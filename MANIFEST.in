@@ -1,0 +1,17 @@
+include TODO
+include ChangeLog
+include LICENCE*
+include COPYING
+include MANIFEST*
+include README
+include wxgtd*
+include setup.*
+recursive-include wxgtd *
+recursive-include po *.in *.po *.pot
+recursive-include locale *
+recursive-include debian *
+recursive-include data *
+recursive-include bin *
+recursive-include man *
+recursive-include doc *
+global-exclude *~ *.swp \.* *.pyc *.pyo *.gpx
