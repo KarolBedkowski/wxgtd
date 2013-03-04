@@ -110,6 +110,17 @@ class TestEnum(TestCase):
 		self.assertIsNone(obj3, "Object deleted")
 		dbcon.close()
 
+	def test_07_full_select_query(self):
+		sql, params = _Obj1._create_select_query(order="ord1 desc",
+				limit=10, offset=20, distinct=True,
+				where_stmt="(foo > 10 or foo < 5)",
+				group_by="grouping sts",
+				id=12, num=233)
+		self.assertEqual(sql, 'SELECT DISTINCT tekst1 AS tekst, tekst2 AS info, '
+				'num, id FROM "obj" WHERE (foo > 10 or foo < 5) AND num=? '
+				'AND id=? GROUP BY grouping sts ORDER BY ord1 desc '
+				'LIMIT 10 OFFSET 20')
+		self.assertEqual(params, [233, 12])
 
 if __name__ == '__main__':
 	main()

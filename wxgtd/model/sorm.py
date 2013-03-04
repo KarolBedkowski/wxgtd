@@ -117,11 +117,8 @@ class Model(object):
 				distinct, where_stmt, group_by, **where)
 		with DbConnection().get_cursor() as cursor:
 			cursor.execute(sql, query_params)
-			fields_mapper = dict(((field or key, key) for key, field
-					in cls._fields.iteritems()))
 			for row in cursor:
-				yield cls(**dict((fields_mapper[key], val) for key, val
-						in itertools.izip(row.keys(), row)))
+				yield cls(**row)
 
 	@classmethod
 	def get(cls, **where):
@@ -170,8 +167,10 @@ class Model(object):
 				distinct=None, where_stmt=None, group_by=None, **where):
 		"""Prepare select query for given parameters """
 		sqls = ['SELECT', ("DISTINCT" if distinct else "")]
-		sqls.append(', '.join((field or key for key, field
-				in cls._fields.iteritems())))
+		# use "AS" if object fiels is diferrent from table column
+		sqls.append(', '.join(((field + " AS " + key)
+				if (field and field != key) else key)
+				for key, field in cls._fields.iteritems()))
 		sqls.append('FROM "%s"' % cls._table_name)
 		query_params = []
 		if where_stmt or where_stmt:
@@ -200,8 +199,7 @@ class Model(object):
 		"""Prepare sql stmt and parameters for update current object."""
 		assert bool(self._primary_keys)
 		values = [((field or key), getattr(self, key))
-				for key, field
-				in self._fields.iteritems()
+				for key, field in self._fields.iteritems()
 				if key not in self._primary_keys]
 		pkeys = [(self._fields[key] or key, getattr(self, key))
 				for key in self._primary_keys]
