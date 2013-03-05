@@ -66,12 +66,14 @@ class DbConnection(object):
 		if self._connection:
 			return _CursorWrapper(self._connection)
 		_LOG.error("DbConnection.get_cursor ERROR: not connected")
+		raise RuntimeError('Not connected')
 
 	def get_raw_cursor(self):
 		""" Get sqlite3.Cursor for current connection """
 		if self._connection:
 			return self._connection.cursor()
 		_LOG.error("DbConnection.get_raw_cursor ERROR: not connected")
+		raise RuntimeError('Not connected')
 
 	def execue(self, *args, **kwargs):
 		""" Execute query """
@@ -79,7 +81,25 @@ class DbConnection(object):
 		if self._connection:
 			with self.get_cursor() as curs:
 				curs.execute(*args, **kwargs)
-		_LOG.error("DbConnection.execute ERROR: not connected")
+		else:
+			_LOG.error("DbConnection.execute ERROR: not connected")
+			raise RuntimeError('Not connected')
+
+	def commit(self):
+		_LOG.debug('DbConnection.commit')
+		if self._connection:
+			self._connection.commit()
+		else:
+			_LOG.error("DbConnection.commit ERROR: not connected")
+			raise RuntimeError('Not connected')
+
+	def rollback(self):
+		_LOG.debug('DbConnection.rollback')
+		if self._connection:
+			self._connection.rollback()
+		else:
+			_LOG.error("DbConnection.rollback ERROR: not connected")
+			raise RuntimeError('Not connected')
 
 
 class Column(object):
@@ -162,9 +182,8 @@ class Model(object):
 
 	def __init__(self, **kwargs):
 		super(Model, self).__init__()
-		for key, val in kwargs.iteritems():
-			if key in self._fields:
-				setattr(self, key, val)
+		if kwargs:
+			self.load_from_dict(kwargs)
 
 	def __repr__(self):
 		res = ['<', self.__class__.__name__,
@@ -175,12 +194,17 @@ class Model(object):
 		res.append('>')
 		return ' '.join(res)
 
+	def load_from_dict(self, dict_):
+		for key, val in dict_.iteritems():
+			if key in self._fields:
+				setattr(self, key, val)
+
 	@classmethod
 	def select(cls, order=None, limit=None, offset=None, distinct=None,
-				where_stmt=None, group_by=None, **where):
+				where_stmt=None, group_by=None, count=False, **where):
 		"""Select object according to given params """
 		sql, query_params = cls._create_select_query(order, limit, offset,
-				distinct, where_stmt, group_by, **where)
+				distinct, where_stmt, group_by, count, **where)
 		with DbConnection().get_cursor() as cursor:
 			cursor.execute(sql, query_params)
 			for row in cursor:
@@ -200,6 +224,13 @@ class Model(object):
 	def all(cls):
 		"""Select all object."""
 		return cls.select()
+
+	@classmethod
+	def exists(cls, **pkeys):
+		sql, query_params = cls._create_select_query(count=True, **pkeys)
+		with DbConnection().get_cursor() as cursor:
+			cursor.execute(sql, query_params)
+			return cursor.fetchone()[0] > 0
 
 	def save(self):
 		"""Save (insert) current object as new record."""
@@ -241,16 +272,20 @@ class Model(object):
 
 	@classmethod
 	def _create_select_query(cls, order=None, limit=None, offset=None,
-				distinct=None, where_stmt=None, group_by=None, **where):
+				distinct=None, where_stmt=None, group_by=None, count=False,
+				**where):
 		"""Prepare select query for given parameters """
 		sqls = ['SELECT', ("DISTINCT" if distinct else "")]
-		# use "AS" if object fields is different from table column
-		sqls.append(', '.join(((field.name + " AS " + key)
-				if (field.name and field.name != key) else key)
-				for key, field in cls._fields.iteritems()))
+		if count:
+			sqls.append('COUNT(*) as count')
+		else:
+			# use "AS" if object fields is different from table column
+			sqls.append(', '.join(((field.name + " AS " + key)
+					if (field.name and field.name != key) else key)
+					for key, field in cls._fields.iteritems()))
 		sqls.append('FROM "%s"' % cls._table_name)
 		query_params = []
-		if where_stmt or where_stmt:
+		if where_stmt or where:
 			sqls.append('WHERE')
 			where_params = []
 			if where_stmt:

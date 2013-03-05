@@ -93,6 +93,9 @@ class TestEnum(TestCase):
 		curs.execute('select count(*) from obj where id=1')
 		self.assertEqual(curs.fetchone()[0], 1)
 		curs.close()
+		# obj check
+		self.assertTrue(_Obj1.exists(id=1))
+		self.assertTrue(not _Obj1.exists(id=122))
 		dbcon.close()
 
 	def test_04_query(self):
