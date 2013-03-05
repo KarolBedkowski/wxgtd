@@ -9,7 +9,7 @@ __version__ = "2011-05-15"
 
 from unittest import main, TestCase
 
-from sorm import DbConnection, Model
+from sorm import DbConnection, Model, Column
 
 
 class _Obj1(Model):
@@ -24,12 +24,40 @@ class _Obj1(Model):
 		Model.__init__(self, **kwarg)
 
 
+class _Obj2(Model):
+	_table_name = 'obj'
+	_primary_keys = ['id']
+	_fields = {'id': Column(value_type=int),
+			'name': None,
+			'value': 'value'}
+
+	def __init__(self, **kwarg):
+		Model.__init__(self, **kwarg)
+		self.id = None
+		self.name = None
+		self.value = None
+
+
 _OBJ1_DDL = """create table obj
 (id integer primary key autoincrement,
 tekst1 varchar,
 tekst2 varchar,
 num number);
 """
+
+
+class _Obj3(Model):
+	_table_name = 'obj'
+	_fields = {'id': Column(value_type=int, primary_key=True),
+			'name': Column(name="col1", value_type=str),
+			'value': Column(name="val", value_type=float)}
+
+
+class _Obj4(Model):
+	_table_name = 'obj'
+	_fields = [Column(name="id", value_type=int, primary_key=True),
+			Column(name="col1", value_type=str),
+			Column(name="val", value_type=float)]
 
 
 def _prepare_db():
@@ -121,6 +149,35 @@ class TestEnum(TestCase):
 				'AND id=? GROUP BY grouping sts ORDER BY ord1 desc '
 				'LIMIT 10 OFFSET 20')
 		self.assertEqual(params, [233, 12])
+
+	def test_07_auto_fields(self):
+		obj = _Obj2()
+		self.assertListEqual(sorted(obj._fields.keys()),
+				sorted(['id', 'name', 'value']))
+
+	def test_08_columns(self):
+		obj = _Obj3()
+		self.assertTrue(obj._fields['id'].primary_key)
+		self.assertEqual(obj._fields['id'].name, 'id')
+		self.assertEqual(obj._fields['name'].name, 'col1')
+		self.assertEqual(obj._fields['value'].value_type, float)
+		self.assertEqual(obj._primary_keys, set(['id']))
+
+	def test_09_columns_list(self):
+		obj = _Obj4()
+		self.assertTrue(obj._fields['id'].primary_key)
+		self.assertEqual(obj._fields['id'].name, 'id')
+		self.assertEqual(obj._fields['col1'].name, 'col1')
+		self.assertEqual(obj._fields['val'].value_type, float)
+		self.assertEqual(obj._primary_keys, set(['id']))
+
+	def test_10_autoincrement_pk(self):
+		dbcon = _prepare_db()
+		obj = _Obj1(tekst='abc', info='info123', num=987)
+		obj.save()
+		self.assertIsNotNone(obj.id, "PK not loaded")
+		dbcon.close()
+
 
 if __name__ == '__main__':
 	main()
