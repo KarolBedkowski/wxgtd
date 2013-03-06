@@ -85,6 +85,16 @@ class DbConnection(object):
 			_LOG.error("DbConnection.execute ERROR: not connected")
 			raise RuntimeError('Not connected')
 
+	def execuescript(self, *args, **kwargs):
+		""" Execute query """
+		_LOG.debug('DbConnection.executescript(%r, %r)', args, kwargs)
+		if self._connection:
+			with self.get_cursor() as curs:
+				curs.executescript(*args, **kwargs)
+		else:
+			_LOG.error("DbConnection.executescript ERROR: not connected")
+			raise RuntimeError('Not connected')
+
 	def commit(self):
 		_LOG.debug('DbConnection.commit')
 		if self._connection:
@@ -124,6 +134,29 @@ class Column(object):
 		return value
 
 
+class ManyToOne(object):
+	"""Many to one relation definition"""
+	# TODO: obsluga kluczy wielowartościowych
+	def __init__(self, ref_field, ref_class, ref_key="id"):
+		self.ref_field = ref_field
+		self.ref_class = ref_class
+		self.ref_key = ref_key
+
+	def __repr__(self):
+		return ' '.join(map(str, ('<ManyToOne', self.ref_field, self.ref_class,
+				self.ref_key, '>')))
+
+	def load(self, parent):
+		ref_field_value = getattr(parent, self.ref_field)
+		return self.ref_class.get(**{self.ref_key: ref_field_value})
+
+	def save(self, parent, obj):
+		if not isinstance(obj, self.ref_class):
+			raise TypeError("wrong object type")
+		obj_id = getattr(obj, self.ref_key)
+		setattr(parent, self.ref_field, obj_id)
+
+
 class _MetaModel(type):
 	"""MetaModel for Model class"""
 	def __new__(mcs, name, bases, dict_):
@@ -144,6 +177,10 @@ class _MetaModel(type):
 							% field)
 			dict_['_fields'] = rfields
 		dict_['_primary_keys'] = set(dict_['_primary_keys'])
+		relations = dict_.get('_relations')
+		if relations:
+			for key, relation in relations.iteritems():
+				dict_[key] = property(relation.load, relation.save)
 		return type.__new__(mcs, name, bases, dict_)
 
 	def __init__(mcs, name, bases, dict_):
@@ -169,9 +206,18 @@ class Model(object):
 	"""Base class for all objects"""
 	__metaclass__ = _MetaModel
 
+	# table name in database
 	_table_name = None
-	_fields = {}  # map class property -> None | db field name (str) | Column()
-	_primary_keys = set()  # list of primary keys properties
+
+	# map class property -> None | db field name (str) | Column()
+	_fields = {}
+
+	# list of primary keys properties
+	_primary_keys = set()
+
+	# map property -> relation definion; create property for access to related
+	# objects (get, set)
+	_relations = {}
 
 	def __new__(cls, *args, **kwarg):
 		instance = object.__new__(cls, *args, **kwarg)

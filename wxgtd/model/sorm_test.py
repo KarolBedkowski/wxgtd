@@ -9,7 +9,7 @@ __version__ = "2011-05-15"
 
 from unittest import main, TestCase
 
-from sorm import DbConnection, Model, Column
+from sorm import DbConnection, Model, Column, ManyToOne
 
 
 class _Obj1(Model):
@@ -43,6 +43,10 @@ _OBJ1_DDL = """create table obj
 tekst1 varchar,
 tekst2 varchar,
 num number);
+
+create table mobj
+(id integer primary key autoincrement,
+obj_id integer);
 """
 
 
@@ -60,10 +64,17 @@ class _Obj4(Model):
 			Column(name="val", value_type=float)]
 
 
+class _MObj(Model):
+	_table_name = 'mobj'
+	_fields = [Column(name="id", value_type=int, primary_key=True),
+			Column(name="obj_id", value_type=int)]
+	_relations = {'obj': ManyToOne('obj_id', _Obj1, "id")}
+
+
 def _prepare_db():
 	dbcon = DbConnection()
 	dbcon.open(':memory:')
-	dbcon.execue(_OBJ1_DDL)
+	dbcon.execuescript(_OBJ1_DDL)
 	return dbcon
 
 
@@ -179,6 +190,32 @@ class TestEnum(TestCase):
 		obj = _Obj1(tekst='abc', info='info123', num=987)
 		obj.save()
 		self.assertIsNotNone(obj.id, "PK not loaded")
+		dbcon.close()
+
+	def test_11_relations_def(self):
+		self.assertTrue(hasattr(_MObj, 'obj'))
+
+	def test_12_relation_get(self):
+		dbcon = _prepare_db()
+		obj = _Obj1(id=1, tekst='abc', info='info123', num=987)
+		obj.save()
+		mobj = _MObj(id=2, obj_id=1)
+		mobj.save()
+		mobj2 = _MObj.get(id=2)
+		self.assertIsNotNone(mobj2, "Object loaded")
+		self.assertEqual(mobj2.obj_id, mobj.obj_id)
+		obj2 = mobj.obj
+		self.assertIsNotNone(obj2)
+		self.assertEqual(obj2.id, obj.id)
+		self.assertEqual(obj2.tekst, obj.tekst)
+		dbcon.close()
+
+	def test_12_relation_set(self):
+		dbcon = _prepare_db()
+		obj = _Obj1(id=1, tekst='abc', info='info123', num=987)
+		mobj = _MObj(id=2)
+		mobj.obj = obj
+		self.assertEqual(mobj.obj_id, obj.id)
 		dbcon.close()
 
 
