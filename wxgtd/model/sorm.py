@@ -2,6 +2,8 @@
 
 """
 very Simple ORM
+
+TODO: default sort col
 """
 
 __author__ = "Karol Będkowski"
@@ -219,6 +221,9 @@ class Model(object):
 	# objects (get, set)
 	_relations = {}
 
+	# default sort order
+	_default_sort_order = None
+
 	def __new__(cls, *args, **kwarg):
 		instance = object.__new__(cls, *args, **kwarg)
 		# prepare instance
@@ -345,8 +350,8 @@ class Model(object):
 			sqls.append(' AND '.join(where_params))
 		if group_by:
 			sqls.append("GROUP BY %s" % group_by)
-		if order:
-			sqls.append('ORDER BY %s' % order)
+		if order or cls._default_sort_order:
+			sqls.append('ORDER BY %s' % (order or cls._default_sort_order))
 		if limit:
 			sqls.append('LIMIT %d' % limit)
 		if offset:
