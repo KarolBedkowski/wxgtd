@@ -14,19 +14,17 @@ __version__ = "2011-05-15"
 
 import logging
 
+import sorm
+import sqls
+
 _LOG = logging.getLogger(__name__)
 
 
-class Db(object):
-	"""docstring for Db"""
-
-	def __init__(self, filename):
-		self.filename = filename
-
-	def open(self):
-		"""Open database"""
-		# TODO: write code...
-
-	def close(self):
-		"""Close database"""
-		# TODO: write code...
+def connect(*argv, **kwargs):
+	dbconn = sorm.DbConnection()
+	dbconn.open(*argv, **kwargs)
+	with dbconn.get_cursor() as cursor:
+		for schema in sqls.SCHEMA_DEF:
+			for sql in schema:
+				cursor.executescript(sql)
+	return dbconn
