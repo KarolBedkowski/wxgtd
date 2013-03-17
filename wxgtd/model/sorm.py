@@ -16,8 +16,40 @@ import sqlite3
 import locale
 import itertools
 #import types
+import functools
+import time
 
 _LOG = logging.getLogger(__name__)
+
+
+def cached(ttl=60):
+	""" Decorator for cache function results.
+
+	import time
+
+	@cache(tty=1)
+	def rand(
+	"""
+
+	def cache(obj):
+		cache = obj.cache = {}
+
+		@functools.wraps(obj)
+		def cacher(*args, **kwargs):
+			if '__NO_CACHE__' in kwargs:
+				kwargs.pop('__NO_CACHE__')
+				return obj(*args, **kwargs)
+			params = hash((args, repr(kwargs)))
+			now = time.time()
+			if params in cache:
+				last_update, value = cache[params]
+				if now - last_update < ttl:
+					return value
+			value = obj(*args, **kwargs)
+			cache[params] = now, value
+			return value
+		return cacher
+	return cache
 
 
 class _CursorWrapper(object):
@@ -264,6 +296,7 @@ class Model(object):
 				yield cls(**values)
 
 	@classmethod
+	@cached(ttl=1)
 	def get(cls, **where):
 		"""Get one object"""
 		result = list(cls.select(limit=1, **where))
