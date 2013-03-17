@@ -69,7 +69,7 @@ def run():
 
 	# logowanie
 	from wxgtd.lib.logging_setup import logging_setup
-	logging_setup('rwr.log', _OPTIONS.debug)
+	logging_setup('wxgtd.log', _OPTIONS.debug)
 
 	# konfiguracja
 	config = appconfig.AppConfig('wxgtd.cfg', 'wxgtd')
@@ -103,7 +103,7 @@ def run():
 
 	# program
 	from wxgtd.gui.frame_main import FrameMain
-	from wxgtd.model.db import Db
+	from wxgtd.model import db
 	from wxgtd.lib import iconprovider
 
 	# ustalnienie położenia głównego pliku bazy
@@ -131,13 +131,12 @@ def run():
 
 	iconprovider.init_icon_cache(None, config.data_dir)
 
-	config['_DB'] = database = Db(db_filename)
-	database.open()
+	conn = db.connect(db_filename)
 
-	main_frame = FrameMain(database)
+	main_frame = FrameMain()
 	app.SetTopWindow(main_frame.wnd)
 	main_frame.wnd.Show()
 	app.MainLoop()
 
-	database.close()
+	conn.close()
 	config.save()
