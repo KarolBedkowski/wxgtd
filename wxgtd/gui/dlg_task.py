@@ -10,6 +10,10 @@ __version__ = "2010-11-25"
 
 
 import wx
+try:
+	from wx.lib.pubsub.pub import Publisher
+except ImportError:
+	from wx.lib.pubsub import Publisher
 
 from wxgtd.model import objects as OBJ
 from wxgtd.wxtools import validators
@@ -71,4 +75,5 @@ class DlgTask(BaseDialog):
 			return
 		self._task.save_or_update()
 		self._task.connection.commit()
+		Publisher.sendMessage('task.update', data={'task_uuid': self._task.uuid})
 		self._on_ok(evt)

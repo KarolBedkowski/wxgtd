@@ -14,6 +14,10 @@ import time
 import wx
 from wx import xrc
 import wx.lib.customtreectrl as CT
+try:
+	from wx.lib.pubsub.pub import Publisher
+except ImportError:
+	from wx.lib.pubsub import Publisher
 
 from wxgtd.lib import wxresources
 from wxgtd.lib.appconfig import AppConfig
@@ -98,6 +102,8 @@ class FrameMain:
 		self._items_list_ctrl.Bind(wx.EVT_LIST_ITEM_ACTIVATED,
 				self._on_items_list_activated)
 
+		Publisher.subscribe(self._on_tasks_update, ('task', 'update'))
+
 	def _create_toolbar(self):
 		toolbar = self.wnd.CreateToolBar()
 		tbi = toolbar.AddLabelTool(-1, _('New Task'), wx.ArtProvider.GetBitmap(
@@ -131,7 +137,7 @@ class FrameMain:
 
 	def _on_menu_file_new_task(self, _evt):
 		task = OBJ.Task()
-		dlg = DlgTask(self.wnd, task)
+		dlg = DlgTask.create(task.uuid, self.wnd, task)
 		dlg.run()
 
 	def _on_menu_help_about(self, _evt):
@@ -154,8 +160,11 @@ class FrameMain:
 		uuid = self._items_uuids[evt.GetData()]
 		task = OBJ.Task.get(uuid=uuid)
 		if task:
-			dlg = DlgTask(self.wnd, task)
+			dlg = DlgTask.create(task.uuid, self.wnd, task)
 			dlg.run()
+
+	def _on_tasks_update(self, _args):
+		self._refresh_list()
 
 	# logic
 
