@@ -123,7 +123,7 @@ class Folder(BaseModel):
 	_fields = ["parent_uuid", "uuid", "created", "modified", "deleted",
 			"ordinal", "title", "note", "color", "visible"]
 	_primary_keys = ['uuid']
-	_default_sort_order = "name"
+	_default_sort_order = "title"
 
 	def save(self):
 		if not self.uuid:
@@ -142,7 +142,7 @@ class Context(BaseModel):
 	_fields = ["parent_uuid", "uuid", "created", "modified", "deleted",
 			"ordinal", "title", "note", "color", "visible"]
 	_primary_keys = ['uuid']
-	_default_sort_order = "name"
+	_default_sort_order = "title"
 
 
 class Tasknote(BaseModel):
@@ -151,7 +151,7 @@ class Tasknote(BaseModel):
 	_fields = ["task_uuid", "created", "modified", "uuid", "ordinal",
 			"title", "color", "visible"]
 	_primary_keys = ['uuid']
-	_default_sort_order = "name"
+	_default_sort_order = "title"
 
 
 class Alarm(BaseModel):
@@ -171,7 +171,7 @@ class Goal(BaseModel):
 			"ordinal", "title", "note", "time_period", "archived", "color",
 			"visible"]
 	_primary_keys = ['uuid']
-	_default_sort_order = "name"
+	_default_sort_order = "title"
 
 
 def _create_params_list(column, values):
