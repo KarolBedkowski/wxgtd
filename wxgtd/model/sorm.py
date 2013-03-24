@@ -263,8 +263,9 @@ class Model(object):
 			instance.__dict__[key] = column_def.default
 		return instance
 
-	def __init__(self, **kwargs):
+	def __init__(self, _is_new=True, **kwargs):
 		super(Model, self).__init__()
+		self._is_new = _is_new
 		if kwargs:
 			self.load_from_dict(kwargs)
 
@@ -293,7 +294,7 @@ class Model(object):
 			for row in cursor:
 				values = dict((key, cls._fields[key].from_database(val))
 						for key, val in dict(row).iteritems())
-				yield cls(**values)
+				yield cls(_is_new=False, **values)
 
 	@classmethod
 	@cached(ttl=1)
@@ -316,6 +317,12 @@ class Model(object):
 			cursor.execute(sql, query_params)
 			return cursor.fetchone()[0] > 0
 
+	def save_or_update(self):
+		if self._is_new:
+			self.save()
+		else:
+			self.update()
+
 	def save(self):
 		"""Save (insert) current object as new record."""
 		sql, query_params = self._create_save_stmt()
@@ -333,6 +340,7 @@ class Model(object):
 			for key, val in dict(row).iteritems():
 				if key in self._fields:
 					setattr(self, key, self._fields[key].from_database(val))
+			self._is_new = False
 
 	def update(self):
 		"""Update current object.
