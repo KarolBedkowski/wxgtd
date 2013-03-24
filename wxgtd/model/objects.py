@@ -12,6 +12,8 @@ __version__ = "2013-03-02"
 
 import logging
 import gettext
+import uuid
+import time
 
 import sorm
 
@@ -21,10 +23,42 @@ _ = gettext.gettext
 STATUSES = {0: _("No Status"),  # no status
 		1: _("Next Action"),
 		2: _("Active"),
-		3: _("Planned")}
+		3: _("Planning"),
+		4: _("Delegated"),
+		5: _("Waiting"),
+		6: _("Hold"),
+		7: _("Postponed"),
+		8: _("Someday"),
+		9: _("Canceled"),
+		10: _("Reference")}
 
 
-class Task(sorm.Model):
+TYPES = {0: _("Task"),
+		1: _("Project"),
+		2: _("Checklist"),
+		3: _("Checklist Item"),
+		4: _("Note"),
+		5: _("Call"),
+		6: _("Email"),
+		7: _("SMS"),
+		8: _("Return Call")}
+
+
+class BaseModel(sorm.Model):
+	""" Bazowy model - tworzenie kluczy, aktualizacja timestampów """
+
+	def save(self):
+		if not self.uuid:
+			self.uuid = str(uuid.uuid4())
+		self.modified = self.created = time.time()
+		sorm.Model.save(self)
+
+	def update(self):
+		self.modified = time.time()
+		sorm.Model.update(self)
+
+
+class Task(BaseModel):
 	"""Task"""
 	_table_name = "tasks"
 	_fields = ["parent_uuid", "uuid", "created", "modified", "completed",
@@ -40,7 +74,7 @@ class Task(sorm.Model):
 	_default_sort_order = "ordinal, title"
 
 	def __init__(self, *args, **kwargs):
-		sorm.Model.__init__(self, *args, **kwargs)
+		BaseModel.__init__(self, *args, **kwargs)
 		self.folder = None
 		self.context = None
 		self.goal = None
@@ -62,56 +96,65 @@ class Task(sorm.Model):
 		where_stmt = []
 		params = []
 		for column, ids in (('context_uuid', contexts),
-				('folder_uuid', folders), ('goal_uuid', goals),
-				('status', statuses)):
+						('folder_uuid', folders), ('goal_uuid', goals),
+						('status', statuses)):
 			if ids:
 				wstmt, wparams = _create_params_list(column, ids)
-				if wstmt:
-					where_stmt.append(wstmt)
-					if wparams:
-						params.extend(wparams)
-		where = ' and '.join(where_stmt)
+				where_stmt.append(wstmt)
+				if wparams:
+					params.extend(wparams)
+		where = ' AND '.join(where_stmt)
 		sql, query_params = cls._create_select_query(where_stmt=where)
 		query_params.extend(params)
 		with sorm.DbConnection().get_cursor() as cursor:
 			cursor.execute(sql, query_params)
 			for row in cursor:
 				values = dict((key, cls._fields[key].from_database(val))
-						for key, val in dict(row).iteritems())
+							for key, val in dict(row).iteritems())
 				obj = cls(**values)
 				if obj.context_uuid:
 					obj.context = Context.get(uuid=obj.context_uuid)
 				yield obj
 
 
-class Folder(sorm.Model):
+class Folder(BaseModel):
 	"""folder"""
 	_table_name = "folders"
 	_fields = ["parent_uuid", "uuid", "created", "modified", "deleted",
 			"ordinal", "title", "note", "color", "visible"]
 	_primary_keys = ['uuid']
-	_default_sort_order = "ordinal"
+	_default_sort_order = "name"
+
+	def save(self):
+		if not self.uuid:
+			self.uuid = str(uuid.uuid4())
+		self.modified = self.created = time.time()
+		BaseModel.save(self)
+
+	def update(self):
+		self.modified = time.time()
+		BaseModel.update(self)
 
 
-class Context(sorm.Model):
+class Context(BaseModel):
 	"""context"""
 	_table_name = "contexts"
 	_fields = ["parent_uuid", "uuid", "created", "modified", "deleted",
 			"ordinal", "title", "note", "color", "visible"]
 	_primary_keys = ['uuid']
-	_default_sort_order = "ordinal"
+	_default_sort_order = "name"
 
 
-class Tasknote(sorm.Model):
+class Tasknote(BaseModel):
 	"""tasknote"""
 	_table_name = "tasknotes"
 	_fields = ["task_uuid", "created", "modified", "uuid", "ordinal",
 			"title", "color", "visible"]
 	_primary_keys = ['uuid']
-	_default_sort_order = "ordinal"
+	_default_sort_order = "name"
 
 
-class Alarm(sorm.Model):
+class Alarm(BaseModel):
 	"""alarm"""
 
 	_table_name = "alarms"
@@ -120,7 +163,7 @@ class Alarm(sorm.Model):
 	_primary_keys = ['uuid']
 
 
-class Goal(sorm.Model):
+class Goal(BaseModel):
 	""" Goal """
 
 	_table_name = "goals"
@@ -128,6 +171,7 @@ class Goal(sorm.Model):
 			"ordinal", "title", "note", "time_period", "archived", "color",
 			"visible"]
 	_primary_keys = ['uuid']
+	_default_sort_order = "name"
 
 
 def _create_params_list(column, values):

@@ -1,5 +1,11 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+"""
+
+
+TODO:
+	- goals
+"""
 
 import logging
 import cjson
