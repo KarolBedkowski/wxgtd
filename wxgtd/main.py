@@ -37,6 +37,7 @@ def _parse_opt():
 			help='enable debug messages')
 	optp.add_option('--version', action="callback", callback=show_version,
 		help='show information about application version')
+	optp.add_option('--wx-inspection', action="store_true", default=False)
 	return optp.parse_args()[0]
 
 
@@ -136,6 +137,11 @@ def run():
 	main_frame = FrameMain()
 	app.SetTopWindow(main_frame.wnd)
 	main_frame.wnd.Show()
+
+	if _OPTIONS.wx_inspection:
+		import wx.lib.inspection
+		wx.lib.inspection.InspectionTool().Show()
+
 	app.MainLoop()
 
 	conn.close()
