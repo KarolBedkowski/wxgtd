@@ -20,6 +20,7 @@ __all__ = ['Validator', 'ValidatorDv']
 
 
 import types
+import gettext
 
 import wx
 import wx.calendar
@@ -27,22 +28,41 @@ import wx.lib.masked
 
 from .errors import ValidateError
 
-_ = wx.GetTranslation
+_ = gettext.gettext
 
 
 ##############################################################################
 
 
 class Validator(wx.PyValidator):
-	def __init__(self, data_key=None, validators=None, field=None, default=None):
+	def __init__(self, data_obj=None, data_key=None, validators=None,
+				field=None, default=None, readonly=False):
 		"""
-			@param data_key = (dict(), key) | (obiekt, attribute_name)
-			@param validators = [ SimpleValidator() ]
-			@param field = field name
-			@param default =  domyślna wartość dla pola
+			@param data_obj - obiekt z którego pobierane są dane
+			@param data_key - klucz obiektu (atrybut, klucz itd)
+			@param validators - [ SimpleValidator() ] - lista walidatorów
+			@param field - nazwa pola (wyświetlana); jeżei brak - pobierana jest
+					przez GetName() z widgeta
+			@param default - domyślna wartość dla pola
+			@param readonly - czy można zapisywać do obiektu
+
+			Przykład:
+			task = {}
+			text_control.SetValidator(validators.Validator(task, 'title',
+				validators=NotEmptyValidator(), field='title'))
+
+			Uwagi:
+				w dialogach:
+					dlg.SetExtraStyle(wx.WS_EX_VALIDATE_RECURSIVELY)
+				przy zapisie:
+					if not dlg.Validate():
+						return
+					if not dlg.TransferDataFromWindow():
+						return
 		"""
 		wx.PyValidator.__init__(self)
-		self._data = data_key
+		self._object = data_obj
+		self._key = data_key
 		if isinstance(validators, (types.ListType, types.TupleType)) or \
 				validators is None:
 			self._validators = validators
@@ -50,10 +70,12 @@ class Validator(wx.PyValidator):
 			self._validators = [validators]
 		self._field = field
 		self._default = default
+		self._readonly = readonly
 
 	def Clone(self):
 		"""	"""
-		return self.__class__(self._data, self._validators, self._field)
+		return self.__class__(self._object, self._key, self._validators,
+				self._field, self._default, self._readonly)
 
 	def Validate(self, win):
 		""" Validacja pola """
@@ -67,7 +89,8 @@ class Validator(wx.PyValidator):
 				except ValidateError:
 					dlg = wx.MessageDialog(win,
 							_('Validate field "%(field)s" failed:\n%(msg)s') %
-							{'field': (self._field or self._data[1] or ''),
+							{'field': (self._field or control.GetName() or
+									self._key or ''),
 									'msg': validator.error},
 							_('Validate error'),
 							wx.OK | wx.CENTRE | wx.ICON_ERROR)
@@ -84,13 +107,15 @@ class Validator(wx.PyValidator):
 		return True
 
 	def TransferToWindow(self):
-		if self._data:
+		if self._object:
 			val = self._get_value()
 			val = self._process_through_validators(val)
 			self._set_value_to_control(val)
 		return True
 
 	def TransferFromWindow(self):
+		if self._readonly:
+			return True
 		value = self._get_value_from_control()
 		if self._validators is not None:
 			for validator in self._validators:
@@ -112,24 +137,22 @@ class Validator(wx.PyValidator):
 	def _get_value(self):
 		""" Pobranie aktualnej wartości z obiektu """
 		val = None
-		if self._data is not None:
-			data, key = self._data
-			if hasattr(data, key):
-				val = getattr(data, key)
+		if self._object is not None:
+			if hasattr(self._object, self._key):
+				val = getattr(self._object, self._key)
 			else:
-				val = data.get(key)
+				val = self._object.get(self._key)
 		if val is None:
 			val = self._default
 		return val
 
 	def _set_value(self, value):
 		""" Ustawienie wartości w obiekcie """
-		if self._data is not None:
-			data, key = self._data
-			if hasattr(data, key):
-				setattr(data, key, value)
+		if self._object is not None:
+			if hasattr(self._object, self._key):
+				setattr(self._object, self._key, value)
 			else:
-				data[key] = value
+				self._object[self._key] = value
 
 	def _get_value_from_control(self):
 		""" Pobranie wartości z widgetu """
@@ -160,7 +183,6 @@ class ValidatorDv(Validator):
 	def _set_value_to_control(self, value):
 		ctrl = self.GetWindow()
 		for i in xrange(ctrl.GetCount()):
-			print self._data[1], ctrl.GetClientData(i), value
 			if ctrl.GetClientData(i) == value:
 				ctrl.Select(i)
 				return
