@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 
 """
-Główne okno programu
+Klasa bazowa dla wszystkich dlg.
 """
 
 __author__ = "Karol Będkowski"
-__copyright__ = "Copyright (c) Karol Będkowski, 2010"
+__copyright__ = "Copyright (c) Karol Będkowski, 2010-2013"
 __version__ = "2010-11-25"
 
 
