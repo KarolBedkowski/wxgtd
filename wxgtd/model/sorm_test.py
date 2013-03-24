@@ -71,6 +71,11 @@ class _MObj(Model):
 	_relations = {'obj': ManyToOne('obj_id', _Obj1, "id")}
 
 
+class _Obj5(Model):
+	_table_name = 'obj'
+	_fields = ["id", 'col1', 'val']
+
+
 def _prepare_db():
 	dbcon = DbConnection()
 	dbcon.open(':memory:')

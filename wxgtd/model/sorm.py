@@ -191,27 +191,53 @@ class ManyToOne(object):
 		setattr(parent, self.ref_field, obj_id)
 
 
+def _model_convert_fields_def(fields):
+	""" Zamiana definicji pól w modelu gdy są zdefiniowane jako lista,
+		tuple, set na słownik {nazwa -> definicja}
+	"""
+	if isinstance(fields, (list, tuple, set)):
+		rfields = {}
+		for field in fields:
+			print 0, field, type(field)
+			if isinstance(field, Column):
+				if not field.name:
+					raise TypeError('No field name')
+				rfields[field.name] = field
+			elif isinstance(field, (str, unicode)):
+				rfields[field] = field
+			else:
+				raise TypeError('Invalid column definition %r'
+						% field)
+		return rfields
+	return fields
+
+
+def _model_update_field_definition(key, definition, fields, primary_keys):
+	""" Tworzy definicje (Column()) dla danego pola; aktualizuje słowniki
+		fields i primary_keys.
+	"""
+	if isinstance(definition, Column):
+		if not definition.name:
+			definition.name = key
+		if definition.primary_key:
+			if definition.name not in primary_keys:
+				primary_keys.add(definition.name)
+	elif isinstance(definition, (str, unicode)):
+		fields[key] = Column(name=definition,
+				primary_key=(definition in primary_keys))
+	else:
+		fields[key] = Column(name=key)
+
+
 class _MetaModel(type):
 	"""MetaModel for Model class"""
 	def __new__(mcs, name, bases, dict_):
 		if '_fields' in dict_:
+			dict_['_fields'] = _model_convert_fields_def(dict_['_fields'])
 			if '_primary_keys' not in dict_:
-				dict_['_primary_keys'] = []
-			fields = dict_['_fields']
-			if isinstance(fields, (list, tuple, set)):
-				rfields = {}
-				for field in fields:
-					if isinstance(field, Column):
-						if not field.name:
-							raise TypeError('No field name')
-						rfields[field.name] = field
-					elif isinstance(field, (str, unicode)):
-						rfields[field] = Column(name=field)
-					else:
-						raise TypeError('Invalid column definition %r'
-								% field)
-				dict_['_fields'] = rfields
-			dict_['_primary_keys'] = set(dict_['_primary_keys'])
+				dict_['_primary_keys'] = set()
+			else:
+				dict_['_primary_keys'] = set(dict_['_primary_keys'])
 			relations = dict_.get('_relations')
 			if relations:
 				for key, relation in relations.iteritems():
@@ -224,18 +250,9 @@ class _MetaModel(type):
 			fields = dict_['_fields']
 			primary_keys = dict_['_primary_keys']
 			if isinstance(fields, dict):
-				for key, value in fields.iteritems():
-					if isinstance(value, Column):
-						if not value.name:
-							value.name = key
-						if value.primary_key:
-							if value.name not in primary_keys:
-								primary_keys.add(value.name)
-					elif isinstance(value, (str, unicode)):
-						fields[key] = Column(name=value,
-								primary_key=(value in primary_keys))
-					else:
-						fields[key] = Column(name=key)
+				for key, definition in fields.iteritems():
+					_model_update_field_definition(key, definition,
+							fields, primary_keys)
 
 
 class Model(object):
