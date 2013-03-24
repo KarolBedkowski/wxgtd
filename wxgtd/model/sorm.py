@@ -194,46 +194,48 @@ class ManyToOne(object):
 class _MetaModel(type):
 	"""MetaModel for Model class"""
 	def __new__(mcs, name, bases, dict_):
-		if '_primary_keys' not in dict_:
-			dict_['_primary_keys'] = []
-		fields = dict_['_fields']
-		if isinstance(fields, (list, tuple, set)):
-			rfields = {}
-			for field in fields:
-				if isinstance(field, Column):
-					if not field.name:
-						raise TypeError('No field name')
-					rfields[field.name] = field
-				elif isinstance(field, (str, unicode)):
-					rfields[field] = Column(name=field)
-				else:
-					raise TypeError('Invalid column definition %r'
-							% field)
-			dict_['_fields'] = rfields
-		dict_['_primary_keys'] = set(dict_['_primary_keys'])
-		relations = dict_.get('_relations')
-		if relations:
-			for key, relation in relations.iteritems():
-				dict_[key] = property(relation.load, relation.save)
+		if '_fields' in dict_:
+			if '_primary_keys' not in dict_:
+				dict_['_primary_keys'] = []
+			fields = dict_['_fields']
+			if isinstance(fields, (list, tuple, set)):
+				rfields = {}
+				for field in fields:
+					if isinstance(field, Column):
+						if not field.name:
+							raise TypeError('No field name')
+						rfields[field.name] = field
+					elif isinstance(field, (str, unicode)):
+						rfields[field] = Column(name=field)
+					else:
+						raise TypeError('Invalid column definition %r'
+								% field)
+				dict_['_fields'] = rfields
+			dict_['_primary_keys'] = set(dict_['_primary_keys'])
+			relations = dict_.get('_relations')
+			if relations:
+				for key, relation in relations.iteritems():
+					dict_[key] = property(relation.load, relation.save)
 		return type.__new__(mcs, name, bases, dict_)
 
 	def __init__(mcs, name, bases, dict_):
 		type.__init__(mcs, name, bases, dict_)
-		fields = dict_['_fields']
-		primary_keys = dict_['_primary_keys']
-		if isinstance(fields, dict):
-			for key, value in fields.iteritems():
-				if isinstance(value, Column):
-					if not value.name:
-						value.name = key
-					if value.primary_key:
-						if value.name not in primary_keys:
-							primary_keys.add(value.name)
-				elif isinstance(value, (str, unicode)):
-					fields[key] = Column(name=value,
-							primary_key=(value in primary_keys))
-				else:
-					fields[key] = Column(name=key)
+		if '_fields' in dict_:
+			fields = dict_['_fields']
+			primary_keys = dict_['_primary_keys']
+			if isinstance(fields, dict):
+				for key, value in fields.iteritems():
+					if isinstance(value, Column):
+						if not value.name:
+							value.name = key
+						if value.primary_key:
+							if value.name not in primary_keys:
+								primary_keys.add(value.name)
+					elif isinstance(value, (str, unicode)):
+						fields[key] = Column(name=value,
+								primary_key=(value in primary_keys))
+					else:
+						fields[key] = Column(name=key)
 
 
 class Model(object):
@@ -259,8 +261,9 @@ class Model(object):
 	def __new__(cls, *args, **kwarg):
 		instance = object.__new__(cls, *args, **kwarg)
 		# prepare instance
-		for key, column_def in cls._fields.iteritems():
-			instance.__dict__[key] = column_def.default
+		if hasattr(cls, '_fields'):
+			for key, column_def in cls._fields.iteritems():
+				instance.__dict__[key] = column_def.default
 		return instance
 
 	def __init__(self, _is_new=True, **kwargs):
@@ -282,6 +285,10 @@ class Model(object):
 		for key, val in dict_.iteritems():
 			if key in self._fields:
 				setattr(self, key, val)
+
+	@property
+	def connection(cls):
+		return DbConnection()
 
 	@classmethod
 	def select(cls, order=None, limit=None, offset=None, distinct=None,
@@ -317,11 +324,13 @@ class Model(object):
 			cursor.execute(sql, query_params)
 			return cursor.fetchone()[0] > 0
 
-	def save_or_update(self):
+	def save_or_update(self, commit=False):
 		if self._is_new:
 			self.save()
 		else:
 			self.update()
+		if commit:
+			self.connection.commit()
 
 	def save(self):
 		"""Save (insert) current object as new record."""
@@ -341,6 +350,7 @@ class Model(object):
 				if key in self._fields:
 					setattr(self, key, self._fields[key].from_database(val))
 			self._is_new = False
+		self.get.cache.clear()
 
 	def update(self):
 		"""Update current object.
@@ -351,6 +361,7 @@ class Model(object):
 				self.__class__.__name__, sql, query_params)
 		with DbConnection().get_cursor() as cursor:
 			cursor.execute(sql, query_params)
+		self.get.cache.clear()
 
 	def delete(self):
 		"""Delete current object.
@@ -361,6 +372,7 @@ class Model(object):
 				self.__class__.__name__, sql, query_params)
 		with DbConnection().get_cursor() as cursor:
 			cursor.execute(sql, query_params)
+		self.get.cache.clear()
 
 	@classmethod
 	def _create_select_query(cls, order=None, limit=None, offset=None,
