@@ -20,6 +20,7 @@ from _base_dialog import BaseDialog
 
 class DlgTask(BaseDialog):
 	"""
+	Dlg edycji zadań.
 	WARRNING: okienko niemodalne; obsługa zapisywania tutaj
 	"""
 
@@ -37,22 +38,14 @@ class DlgTask(BaseDialog):
 
 	def _setup(self, task):
 		self._task = task
-		self['tc_title'].SetValidator(validators.Validator(
-				data_key=(task, 'title'),
-				validators=LVALID.NotEmptyValidator(),
-				field='title'))
-		self['cb_stared'].SetValidator(validators.Validator(
-				data_key=(task, 'starred')))
-		self['cb_status'].SetValidator(validators.ValidatorDv(
-				data_key=(task, 'status')))
-		self['cb_context'].SetValidator(validators.ValidatorDv(
-				data_key=(task, 'context_uuid')))
-		self['cb_folder'].SetValidator(validators.ValidatorDv(
-				data_key=(task, 'folder_uuid')))
-		self['cb_goal'].SetValidator(validators.ValidatorDv(
-				data_key=(task, 'goal_uuid')))
-		self['cb_type'].SetValidator(validators.ValidatorDv(
-				data_key=(task, 'type')))
+		self['tc_title'].SetValidator(validators.Validator(task, 'title',
+				validators=LVALID.NotEmptyValidator(), field='title'))
+		self['cb_stared'].SetValidator(validators.Validator(task, 'starred'))
+		self['cb_status'].SetValidator(validators.ValidatorDv(task, 'status'))
+		self['cb_context'].SetValidator(validators.ValidatorDv(task, 'context_uuid'))
+		self['cb_folder'].SetValidator(validators.ValidatorDv(task, 'folder_uuid'))
+		self['cb_goal'].SetValidator(validators.ValidatorDv(task, 'goal_uuid'))
+		self['cb_type'].SetValidator(validators.ValidatorDv(task, 'type'))
 
 	def _setup_comboboxes(self):
 		cb_status = self['cb_status']
@@ -77,4 +70,5 @@ class DlgTask(BaseDialog):
 		if not self._wnd.TransferDataFromWindow():
 			return
 		self._task.save_or_update()
+		self._task.connection.commit()
 		self._on_ok(evt)
