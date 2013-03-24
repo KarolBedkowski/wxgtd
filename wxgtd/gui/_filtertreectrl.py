@@ -60,15 +60,6 @@ class TreeItemCB(TreeItem):
 class FilterTreeModel(object):
 	def __init__(self):
 		self._items = []
-		self._items.append(TreeItem(_("Main"), "MAIN",
-				TreeItem(_("All"), "ALL"),
-				TreeItem(_("Hot list"), "HOTLIST"),
-				TreeItem(_("Stared"), "STARED"),
-				TreeItem(_("Basket"), "BASKET"),
-				TreeItem(_("Finished"), "FINISHED")))
-		self._items.append(TreeItem(_("Groups"), "GROUPS",
-				TreeItem(_("Projects"), "PROJECTS"),
-				TreeItem(_("Checklists"), "CHECKLISTS")))
 		self._items.append(TreeItemCB(_("Statuses"), "STATUSES",
 				*tuple(TreeItemCB(status, status_id or 0)
 						for status_id, status
@@ -125,7 +116,8 @@ class FilterTreeCtrl(treemixin.VirtualTree, treemixin.ExpansionState,
 		kwargs['agwStyle'] = CT.TR_DEFAULT_STYLE | CT.TR_AUTO_CHECK_CHILD | \
 			CT.TR_AUTO_CHECK_PARENT | CT.TR_AUTO_TOGGLE_CHILD | wx.TR_HIDE_ROOT
 		super(FilterTreeCtrl, self).__init__(*args, **kwargs)
-		self.Bind(CT.EVT_TREE_ITEM_CHECKED, self.OnItemChecked)
+		self.Bind(CT.EVT_TREE_ITEM_CHECKED, self._on_item_checked)
+		wx.CallAfter(self.refresh)
 
 	@property
 	def model(self):
@@ -138,7 +130,13 @@ class FilterTreeCtrl(treemixin.VirtualTree, treemixin.ExpansionState,
 		item = self._model.get_item(indices)
 		return hasattr(item, 'checked') and item.checked
 
-	def OnItemChecked(self, event):
+	def OnGetItemText(self, indices):
+		return self._model.get_text(indices)
+
+	def OnGetChildrenCount(self, indices):
+		return self._model.get_children_count(indices)
+
+	def _on_item_checked(self, event):
 		item = event.GetItem()
 		indices = self.GetIndexOfItem(item)
 		if self.GetItemType(item) == 2:
@@ -154,8 +152,6 @@ class FilterTreeCtrl(treemixin.VirtualTree, treemixin.ExpansionState,
 			self.RefreshSubtree(item)
 		event.Skip()
 
-	def OnGetItemText(self, indices):
-		return self._model.get_text(indices)
-
-	def OnGetChildrenCount(self, indices):
-		return self._model.get_children_count(indices)
+	def refresh(self):
+		self.ExpandAll()
+		wx.CallAfter(self.RefreshItems)

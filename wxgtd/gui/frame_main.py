@@ -13,7 +13,7 @@ import time
 
 import wx
 from wx import xrc
-#import wx.lib.customtreectrl as CT
+import wx.lib.customtreectrl as CT
 
 from wxgtd.lib import wxresources
 from wxgtd.lib.appconfig import AppConfig
@@ -23,6 +23,7 @@ from wxgtd.lib import iconprovider
 from wxgtd.model import objects as OBJ
 from wxgtd.gui import dlg_about
 from wxgtd.gui._filtertreectrl import FilterTreeCtrl
+from wxgtd.gui.dlg_task import DlgTask
 #from . import message_boxes as mbox
 
 _ = gettext.gettext
@@ -46,6 +47,7 @@ class FrameMain:
 		return ctrl
 
 	def _setup(self):
+		self._items_uuids = {}
 		items_list = self._items_list_ctrl
 		items_list.InsertColumn(0, _('Title'), width=400)
 		items_list.InsertColumn(1, _('Context'), width=100)
@@ -53,7 +55,6 @@ class FrameMain:
 		items_list.InsertColumn(3, _('Duo'), width=150)
 		self._filter_tree_ctrl.RefreshItems()
 		wx.CallAfter(self._refresh_list)
-		wx.CallAfter(self._filter_tree_ctrl.ExpandAll)
 
 	def _setup_wnd(self):
 		self.wnd.SetIcon(iconprovider.get_icon('wxgtd'))
@@ -90,11 +91,19 @@ class FrameMain:
 
 		self._filter_tree_ctrl.Bind(wx.EVT_TREE_ITEM_ACTIVATED,
 				self._on_filter_tree_item_activated)
-#		self._filter_tree_ctrl.Bind(CT.EVT_TREE_ITEM_CHECKED,
-#				self._on_filter_tree_item_selected)
+		self._filter_tree_ctrl.Bind(CT.EVT_TREE_ITEM_CHECKED,
+				self._on_filter_tree_item_selected)
+		self['rb_show_selection'].Bind(wx.EVT_RADIOBOX,
+				self._on_rb_show_selection)
+		self._items_list_ctrl.Bind(wx.EVT_LIST_ITEM_ACTIVATED,
+				self._on_items_list_activated)
 
 	def _create_toolbar(self):
 		toolbar = self.wnd.CreateToolBar()
+		tbi = toolbar.AddLabelTool(-1, _('New Task'), wx.ArtProvider.GetBitmap(
+				wx.ART_NEW, wx.ART_TOOLBAR), shortHelp=_('Add new task'))
+		self.wnd.Bind(wx.EVT_TOOL, self._on_menu_file_new_task, id=tbi.GetId())
+
 		toolbar.Realize()
 
 	def _set_size_pos(self):
@@ -120,19 +129,48 @@ class FrameMain:
 	def _on_menu_file_exit(self, _evt):
 		self.wnd.Close()
 
+	def _on_menu_file_new_task(self, _evt):
+		task = OBJ.Task()
+		dlg = DlgTask(self.wnd, task)
+		dlg.run()
+
 	def _on_menu_help_about(self, _evt):
 		""" Show about dialog """
 		dlg_about.show_about_box(self.wnd)
 
-	def _on_filter_tree_item_activated(self, _evt):
-		self._refresh_list()
+	def _on_filter_tree_item_activated(self, evt):
+		wx.CallAfter(self._refresh_list)
+		evt.Skip()
 
 	def _on_filter_tree_item_selected(self, evt):
+		wx.CallAfter(self._refresh_list)
 		evt.Skip()
+
+	def _on_rb_show_selection(self, evt):
+		wx.CallAfter(self._refresh_list)
+		evt.Skip()
+
+	def _on_items_list_activated(self, evt):
+		uuid = self._items_uuids[evt.GetData()]
+		task = OBJ.Task.get(uuid=uuid)
+		if task:
+			dlg = DlgTask(self.wnd, task)
+			dlg.run()
 
 	# logic
 
 	def _refresh_list(self):
+		group_id = self['rb_show_selection'].GetSelection()
+		if group_id == 0:  # all
+			pass
+		elif group_id == 1:  # Hot
+			pass
+		elif group_id == 2:  # Stared
+			pass
+		elif group_id == 3:  # basket
+			pass
+		elif group_id == 4:  # finished
+			pass
 		tmodel = self._filter_tree_ctrl.model
 		contexts = list(tmodel.checked_items_by_parent("CONTEXTS"))
 		folders = list(tmodel.checked_items_by_parent("FOLDERS"))
@@ -140,13 +178,20 @@ class FrameMain:
 		statuses = list(tmodel.checked_items_by_parent("STATUSES"))
 		tasks = OBJ.Task.select_by_filters(contexts, folders, goals, statuses)
 		items_list = self._items_list_ctrl
+		items_list.Freeze()
 		items_list.DeleteAllItems()
+		idx = 0
+		self._items_uuids.clear()
 		for task in tasks:
 			idx = items_list.InsertStringItem(sys.maxint, task.title)
 			items_list.SetStringItem(idx, 1, task.context.title if task.context
 					else '')
 			items_list.SetStringItem(idx, 2, task.status_name)
 			items_list.SetStringItem(idx, 3, format_date(task.due_date))
+			items_list.SetItemData(idx, idx)
+			self._items_uuids[idx] = task.uuid
+		items_list.Thaw()
+		self.wnd.SetStatusText(_("Showed %d items") % idx)
 
 
 def _update_color(wnd, bgcolor):
