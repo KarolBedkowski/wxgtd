@@ -74,7 +74,7 @@ class Task(BaseModel):
 			"prevent_auto_purge", "trash_bin", "metainf", "folder_uuid",
 			"context_uuid", "goal_uuid"]
 	_primary_keys = ['uuid']
-	_default_sort_order = "ordinal, title"
+	_default_sort_order = "title"
 
 	def __init__(self, *args, **kwargs):
 		BaseModel.__init__(self, *args, **kwargs)
@@ -106,7 +106,10 @@ class Task(BaseModel):
 				where_stmt.append(wstmt)
 				if wparams:
 					params.extend(wparams)
-		if group_id == 1:  # Hot
+		if group_id == 0:  # task, not completed
+			where_stmt.append('type=0')
+			where_stmt.append('(completed=0 or completed is null)')
+		elif group_id == 1:  # Hot
 			where_stmt.append('type=0')
 		elif group_id == 2:  # Stared
 			where_stmt.append('type=0')
