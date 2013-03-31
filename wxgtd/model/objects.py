@@ -186,3 +186,9 @@ def _create_params_list(column, values):
 	res += ','.join("?" * len(values))
 	res += '))'
 	return res, values
+
+
+class Conf(sorm.Model):
+	_table_name = 'wxgtd'
+	_fields = ['key', 'val']
+	_primary_keys = ['key']

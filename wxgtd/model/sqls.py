@@ -106,6 +106,6 @@ create table if not exists goals (
 	color number,
 	visible number)""",
 	"""
-create table if not exists wxgtg (
+create table if not exists wxgtd (
 	key varchar(32) primary key,
 	val text)"""])
