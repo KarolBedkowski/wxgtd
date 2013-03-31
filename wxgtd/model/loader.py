@@ -28,8 +28,11 @@ def _create_or_update(cls, datadict, cache=None):
 	uuid = datadict.pop('uuid')
 	obj = cls.get(uuid=uuid)
 	if obj:
-		obj.load_from_dict(datadict)
-		obj.update()
+		modified = datadict.get('modified')
+		if not modified or modified > obj.modified:
+			# load only modified objs
+			obj.load_from_dict(datadict)
+			obj.update()
 	else:
 		obj = cls(uuid=uuid)
 		obj.load_from_dict(datadict)
@@ -47,20 +50,26 @@ def _replace_ids(objdict, cache, key_id, key_uuid=None):
 			key_uuid = key_uuid or (key_id[:-2] + 'uuid')
 			objdict[key_uuid] = uuid
 		else:
-			_LOG.warn('missing key in cache %r', repr((objdict, key_id, key_uuid)))
+			_LOG.warn('missing key in cache %r', repr((objdict, key_id,
+					key_uuid)))
 	else:
 		_LOG.warn('missing key %r', repr((objdict, key_id, key_uuid)))
+
+
+def str2timestamp(string):
+	""" Convert timestamps like '2013-03-22T21:27:46.461Z'"""
+	if string and len(string) > 18:
+		try:
+			return time.mktime(time.strptime(string[:19], "%Y-%m-%dT%H:%M:%S"))
+		except:
+			_LOG.exception("str2timestamp %r", string)
 
 
 def _convert_timestamps(dictobj, *fields):
 	def convert(field):
 		value = dictobj.get(field)
-		if value:
-			try:
-				val = time.mktime(time.strptime(value[:19], "%Y-%m-%dT%H:%M:%S"))
-				dictobj[field] = val
-			except:
-				_LOG.exception("_convert_timestamps %r=%r", field, value)
+		value = str2timestamp(value)
+		dictobj[field] = value
 
 	for field in ('created', 'modified', 'deleted'):
 		convert(field)
@@ -68,8 +77,35 @@ def _convert_timestamps(dictobj, *fields):
 		convert(field)
 
 
+def _delete_missing(objcls, ids, last_sync):
+	""" skasowanie starych obiektów klasy objcls, których uuid-y nie są w ids,
+		o ile data modyfikacji < last_sync """
+	objs = objcls.selecy_by_modified_is_less(last_sync)
+	to_delete = []
+	for obj in objs:
+		if obj.uuid not in ids:
+			to_delete.append(obj)
+	for obj in to_delete:
+		_LOG.info("_delete_missing %r", obj)
+		obj.delete()
+
+
 def load_json(strdata):
 	data = cjson.decode(strdata)
+
+	last_sync = 0
+	c_last_sync = objects.Conf.get(key='last_sync')
+	if c_last_sync:
+		last_sync = c_last_sync.val
+	else:
+		c_last_sync = objects.Conf(key='last_sync')
+
+	file_sync_time_str = data.get('syncLog')[0].get('syncTime')
+	file_sync_time = str2timestamp(file_sync_time_str)
+
+	if last_sync > file_sync_time:
+		_LOG.info("no loading file time=%r, last sync=%r", last_sync,
+				file_sync_time_str)
 
 	folders_cache = {}
 	folders = data.get('folder')
@@ -96,17 +132,19 @@ def load_json(strdata):
 		task['goal_uuid'] = None
 		_create_or_update(objects.Task, task, tasks_cache)
 
+	tasknotes_cache = {}
 	tasknotes = data.get('tasknote')
 	for tasknote in tasknotes or []:
 		_replace_ids(tasknote, tasks_cache, 'task_id')
 		_convert_timestamps(tasknote)
-		_create_or_update(objects.Tasknote, tasknote)
+		_create_or_update(objects.Tasknote, tasknote, tasknotes_cache)
 
+	alarms_cache = {}
 	alarms = data.get('alarm')
 	for alarm in alarms or []:
 		_replace_ids(alarm, tasks_cache, 'task_id')
 		_convert_timestamps(alarm, 'alarm')
-		_create_or_update(objects.Alarm, alarm)
+		_create_or_update(objects.Alarm, alarm, alarms_cache)
 
 	task_folders = data.get('task_folder')
 	for task_folder in task_folders or []:
@@ -129,6 +167,18 @@ def load_json(strdata):
 		task = objects.Task.get(uuid=task_uuid)
 		task.context_uuid = context_uuid
 		task.update()
+
+	# pokasowanie staroci
+	_delete_missing(objects.Task, tasks_cache, file_sync_time)
+	_delete_missing(objects.Folder, folders_cache, file_sync_time)
+	_delete_missing(objects.Context, contexts_cache, file_sync_time)
+	_delete_missing(objects.Tasknote, tasknotes_cache, file_sync_time)
+	_delete_missing(objects.Alarm, alarms_cache, file_sync_time)
+
+	c_last_sync.val = time.time()
+	c_last_sync.save_or_update()
+
+	c_last_sync.connection.commit()
 
 
 def test():
