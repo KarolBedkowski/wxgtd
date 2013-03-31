@@ -18,10 +18,11 @@ except ImportError:
 	from wx.lib.pubsub import Publisher
 
 from wxgtd.model import objects as OBJ
-from wxgtd.wxtools import validators
-from wxgtd.wxtools.validators import length as LVALID
+from wxgtd.wxtools.validators import Validator, ValidatorDv
+from wxgtd.wxtools.validators import v_length as LVALID
 
 from _base_dialog import BaseDialog
+from dlg_datetime import DlgDateTime
 
 _LOG = logging.getLogger(__name__)
 
@@ -36,6 +37,7 @@ class DlgTask(BaseDialog):
 		BaseDialog.__init__(self, parent, 'dlg_task')
 		self._setup_comboboxes()
 		self._setup(task)
+		self._refresh_dates()
 
 	def _load_controls(self, wnd):
 		BaseDialog._load_controls(self, wnd)
@@ -43,24 +45,33 @@ class DlgTask(BaseDialog):
 
 	def _create_bindings(self):
 		BaseDialog._create_bindings(self)
+		self['btn_due_date_set'].Bind(wx.EVT_BUTTON, self._on_btn_due_date_set)
+		self['btn_start_date_set'].Bind(wx.EVT_BUTTON, self._on_btn_start_date_set)
 
 	def _setup(self, task):
 		_LOG.debug("DlgTask(%r)", task)
 		self._task = task
-		self['tc_title'].SetValidator(validators.Validator(task, 'title',
+		self._dates = {}
+		self._dates['due_time'] = self._dates['due_date'] = task.due_date
+		self._dates['start_time'] = self._dates['start_date'] = task.start_date
+
+		self['tc_title'].SetValidator(Validator(task, 'title',
 				validators=LVALID.NotEmptyValidator(), field='title'))
-		self['cb_stared'].SetValidator(validators.Validator(task, 'starred'))
-		self['cb_status'].SetValidator(validators.ValidatorDv(task, 'status'))
-		self['cb_context'].SetValidator(validators.ValidatorDv(task, 'context_uuid'))
-		self['cb_folder'].SetValidator(validators.ValidatorDv(task, 'folder_uuid'))
-		self['cb_goal'].SetValidator(validators.ValidatorDv(task, 'goal_uuid'))
-		self['cb_type'].SetValidator(validators.ValidatorDv(task, 'type'))
+		self['cb_status'].SetValidator(ValidatorDv(task, 'status'))
+		self['cb_context'].SetValidator(ValidatorDv(task, 'context_uuid'))
+		self['cb_folder'].SetValidator(ValidatorDv(task, 'folder_uuid'))
+		self['cb_goal'].SetValidator(ValidatorDv(task, 'goal_uuid'))
+		self['cb_type'].SetValidator(ValidatorDv(task, 'type'))
 		# parent == projekt/lista
-		self['cb_project'].SetValidator(validators.ValidatorDv(task,
+		self['cb_project'].SetValidator(ValidatorDv(task,
 				'parent_uuid'))
-		self['l_uuid'].SetLabel(str(task.uuid))
 		self['l_created'].SetLabel(str(time.asctime(time.localtime(task.created))))
 		self['l_modified'].SetLabel(str(time.asctime(time.localtime(task.modified))))
+		#self['tc_tags'].SetValidator(Validator(task, 'tags'))
+		self['tc_tags'].Disable()  # not in use
+		self['cb_completed'].SetValidator(Validator(task, 'task_completed'))
+		self['cb_starred'].SetValidator(Validator(task, 'starred'))
+		self['sl_priority'].SetValidator(Validator(task, 'priority'))
 
 	def _setup_comboboxes(self):
 		cb_status = self['cb_status']
@@ -92,3 +103,34 @@ class DlgTask(BaseDialog):
 		self._task.connection.commit()
 		Publisher.sendMessage('task.update', data={'task_uuid': self._task.uuid})
 		self._on_ok(evt)
+
+	def _on_btn_due_date_set(self, _evt):
+		self._set_date('due_date', 'due_time_set')
+
+	def _on_btn_start_date_set(self, _evt):
+		self._set_date('start_date', 'start_time_set')
+
+	def _refresh_dates(self):
+		""" Odświeżenie pól dat na dlg """
+		task = self._task
+		self['l_due'].SetLabel(format_timestamp(task.due_date,
+				task.due_time_set))
+		self['l_start_date'].SetLabel(format_timestamp(task.start_date,
+				task.start_time_set))
+
+	def _set_date(self, attr_date, attr_time_set):
+		""" Wyśweitlenie dlg wyboru daty dla danego atrybutu """
+		dlg = DlgDateTime(self._wnd, getattr(self._task, attr_date),
+				getattr(self._task, attr_time_set))
+		if dlg.run(True):
+			setattr(self._task, attr_date, dlg.timestamp)
+			setattr(self._task, attr_time_set, dlg.is_time_set)
+			self._refresh_dates()
+
+
+def format_timestamp(timestamp, show_time):
+	if not timestamp:
+		return ""
+	if show_time:
+		return time.strftime("%x %X", time.localtime(timestamp))
+	return time.strftime("%x", time.localtime(timestamp))
