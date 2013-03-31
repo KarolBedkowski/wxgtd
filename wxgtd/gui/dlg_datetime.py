@@ -23,14 +23,19 @@ class DlgDateTime(BaseDialog):
 	Dlg wyboru daty i czasu (opcjonalnie)
 	"""
 
-	def __init__(self, parent, timestamp):
+	def __init__(self, parent, timestamp, timeset):
 		BaseDialog.__init__(self, parent, 'dlg_datetime')
-		self._setup(timestamp)
+		self._setup(timestamp, timeset)
+		self._timeset = timeset
 		self._timestamp = timestamp
 
 	@property
 	def timestamp(self):
 		return self._timestamp
+
+	@property
+	def is_time_set(self):
+		return self._
 
 	def _load_controls(self, wnd):
 		BaseDialog._load_controls(self, wnd)
@@ -39,20 +44,21 @@ class DlgDateTime(BaseDialog):
 	def _create_bindings(self):
 		BaseDialog._create_bindings(self)
 
-	def _setup(self, timestamp):
+	def _setup(self, timestamp, timeset):
 		_LOG.debug("DlgDateTime(%r)", timestamp)
-		self._values = {'date': timestamp, 'time': timestamp}
+		self._values = {'date': timestamp,
+				'time': (timestamp if timeset else 0)}
 		if timestamp:
 			self['cc_date'].SetValidator(ValidatorDate(self._values, 'date'))
 			self['tc_time'].SetValidator(ValidatorTime(self._values, 'time'))
 			self['rb_date'].SetValue(True)
-			self['cb_set_time'].SetValue(True)  # TODO: wybór
+			self['cb_set_time'].SetValue(timeset)
 
 	def _on_ok(self, evt):
 		if self['rb_no_date'].GetValue():
 			# nie wybrano daty
 			self._timestamp = None
-			self._on_ok(evt)
+			BaseDialog._on_ok(evt)
 			return
 		if not self._wnd.Validate():
 			return
