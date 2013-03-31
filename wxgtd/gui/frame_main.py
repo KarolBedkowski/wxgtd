@@ -170,26 +170,17 @@ class FrameMain:
 
 	def _refresh_list(self):
 		group_id = self['rb_show_selection'].GetSelection()
-		if group_id == 0:  # all
-			pass
-		elif group_id == 1:  # Hot
-			pass
-		elif group_id == 2:  # Stared
-			pass
-		elif group_id == 3:  # basket
-			pass
-		elif group_id == 4:  # finished
-			pass
 		tmodel = self._filter_tree_ctrl.model
 		contexts = list(tmodel.checked_items_by_parent("CONTEXTS"))
 		folders = list(tmodel.checked_items_by_parent("FOLDERS"))
 		goals = list(tmodel.checked_items_by_parent("GOALS"))
 		statuses = list(tmodel.checked_items_by_parent("STATUSES"))
-		tasks = OBJ.Task.select_by_filters(contexts, folders, goals, statuses)
 		items_list = self._items_list_ctrl
 		items_list.Freeze()
 		items_list.DeleteAllItems()
 		idx = 0
+		tasks = OBJ.Task.select_by_filters(contexts, folders, goals, statuses,
+				group_id)
 		self._items_uuids.clear()
 		for task in tasks:
 			idx = items_list.InsertStringItem(sys.maxint, task.title)

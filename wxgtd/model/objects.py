@@ -95,7 +95,7 @@ class Task(BaseModel):
 		return cls.select(where_stmt="completed is not null")
 
 	@classmethod
-	def select_by_filters(cls, contexts, folders, goals, statuses):
+	def select_by_filters(cls, contexts, folders, goals, statuses, group_id):
 		where_stmt = []
 		params = []
 		for column, ids in (('context_uuid', contexts),
@@ -106,6 +106,21 @@ class Task(BaseModel):
 				where_stmt.append(wstmt)
 				if wparams:
 					params.extend(wparams)
+		if group_id == 1:  # Hot
+			where_stmt.append('type=0')
+		elif group_id == 2:  # Stared
+			where_stmt.append('type=0')
+			where_stmt.append('starred=1')
+		elif group_id == 3:  # basket
+			where_stmt.append('type=0')
+		elif group_id == 4:  # finished
+			where_stmt.append('type=0')
+			where_stmt.append('completed > 0')
+		elif group_id == 5:  # project
+			where_stmt.append('type=1')
+		elif group_id == 6:  # checklist
+			where_stmt.append('type=2')
+
 		where = ' AND '.join(where_stmt)
 		sql, query_params = cls._create_select_query(where_stmt=where)
 		query_params.extend(params)
