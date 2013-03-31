@@ -21,6 +21,7 @@ __all__ = ['Validator', 'ValidatorDv']
 
 import types
 import gettext
+import time
 
 import wx
 import wx.calendar
@@ -166,7 +167,7 @@ class Validator(wx.PyValidator):
 	def _set_value_to_control(self, value):
 		""" Ustawienei wartości w widgecie """
 		control = self.GetWindow()
-		if isinstance(control, wx.lib.masked.NumCtrl):
+		if isinstance(control, (wx.lib.masked.NumCtrl, wx.Slider)):
 			control.SetValue(value or 0)
 		elif isinstance(control, (wx.CheckBox, wx.RadioButton)):
 			control.SetValue(bool(value))
@@ -200,3 +201,50 @@ class ValidatorDv(Validator):
 		except:
 			pass
 		return value
+
+
+class ValidatorDate(Validator):
+	""" Walidator dla wxDatePicker, wartości proste - timestamp"""
+
+	def _set_value_to_control(self, value):
+		ctrl = self.GetWindow()
+		assert isinstance(ctrl, (wx.calendar.CalendarCtrl, wx.DatePickerCtrl)), \
+				'Invalid control %r' % ctrl
+		if value:
+			date = wx.DateTime()
+			date.SetTimeT(value)
+			if isinstance(ctrl, wx.calendar.CalendarCtrl):
+				ctrl.SetDate(date)
+			else:
+				ctrl.SetValue(date)
+
+	def _get_value_from_control(self):
+		ctrl = self.GetWindow()
+		if isinstance(ctrl, wx.calendar.CalendarCtrl):
+			datetime = ctrl.GetDate()
+		else:
+			datetime = ctrl.GetValue()
+		if not datetime.IsValid():
+			return None
+		datetime.SetHour(0)
+		datetime.SetMinute(0)
+		datetime.SetSecond(0)
+		return datetime.GetTicks()
+
+
+class ValidatorTime(Validator):
+	""" Walidator dla wxTextCtrl, który zawiera czas w formacie %X,
+		wartości proste - timestamp"""
+
+	def _set_value_to_control(self, value):
+		ctrl = self.GetWindow()
+		assert isinstance(ctrl, wx.TextCtrl), 'Invalid control %r' % ctrl
+		ctrl.SetValue(time.strftime('%X', time.localtime(value)))
+
+	def _get_value_from_control(self):
+		ctrl = self.GetWindow()
+		timestr = ctrl.GetValue()
+		if timestr:
+			value = time.strptime(timestr, '%X')
+			return 3600 * value.tm_hour + 60 * value.tm_min + value.tm_sec
+		return None
