@@ -8,6 +8,8 @@ __author__ = "Karol Będkowski"
 __copyright__ = "Copyright (c) Karol Będkowski, 2010-2013"
 __version__ = "2010-11-25"
 
+import time
+import logging
 
 import wx
 try:
@@ -20,6 +22,8 @@ from wxgtd.wxtools import validators
 from wxgtd.wxtools.validators import length as LVALID
 
 from _base_dialog import BaseDialog
+
+_LOG = logging.getLogger(__name__)
 
 
 class DlgTask(BaseDialog):
@@ -41,6 +45,7 @@ class DlgTask(BaseDialog):
 		BaseDialog._create_bindings(self)
 
 	def _setup(self, task):
+		_LOG.debug("DlgTask(%r)", task)
 		self._task = task
 		self['tc_title'].SetValidator(validators.Validator(task, 'title',
 				validators=LVALID.NotEmptyValidator(), field='title'))
@@ -50,6 +55,12 @@ class DlgTask(BaseDialog):
 		self['cb_folder'].SetValidator(validators.ValidatorDv(task, 'folder_uuid'))
 		self['cb_goal'].SetValidator(validators.ValidatorDv(task, 'goal_uuid'))
 		self['cb_type'].SetValidator(validators.ValidatorDv(task, 'type'))
+		# parent == projekt/lista
+		self['cb_project'].SetValidator(validators.ValidatorDv(task,
+				'parent_uuid'))
+		self['l_uuid'].SetLabel(str(task.uuid))
+		self['l_created'].SetLabel(str(time.asctime(time.localtime(task.created))))
+		self['l_modified'].SetLabel(str(time.asctime(time.localtime(task.modified))))
 
 	def _setup_comboboxes(self):
 		cb_status = self['cb_status']
@@ -67,6 +78,10 @@ class DlgTask(BaseDialog):
 		cb_goal = self['cb_goal']
 		for goal in OBJ.Goal.all():
 			cb_goal.Append(goal.title, goal.uuid)
+		cb_project = self['cb_project']
+		for project in OBJ.Task.select_by_filters(None, None, None, None, 5):
+			# projects
+			cb_project.Append(project.title, project.uuid)
 
 	def _on_save(self, evt):
 		if not self._wnd.Validate():
