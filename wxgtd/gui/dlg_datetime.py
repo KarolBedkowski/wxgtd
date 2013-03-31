@@ -19,8 +19,8 @@ _LOG = logging.getLogger(__name__)
 
 
 class DlgDateTime(BaseDialog):
-	"""
-	Dlg wyboru daty i czasu (opcjonalnie)
+	""" Dlg wyboru daty i czasu (opcjonalnie)
+	TODO: maska na timestamp
 	"""
 
 	def __init__(self, parent, timestamp, timeset):
@@ -35,7 +35,7 @@ class DlgDateTime(BaseDialog):
 
 	@property
 	def is_time_set(self):
-		return self._
+		return self._timeset
 
 	def _load_controls(self, wnd):
 		BaseDialog._load_controls(self, wnd)
@@ -48,23 +48,25 @@ class DlgDateTime(BaseDialog):
 		_LOG.debug("DlgDateTime(%r)", timestamp)
 		self._values = {'date': timestamp,
 				'time': (timestamp if timeset else 0)}
+		self['cc_date'].SetValidator(ValidatorDate(self._values, 'date'))
+		self['tc_time'].SetValidator(ValidatorTime(self._values, 'time'))
 		if timestamp:
-			self['cc_date'].SetValidator(ValidatorDate(self._values, 'date'))
-			self['tc_time'].SetValidator(ValidatorTime(self._values, 'time'))
 			self['rb_date'].SetValue(True)
-			self['cb_set_time'].SetValue(timeset)
+		self['cb_set_time'].SetValue(timeset)
 
 	def _on_ok(self, evt):
 		if self['rb_no_date'].GetValue():
 			# nie wybrano daty
 			self._timestamp = None
-			BaseDialog._on_ok(evt)
+			self._timeset = None
+			BaseDialog._on_ok(self, evt)
 			return
 		if not self._wnd.Validate():
 			return
 		if not self._wnd.TransferDataFromWindow():
 			return
 		self._timestamp = int(self._values['date'])
-		if self['cb_set_time'].GetValue():
+		self._timeset = self['cb_set_time'].GetValue()
+		if self._timeset:
 			self._timestamp += int(self._values['time'])
 		BaseDialog._on_ok(self, evt)
