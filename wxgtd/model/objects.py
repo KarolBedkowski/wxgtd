@@ -32,7 +32,6 @@ STATUSES = {0: _("No Status"),  # no status
 		9: _("Canceled"),
 		10: _("Reference")}
 
-
 TYPES = {0: _("Task"),
 		1: _("Project"),
 		2: _("Checklist"),
@@ -56,6 +55,10 @@ class BaseModel(sorm.Model):
 	def update(self):
 		self.modified = time.time()
 		sorm.Model.update(self)
+
+	@classmethod
+	def selecy_by_modified_is_less(cls, timestamp):
+		return cls.select(where_stmt=("modified < %d" % timestamp))
 
 
 class Task(BaseModel):
