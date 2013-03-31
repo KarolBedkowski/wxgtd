@@ -13,9 +13,11 @@ __version__ = "2011-05-15"
 
 
 import logging
+import uuid
 
 import sorm
 import sqls
+import objects
 
 _LOG = logging.getLogger(__name__)
 
@@ -27,4 +29,13 @@ def connect(*argv, **kwargs):
 		for schema in sqls.SCHEMA_DEF:
 			for sql in schema:
 				cursor.executescript(sql)
+	# bootstrap
+	# 1. deviceId
+	conf = objects.Conf.get(key='deviceId')
+	if conf is None:
+		conf = objects.Conf(key='deviceId')
+		conf.val = str(uuid.uuid4())
+		conf.save()
+		_LOG.info('DB bootstrap: create deviceId=%r', conf.val)
+		dbconn.commit()
 	return dbconn
