@@ -62,7 +62,12 @@ class BaseModel(sorm.Model):
 
 
 class Task(BaseModel):
-	"""Task"""
+	"""Task
+
+	TODO:
+		- tagi
+		- importance - nie używane (?)
+	"""
 	_table_name = "tasks"
 	_fields = ["parent_uuid", "uuid", "created", "modified", "completed",
 			"deleted", "ordinal", "title", "note", "type", "starred",
@@ -85,6 +90,17 @@ class Task(BaseModel):
 	@property
 	def status_name(self):
 		return STATUSES.get(self.status or 0, '?')
+
+	def _get_task_completed(self):
+		return bool(self.completed)
+
+	def _set_task_completed(self, value):
+		if value:
+			self.completed = time.time()
+		else:
+			self.completed = None
+
+	task_completed = property(_get_task_completed, _set_task_completed)
 
 	@classmethod
 	def get_stared(cls):
