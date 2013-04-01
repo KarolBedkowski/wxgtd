@@ -41,7 +41,6 @@ class DlgTask(BaseDialog):
 
 	def _load_controls(self, wnd):
 		BaseDialog._load_controls(self, wnd)
-		wnd.SetExtraStyle(wx.WS_EX_VALIDATE_RECURSIVELY)
 
 	def _create_bindings(self):
 		BaseDialog._create_bindings(self)
@@ -54,9 +53,9 @@ class DlgTask(BaseDialog):
 		self._dates = {}
 		self._dates['due_time'] = self._dates['due_date'] = task.due_date
 		self._dates['start_time'] = self._dates['start_date'] = task.start_date
-
 		self['tc_title'].SetValidator(Validator(task, 'title',
 				validators=LVALID.NotEmptyValidator(), field='title'))
+		self['tc_note'].SetValidator(Validator(task, 'note',))
 		self['cb_status'].SetValidator(ValidatorDv(task, 'status'))
 		self['cb_context'].SetValidator(ValidatorDv(task, 'context_uuid'))
 		self['cb_folder'].SetValidator(ValidatorDv(task, 'folder_uuid'))
@@ -67,8 +66,6 @@ class DlgTask(BaseDialog):
 				'parent_uuid'))
 		self['l_created'].SetLabel(str(time.asctime(time.localtime(task.created))))
 		self['l_modified'].SetLabel(str(time.asctime(time.localtime(task.modified))))
-		#self['tc_tags'].SetValidator(Validator(task, 'tags'))
-		self['tc_tags'].Disable()  # not in use
 		self['cb_completed'].SetValidator(Validator(task, 'task_completed'))
 		self['cb_starred'].SetValidator(Validator(task, 'starred'))
 		self['sl_priority'].SetValidator(Validator(task, 'priority'))
