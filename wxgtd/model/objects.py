@@ -145,9 +145,9 @@ class Task(BaseModel):
 			where_stmt.append('due_date <= %d' % max_due_date)
 		if finished is not None:
 			if finished:
-				where_stmt.append("(completed='' or completed is null)")
-			else:
 				where_stmt.append("(completed<>'' and completed is not null)")
+			else:
+				where_stmt.append("(completed='' or completed is null)")
 		if parent_uuid is not None:
 			where_stmt.append("parent_uuid='%s'" % parent_uuid)
 		where = ' AND '.join(where_stmt)
