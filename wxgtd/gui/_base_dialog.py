@@ -30,6 +30,8 @@ class BaseDialog:
 		assert res is not None, 'resource %s not found' % resource
 		self._wnd = res.LoadDialog(parent, name)
 		assert self._wnd is not None, 'wnd %s not found in %s' % (name, resource)
+		self._wnd.SetExtraStyle(wx.WS_EX_VALIDATE_RECURSIVELY)
+		_fix_panels(self._wnd)
 		self._appconfig = AppConfig()
 		self._load_controls(self._wnd)
 		self._create_bindings()
@@ -112,3 +114,17 @@ class BaseDialog:
 
 	def _on_save(self, evt):
 		self._on_ok(evt)
+
+
+def _fix_panels(wnd):
+	""" Rekursywne ustawienie własności na widgetach """
+	for child in wnd.GetChildren():
+		if isinstance(child, wx.Panel):
+			if wx.Platform == '__WXMSW__':
+				child.SetBackgroundColour(wx.SystemSettings.GetColour(
+						wx.SYS_COLOUR_ACTIVEBORDER))
+			_fix_panels(child)
+		elif isinstance(child, wx.Notebook):
+			# bez tego walidatory nie działają
+			child.SetExtraStyle(wx.WS_EX_VALIDATE_RECURSIVELY)
+			_fix_panels(child)
