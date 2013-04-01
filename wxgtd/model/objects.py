@@ -243,3 +243,20 @@ class Conf(sorm.Model):
 	_table_name = 'wxgtd'
 	_fields = ['key', 'val']
 	_primary_keys = ['key']
+
+
+class Tag(BaseModel):
+	""" Obiekt tag.
+	Task może mieć wiele tagów."""
+
+	_table_name = 'tags'
+	_fields = ["parent_uuid", "uuid", "created", "modified",
+			"deleted", "ordinal", "title", "note", "bg_color", "visible"]
+	_primary_keys = ['uuid']
+	_default_sort_order = "title"
+
+
+class TaskTag(sorm.Model):
+	_table_name = "task_tags"
+	_fields = ["task_uuid", "tag_uuid"]
+	_primary_keys = ['task_uuid, tag_uuid']

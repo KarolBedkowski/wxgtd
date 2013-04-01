@@ -106,6 +106,22 @@ create table if not exists goals (
 	color number,
 	visible number)""",
 	"""
+create table if not exists tags (
+	parent_uuid varchar(36) references tags(uuid),
+	uuid varchar(36) primary key,
+	created timestamp,
+	modified timestamp,
+	deleted timestamp,
+	ordinal integer,
+	title text,
+	note text,
+	bg_color integer,
+	visible number)""",
+	"""
+create table if not exists task_tags (
+	task_uuid varchar(36) references tasks(uuid),
+	tag_uuid varchar(36) references tags(uuid))""",
+	"""
 create table if not exists wxgtd (
 	key varchar(32) primary key,
 	val text)"""])
