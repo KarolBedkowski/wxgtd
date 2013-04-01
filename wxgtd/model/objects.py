@@ -35,7 +35,7 @@ STATUSES = {0: _("No Status"),  # no status
 TYPE_TASK = 0
 TYPE_PROJECT = 1
 TYPE_CHECKLIST = 2
-TYPE_CHECKLIST_ITEM = 2
+TYPE_CHECKLIST_ITEM = 3
 
 TYPES = {TYPE_TASK: _("Task"),
 		TYPE_PROJECT: _("Project"),
@@ -134,7 +134,7 @@ class Task(BaseModel):
 			if len(types) == 1:
 				where_stmt.append("type=%d" % types[0])
 			else:
-				where_stmt.append("types in (%s)" % ",".join(map(str, types)))
+				where_stmt.append("type in (%s)" % ",".join(map(str, types)))
 		if starred:
 			where_stmt.append('starred=1')
 		if min_priority is not None:
@@ -148,7 +148,9 @@ class Task(BaseModel):
 				where_stmt.append("(completed<>'' and completed is not null)")
 			else:
 				where_stmt.append("(completed='' or completed is null)")
-		if parent_uuid is not None:
+		if parent_uuid == 0:
+			where_stmt.append("parent_uuid is null")
+		elif parent_uuid:
 			where_stmt.append("parent_uuid='%s'" % parent_uuid)
 		where = ' AND '.join(where_stmt)
 		sql, query_params = cls._create_select_query(where_stmt=where)
