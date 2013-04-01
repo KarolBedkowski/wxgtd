@@ -125,6 +125,12 @@ def run():
 	if not db_filename:
 		db_filename = os.path.join(config.user_share_dir, 'wxgtd.db')
 
+	# utworzenie katalogu
+	db_dirname = os.path.dirname(db_filename)
+	if not os.path.isdir(db_dirname):
+		os.mkdir(db_dirname)
+
+
 	if sys.platform == 'win32':
 		wx.Locale.AddCatalogLookupPathPrefix(config.locales_dir)
 		wxloc = wx.Locale(wx.LANGUAGE_DEFAULT)
