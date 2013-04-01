@@ -9,6 +9,7 @@ __version__ = "2011-03-29"
 
 import sys
 import gettext
+import logging
 
 import wx
 from wx import xrc
@@ -32,6 +33,7 @@ from wxgtd.gui import _fmt as fmt
 #from . import message_boxes as mbox
 
 _ = gettext.gettext
+_LOG = logging.getLogger(__name__)
 
 
 class FrameMain:
@@ -55,10 +57,11 @@ class FrameMain:
 		self._items_uuids = {}
 		self._items_path = []
 		items_list = self._items_list_ctrl
-		items_list.InsertColumn(0, _('Title'), width=400)
-		items_list.InsertColumn(1, _('Context'), width=100)
-		items_list.InsertColumn(2, _('Status'), width=100)
-		items_list.InsertColumn(3, _('Duo'), width=150)
+		items_list.InsertColumn(0, _('Type'), width=50)
+		items_list.InsertColumn(1, _('Title'), width=400)
+		items_list.InsertColumn(2, _('Context'), width=100)
+		items_list.InsertColumn(3, _('Status'), width=100)
+		items_list.InsertColumn(4, _('Duo'), width=150)
 		self._filter_tree_ctrl.RefreshItems()
 		wx.CallAfter(self._refresh_list)
 
@@ -137,6 +140,8 @@ class FrameMain:
 		if dlg.ShowModal() == wx.ID_OK:
 			filename = dlg.GetPath()
 			loader.load_from_file(filename)
+			self._filter_tree_ctrl.RefreshItems()
+			Publisher.sendMessage('task.update')
 		dlg.Destroy()
 
 	def _on_menu_file_exit(self, _evt):
@@ -160,6 +165,7 @@ class FrameMain:
 		evt.Skip()
 
 	def _on_rb_show_selection(self, evt):
+		self._items_path = []
 		wx.CallAfter(self._refresh_list)
 		evt.Skip()
 
@@ -197,6 +203,9 @@ class FrameMain:
 				if self._items_path else None
 		if group_id == 0:  # all
 			params['finished'] = False
+			if not parent:
+				# tylko nadrzędne
+				params['parent_uuid'] = 0
 		elif group_id == 1:  # hot
 			# TODO: dodać obsługę hotlisty
 			# będzie to problematyczne, bo hotlista może działać na and-ach lub
@@ -220,17 +229,19 @@ class FrameMain:
 			else:
 				params['types'] = [OBJ.TYPE_CHECKLIST]
 
+		_LOG.debug("FrameMain._refresh_list; params=%r", params)
 		tasks = OBJ.Task.select_by_filters(**params)
 		items_list = self._items_list_ctrl
 		items_list.Freeze()
 		items_list.DeleteAllItems()
 		self._items_uuids.clear()
 		for task in tasks:
-			idx = items_list.InsertStringItem(sys.maxint, task.title)
-			items_list.SetStringItem(idx, 1, task.context.title if task.context
+			idx = items_list.InsertStringItem(sys.maxint, OBJ.TYPES[task.type])
+			items_list.SetStringItem(idx, 1, task.title)
+			items_list.SetStringItem(idx, 2, task.context.title if task.context
 					else '')
-			items_list.SetStringItem(idx, 2, task.status_name)
-			items_list.SetStringItem(idx, 3, fmt.format_timestamp(task.due_date,
+			items_list.SetStringItem(idx, 3, task.status_name)
+			items_list.SetStringItem(idx, 4, fmt.format_timestamp(task.due_date,
 					task.due_time_set))
 			items_list.SetItemData(idx, idx)
 			self._items_uuids[idx] = task
