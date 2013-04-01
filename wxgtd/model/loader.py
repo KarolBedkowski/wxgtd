@@ -17,10 +17,14 @@ import objects
 _LOG = logging.getLogger()
 
 
-def load_from_zip(filename):
+def load_from_file(filename):
 	"""Load data from zipfile"""
-	with zipfile.ZipFile(filename, 'r') as zfile:
-		load_json(zfile.read())
+	if filename.endswith('.zip'):
+		with zipfile.ZipFile(filename, 'r') as zfile:
+			load_json(zfile.read())
+	else:
+		with open(filename, 'r') as ifile:
+			load_json(ifile.read())
 
 
 def _create_or_update(cls, datadict, cache=None):

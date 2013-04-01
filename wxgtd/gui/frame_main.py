@@ -24,6 +24,7 @@ from wxgtd.lib import iconprovider
 #from wxgtd.lib import wxutils
 
 from wxgtd.model import objects as OBJ
+from wxgtd.model import loader
 from wxgtd.gui import dlg_about
 from wxgtd.gui._filtertreectrl import FilterTreeCtrl
 from wxgtd.gui.dlg_task import DlgTask
@@ -132,7 +133,11 @@ class FrameMain:
 		self.wnd.Destroy()
 
 	def _on_menu_file_load(self, _evt):
-		pass
+		dlg = wx.FileDialog(self.wnd, style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST)
+		if dlg.ShowModal() == wx.ID_OK:
+			filename = dlg.GetPath()
+			loader.load_from_file(filename)
+		dlg.Destroy()
 
 	def _on_menu_file_exit(self, _evt):
 		self.wnd.Close()
