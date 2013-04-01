@@ -72,7 +72,7 @@ class FilterTreeModel(object):
 				TreeItemCB(_("No Folder"), None),
 				*tuple(TreeItemCB(folder.title, folder.uuid)
 						for folder in OBJ.Folder.all())))
-		self._items.append(TreeItemCB(_("Goals"), "GOLALS",
+		self._items.append(TreeItemCB(_("Goals"), "GOALS",
 				TreeItemCB(_("No goal"), None),
 				*tuple(TreeItemCB(goal.title, goal.uuid)
 						for goal in OBJ.Goal.all())))
