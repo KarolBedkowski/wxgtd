@@ -258,5 +258,5 @@ class Tag(BaseModel):
 
 class TaskTag(sorm.Model):
 	_table_name = "task_tags"
-	_fields = ["task_uuid", "tag_uuid"]
+	_fields = ["task_uuid", "tag_uuid", "modified", "created"]
 	_primary_keys = ['task_uuid, tag_uuid']

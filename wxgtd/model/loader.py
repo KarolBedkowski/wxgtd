@@ -14,7 +14,7 @@ import time
 
 import objects
 
-_LOG = logging.getLogger()
+_LOG = logging.getLogger(__name__)
 
 
 def load_from_file(filename):
@@ -48,16 +48,19 @@ def _create_or_update(cls, datadict, cache=None):
 
 def _replace_ids(objdict, cache, key_id, key_uuid=None):
 	key = objdict.get(key_id)
+	res = None
 	if key:
 		uuid = cache.get(key)
 		if uuid:
 			key_uuid = key_uuid or (key_id[:-2] + 'uuid')
 			objdict[key_uuid] = uuid
+			res = uuid
 		else:
 			_LOG.warn('missing key in cache %r', repr((objdict, key_id,
-					key_uuid)))
-	else:
-		_LOG.warn('missing key %r', repr((objdict, key_id, key_uuid)))
+					key_uuid, key)))
+	elif key is None:
+		_LOG.warn('missing key %r', repr((objdict, key_id, key_uuid, key)))
+	return res
 
 
 def str2timestamp(string):
@@ -72,8 +75,11 @@ def str2timestamp(string):
 def _convert_timestamps(dictobj, *fields):
 	def convert(field):
 		value = dictobj.get(field)
-		value = str2timestamp(value)
-		dictobj[field] = value
+		if value is None:
+			return
+		elif value:
+			value = str2timestamp(value)
+		dictobj[field] = value or None
 
 	for field in ('created', 'modified', 'deleted'):
 		convert(field)
@@ -111,18 +117,21 @@ def load_json(strdata):
 		_LOG.info("no loading file time=%r, last sync=%r", last_sync,
 				file_sync_time_str)
 
+	_LOG.info("load_json: folder")
 	folders_cache = {}
 	folders = data.get('folder')
-	for folder in folders or []:
+	for folder in sorted(folders or []):  # musi być sortowane,
+		# bo nie znajdzie parenta
 		_replace_ids(folder, folders_cache, 'parent_id')
 		_convert_timestamps(folder)
 		_create_or_update(objects.Folder, folder, folders_cache)
 	if folders:
 		del data['folder']
 
+	_LOG.info("load_json: context")
 	contexts_cache = {}
 	contexts = data.get('context')
-	for context in contexts or []:
+	for context in sorted(contexts or []):
 		_replace_ids(context, contexts_cache, 'parent_id')
 		_convert_timestamps(context)
 		_create_or_update(objects.Context, context, contexts_cache)
@@ -130,17 +139,19 @@ def load_json(strdata):
 		del data['context']
 
 	# Goals
+	_LOG.info("load_json: goals")
 	goals = data.get('goal')
 	goals_cache = {}
-	for goal in goals or []:
+	for goal in sorted(goals or []):
 		_replace_ids(goal, goals_cache, 'parent_id')
 		_create_or_update(objects.Goal, goal, goals_cache)
 	if goal:
 		del data['goal']
 
+	_LOG.info("load_json: tasks")
 	tasks_cache = {}
 	tasks = data.get('task')
-	for task in tasks or []:
+	for task in sorted(tasks or []):
 		_replace_ids(task, tasks_cache, 'parent_id')
 		_convert_timestamps(task, 'completed', 'start_date', 'due_date',
 				'due_date_project', 'hide_until')
@@ -151,6 +162,7 @@ def load_json(strdata):
 	if tasks:
 		del data['task']
 
+	_LOG.info("load_json: tasknote")
 	tasknotes_cache = {}
 	tasknotes = data.get('tasknote')
 	for tasknote in tasknotes or []:
@@ -160,6 +172,7 @@ def load_json(strdata):
 	if tasknotes:
 		del data['tasknote']
 
+	_LOG.info("load_json: alarms")
 	alarms_cache = {}
 	alarms = data.get('alarm')
 	for alarm in alarms or []:
@@ -169,44 +182,73 @@ def load_json(strdata):
 	if alarms:
 		del data['alarm']
 
+	_LOG.info("load_json: task_folder")
 	task_folders = data.get('task_folder')
 	for task_folder in task_folders or []:
-		_replace_ids(task_folder, tasks_cache, 'task_id')
-		_replace_ids(task_folder, folders_cache, 'folder_id')
+		task_uuid = _replace_ids(task_folder, tasks_cache, 'task_id')
+		folder_uuid = _replace_ids(task_folder, folders_cache, 'folder_id')
 		_convert_timestamps(task_folder)
-		task_uuid = task_folder['task_uuid']
-		folder_uuid = task_folder['folder_uuid']
 		task = objects.Task.get(uuid=task_uuid)
 		task.folder_uuid = folder_uuid
 		task.update()
 	if task_folders:
 		del data['task_folder']
 
+	_LOG.info("load_json: task_contexts")
 	task_contexts = data.get('task_context')
 	for task_context in task_contexts or []:
-		_replace_ids(task_context, tasks_cache, 'task_id')
-		_replace_ids(task_context, contexts_cache, 'context_id')
+		task_uuid = _replace_ids(task_context, tasks_cache, 'task_id')
+		context_uuid = _replace_ids(task_context, contexts_cache, 'context_id')
 		_convert_timestamps(task_context)
-		task_uuid = task_context['task_uuid']
-		context_uuid = task_context['context_uuid']
 		task = objects.Task.get(uuid=task_uuid)
 		task.context_uuid = context_uuid
 		task.update()
 	if task_contexts:
 		del data['task_context']
 
+	_LOG.info("load_json: task_goal")
 	task_goals = data.get('task_goal')
 	for task_goal in task_goals or []:
-		_replace_ids(task_goal, tasks_cache, 'task_id')
-		_replace_ids(task_goal, goals_cache, 'goal_id')
-		task_uuid = task_goal['task_uuid']
-		goal_uuid = task_goal['goal_uuid']
+		task_uuid = _replace_ids(task_goal, tasks_cache, 'task_id')
+		goal_uuid = _replace_ids(task_goal, goals_cache, 'goal_id')
 		task = objects.Task.get(uuid=task_uuid)
 		task.goal_uuid = goal_uuid
 		task.update()
 	if task_goals:
 		del data['task_goal']
 
+	# tagi
+	_LOG.info("load_json: tag")
+	tags = data.get('tag')
+	tags_cache = {}
+	for tag in sorted(tags or []):
+		_replace_ids(tag, tags_cache, 'parent_id')
+		_convert_timestamps(tag)
+		_create_or_update(objects.Tag, tag, tags_cache)
+	if tags:
+		del data['tag']
+
+	_LOG.info("load_json: task_tag")
+	# TODO: dodać do sorm obsługe many2many i przerobić to
+	task_tags = data.get('task_tag')
+	for task_tag in task_tags or []:
+		task_uuid = _replace_ids(task_tag, tasks_cache, 'task_id')
+		tag_uuid = _replace_ids(task_tag, tags_cache, 'tag_id')
+		_convert_timestamps(task_tag)
+		obj = objects.TaskTag.get(task_uuid=task_uuid, tag_uuid=tag_uuid)
+		if obj:
+			modified = task_tag.get('modified')
+			if not modified or modified > obj.modified:
+				obj.load_from_dict(task_tag)
+				obj.update()
+		else:
+			obj = objects.TaskTag(task_uuid=task_uuid, tag_uuid=tag_uuid)
+			obj.load_from_dict(task_tag)
+			obj.save()
+	if task_tags:
+		del data['task_tag']
+
+	_LOG.info("load_json: czyszczenie")
 	# pokasowanie staroci
 	_delete_missing(objects.Task, tasks_cache, file_sync_time)
 	_delete_missing(objects.Folder, folders_cache, file_sync_time)

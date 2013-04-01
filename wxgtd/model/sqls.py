@@ -120,7 +120,9 @@ create table if not exists tags (
 	"""
 create table if not exists task_tags (
 	task_uuid varchar(36) references tasks(uuid),
-	tag_uuid varchar(36) references tags(uuid))""",
+	tag_uuid varchar(36) references tags(uuid),
+	created timestamp,
+	modified timestamp)""",
 	"""
 create table if not exists wxgtd (
 	key varchar(32) primary key,
