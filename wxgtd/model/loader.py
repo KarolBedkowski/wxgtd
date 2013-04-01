@@ -21,7 +21,8 @@ def load_from_file(filename):
 	"""Load data from zipfile"""
 	if filename.endswith('.zip'):
 		with zipfile.ZipFile(filename, 'r') as zfile:
-			load_json(zfile.read())
+			fname = zfile.namelist()[0]
+			load_json(zfile.read(fname))
 	else:
 		with open(filename, 'r') as ifile:
 			load_json(ifile.read())
@@ -101,7 +102,7 @@ def _delete_missing(objcls, ids, last_sync):
 
 
 def load_json(strdata):
-	data = cjson.decode(strdata)
+	data = cjson.decode(strdata.decode('UTF-8'))
 
 	last_sync = 0
 	c_last_sync = objects.Conf.get(key='last_sync')
