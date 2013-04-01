@@ -90,7 +90,7 @@ class DlgTask(BaseDialog):
 		for goal in OBJ.Goal.all():
 			cb_goal.Append(goal.title, goal.uuid)
 		cb_project = self['cb_project']
-		for project in OBJ.Task.select_by_filters(None, None, None, None, 5):
+		for project in OBJ.Task.all_projects():
 			# projects
 			cb_project.Append(project.title, project.uuid)
 

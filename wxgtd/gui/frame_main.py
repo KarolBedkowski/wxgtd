@@ -9,7 +9,6 @@ __version__ = "2011-03-29"
 
 import sys
 import gettext
-import time
 
 import wx
 from wx import xrc
@@ -28,6 +27,7 @@ from wxgtd.model import objects as OBJ
 from wxgtd.gui import dlg_about
 from wxgtd.gui._filtertreectrl import FilterTreeCtrl
 from wxgtd.gui.dlg_task import DlgTask
+from wxgtd.gui import _fmt as fmt
 #from . import message_boxes as mbox
 
 _ = gettext.gettext
@@ -52,6 +52,7 @@ class FrameMain:
 
 	def _setup(self):
 		self._items_uuids = {}
+		self._items_path = []
 		items_list = self._items_list_ctrl
 		items_list.InsertColumn(0, _('Title'), width=400)
 		items_list.InsertColumn(1, _('Context'), width=100)
@@ -101,6 +102,7 @@ class FrameMain:
 				self._on_rb_show_selection)
 		self._items_list_ctrl.Bind(wx.EVT_LIST_ITEM_ACTIVATED,
 				self._on_items_list_activated)
+		wnd.Bind(wx.EVT_BUTTON, self._on_btn_path_back, id=wx.ID_BACKWARD)
 
 		Publisher.subscribe(self._on_tasks_update, ('task', 'update'))
 
@@ -157,11 +159,19 @@ class FrameMain:
 		evt.Skip()
 
 	def _on_items_list_activated(self, evt):
-		uuid = self._items_uuids[evt.GetData()]
-		task = OBJ.Task.get(uuid=uuid)
+		task = self._items_uuids[evt.GetData()]
+		if task.type in (OBJ.TYPE_PROJECT, OBJ.TYPE_CHECKLIST):
+			self._items_path.append(task)
+			self._refresh_list()
+			return
 		if task:
 			dlg = DlgTask.create(task.uuid, self.wnd, task)
 			dlg.run()
+
+	def _on_btn_path_back(self, _evt):
+		if self._items_path:
+			self._items_path.pop(-1)
+			self._refresh_list()
 
 	def _on_tasks_update(self, _args):
 		self._refresh_list()
@@ -171,27 +181,60 @@ class FrameMain:
 	def _refresh_list(self):
 		group_id = self['rb_show_selection'].GetSelection()
 		tmodel = self._filter_tree_ctrl.model
-		contexts = list(tmodel.checked_items_by_parent("CONTEXTS"))
-		folders = list(tmodel.checked_items_by_parent("FOLDERS"))
-		goals = list(tmodel.checked_items_by_parent("GOALS"))
-		statuses = list(tmodel.checked_items_by_parent("STATUSES"))
+		params = {'starred': False, 'finished': None, 'min_priority': None,
+				'max_start_date': None, 'max_due_date': None, 'tags': None,
+				'types': None}
+		params['contexts'] = list(tmodel.checked_items_by_parent("CONTEXTS"))
+		params['folders'] = list(tmodel.checked_items_by_parent("FOLDERS"))
+		params['goals'] = list(tmodel.checked_items_by_parent("GOALS"))
+		params['statuses'] = list(tmodel.checked_items_by_parent("STATUSES"))
+		params['parent_uuid'] = parent = self._items_path[-1].uuid \
+				if self._items_path else None
+		if group_id == 0:  # all
+			params['finished'] = False
+		elif group_id == 1:  # hot
+			# TODO: dodać obsługę hotlisty
+			# będzie to problematyczne, bo hotlista może działać na and-ach lub
+			# na orach (domyślne). And można tutaj dodać, ale dla or-ów musi
+			# być osobna metoda do zwracania
+			pass
+		elif group_id == 2:  # stared
+			params['starred'] = True
+		elif group_id == 3:  # basket
+			# no status, no context
+			params['contexts'] = [None]
+			params['statuses'] = [None]
+		elif group_id == 4:  # finished
+			params['finished'] = True
+		elif group_id == 5:  # projects
+			if not parent:
+				params['types'] = [OBJ.TYPE_PROJECT]
+		elif group_id == 6:  # checklists
+			if parent:
+				params['types'] = [OBJ.TYPE_CHECKLIST, OBJ.TYPE_CHECKLIST_ITEM]
+			else:
+				params['types'] = [OBJ.TYPE_CHECKLIST]
+
+		tasks = OBJ.Task.select_by_filters(**params)
 		items_list = self._items_list_ctrl
 		items_list.Freeze()
 		items_list.DeleteAllItems()
-		idx = 0
-		tasks = OBJ.Task.select_by_filters(contexts, folders, goals, statuses,
-				group_id)
 		self._items_uuids.clear()
 		for task in tasks:
 			idx = items_list.InsertStringItem(sys.maxint, task.title)
 			items_list.SetStringItem(idx, 1, task.context.title if task.context
 					else '')
 			items_list.SetStringItem(idx, 2, task.status_name)
-			items_list.SetStringItem(idx, 3, format_date(task.due_date))
+			items_list.SetStringItem(idx, 3, fmt.format_timestamp(task.due_date,
+					task.due_time_set))
 			items_list.SetItemData(idx, idx)
-			self._items_uuids[idx] = task.uuid
+			self._items_uuids[idx] = task
 		items_list.Thaw()
-		self.wnd.SetStatusText(_("Showed %d items") % idx)
+		self.wnd.SetStatusText(_("Showed %d items") % items_list.GetItemCount())
+
+		path_str = ' / '.join(task.title for task in self._items_path)
+		self['l_path'].SetLabel(path_str)
+		self.wnd.FindWindowById(wx.ID_BACKWARD).Enable(bool(self._items_path))
 
 
 def _update_color(wnd, bgcolor):
@@ -199,9 +242,3 @@ def _update_color(wnd, bgcolor):
 		if isinstance(child, wx.Panel):
 			child.SetBackgroundColour(bgcolor)
 		_update_color(child, bgcolor)
-
-
-def format_date(timestamp):
-	if not timestamp:
-		return ''
-	return time.strftime('%x %X', time.localtime(timestamp))

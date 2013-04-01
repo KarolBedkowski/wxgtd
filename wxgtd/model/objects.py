@@ -32,10 +32,15 @@ STATUSES = {0: _("No Status"),  # no status
 		9: _("Canceled"),
 		10: _("Reference")}
 
-TYPES = {0: _("Task"),
-		1: _("Project"),
-		2: _("Checklist"),
-		3: _("Checklist Item"),
+TYPE_TASK = 0
+TYPE_PROJECT = 1
+TYPE_CHECKLIST = 2
+TYPE_CHECKLIST_ITEM = 2
+
+TYPES = {TYPE_TASK: _("Task"),
+		TYPE_PROJECT: _("Project"),
+		TYPE_CHECKLIST: _("Checklist"),
+		TYPE_CHECKLIST_ITEM: _("Checklist Item"),
 		4: _("Note"),
 		5: _("Call"),
 		6: _("Email"),
@@ -111,7 +116,10 @@ class Task(BaseModel):
 		return cls.select(where_stmt="completed is not null")
 
 	@classmethod
-	def select_by_filters(cls, contexts, folders, goals, statuses, group_id):
+	def select_by_filters(cls, contexts, folders, goals, statuses, types,
+			parent_uuid, starred, min_priority, max_start_date,
+			max_due_date, finished, tags):
+		# TODO: tags
 		where_stmt = []
 		params = []
 		for column, ids in (('context_uuid', contexts),
@@ -122,24 +130,26 @@ class Task(BaseModel):
 				where_stmt.append(wstmt)
 				if wparams:
 					params.extend(wparams)
-		if group_id == 0:  # task, not completed
-			where_stmt.append('type=0')
-			where_stmt.append('(completed=0 or completed is null)')
-		elif group_id == 1:  # Hot
-			where_stmt.append('type=0')
-		elif group_id == 2:  # Stared
-			where_stmt.append('type=0')
+		if types:
+			if len(types) == 1:
+				where_stmt.append("type=%d" % types[0])
+			else:
+				where_stmt.append("types in (%s)" % ",".join(map(str, types)))
+		if starred:
 			where_stmt.append('starred=1')
-		elif group_id == 3:  # basket
-			where_stmt.append('type=0')
-		elif group_id == 4:  # finished
-			where_stmt.append('type=0')
-			where_stmt.append('completed > 0')
-		elif group_id == 5:  # project
-			where_stmt.append('type=1')
-		elif group_id == 6:  # checklist
-			where_stmt.append('type=2')
-
+		if min_priority is not None:
+			where_stmt.append('priority >= %d' % min_priority)
+		if max_start_date:
+			where_stmt.append('start_date <= %d' % max_start_date)
+		if max_due_date:
+			where_stmt.append('due_date <= %d' % max_due_date)
+		if finished is not None:
+			if finished:
+				where_stmt.append("(completed='' or completed is null)")
+			else:
+				where_stmt.append("(completed<>'' and completed is not null)")
+		if parent_uuid is not None:
+			where_stmt.append("parent_uuid='%s'" % parent_uuid)
 		where = ' AND '.join(where_stmt)
 		sql, query_params = cls._create_select_query(where_stmt=where)
 		query_params.extend(params)
@@ -152,6 +162,10 @@ class Task(BaseModel):
 				if obj.context_uuid:
 					obj.context = Context.get(uuid=obj.context_uuid)
 				yield obj
+
+	@classmethod
+	def all_projects(cls):
+		return cls.select(type=TYPE_PROJECT)
 
 
 class Folder(BaseModel):
