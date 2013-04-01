@@ -117,6 +117,8 @@ def load_json(strdata):
 		_replace_ids(folder, folders_cache, 'parent_id')
 		_convert_timestamps(folder)
 		_create_or_update(objects.Folder, folder, folders_cache)
+	if folders:
+		del data['folder']
 
 	contexts_cache = {}
 	contexts = data.get('context')
@@ -124,6 +126,17 @@ def load_json(strdata):
 		_replace_ids(context, contexts_cache, 'parent_id')
 		_convert_timestamps(context)
 		_create_or_update(objects.Context, context, contexts_cache)
+	if contexts:
+		del data['context']
+
+	# Goals
+	goals = data.get('goal')
+	goals_cache = {}
+	for goal in goals or []:
+		_replace_ids(goal, goals_cache, 'parent_id')
+		_create_or_update(objects.Goal, goal, goals_cache)
+	if goal:
+		del data['goal']
 
 	tasks_cache = {}
 	tasks = data.get('task')
@@ -135,6 +148,8 @@ def load_json(strdata):
 		task['folder_uuid'] = None
 		task['goal_uuid'] = None
 		_create_or_update(objects.Task, task, tasks_cache)
+	if tasks:
+		del data['task']
 
 	tasknotes_cache = {}
 	tasknotes = data.get('tasknote')
@@ -142,6 +157,8 @@ def load_json(strdata):
 		_replace_ids(tasknote, tasks_cache, 'task_id')
 		_convert_timestamps(tasknote)
 		_create_or_update(objects.Tasknote, tasknote, tasknotes_cache)
+	if tasknotes:
+		del data['tasknote']
 
 	alarms_cache = {}
 	alarms = data.get('alarm')
@@ -149,6 +166,8 @@ def load_json(strdata):
 		_replace_ids(alarm, tasks_cache, 'task_id')
 		_convert_timestamps(alarm, 'alarm')
 		_create_or_update(objects.Alarm, alarm, alarms_cache)
+	if alarms:
+		del data['alarm']
 
 	task_folders = data.get('task_folder')
 	for task_folder in task_folders or []:
@@ -160,6 +179,8 @@ def load_json(strdata):
 		task = objects.Task.get(uuid=task_uuid)
 		task.folder_uuid = folder_uuid
 		task.update()
+	if task_folders:
+		del data['task_folder']
 
 	task_contexts = data.get('task_context')
 	for task_context in task_contexts or []:
@@ -171,6 +192,20 @@ def load_json(strdata):
 		task = objects.Task.get(uuid=task_uuid)
 		task.context_uuid = context_uuid
 		task.update()
+	if task_contexts:
+		del data['task_context']
+
+	task_goals = data.get('task_goal')
+	for task_goal in task_goals or []:
+		_replace_ids(task_goal, tasks_cache, 'task_id')
+		_replace_ids(task_goal, goals_cache, 'goal_id')
+		task_uuid = task_goal['task_uuid']
+		goal_uuid = task_goal['goal_uuid']
+		task = objects.Task.get(uuid=task_uuid)
+		task.goal_uuid = goal_uuid
+		task.update()
+	if task_goals:
+		del data['task_goal']
 
 	# pokasowanie staroci
 	_delete_missing(objects.Task, tasks_cache, file_sync_time)
@@ -183,6 +218,10 @@ def load_json(strdata):
 	c_last_sync.save_or_update()
 
 	c_last_sync.connection.commit()
+
+	if data:
+		_LOG.warn("Loader: remaining: %r", data.keys())
+		_LOG.debug("Loader: remainig: %r", data)
 
 
 def test():
