@@ -9,7 +9,7 @@ __version__ = "2011-05-15"
 
 from unittest import main, TestCase
 
-from sorm import DbConnection, Model, Column, ManyToOne
+from sorm import DbConnection, Model, Column, ManyToOne, OneToMany
 
 
 class _Obj1(Model):
@@ -71,9 +71,11 @@ class _MObj(Model):
 	_relations = {'obj': ManyToOne('obj_id', _Obj1, "id")}
 
 
-class _Obj5(Model):
+class _Obj6(Model):
 	_table_name = 'obj'
-	_fields = ["id", 'col1', 'val']
+	_fields = ['id', 'tekst1', 'tekst2', 'num']
+	_primary_keys = ['id']
+	_relations = {'objs': OneToMany("id", _MObj, "obj_id")}
 
 
 def _prepare_db():
@@ -195,6 +197,7 @@ class TestEnum(TestCase):
 		obj = _Obj1(tekst='abc', info='info123', num=987)
 		obj.save()
 		self.assertIsNotNone(obj.id, "PK not loaded")
+		self.assertEqual(obj.id, 1, "PK not loaded")
 		dbcon.close()
 
 	def test_11_relations_def(self):
@@ -221,6 +224,23 @@ class TestEnum(TestCase):
 		mobj = _MObj(id=2)
 		mobj.obj = obj
 		self.assertEqual(mobj.obj_id, obj.id)
+		dbcon.close()
+
+	def test_13_relation_one2many(self):
+		"""testy dla relacji OneToMany"""
+		dbcon = _prepare_db()
+		obj = _Obj6(id=1, tekst1='abc', tekst2='info123', num=987)
+		mobj1 = _MObj(id=2)
+		mobj2 = _MObj(id=3)
+		obj.objs = [mobj1, mobj2]
+		self.assertListEqual(obj.objs, [mobj1, mobj2])
+		obj.save()
+		obj2 = _Obj6.get(id=1)
+		objs = obj2.objs
+		self.assertTrue(isinstance(objs, list), 'result must be list')
+		self.assertEqual(len(objs), 2)
+		mobj1_1 = _MObj.get(id=2)
+		self.assertEqual(mobj1_1.obj_id, obj2.id, 'spr obj_id w relacji')
 		dbcon.close()
 
 

@@ -168,27 +168,111 @@ class Column(object):
 		return value
 
 
-class ManyToOne(object):
-	"""Many to one relation definition"""
+class Relation(object):
+	"""Abstract class for relations"""
+
+	def save(self, _parent):
+		""" Launched on parent object save"""
+		pass
+
+	def load(self, _parent):
+		""" Launched on parent object loaded"""
+		pass
+
+	def update(self, parent):
+		""" Launched on parent object update"""
+		self.save(parent)
+
+	def get(self, _parent):
+		""" Get relation value by parent object property"""
+		return None
+
+	def set(self, _parent):
+		""" Set relation value from parent object property"""
+		return
+
+
+class ManyToOne(Relation):
+	"""Many to one relation definition.
+	Value is single object of ref_class mapped by ref_key."""
 	# TODO: obsluga kluczy wielowartościowych
-	def __init__(self, ref_field, ref_class, ref_key="id"):
-		self.ref_field = ref_field
+	# TODO: obiekt meta dla pola
+	# FIXME: zapisywanie relacji koniecznie przed zapisem obiektu nadrzędnego
+	def __init__(self, field, ref_class, ref_key="id"):
+		"""
+			Obj(field) -> ref_class(ref_key)
+		"""
+		Relation.__init__(self)
+		self.field = field
 		self.ref_class = ref_class
 		self.ref_key = ref_key
 
 	def __repr__(self):
-		return ' '.join(map(str, ('<ManyToOne', self.ref_field, self.ref_class,
+		return ' '.join(map(str, ('<ManyToOne', self.field, self.ref_class,
 				self.ref_key, '>')))
 
-	def load(self, parent):
-		ref_field_value = getattr(parent, self.ref_field)
+	def get(self, parent):
+		ref_field_value = getattr(parent, self.field)
+		if ref_field_value is None:
+			return None
 		return self.ref_class.get(**{self.ref_key: ref_field_value})
 
-	def save(self, parent, obj):
+	def set(self, parent, obj):
 		if not isinstance(obj, self.ref_class):
 			raise TypeError("wrong object type")
 		obj_id = getattr(obj, self.ref_key)
-		setattr(parent, self.ref_field, obj_id)
+		setattr(parent, self.field, obj_id)
+
+
+class OneToMany(Relation):
+	"""One to many relation definition
+	Value is list of objects
+	"""
+	# TODO: obsluga kluczy wielowartościowych
+	# FIXME: zapisywanie relacji koniecznie PO zapisem obiektu nadrzędnego
+	def __init__(self, field, ref_class, ref_key="id"):
+		"""
+			Obj(field:id) -> [ref_class(ref_key == field)]
+		"""
+		Relation.__init__(self)
+		self.field = field
+		self.ref_class = ref_class
+		self.ref_key = ref_key
+		self.field_value = "_" + field + "_" + ref_class.__name__ + '_' + ref_key
+
+	def __repr__(self):
+		return ' '.join(map(str, ('<ManyToOne', self.field, self.ref_class,
+				self.ref_key, '>')))
+
+	def get(self, parent):
+		if not hasattr(parent, self.field_value):
+			setattr(parent, self.field_value, None)
+		curr_value = getattr(parent, self.field_value)
+		if curr_value is not None:
+			# loaded
+			return curr_value
+		parent_id = getattr(parent, self.field)
+		if parent_id is None:
+			return None
+		curr_value = list(self.ref_class.select(**{self.ref_key: parent_id}))
+		setattr(parent, self.field_value, curr_value)
+		return curr_value
+
+	def set(self, parent, objs):
+		setattr(parent, self.field_value, objs)
+
+	def save(self, parent):
+		parent_id = getattr(parent, self.field)
+		assert parent_id is not None
+		self.ref_class.delete_by(**{self.ref_key: parent_id})
+		objs = getattr(parent, self.field_value)
+		if not objs:
+			return
+		if not all(isinstance(obj, self.ref_class) for obj in objs):
+			raise TypeError("wrong object type %r", objs)
+		for obj in objs:
+			setattr(obj, self.ref_key, parent_id)
+			obj.save_or_update()
 
 
 def _model_convert_fields_def(fields):
@@ -198,7 +282,6 @@ def _model_convert_fields_def(fields):
 	if isinstance(fields, (list, tuple, set)):
 		rfields = {}
 		for field in fields:
-			print 0, field, type(field)
 			if isinstance(field, Column):
 				if not field.name:
 					raise TypeError('No field name')
@@ -241,7 +324,7 @@ class _MetaModel(type):
 			relations = dict_.get('_relations')
 			if relations:
 				for key, relation in relations.iteritems():
-					dict_[key] = property(relation.load, relation.save)
+					dict_[key] = property(relation.get, relation.set)
 		return type.__new__(mcs, name, bases, dict_)
 
 	def __init__(mcs, name, bases, dict_):
@@ -367,6 +450,8 @@ class Model(object):
 				if key in self._fields:
 					setattr(self, key, self._fields[key].from_database(val))
 			self._is_new = False
+		for relation in self._relations.itervalues():
+			relation.save(self)
 		self.get.cache.clear()
 
 	def update(self):
@@ -378,18 +463,28 @@ class Model(object):
 				self.__class__.__name__, sql, query_params)
 		with DbConnection().get_cursor() as cursor:
 			cursor.execute(sql, query_params)
+		for relation in self._relations.itervalues():
+			relation.update(self)
 		self.get.cache.clear()
 
 	def delete(self):
 		"""Delete current object.
 			NOTE: valid primary key is required.
 		"""
-		sql, query_params = self._create_delete_stmt()
-		_LOG.debug("%s._update_object sql=%r params=%r",
-				self.__class__.__name__, sql, query_params)
+		pkeys = dict(self._get_pkey_values())
+		print pkeys
+		if not pkeys or not all(pkeys.values()):
+			raise RuntimeError('Missing primary keys')
+		self.__class__.delete_by(**pkeys)
+
+	@classmethod
+	def delete_by(cls, **values):
+		sql, query_params = cls._create_delete_stmt(**values)
+		_LOG.debug("%s.delete_by sql=%r params=%r",
+				cls.__name__, sql, query_params)
 		with DbConnection().get_cursor() as cursor:
 			cursor.execute(sql, query_params)
-		self.get.cache.clear()
+		cls.get.cache.clear()
 
 	@classmethod
 	def _create_select_query(cls, order=None, limit=None, offset=None,
@@ -456,15 +551,14 @@ class Model(object):
 		query_params = [val[1] for val in values]
 		return sql, query_params
 
-	def _create_delete_stmt(self):
-		"""Prepare sql for delete object"""
-		pkeys = self._get_pkey_values()
-		if not pkeys or not all(pkey[1] for pkey in pkeys):
-			raise RuntimeError('Missing primary keys')
-		sql = ['DELETE FROM', self._table_name, 'WHERE']
-		sql.append(' AND '.join(val[0] + "=?" for val in pkeys))
+	@classmethod
+	def _create_delete_stmt(cls, **fields):
+		"""Prepare sql for delete object """
+		sql = ['DELETE FROM', cls._table_name, 'WHERE']
+		fields = list(fields.iteritems())
+		sql.append(' AND '.join(val[0] + "=?" for val in fields))
 		sql = ' '.join(sql)
-		query_params = [val[1] for val in pkeys]
+		query_params = [val[1] for val in fields]
 		return sql, query_params
 
 	def _get_pkey_values(self):
