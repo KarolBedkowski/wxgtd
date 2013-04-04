@@ -11,6 +11,7 @@ import logging
 import cjson
 import zipfile
 import time
+import datetime
 
 import objects
 
@@ -28,20 +29,19 @@ def load_from_file(filename):
 			load_json(ifile.read())
 
 
-def _create_or_update(cls, datadict, cache=None):
+def _create_or_update(session, cls, datadict, cache=None):
 	oid = datadict.pop('_id')
 	uuid = datadict.pop('uuid')
-	obj = cls.get(uuid=uuid)
+	obj = session.query(cls).filter_by(uuid=uuid).first()
 	if obj:
 		modified = datadict.get('modified')
 		if not modified or modified > obj.modified:
 			# load only modified objs
 			obj.load_from_dict(datadict)
-			obj.update()
 	else:
 		obj = cls(uuid=uuid)
 		obj.load_from_dict(datadict)
-		obj.save()
+		session.add(obj)
 	if cache is not None:
 		cache[oid] = uuid
 		cache[uuid] = oid
@@ -79,7 +79,7 @@ def _convert_timestamps(dictobj, *fields):
 		if value is None:
 			return
 		elif value:
-			value = str2timestamp(value)
+			value = datetime.datetime.fromtimestamp(str2timestamp(value))
 		dictobj[field] = value or None
 
 	for field in ('created', 'modified', 'deleted'):
@@ -103,9 +103,10 @@ def _delete_missing(objcls, ids, last_sync):
 
 def load_json(strdata):
 	data = cjson.decode(strdata.decode('UTF-8'))
+	session = objects.Session()
 
 	last_sync = 0
-	c_last_sync = objects.Conf.get(key='last_sync')
+	c_last_sync = session.query(objects.Conf).filter_by(key='last_sync').first()
 	if c_last_sync:
 		last_sync = c_last_sync.val
 	else:
@@ -125,7 +126,7 @@ def load_json(strdata):
 		# bo nie znajdzie parenta
 		_replace_ids(folder, folders_cache, 'parent_id')
 		_convert_timestamps(folder)
-		_create_or_update(objects.Folder, folder, folders_cache)
+		_create_or_update(session, objects.Folder, folder, folders_cache)
 	if folders:
 		del data['folder']
 
@@ -135,7 +136,7 @@ def load_json(strdata):
 	for context in sorted(contexts or []):
 		_replace_ids(context, contexts_cache, 'parent_id')
 		_convert_timestamps(context)
-		_create_or_update(objects.Context, context, contexts_cache)
+		_create_or_update(session, objects.Context, context, contexts_cache)
 	if contexts:
 		del data['context']
 
@@ -145,7 +146,8 @@ def load_json(strdata):
 	goals_cache = {}
 	for goal in sorted(goals or []):
 		_replace_ids(goal, goals_cache, 'parent_id')
-		_create_or_update(objects.Goal, goal, goals_cache)
+		_convert_timestamps(goal)
+		_create_or_update(session, objects.Goal, goal, goals_cache)
 	if goal:
 		del data['goal']
 
@@ -159,7 +161,7 @@ def load_json(strdata):
 		task['context_uuid'] = None
 		task['folder_uuid'] = None
 		task['goal_uuid'] = None
-		_create_or_update(objects.Task, task, tasks_cache)
+		_create_or_update(session, objects.Task, task, tasks_cache)
 	if tasks:
 		del data['task']
 
@@ -169,7 +171,7 @@ def load_json(strdata):
 	for tasknote in tasknotes or []:
 		_replace_ids(tasknote, tasks_cache, 'task_id')
 		_convert_timestamps(tasknote)
-		_create_or_update(objects.Tasknote, tasknote, tasknotes_cache)
+		_create_or_update(session, objects.Tasknote, tasknote, tasknotes_cache)
 	if tasknotes:
 		del data['tasknote']
 
@@ -179,7 +181,7 @@ def load_json(strdata):
 	for alarm in alarms or []:
 		_replace_ids(alarm, tasks_cache, 'task_id')
 		_convert_timestamps(alarm, 'alarm')
-		_create_or_update(objects.Alarm, alarm, alarms_cache)
+		_create_or_update(session, objects.Alarm, alarm, alarms_cache)
 	if alarms:
 		del data['alarm']
 
@@ -189,9 +191,8 @@ def load_json(strdata):
 		task_uuid = _replace_ids(task_folder, tasks_cache, 'task_id')
 		folder_uuid = _replace_ids(task_folder, folders_cache, 'folder_id')
 		_convert_timestamps(task_folder)
-		task = objects.Task.get(uuid=task_uuid)
+		task = session.query(objects.Task).filter_by(uuid=task_uuid).first()
 		task.folder_uuid = folder_uuid
-		task.update()
 	if task_folders:
 		del data['task_folder']
 
@@ -201,9 +202,8 @@ def load_json(strdata):
 		task_uuid = _replace_ids(task_context, tasks_cache, 'task_id')
 		context_uuid = _replace_ids(task_context, contexts_cache, 'context_id')
 		_convert_timestamps(task_context)
-		task = objects.Task.get(uuid=task_uuid)
+		task = session.query(objects.Task).filter_by(uuid=task_uuid).first()
 		task.context_uuid = context_uuid
-		task.update()
 	if task_contexts:
 		del data['task_context']
 
@@ -212,9 +212,8 @@ def load_json(strdata):
 	for task_goal in task_goals or []:
 		task_uuid = _replace_ids(task_goal, tasks_cache, 'task_id')
 		goal_uuid = _replace_ids(task_goal, goals_cache, 'goal_id')
-		task = objects.Task.get(uuid=task_uuid)
+		task = session.query(objects.Task).filter_by(uuid=task_uuid).first()
 		task.goal_uuid = goal_uuid
-		task.update()
 	if task_goals:
 		del data['task_goal']
 
@@ -225,7 +224,7 @@ def load_json(strdata):
 	for tag in sorted(tags or []):
 		_replace_ids(tag, tags_cache, 'parent_id')
 		_convert_timestamps(tag)
-		_create_or_update(objects.Tag, tag, tags_cache)
+		_create_or_update(session, objects.Tag, tag, tags_cache)
 	if tags:
 		del data['tag']
 
@@ -236,18 +235,20 @@ def load_json(strdata):
 		task_uuid = _replace_ids(task_tag, tasks_cache, 'task_id')
 		tag_uuid = _replace_ids(task_tag, tags_cache, 'tag_id')
 		_convert_timestamps(task_tag)
-		obj = objects.TaskTag.get(task_uuid=task_uuid, tag_uuid=tag_uuid)
+		obj = session.query(objects.TaskTag).filter_by(task_uuid=task_uuid,
+				tag_uuid=tag_uuid).first()
 		if obj:
 			modified = task_tag.get('modified')
 			if not modified or modified > obj.modified:
 				obj.load_from_dict(task_tag)
-				obj.update()
 		else:
 			obj = objects.TaskTag(task_uuid=task_uuid, tag_uuid=tag_uuid)
 			obj.load_from_dict(task_tag)
-			obj.save()
+			session.add(obj)
 	if task_tags:
 		del data['task_tag']
+
+	session.commit()
 
 	_LOG.info("load_json: czyszczenie")
 	# pokasowanie staroci
@@ -259,8 +260,6 @@ def load_json(strdata):
 
 	c_last_sync.val = time.time()
 	c_last_sync.save_or_update()
-
-	c_last_sync.connection.commit()
 
 	if data:
 		_LOG.warn("Loader: remaining: %r", data.keys())

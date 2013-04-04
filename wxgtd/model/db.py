@@ -12,30 +12,36 @@ __copyright__ = "Copyright (c) Karol Będkowski, 2009-2013"
 __version__ = "2011-05-15"
 
 
+import sqlite3
 import logging
 import uuid
 
-import sorm
+import sqlalchemy
+
 import sqls
 import objects
 
 _LOG = logging.getLogger(__name__)
 
 
-def connect(*argv, **kwargs):
-	dbconn = sorm.DbConnection()
-	dbconn.open(*argv, **kwargs)
-	with dbconn.get_cursor() as cursor:
-		for schema in sqls.SCHEMA_DEF:
-			for sql in schema:
-				cursor.executescript(sql)
+def connect(filename, *args, **kwargs):
+	_LOG.info('connect %r', (filename, args, kwargs))
+	engine = sqlalchemy.create_engine("sqlite:///" + filename, echo=True,
+			connect_args={'detect_types': sqlite3.PARSE_DECLTYPES |
+				sqlite3.PARSE_COLNAMES}, native_datetime=True)
+	for schema in sqls.SCHEMA_DEF:
+		for sql in schema:
+			engine.execute(sql)
+	objects.Session.configure(bind=engine)
+	objects.Base.metadata.create_all(engine)
 	# bootstrap
+	session = objects.Session()
 	# 1. deviceId
-	conf = objects.Conf.get(key='deviceId')
+	conf = session.query(objects.Conf).filter_by(key='deviceId').first()
 	if conf is None:
 		conf = objects.Conf(key='deviceId')
 		conf.val = str(uuid.uuid4())
-		conf.save()
+		session.add(conf)
 		_LOG.info('DB bootstrap: create deviceId=%r', conf.val)
-		dbconn.commit()
-	return dbconn
+		session.commit()
+	return objects.Session
