@@ -13,11 +13,11 @@ __version__ = "2013-03-02"
 import logging
 import gettext
 import uuid
-import time
+import datetime
 
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import orm
+from sqlalchemy import orm, or_
 
 _LOG = logging.getLogger(__name__)
 _ = gettext.gettext
@@ -61,13 +61,16 @@ class BaseModelMixin(object):
 	def save(self):
 		if not self.uuid:
 			self.uuid = str(uuid.uuid4())
-		self.modified = self.created = time.time()
+		if not self.created:
+			self.modified = self.created = datetime.datetime.now()
+		else:
+			self.modified = datetime.datetime.now()
 		session = Session.object_session(self) or Session()
 		session.add(self)
 		return session
 
 	def update(self):
-		self.modified = time.time()
+		self.modified = datetime.datetime.now()
 		session = Session.object_session(self) or Session()
 		session.add(self)
 		return session
@@ -97,7 +100,6 @@ class Task(BaseModelMixin, Base):
 	"""Task
 
 	TODO:
-		- tagi
 		- importance - nie używane (?)
 	"""
 	__tablename__ = "tasks"
@@ -156,15 +158,11 @@ class Task(BaseModelMixin, Base):
 
 	def _set_task_completed(self, value):
 		if value:
-			self.completed = time.time()
+			self.completed = datetime.datetime.now()
 		else:
 			self.completed = None
 
 	task_completed = property(_get_task_completed, _set_task_completed)
-
-	@classmethod
-	def get_stared(cls):
-		return cls.select(stared=1)
 
 	@classmethod
 	def get_finished(cls):
@@ -176,44 +174,58 @@ class Task(BaseModelMixin, Base):
 			max_due_date, finished, tags):
 		session = Session()
 		query = session.query(cls)
-		if contexts:
-			if contexts == [None]:
-				query = query.filter(Task.context_uuid.is_(None))
-			else:
-				query = query.filter(Task.context_uuid.in_(contexts))
-		if folders:
-			if folders == [None]:
-				query = query.filter(Task.folder_uuid.is_(None))
-			else:
-				query = query.filter(Task.folder_uuid.in_(folders))
-		# TODO: tags, goals
-		if statuses:
-			if statuses == [None]:
-				query = query.filter(Task.status.is_(None))
-			else:
-				query = query.filter(Task.status.in_(statuses))
+		query = _append_filter_list(query, Task.context_uuid, contexts)
+		query = _append_filter_list(query, Task.folder_uuid, folders)
+		query = _append_filter_list(query, Task.goal_uuid, goals)
+		query = _append_filter_list(query, Task.status, statuses)
+		query = _append_filter_list(query, Task.type, types)
+		if tags:
+			query = query.filter(Task.tags.any(TaskTag.task_uuid.in_(tags)))
 		if starred:
-			query = query.filter_by(starred > 0)
+			query = query.filter(starred > 0)
 		if min_priority is not None:
 			query = query.filter(Task.priority >= min_priority)
-#		if max_start_date:
-#			where_stmt.append('start_date <= %d' % max_start_date)
-#		if max_due_date:
-#			where_stmt.append('due_date <= %d' % max_due_date)
-#		if finished is not None:
-#			if finished:
-#				where_stmt.append("(completed<>'' and completed is not null)")
-#			else:
-#				where_stmt.append("(completed='' or completed is null)")
-		if parent_uuid == 0:
-			query = query.filter(Task.parent_uuid.is_(None))
-		elif parent_uuid:
-			query = query.filter(Task.parent_uuid == parent_uuid)
+		if max_start_date:
+			query = query.filter(Task.start_date <= max_start_date)
+		if max_due_date:
+			query = query.filter(Task.due_date <= max_due_date)
+		if finished is not None:
+			if finished:
+				query = query.filter(Task.completed.isnot(None))
+			else:
+				query = query.filter(Task.completed.is_(None))
+		if parent_uuid is not None:
+			if parent_uuid == 0:
+				query = query.filter(Task.parent_uuid.is_(None))
+			elif parent_uuid:
+				query = query.filter(Task.parent_uuid == parent_uuid)
+		query = query.options(orm.joinedload(Task.context)) \
+				.options(orm.joinedload(Task.folder)) \
+				.options(orm.joinedload(Task.goal)) \
+				.order_by(Task.title)
 		return query.all()
 
 	@classmethod
 	def all_projects(cls):
-		return cls.select(type=TYPE_PROJECT)
+		return Session().query(cls).filter_by(type=TYPE_PROJECT).all()
+
+
+def _append_filter_list(query, param, values):
+	""" Dodanie do query filtra dla atrybutu param dla wartości z listy values
+	"""
+	if not values:
+		# brak filtra
+		return query
+	if values == [None]:
+		# wyświetlenie tylko bez ustawionej wartości parametru
+		return query.filter(param.is_(None))
+	elif None in values:
+		# lista parametrów zawiera wartość NULL
+		values = values[:]
+		values.remove(None)
+		return query.filter(or_(param.is_(None), param.in_(values)))
+	# lista parametrów bez NULL
+	return query.filter(param.in_(values))
 
 
 class Folder(BaseModelMixin, Base):
@@ -237,12 +249,7 @@ class Folder(BaseModelMixin, Base):
 	def save(self):
 		if not self.uuid:
 			self.uuid = str(uuid.uuid4())
-		self.modified = self.created = time.time()
 		BaseModelMixin.save(self)
-
-	def update(self):
-		self.modified = time.time()
-		BaseModelMixin.update(self)
 
 
 class Context(BaseModelMixin, Base):

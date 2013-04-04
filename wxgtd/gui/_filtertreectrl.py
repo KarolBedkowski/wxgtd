@@ -76,6 +76,10 @@ class FilterTreeModel(object):
 				TreeItemCB(_("No goal"), None),
 				*tuple(TreeItemCB(goal.title, goal.uuid)
 						for goal in OBJ.Goal.all())))
+		self._items.append(TreeItemCB(_("Tags"), "TAGS",
+				TreeItemCB(_("No tag"), None),
+				*tuple(TreeItemCB(tag.title, tag.uuid)
+						for tag in OBJ.Tag.all())))
 
 	def get_item(self, indices):
 		if len(indices) == 1:

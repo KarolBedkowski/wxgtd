@@ -8,7 +8,6 @@ __author__ = "Karol Będkowski"
 __copyright__ = "Copyright (c) Karol Będkowski, 2010-2013"
 __version__ = "2010-11-25"
 
-import time
 import logging
 
 import wx
@@ -23,6 +22,7 @@ from wxgtd.wxtools.validators import v_length as LVALID
 
 from _base_dialog import BaseDialog
 from dlg_datetime import DlgDateTime
+import _fmt as fmt
 
 _LOG = logging.getLogger(__name__)
 
@@ -64,8 +64,8 @@ class DlgTask(BaseDialog):
 		# parent == projekt/lista
 		self['cb_project'].SetValidator(ValidatorDv(task,
 				'parent_uuid'))
-		self['l_created'].SetLabel(str(time.asctime(time.localtime(task.created))))
-		self['l_modified'].SetLabel(str(time.asctime(time.localtime(task.modified))))
+		self['l_created'].SetLabel(str(task.created))
+		self['l_modified'].SetLabel(str(task.modified))
 		self['cb_completed'].SetValidator(Validator(task, 'task_completed'))
 		self['cb_starred'].SetValidator(Validator(task, 'starred'))
 		self['sl_priority'].SetValidator(Validator(task, 'priority'))
@@ -96,8 +96,7 @@ class DlgTask(BaseDialog):
 			return
 		if not self._wnd.TransferDataFromWindow():
 			return
-		self._task.save_or_update()
-		self._task.connection.commit()
+		self._task.save().commit()
 		Publisher.sendMessage('task.update', data={'task_uuid': self._task.uuid})
 		self._on_ok(evt)
 
@@ -110,9 +109,9 @@ class DlgTask(BaseDialog):
 	def _refresh_dates(self):
 		""" Odświeżenie pól dat na dlg """
 		task = self._task
-		self['l_due'].SetLabel(format_timestamp(task.due_date,
+		self['l_due'].SetLabel(fmt.format_timestamp(task.due_date,
 				task.due_time_set))
-		self['l_start_date'].SetLabel(format_timestamp(task.start_date,
+		self['l_start_date'].SetLabel(fmt.format_timestamp(task.start_date,
 				task.start_time_set))
 
 	def _set_date(self, attr_date, attr_time_set):
@@ -123,11 +122,3 @@ class DlgTask(BaseDialog):
 			setattr(self._task, attr_date, dlg.timestamp)
 			setattr(self._task, attr_time_set, dlg.is_time_set)
 			self._refresh_dates()
-
-
-def format_timestamp(timestamp, show_time):
-	if not timestamp:
-		return ""
-	if show_time:
-		return time.strftime("%x %X", time.localtime(timestamp))
-	return time.strftime("%x", time.localtime(timestamp))

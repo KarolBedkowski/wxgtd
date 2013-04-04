@@ -201,6 +201,7 @@ class FrameMain:
 		params['statuses'] = list(tmodel.checked_items_by_parent("STATUSES"))
 		params['parent_uuid'] = parent = self._items_path[-1].uuid \
 				if self._items_path else None
+		params['tags'] = list(tmodel.checked_items_by_parent("TAGS"))
 		if group_id == 0:  # all
 			params['finished'] = False
 			if not parent:

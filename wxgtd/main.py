@@ -150,5 +150,4 @@ def run():
 
 	app.MainLoop()
 
-	conn.close()
 	config.save()
