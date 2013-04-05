@@ -9,6 +9,8 @@ __copyright__ = "Copyright (c) Karol Będkowski, 2010-2013"
 __version__ = "2010-11-25"
 
 import logging
+import datetime
+import gettext
 
 import wx
 try:
@@ -24,6 +26,7 @@ from _base_dialog import BaseDialog
 from dlg_datetime import DlgDateTime
 import _fmt as fmt
 
+_ = gettext.gettext
 _LOG = logging.getLogger(__name__)
 
 
@@ -33,11 +36,11 @@ class DlgTask(BaseDialog):
 	WARRNING: okienko niemodalne; obsługa zapisywania tutaj
 	"""
 
-	def __init__(self, parent, task):
+	def __init__(self, parent, task_uuid):
 		BaseDialog.__init__(self, parent, 'dlg_task')
 		self._setup_comboboxes()
-		self._setup(task)
-		self._refresh_dates()
+		self._setup(task_uuid)
+		self._refresh_static_texts()
 
 	def _load_controls(self, wnd):
 		BaseDialog._load_controls(self, wnd)
@@ -46,11 +49,23 @@ class DlgTask(BaseDialog):
 		BaseDialog._create_bindings(self)
 		self['btn_due_date_set'].Bind(wx.EVT_BUTTON, self._on_btn_due_date_set)
 		self['btn_start_date_set'].Bind(wx.EVT_BUTTON, self._on_btn_start_date_set)
+		self['lb_notes_list'].Bind(wx.EVT_LISTBOX, self._on_lb_notes_list)
+		self._wnd.Bind(wx.EVT_BUTTON, self._on_btn_new_note, id=wx.ID_ADD)
+		self['btn_del_note'].Bind(wx.EVT_BUTTON, self._on_btn_del_note)
+		self['btn_save_note'].Bind(wx.EVT_BUTTON, self._on_btn_save_note)
 
-	def _setup(self, task):
-		_LOG.debug("DlgTask(%r)", task)
-		self._task = task
+	def _setup(self, task_uuid):
+		_LOG.debug("DlgTask(%r)", task_uuid)
+		self._current_note = None
 		self._dates = {}
+		self._session = OBJ.Session()
+		if task_uuid:
+			self._task = self._session.query(OBJ.Task).filter_by(
+					uuid=task_uuid).first()
+		else:
+			self._task = OBJ.Task()
+			self._session.add(self._task)
+		task = self._task
 		self._dates['due_time'] = self._dates['due_date'] = task.due_date
 		self._dates['start_time'] = self._dates['start_date'] = task.start_date
 		self['tc_title'].SetValidator(Validator(task, 'title',
@@ -96,7 +111,7 @@ class DlgTask(BaseDialog):
 			return
 		if not self._wnd.TransferDataFromWindow():
 			return
-		self._task.save().commit()
+		self._session.commit()
 		Publisher.sendMessage('task.update', data={'task_uuid': self._task.uuid})
 		self._on_ok(evt)
 
@@ -106,13 +121,59 @@ class DlgTask(BaseDialog):
 	def _on_btn_start_date_set(self, _evt):
 		self._set_date('start_date', 'start_time_set')
 
-	def _refresh_dates(self):
+	def _on_lb_notes_list(self, evt):
+		note_uuid = evt.GetClientData()
+		for note in self._task.notes:
+			if note.uuid == note_uuid:
+				# czy aktualne jest zmienione
+				if note != self._current_note and self._current_note:
+					# TODO: potwierdzenie zapisania
+					value = self['tc_notes_note'].GetValue()
+					if value != self._current_note.title:
+						self._current_note.title = value
+				self._current_note = note
+				self['tc_notes_note'].SetValue(note.title or '')
+
+	def _on_btn_new_note(self, _evt):
+		self._save_current_note()
+		self._current_note = OBJ.Tasknote(title=_("New note"))
+		self['tc_notes_note'].SetValue(self._current_note.title)
+
+	def _on_btn_del_note(self, _evt):
+		lb_notes_list = self['lb_notes_list']
+		sel = lb_notes_list.GetSelection()
+		if sel < 0:
+			return
+		del self._task.notes[sel]
+		self._refresh_static_texts()
+
+	def _on_btn_save_note(self, _evt):
+		self._save_current_note()
+
+	def _save_current_note(self):
+		cnote = self._current_note
+		if cnote:
+			value = self['tc_notes_note'].GetValue()
+			if value and value != cnote.title:
+				cnote.title = value
+				cnote.modified = datetime.datetime.now()
+				if not cnote.created:
+					cnote.created = cnote.modified
+					self._task.notes.append(cnote)
+			wx.CallAfter(self._refresh_static_texts)
+
+	def _refresh_static_texts(self):
 		""" Odświeżenie pól dat na dlg """
 		task = self._task
 		self['l_due'].SetLabel(fmt.format_timestamp(task.due_date,
 				task.due_time_set))
 		self['l_start_date'].SetLabel(fmt.format_timestamp(task.start_date,
 				task.start_time_set))
+		self['l_tags'].SetLabel(", ".join(tag.tag.title for tag in task.tags) or '')
+		lb_notes_list = self['lb_notes_list']
+		lb_notes_list.Clear()
+		for note in task.notes:
+			lb_notes_list.Append(note.title[:50], note.uuid)
 
 	def _set_date(self, attr_date, attr_time_set):
 		""" Wyśweitlenie dlg wyboru daty dla danego atrybutu """
@@ -121,4 +182,4 @@ class DlgTask(BaseDialog):
 		if dlg.run(True):
 			setattr(self._task, attr_date, dlg.timestamp)
 			setattr(self._task, attr_time_set, dlg.is_time_set)
-			self._refresh_dates()
+			self._refresh_static_texts()

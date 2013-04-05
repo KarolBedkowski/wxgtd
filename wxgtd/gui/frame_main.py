@@ -195,13 +195,16 @@ class FrameMain:
 		evt.Skip()
 
 	def _on_items_list_activated(self, evt):
-		task = self._items_uuids[evt.GetData()]
-		if task.type in (OBJ.TYPE_PROJECT, OBJ.TYPE_CHECKLIST):
+		task_uuid, task_type = self._items_uuids[evt.GetData()]
+		if task_type in (OBJ.TYPE_PROJECT, OBJ.TYPE_CHECKLIST):
+			session = OBJ.Session()
+			task = session.query(OBJ.Task).filter_by(uuid=task_uuid).first()
+			session.close()
 			self._items_path.append(task)
 			self._refresh_list()
 			return
-		if task:
-			dlg = DlgTask.create(task.uuid, self.wnd, task)
+		if task_uuid:
+			dlg = DlgTask.create(task_uuid, self.wnd, task_uuid)
 			dlg.run()
 
 	def _on_btn_path_back(self, _evt):
@@ -294,7 +297,7 @@ class FrameMain:
 			items_list.SetStringItem(idx, 4, fmt.format_timestamp(task.due_date,
 					task.due_time_set))
 			items_list.SetItemData(idx, idx)
-			self._items_uuids[idx] = task
+			self._items_uuids[idx] = (task.uuid, task.type)
 		items_list.Thaw()
 		self.wnd.SetStatusText(_("Showed %d items") % items_list.GetItemCount())
 
