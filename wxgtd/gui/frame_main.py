@@ -67,6 +67,10 @@ class FrameMain:
 
 	def _setup_wnd(self):
 		self.wnd.SetIcon(iconprovider.get_icon('wxgtd'))
+		self._icons = icon_prov = iconprovider.IconProvider()
+		icon_prov.load_icons(['project', 'task_done', 'checklist', 'task'])
+		self._items_list_ctrl.AssignImageList(icon_prov.image_list,
+				wx.IMAGE_LIST_SMALL)
 
 		if wx.Platform == '__WXMSW__':
 			# fix controls background
@@ -115,6 +119,27 @@ class FrameMain:
 		tbi = toolbar.AddLabelTool(-1, _('New Task'), wx.ArtProvider.GetBitmap(
 				wx.ART_NEW, wx.ART_TOOLBAR), shortHelp=_('Add new task'))
 		self.wnd.Bind(wx.EVT_TOOL, self._on_menu_file_new_task, id=tbi.GetId())
+
+		# show subtask
+		self._btn_show_subtasks = wx.ToggleButton(toolbar, -1,
+				_(" Show subtasks "))
+		toolbar.AddControl(self._btn_show_subtasks)
+		self.wnd.Bind(wx.EVT_TOGGLEBUTTON, self._on_btn_show_subtasks,
+				self._btn_show_subtasks)
+
+		# show completed
+		self._btn_show_finished = wx.ToggleButton(toolbar, -1,
+				_(" Show finished "))
+		toolbar.AddControl(self._btn_show_finished)
+		self.wnd.Bind(wx.EVT_TOGGLEBUTTON, self._on_btn_show_finished,
+				self._btn_show_finished)
+
+		# hide until due
+		self._btn_hide_due = wx.ToggleButton(toolbar, -1,
+				_(" Hide due "))
+		toolbar.AddControl(self._btn_hide_due)
+		self.wnd.Bind(wx.EVT_TOGGLEBUTTON, self._on_btn_hide_due,
+				self._btn_hide_due)
 
 		toolbar.Realize()
 
@@ -187,6 +212,15 @@ class FrameMain:
 	def _on_tasks_update(self, _args):
 		self._refresh_list()
 
+	def _on_btn_hide_due(self, _evt):
+		self._refresh_list()
+
+	def _on_btn_show_subtasks(self, _evt):
+		self._refresh_list()
+
+	def _on_btn_show_finished(self, _evt):
+		self._refresh_list()
+
 	# logic
 
 	def _refresh_list(self):
@@ -202,11 +236,13 @@ class FrameMain:
 		params['parent_uuid'] = parent = self._items_path[-1].uuid \
 				if self._items_path else None
 		params['tags'] = list(tmodel.checked_items_by_parent("TAGS"))
-		if group_id == 0:  # all
-			params['finished'] = False
-			if not parent:
+		params['finished'] = self._btn_show_finished.GetValue()
+		if not parent:
+			if not self._btn_show_subtasks.GetValue():
 				# tylko nadrzędne
 				params['parent_uuid'] = 0
+		if group_id == 0:  # all
+			pass
 		elif group_id == 1:  # hot
 			# TODO: dodać obsługę hotlisty
 			# będzie to problematyczne, bo hotlista może działać na and-ach lub
@@ -236,8 +272,21 @@ class FrameMain:
 		items_list.Freeze()
 		items_list.DeleteAllItems()
 		self._items_uuids.clear()
+		icon_task = self._icons.get_image_index('task')
+		icon_project = self._icons.get_image_index('project')
+		icon_checklist = self._icons.get_image_index('checklist')
+		icon_task_done = self._icons.get_image_index('task_done')
 		for task in tasks:
-			idx = items_list.InsertStringItem(sys.maxint, OBJ.TYPES[task.type])
+			if task.type == OBJ.TYPE_PROJECT:
+				icon = icon_project
+			elif task.type == OBJ.TYPE_CHECKLIST:
+				icon = icon_checklist
+			elif task.completed:
+				icon = icon_task_done
+			else:
+				icon = icon_task
+			idx = items_list.InsertImageStringItem(sys.maxint,
+					OBJ.TYPES[task.type], icon)
 			items_list.SetStringItem(idx, 1, task.title)
 			items_list.SetStringItem(idx, 2, task.context.title if task.context
 					else '')
