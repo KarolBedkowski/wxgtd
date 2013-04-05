@@ -11,6 +11,7 @@ __version__ = "2010-11-25"
 import logging
 import datetime
 import gettext
+import time
 
 import wx
 try:
@@ -177,9 +178,13 @@ class DlgTask(BaseDialog):
 
 	def _set_date(self, attr_date, attr_time_set):
 		""" Wyśweitlenie dlg wyboru daty dla danego atrybutu """
-		dlg = DlgDateTime(self._wnd, getattr(self._task, attr_date),
+		value = getattr(self._task, attr_date)
+		if value:
+			value = time.mktime(value.timetuple())
+		dlg = DlgDateTime(self._wnd, value,
 				getattr(self._task, attr_time_set))
 		if dlg.run(True):
-			setattr(self._task, attr_date, dlg.timestamp)
+			date = datetime.datetime.fromtimestamp(dlg.timestamp)
+			setattr(self._task, attr_date, date)
 			setattr(self._task, attr_time_set, dlg.is_time_set)
 			self._refresh_static_texts()

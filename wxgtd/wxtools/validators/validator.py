@@ -239,7 +239,7 @@ class ValidatorTime(Validator):
 	def _set_value_to_control(self, value):
 		ctrl = self.GetWindow()
 		assert isinstance(ctrl, wx.TextCtrl), 'Invalid control %r' % ctrl
-		ctrl.SetValue(time.strftime('%X', time.gmtime(value)))
+		ctrl.SetValue(time.strftime('%X', time.localtime(value)))
 
 	def _get_value_from_control(self):
 		ctrl = self.GetWindow()
