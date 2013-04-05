@@ -248,8 +248,6 @@ def load_json(strdata):
 	if task_tags:
 		del data['task_tag']
 
-	session.commit()
-
 	_LOG.info("load_json: czyszczenie")
 	# pokasowanie staroci
 	_delete_missing(objects.Task, tasks_cache, file_sync_time)
@@ -259,7 +257,8 @@ def load_json(strdata):
 	_delete_missing(objects.Alarm, alarms_cache, file_sync_time)
 
 	c_last_sync.val = time.time()
-	c_last_sync.save_or_update()
+
+	session.commit()
 
 	if data:
 		_LOG.warn("Loader: remaining: %r", data.keys())
