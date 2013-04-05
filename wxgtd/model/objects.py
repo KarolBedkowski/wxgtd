@@ -38,7 +38,7 @@ TYPE_TASK = 0
 TYPE_PROJECT = 1
 TYPE_CHECKLIST = 2
 TYPE_CHECKLIST_ITEM = 3
-
+\
 TYPES = {TYPE_TASK: _("Task"),
 		TYPE_PROJECT: _("Project"),
 		TYPE_CHECKLIST: _("Checklist"),
@@ -55,22 +55,14 @@ Base = declarative_base()
 Session = orm.sessionmaker()
 
 
+def _gen_uuid():
+	return str(uuid.uuid4())
+
+
 class BaseModelMixin(object):
 	""" Bazowy model - tworzenie kluczy, aktualizacja timestampów """
 
 	def save(self):
-		if not self.uuid:
-			self.uuid = str(uuid.uuid4())
-		if not self.created:
-			self.modified = self.created = datetime.datetime.now()
-		else:
-			self.modified = datetime.datetime.now()
-		session = Session.object_session(self) or Session()
-		session.add(self)
-		return session
-
-	def update(self):
-		self.modified = datetime.datetime.now()
 		session = Session.object_session(self) or Session()
 		session.add(self)
 		return session
@@ -104,10 +96,10 @@ class Task(BaseModelMixin, Base):
 	"""
 	__tablename__ = "tasks"
 
-	uuid = Column(String(36), primary_key=True)
+	uuid = Column(String(36), primary_key=True, default=_gen_uuid)
 	parent_uuid = Column(String(36), ForeignKey('tasks.uuid'))
-	created = Column(DateTime)
-	modified = Column(DateTime)
+	created = Column(DateTime, default=datetime.datetime.now)
+	modified = Column(DateTime, default=datetime.datetime.now)
 	completed = Column(DateTime)
 	deleted = Column(DateTime)
 	ordinal = Column(Integer)
@@ -143,11 +135,11 @@ class Task(BaseModelMixin, Base):
 	folder = orm.relationship("Folder")
 	context = orm.relationship("Context")
 	goal = orm.relationship("Goal")
-	tags = orm.relationship("TaskTag")
+	tags = orm.relationship("TaskTag", cascade="all, delete-orphan")
 	children = orm.relationship("Task", backref=orm.backref('parent',
 		remote_side=[uuid]))
-	notes = orm.relationship("Tasknote")
-	alarms = orm.relationship("Alarm")
+	notes = orm.relationship("Tasknote", cascade="all, delete-orphan")
+	alarms = orm.relationship("Alarm", cascade="all, delete-orphan")
 
 	@property
 	def status_name(self):
@@ -232,10 +224,10 @@ class Folder(BaseModelMixin, Base):
 	"""folder"""
 	__tablename__ = "folders"
 
-	uuid = Column(String(36), primary_key=True)
+	uuid = Column(String(36), primary_key=True, default=_gen_uuid)
 	parent_uuid = Column(String(36), ForeignKey("folders.uuid"))
-	created = Column(DateTime)
-	modified = Column(DateTime)
+	created = Column(DateTime, default=datetime.datetime.now)
+	modified = Column(DateTime, default=datetime.datetime.now)
 	deleted = Column(DateTime)
 	ordinal = Column(Integer)
 	title = Column(String)
@@ -255,10 +247,10 @@ class Folder(BaseModelMixin, Base):
 class Context(BaseModelMixin, Base):
 	"""context"""
 	__tablename__ = "contexts"
-	uuid = Column(String(36), primary_key=True)
+	uuid = Column(String(36), primary_key=True, default=_gen_uuid)
 	parent_uuid = Column(String(36), ForeignKey("contexts.uuid"))
-	created = Column(DateTime)
-	modified = Column(DateTime)
+	created = Column(DateTime, default=datetime.datetime.now)
+	modified = Column(DateTime, default=datetime.datetime.now)
 	deleted = Column(DateTime)
 	ordinal = Column(Integer)
 	title = Column(String)
@@ -273,10 +265,10 @@ class Context(BaseModelMixin, Base):
 class Tasknote(BaseModelMixin, Base):
 	"""tasknote"""
 	__tablename__ = "tasknotes"
-	uuid = Column(String(36), primary_key=True)
+	uuid = Column(String(36), primary_key=True, default=_gen_uuid)
 	task_uuid = Column(String(36), ForeignKey("tasks.uuid"))
-	created = Column(DateTime)
-	modified = Column(DateTime)
+	created = Column(DateTime, default=datetime.datetime.now)
+	modified = Column(DateTime, default=datetime.datetime.now)
 	ordinal = Column(Integer)
 	title = Column(String)
 	color = Column(String)
@@ -287,10 +279,10 @@ class Alarm(BaseModelMixin, Base):
 	"""alarm"""
 
 	__tablename__ = "alarms"
-	uuid = Column(String(36), primary_key=True)
+	uuid = Column(String(36), primary_key=True, default=_gen_uuid)
 	task_uuid = Column(String(36), ForeignKey("tasks.uuid"))
-	created = Column(DateTime)
-	modified = Column(DateTime)
+	created = Column(DateTime, default=datetime.datetime.now)
+	modified = Column(DateTime, default=datetime.datetime.now)
 	alarm = Column(DateTime)
 	reminder = Column(Integer)
 	active = Column(Integer)
@@ -300,10 +292,10 @@ class Alarm(BaseModelMixin, Base):
 class Goal(BaseModelMixin, Base):
 	""" Goal """
 	__tablename__ = "goals"
-	uuid = Column(String(36), primary_key=True)
+	uuid = Column(String(36), primary_key=True, default=_gen_uuid)
 	parent_uuid = Column(String(36), ForeignKey("goals.uuid"))
-	created = Column(DateTime)
-	modified = Column(DateTime)
+	created = Column(DateTime, default=datetime.datetime.now)
+	modified = Column(DateTime, default=datetime.datetime.now)
 	deleted = Column(DateTime)
 	ordinal = Column(Integer)
 	title = Column(String)
@@ -328,10 +320,10 @@ class Tag(BaseModelMixin, Base):
 	Task może mieć wiele tagów."""
 
 	__tablename__ = 'tags'
-	uuid = Column(String(36), primary_key=True)
+	uuid = Column(String(36), primary_key=True, default=_gen_uuid)
 	parent_uuid = Column(String(36), ForeignKey("tags.uuid"))
-	created = Column(DateTime)
-	modified = Column(DateTime)
+	created = Column(DateTime, default=datetime.datetime.now)
+	modified = Column(DateTime, default=datetime.datetime.now)
 	deleted = Column(DateTime)
 	ordinal = Column(Integer)
 	title = Column(String)
@@ -347,7 +339,7 @@ class TaskTag(BaseModelMixin, Base):
 	__tablename__ = "task_tags"
 	task_uuid = Column(String(50), ForeignKey("tasks.uuid"), primary_key=True)
 	tag_uuid = Column(String(50), ForeignKey("tags.uuid"), primary_key=True)
-	modified = Column(DateTime)
+	modified = Column(DateTime, onupdate=datetime.datetime.now)
 	deleted = Column(DateTime)
 
-	tag = orm.relationship("Tag")
+	tag = orm.relationship("Tag", cascade="all")
