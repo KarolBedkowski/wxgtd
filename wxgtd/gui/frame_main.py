@@ -63,6 +63,7 @@ class FrameMain:
 		items_list.InsertColumn(2, _('Context'), width=100)
 		items_list.InsertColumn(3, _('Status'), width=100)
 		items_list.InsertColumn(4, _('Duo'), width=150)
+		items_list.InsertColumn(5, _('Alarm'), width=150)
 		self._filter_tree_ctrl.RefreshItems()
 		wx.CallAfter(self._refresh_list)
 
@@ -297,6 +298,7 @@ class FrameMain:
 			items_list.SetStringItem(idx, 3, task.status_name)
 			items_list.SetStringItem(idx, 4, fmt.format_timestamp(task.due_date,
 					task.due_time_set))
+			items_list.SetStringItem(idx, 5, fmt.format_timestamp(task.alarm, True)),
 			items_list.SetItemData(idx, idx)
 			self._items_uuids[idx] = (task.uuid, task.type)
 		items_list.Thaw()
