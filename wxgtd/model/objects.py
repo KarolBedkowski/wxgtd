@@ -19,35 +19,10 @@ from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import orm, or_
 
+import enums
+
 _LOG = logging.getLogger(__name__)
 _ = gettext.gettext
-
-STATUSES = {0: _("No Status"),  # no status
-		1: _("Next Action"),
-		2: _("Active"),
-		3: _("Planning"),
-		4: _("Delegated"),
-		5: _("Waiting"),
-		6: _("Hold"),
-		7: _("Postponed"),
-		8: _("Someday"),
-		9: _("Canceled"),
-		10: _("Reference")}
-
-TYPE_TASK = 0
-TYPE_PROJECT = 1
-TYPE_CHECKLIST = 2
-TYPE_CHECKLIST_ITEM = 3
-\
-TYPES = {TYPE_TASK: _("Task"),
-		TYPE_PROJECT: _("Project"),
-		TYPE_CHECKLIST: _("Checklist"),
-		TYPE_CHECKLIST_ITEM: _("Checklist Item"),
-		4: _("Note"),
-		5: _("Call"),
-		6: _("Email"),
-		7: _("SMS"),
-		8: _("Return Call")}
 
 
 # SQLAlchemy
@@ -128,6 +103,7 @@ class Task(BaseModelMixin, Base):
 	trash_bin = Column(Integer)
 	metainf = Column(String)
 	alarm = Column(DateTime)
+	alarm_pattern = Column(String)
 
 	folder_uuid = Column(String(36), ForeignKey("folders.uuid"))
 	context_uuid = Column(String(36), ForeignKey("contexts.uuid"))
@@ -143,7 +119,7 @@ class Task(BaseModelMixin, Base):
 
 	@property
 	def status_name(self):
-		return STATUSES.get(self.status or 0, '?')
+		return enums.STATUSES.get(self.status or 0, '?')
 
 	def _get_task_completed(self):
 		return bool(self.completed)
@@ -201,7 +177,7 @@ class Task(BaseModelMixin, Base):
 
 	@classmethod
 	def all_projects(cls):
-		return Session().query(cls).filter_by(type=TYPE_PROJECT).all()
+		return Session().query(cls).filter_by(type=enums.TYPE_PROJECT).all()
 
 
 def _append_filter_list(query, param, values):

@@ -20,6 +20,7 @@ except ImportError:
 	from wx.lib.pubsub import Publisher
 
 from wxgtd.model import objects as OBJ
+from wxgtd.model import enums
 from wxgtd.wxtools.validators import Validator, ValidatorDv
 from wxgtd.wxtools.validators import v_length as LVALID
 
@@ -88,10 +89,10 @@ class DlgTask(BaseDialog):
 
 	def _setup_comboboxes(self):
 		cb_status = self['cb_status']
-		for key, status in sorted(OBJ.STATUSES.iteritems()):
+		for key, status in sorted(enums.STATUSES.iteritems()):
 			cb_status.Append(status, key)
 		cb_types = self['cb_type']
-		for key, typename in sorted(OBJ.TYPES.iteritems()):
+		for key, typename in sorted(enums.TYPES.iteritems()):
 			cb_types.Append(typename, key)
 		cb_context = self['cb_context']
 		for context in OBJ.Context.all():

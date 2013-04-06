@@ -15,7 +15,7 @@ import wx.lib.customtreectrl as CT
 import wx.gizmos
 from wx.lib.mixins import treemixin
 from wxgtd.model import objects as OBJ
-
+from wxgtd.model import enums
 
 _ = gettext.gettext
 
@@ -63,7 +63,7 @@ class FilterTreeModel(object):
 		self._items.append(TreeItemCB(_("Statuses"), "STATUSES",
 				*tuple(TreeItemCB(status, status_id or 0)
 						for status_id, status
-						in OBJ.STATUSES.iteritems())))
+						in enums.STATUSES.iteritems())))
 		self._items.append(TreeItemCB(_("Contexts"), "CONTEXTS",
 				TreeItemCB(_("No Context"), None),
 				*tuple(TreeItemCB(context.title, context.uuid)

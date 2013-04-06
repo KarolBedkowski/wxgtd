@@ -26,6 +26,7 @@ from wxgtd.lib import iconprovider
 
 from wxgtd.model import objects as OBJ
 from wxgtd.model import loader
+from wxgtd.model import enums
 from wxgtd.gui import dlg_about
 from wxgtd.gui._filtertreectrl import FilterTreeCtrl
 from wxgtd.gui.dlg_task import DlgTask
@@ -135,11 +136,11 @@ class FrameMain:
 				self._btn_show_finished)
 
 		# hide until due
-		self._btn_hide_due = wx.ToggleButton(toolbar, -1,
-				_(" Hide due "))
-		toolbar.AddControl(self._btn_hide_due)
+		self._btn_hide_until = wx.ToggleButton(toolbar, -1,
+				_(" Hide until "))
+		toolbar.AddControl(self._btn_hide_until)
 		self.wnd.Bind(wx.EVT_TOGGLEBUTTON, self._on_btn_hide_due,
-				self._btn_hide_due)
+				self._btn_hide_until)
 
 		toolbar.Realize()
 
@@ -196,7 +197,7 @@ class FrameMain:
 
 	def _on_items_list_activated(self, evt):
 		task_uuid, task_type = self._items_uuids[evt.GetData()]
-		if task_type in (OBJ.TYPE_PROJECT, OBJ.TYPE_CHECKLIST):
+		if task_type in (enums.TYPE_PROJECT, enums.TYPE_CHECKLIST):
 			session = OBJ.Session()
 			task = session.query(OBJ.Task).filter_by(uuid=task_uuid).first()
 			session.close()
@@ -230,8 +231,7 @@ class FrameMain:
 		group_id = self['rb_show_selection'].GetSelection()
 		tmodel = self._filter_tree_ctrl.model
 		params = {'starred': False, 'finished': None, 'min_priority': None,
-				'max_start_date': None, 'max_due_date': None, 'tags': None,
-				'types': None}
+				'max_due_date': None, 'tags': None, 'types': None}
 		params['contexts'] = list(tmodel.checked_items_by_parent("CONTEXTS"))
 		params['folders'] = list(tmodel.checked_items_by_parent("FOLDERS"))
 		params['goals'] = list(tmodel.checked_items_by_parent("GOALS"))
@@ -240,6 +240,7 @@ class FrameMain:
 				if self._items_path else None
 		params['tags'] = list(tmodel.checked_items_by_parent("TAGS"))
 		params['finished'] = self._btn_show_finished.GetValue()
+		params['hide_until'] = self._btn_hide_until.GetValue()
 		if not parent:
 			if not self._btn_show_subtasks.GetValue():
 				# tylko nadrzędne
@@ -262,12 +263,12 @@ class FrameMain:
 			params['finished'] = True
 		elif group_id == 5:  # projects
 			if not parent:
-				params['types'] = [OBJ.TYPE_PROJECT]
+				params['types'] = [enums.TYPE_PROJECT]
 		elif group_id == 6:  # checklists
 			if parent:
-				params['types'] = [OBJ.TYPE_CHECKLIST, OBJ.TYPE_CHECKLIST_ITEM]
+				params['types'] = [enums.TYPE_CHECKLIST, enums.TYPE_CHECKLIST_ITEM]
 			else:
-				params['types'] = [OBJ.TYPE_CHECKLIST]
+				params['types'] = [enums.TYPE_CHECKLIST]
 
 		_LOG.debug("FrameMain._refresh_list; params=%r", params)
 		tasks = OBJ.Task.select_by_filters(**params)
@@ -280,16 +281,16 @@ class FrameMain:
 		icon_checklist = self._icons.get_image_index('checklist')
 		icon_task_done = self._icons.get_image_index('task_done')
 		for task in tasks:
-			if task.type == OBJ.TYPE_PROJECT:
+			if task.type == enums.TYPE_PROJECT:
 				icon = icon_project
-			elif task.type == OBJ.TYPE_CHECKLIST:
+			elif task.type == enums.TYPE_CHECKLIST:
 				icon = icon_checklist
 			elif task.completed:
 				icon = icon_task_done
 			else:
 				icon = icon_task
 			idx = items_list.InsertImageStringItem(sys.maxint,
-					OBJ.TYPES[task.type], icon)
+					enums.TYPES[task.type], icon)
 			items_list.SetStringItem(idx, 1, task.title)
 			items_list.SetStringItem(idx, 2, task.context.title if task.context
 					else '')
