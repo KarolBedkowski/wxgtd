@@ -44,62 +44,27 @@ TYPES = {TYPE_TASK: _("Task"),
 
 
 # Hide until patterns
-HIDE_PATTERNS = {
-		1: _("Task Is Due"),
-		2: _("Given Date"),
-		3: _("Week Before Due"),
-		4: _("Day Before Start Date"),
-		6: _("Week Before Start Date"),
-		7: _("One Month Before Due"),
-		8: _("Two Months Before Due"),
-		9: _("Three Months Before Due"),
-		10: _("Four Months Before Due"),
-		11: _("Five Months Before Due"),
-		12: _("Six Months Before Due"),
-		13: _("One Month Before Start"),
-		14: _("Two Months Before Start"),
-		15: _("Three Months Before Start"),
-		16: _("Four Months Before Start"),
-		17: _("Five Months Before Start"),
-		18: _("Six Months Before Start")}
+HIDE_PATTERNS_LIST = [
+		("task is due", _("Task Is Due")),
+		("given date", _("Given Date")),
+		("1 week before due", _("Week Before Due")),
+		("1 day before start", _("Day Before Start Date")),
+		("1 week before start", _("Week Before Start Date")),
+		("1 month before due", _("One Month Before Due")),
+		("2 months before due", _("Two Months Before Due")),
+		("3 months before due", _("Three Months Before Due")),
+		("4 months before due", _("Four Months Before Due")),
+		("5 months before due", _("Five Months Before Due")),
+		("6 months before due", _("Six Months Before Due")),
+		("1 month before start", _("One Month Before Start")),
+		("2 months before start", _("Two Months Before Start")),
+		("3 months before start", _("Three Months Before Start")),
+		("4 months before start", _("Four Months Before Start")),
+		("5 months before start", _("Five Months Before Start")),
+		("6 months before start", _("Six Months Before Start"))]
 
-HIDE_PATTERNS_MAP_EXP = {
-		1: "task is due",
-		2: "given date",
-		3: "1 week before due",
-		5: "1 day before start",
-		6: "1 week before start",
-		7: "1 month before due",
-		8: "2 months before due",
-		9: "3 months before due",
-		10: "4 months before due",
-		11: "5 months before due",
-		12: "6 months before due",
-		13: "1 month before start",
-		14: "2 months before start",
-		15: "3 months before start",
-		16: "4 months before start",
-		17: "5 months before start",
-		18: "6 months before start"}
+HIDE_PATTERNS = dict(HIDE_PATTERNS_LIST)
 
-HIDE_PATTERNS_MAP_IMP = {
-		"task is due": 1,
-		"given date": 2,
-		"1 week before due": 3,
-		"1 day before start": 5,
-		"1 week before start": 6,
-		"1 month before due": 7,
-		"2 months before due": 8,
-		"3 months before due": 9,
-		"4 months before due": 10,
-		"5 months before due": 11,
-		"6 months before due": 12,
-		"1 month before start": 13,
-		"2 months before start": 14,
-		"3 months before start": 15,
-		"4 months before start": 16,
-		"5 months before start": 17,
-		"6 months before start": 18}
 
 REMAIND_PATTERNS_LIST = [
 		('due', _("When task is due")),

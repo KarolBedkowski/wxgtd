@@ -28,6 +28,7 @@ from wxgtd.wxtools.validators import v_length as LVALID
 from _base_dialog import BaseDialog
 from dlg_datetime import DlgDateTime
 from dlg_remaind_settings import DlgRemaindSettings
+from dlg_show_settings import DlgShowSettings
 import _fmt as fmt
 
 _ = gettext.gettext
@@ -58,6 +59,7 @@ class DlgTask(BaseDialog):
 		self['btn_del_note'].Bind(wx.EVT_BUTTON, self._on_btn_del_note)
 		self['btn_save_note'].Bind(wx.EVT_BUTTON, self._on_btn_save_note)
 		self['btn_remaind_set'].Bind(wx.EVT_BUTTON, self._on_btn_remiand_set)
+		self['btn_hide_until_set'].Bind(wx.EVT_BUTTON, self._on_btn_hide_until_set)
 
 	def _setup(self, task_uuid):
 		_LOG.debug("DlgTask(%r)", task_uuid)
@@ -170,6 +172,21 @@ class DlgTask(BaseDialog):
 			logic.update_task_alarm(task)
 			self._refresh_static_texts()
 
+	def _on_btn_hide_until_set(self, _evt):
+		task = self._task
+		datetime = None
+		if task.hide_until:
+			datetime = time.mktime(task.hide_until.timetuple())
+		dlg = DlgShowSettings(self._wnd, datetime, task.hide_pattern)
+		if dlg.run(True):
+			if dlg.datetime:
+				task.hide_until = datetime.datetime.fromtimestamp(dlg.datetime)
+			else:
+				task.hide_until = None
+			task.hide_pattern = dlg.pattern
+			logic.update_task_hide(task)
+			self._refresh_static_texts()
+
 	def _save_current_note(self):
 		cnote = self._current_note
 		if cnote:
@@ -196,6 +213,13 @@ class DlgTask(BaseDialog):
 			self['l_remaind'].SetLabel(fmt.format_timestamp(task.alarm, True))
 		else:
 			self['l_remaind'].SetLabel('')
+		if task.hide_pattern:
+			self['l_hide_until'].SetLabel(enums.HIDE_PATTERNS[task.hide_pattern])
+		elif task.hide_until:
+			self['l_remaind'].SetLabel(fmt.format_timestamp(task.hide_until,
+					True))
+		else:
+			self['l_hide_until'].SetLabel('')
 		lb_notes_list = self['lb_notes_list']
 		lb_notes_list.Clear()
 		for note in task.notes:

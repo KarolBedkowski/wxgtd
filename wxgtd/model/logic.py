@@ -24,6 +24,8 @@ def update_task_alarm(task):
 	"""
 	_LOG.debug('update_task_alarm: %r', task)
 	alarm_pattern = task.alarm_pattern
+	_LOG.debug('update_task_alarm: alarm=%r, pattern=%r', task.alarm,
+			alarm_pattern)
 	if not alarm_pattern:
 		return
 	if alarm_pattern == 'due':
@@ -49,6 +51,8 @@ def update_task_hide(task):
 	""" Aktualizacja Task.hide_until na postawie Task.hide_pattern i
 	pozostłaych pól"""
 	hide_pattern = task.hide_pattern
+	_LOG.debug('update_task_hide: date=%r, pattern=%r', task.hide_until,
+			task.hide_pattern)
 	if not hide_pattern:
 		task.hide_until = None
 		return
@@ -57,7 +61,7 @@ def update_task_hide(task):
 	elif hide_pattern == "task is due":
 		task.hide_until = task.due_date
 		return
-	num, period, dummy_, rel = task.hide_until.split(' ')
+	num, period, dummy_, rel = hide_pattern.split(' ')
 	rel_date = task.due_date if rel == 'due' else task.start_date
 	if not rel_date:
 		return
