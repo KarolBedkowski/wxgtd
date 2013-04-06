@@ -60,6 +60,7 @@ class DlgTask(BaseDialog):
 		self['btn_save_note'].Bind(wx.EVT_BUTTON, self._on_btn_save_note)
 		self['btn_remaind_set'].Bind(wx.EVT_BUTTON, self._on_btn_remiand_set)
 		self['btn_hide_until_set'].Bind(wx.EVT_BUTTON, self._on_btn_hide_until_set)
+		self['sl_priority'].Bind(wx.EVT_SCROLL, self._on_sl_priority)
 
 	def _setup(self, task_uuid):
 		_LOG.debug("DlgTask(%r)", task_uuid)
@@ -187,6 +188,9 @@ class DlgTask(BaseDialog):
 			logic.update_task_hide(task)
 			self._refresh_static_texts()
 
+	def _on_sl_priority(self, _evt):
+		self['l_prio'].SetLabel(enums.PRIORITIES[self['sl_priority'].GetValue()])
+
 	def _save_current_note(self):
 		cnote = self._current_note
 		if cnote:
@@ -224,6 +228,7 @@ class DlgTask(BaseDialog):
 		lb_notes_list.Clear()
 		for note in task.notes:
 			lb_notes_list.Append(note.title[:50], note.uuid)
+		self['l_prio'].SetLabel(enums.PRIORITIES[task.priority])
 
 	def _set_date(self, attr_date, attr_time_set):
 		""" Wyśweitlenie dlg wyboru daty dla danego atrybutu """

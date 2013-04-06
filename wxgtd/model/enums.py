@@ -94,3 +94,9 @@ REMAIND_PATTERNS_LIST = [
 		("30 days", _("30 days"))]
 
 REMAIND_PATTERNS = dict(REMAIND_PATTERNS_LIST)
+
+PRIORITIES = {3: _("TOP"),
+		2: _("High"),
+		1: _("Med"),
+		0: _("Low"),
+		-1: _("None")}
