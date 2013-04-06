@@ -176,12 +176,12 @@ def load_json(strdata):
 		del data['tasknote']
 
 	_LOG.info("load_json: alarms")
-	alarms_cache = {}
 	alarms = data.get('alarm')
 	for alarm in alarms or []:
-		_replace_ids(alarm, tasks_cache, 'task_id')
+		task_uuid = _replace_ids(alarm, tasks_cache, 'task_id')
 		_convert_timestamps(alarm, 'alarm')
-		_create_or_update(session, objects.Alarm, alarm, alarms_cache)
+		task = session.query(objects.Task).filter_by(uuid=task_uuid).first()
+		task.alarm = alarm['alarm']
 	if alarms:
 		del data['alarm']
 
@@ -254,7 +254,6 @@ def load_json(strdata):
 	_delete_missing(objects.Folder, folders_cache, file_sync_time)
 	_delete_missing(objects.Context, contexts_cache, file_sync_time)
 	_delete_missing(objects.Tasknote, tasknotes_cache, file_sync_time)
-	_delete_missing(objects.Alarm, alarms_cache, file_sync_time)
 
 	c_last_sync.val = time.time()
 

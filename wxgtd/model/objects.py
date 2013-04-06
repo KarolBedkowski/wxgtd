@@ -127,6 +127,7 @@ class Task(BaseModelMixin, Base):
 	prevent_auto_purge = Column(Integer)
 	trash_bin = Column(Integer)
 	metainf = Column(String)
+	alarm = Column(DateTime)
 
 	folder_uuid = Column(String(36), ForeignKey("folders.uuid"))
 	context_uuid = Column(String(36), ForeignKey("contexts.uuid"))
@@ -139,7 +140,6 @@ class Task(BaseModelMixin, Base):
 	children = orm.relationship("Task", backref=orm.backref('parent',
 		remote_side=[uuid]))
 	notes = orm.relationship("Tasknote", cascade="all, delete-orphan")
-	alarms = orm.relationship("Alarm", cascade="all, delete-orphan")
 
 	@property
 	def status_name(self):
@@ -162,7 +162,7 @@ class Task(BaseModelMixin, Base):
 
 	@classmethod
 	def select_by_filters(cls, contexts, folders, goals, statuses, types,
-			parent_uuid, starred, min_priority, max_start_date,
+			parent_uuid, starred, min_priority, hide_until,
 			max_due_date, finished, tags):
 		session = Session()
 		query = session.query(cls)
@@ -177,8 +177,10 @@ class Task(BaseModelMixin, Base):
 			query = query.filter(starred > 0)
 		if min_priority is not None:
 			query = query.filter(Task.priority >= min_priority)
-		if max_start_date:
-			query = query.filter(Task.start_date <= max_start_date)
+		if hide_until:
+			now = datetime.datetime.now()
+			query = query.filter(or_(Task.hide_until.is_(None),
+					Task.hide_until <= now))
 		if max_due_date:
 			query = query.filter(Task.due_date <= max_due_date)
 		if finished is not None:
@@ -273,20 +275,6 @@ class Tasknote(BaseModelMixin, Base):
 	title = Column(String)
 	color = Column(String)
 	visible = Column(Integer)
-
-
-class Alarm(BaseModelMixin, Base):
-	"""alarm"""
-
-	__tablename__ = "alarms"
-	uuid = Column(String(36), primary_key=True, default=_gen_uuid)
-	task_uuid = Column(String(36), ForeignKey("tasks.uuid"))
-	created = Column(DateTime, default=datetime.datetime.now)
-	modified = Column(DateTime, default=datetime.datetime.now)
-	alarm = Column(DateTime)
-	reminder = Column(Integer)
-	active = Column(Integer)
-	note = Column(String)
 
 
 class Goal(BaseModelMixin, Base):
