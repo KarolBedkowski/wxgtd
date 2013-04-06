@@ -29,6 +29,7 @@ from _base_dialog import BaseDialog
 from dlg_datetime import DlgDateTime
 from dlg_remaind_settings import DlgRemaindSettings
 from dlg_show_settings import DlgShowSettings
+from dlg_repeat_settings import DlgRepeatSettings
 import _fmt as fmt
 
 _ = gettext.gettext
@@ -60,6 +61,7 @@ class DlgTask(BaseDialog):
 		self['btn_save_note'].Bind(wx.EVT_BUTTON, self._on_btn_save_note)
 		self['btn_remaind_set'].Bind(wx.EVT_BUTTON, self._on_btn_remiand_set)
 		self['btn_hide_until_set'].Bind(wx.EVT_BUTTON, self._on_btn_hide_until_set)
+		self['btn_repeat_set'].Bind(wx.EVT_BUTTON, self._on_btn_repeat_set)
 		self['sl_priority'].Bind(wx.EVT_SCROLL, self._on_sl_priority)
 
 	def _setup(self, task_uuid):
@@ -188,6 +190,14 @@ class DlgTask(BaseDialog):
 			logic.update_task_hide(task)
 			self._refresh_static_texts()
 
+	def _on_btn_repeat_set(self, _evt):
+		task = self._task
+		dlg = DlgRepeatSettings(self._wnd, task.repeat_pattern, task.repeat_from)
+		if dlg.run(True):
+			task.repeat_from = dlg.repeat_from
+			task.repeat_pattern = dlg.pattern
+			self._refresh_static_texts()
+
 	def _on_sl_priority(self, _evt):
 		self['l_prio'].SetLabel(enums.PRIORITIES[self['sl_priority'].GetValue()])
 
@@ -224,6 +234,8 @@ class DlgTask(BaseDialog):
 					True))
 		else:
 			self['l_hide_until'].SetLabel('')
+		self['l_repeat'].SetLabel(enums.REPEAT_PATTERN.get(task.repeat_pattern,
+				task.repeat_pattern or ""))
 		lb_notes_list = self['lb_notes_list']
 		lb_notes_list.Clear()
 		for note in task.notes:

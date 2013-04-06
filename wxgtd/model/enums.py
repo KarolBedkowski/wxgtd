@@ -100,3 +100,18 @@ PRIORITIES = {3: _("TOP"),
 		1: _("Med"),
 		0: _("Low"),
 		-1: _("None")}
+
+REPEAT_PATTERN_LIST = [("Norepeat", _("Norepeat")),
+	("Daily", _("Daily")),
+	("Businessday", _("Business Day")),
+	("Weekend", _("Weekend")),
+	("Weekly", _("Weekly")),
+	("Biweekly", _("Biweekly")),
+	("Monthly", _("Monthly")),
+	("Bimonthly", _("Bimonthly")),
+	("Quarterly", _("Quarterly")),
+	("Semiannually", _("Semiannually")),
+	("Yearly", _("Yearly")),
+	("WITHPARENT", _("With parrent"))]
+
+REPEAT_PATTERN = dict(REPEAT_PATTERN_LIST)
