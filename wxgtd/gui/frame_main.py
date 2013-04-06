@@ -122,12 +122,15 @@ class FrameMain:
 				wx.ART_NEW, wx.ART_TOOLBAR), shortHelp=_('Add new task'))
 		self.wnd.Bind(wx.EVT_TOOL, self._on_menu_file_new_task, id=tbi.GetId())
 
+		appconfig = AppConfig()
+
 		# show subtask
 		self._btn_show_subtasks = wx.ToggleButton(toolbar, -1,
 				_(" Show subtasks "))
 		toolbar.AddControl(self._btn_show_subtasks)
 		self.wnd.Bind(wx.EVT_TOGGLEBUTTON, self._on_btn_show_subtasks,
 				self._btn_show_subtasks)
+		self._btn_show_subtasks.SetValue(appconfig.get('main', 'show_subtask', True))
 
 		# show completed
 		self._btn_show_finished = wx.ToggleButton(toolbar, -1,
@@ -135,6 +138,8 @@ class FrameMain:
 		toolbar.AddControl(self._btn_show_finished)
 		self.wnd.Bind(wx.EVT_TOGGLEBUTTON, self._on_btn_show_finished,
 				self._btn_show_finished)
+		self._btn_show_finished.SetValue(appconfig.get('main', 'show_finished',
+				False))
 
 		# hide until due
 		self._btn_hide_until = wx.ToggleButton(toolbar, -1,
@@ -142,6 +147,7 @@ class FrameMain:
 		toolbar.AddControl(self._btn_hide_until)
 		self.wnd.Bind(wx.EVT_TOGGLEBUTTON, self._on_btn_hide_due,
 				self._btn_hide_until)
+		self._btn_hide_until.SetValue(appconfig.get('main', 'show_hide_until', True))
 
 		toolbar.Realize()
 
@@ -160,6 +166,9 @@ class FrameMain:
 		appconfig = AppConfig()
 		appconfig.set('frame_main', 'size', self.wnd.GetSizeTuple())
 		appconfig.set('frame_main', 'position', self.wnd.GetPositionTuple())
+		appconfig.set('main', 'show_finished', self._btn_show_finished.GetValue())
+		appconfig.set('main', 'show_subtask', self._btn_show_subtasks.GetValue())
+		appconfig.set('main', 'show_hide_until', self._btn_hide_until.GetValue())
 		self.wnd.Destroy()
 
 	def _on_menu_file_load(self, _evt):
