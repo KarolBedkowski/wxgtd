@@ -21,11 +21,13 @@ except ImportError:
 
 from wxgtd.model import objects as OBJ
 from wxgtd.model import enums
+from wxgtd.model import logic
 from wxgtd.wxtools.validators import Validator, ValidatorDv
 from wxgtd.wxtools.validators import v_length as LVALID
 
 from _base_dialog import BaseDialog
 from dlg_datetime import DlgDateTime
+from dlg_remaind_settings import DlgRemaindSettings
 import _fmt as fmt
 
 _ = gettext.gettext
@@ -55,6 +57,7 @@ class DlgTask(BaseDialog):
 		self._wnd.Bind(wx.EVT_BUTTON, self._on_btn_new_note, id=wx.ID_ADD)
 		self['btn_del_note'].Bind(wx.EVT_BUTTON, self._on_btn_del_note)
 		self['btn_save_note'].Bind(wx.EVT_BUTTON, self._on_btn_save_note)
+		self['btn_remaind_set'].Bind(wx.EVT_BUTTON, self._on_btn_remiand_set)
 
 	def _setup(self, task_uuid):
 		_LOG.debug("DlgTask(%r)", task_uuid)
@@ -152,6 +155,21 @@ class DlgTask(BaseDialog):
 	def _on_btn_save_note(self, _evt):
 		self._save_current_note()
 
+	def _on_btn_remiand_set(self, _evt):
+		task = self._task
+		alarm = None
+		if task.alarm:
+			alarm = time.mktime(task.alarm.timetuple())
+		dlg = DlgRemaindSettings(self._wnd, alarm, task.alarm_pattern)
+		if dlg.run(True):
+			if dlg.alarm:
+				task.alarm = datetime.datetime.fromtimestamp(dlg.alarm)
+			else:
+				task.alarm = None
+			task.alarm_pattern = dlg.alarm_pattern
+			logic.update_task_alarm(task)
+			self._refresh_static_texts()
+
 	def _save_current_note(self):
 		cnote = self._current_note
 		if cnote:
@@ -172,6 +190,12 @@ class DlgTask(BaseDialog):
 		self['l_start_date'].SetLabel(fmt.format_timestamp(task.start_date,
 				task.start_time_set))
 		self['l_tags'].SetLabel(", ".join(tag.tag.title for tag in task.tags) or '')
+		if task.alarm_pattern:
+			self['l_remaind'].SetLabel(enums.REMAIND_PATTERNS[task.alarm_pattern])
+		elif task.alarm:
+			self['l_remaind'].SetLabel(fmt.format_timestamp(task.alarm, True))
+		else:
+			self['l_remaind'].SetLabel('')
 		lb_notes_list = self['lb_notes_list']
 		lb_notes_list.Clear()
 		for note in task.notes:
