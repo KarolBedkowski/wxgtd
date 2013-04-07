@@ -222,15 +222,15 @@ class DlgTask(BaseDialog):
 				task.start_time_set))
 		self['l_tags'].SetLabel(", ".join(tag.tag.title for tag in task.tags) or '')
 		if task.alarm_pattern:
-			self['l_remaind'].SetLabel(enums.REMAIND_PATTERNS[task.alarm_pattern])
+			self['l_remind'].SetLabel(enums.REMAIND_PATTERNS[task.alarm_pattern])
 		elif task.alarm:
-			self['l_remaind'].SetLabel(fmt.format_timestamp(task.alarm, True))
+			self['l_remind'].SetLabel(fmt.format_timestamp(task.alarm, True))
 		else:
-			self['l_remaind'].SetLabel('')
+			self['l_remind'].SetLabel('')
 		if task.hide_pattern:
 			self['l_hide_until'].SetLabel(enums.HIDE_PATTERNS[task.hide_pattern])
 		elif task.hide_until:
-			self['l_remaind'].SetLabel(fmt.format_timestamp(task.hide_until,
+			self['l_hide_until'].SetLabel(fmt.format_timestamp(task.hide_until,
 					True))
 		else:
 			self['l_hide_until'].SetLabel('')
