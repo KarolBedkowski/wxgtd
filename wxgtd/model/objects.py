@@ -137,33 +137,44 @@ class Task(BaseModelMixin, Base):
 		return cls.select(where_stmt="completed is not null")
 
 	@classmethod
-	def select_by_filters(cls, contexts, folders, goals, statuses, types,
-			parent_uuid, starred, min_priority, hide_until,
-			max_due_date, finished, tags):
+	def select_by_filters(cls, params):
 		session = Session()
 		query = session.query(cls)
-		query = _append_filter_list(query, Task.context_uuid, contexts)
-		query = _append_filter_list(query, Task.folder_uuid, folders)
-		query = _append_filter_list(query, Task.goal_uuid, goals)
-		query = _append_filter_list(query, Task.status, statuses)
-		query = _append_filter_list(query, Task.type, types)
-		if tags:
-			query = query.filter(Task.tags.any(TaskTag.task_uuid.in_(tags)))
-		if starred:
-			query = query.filter(starred > 0)
-		if min_priority is not None:
-			query = query.filter(Task.priority >= min_priority)
-		if hide_until:
-			now = datetime.datetime.now()
+		query = _append_filter_list(query, Task.context_uuid, params.get('contexts'))
+		query = _append_filter_list(query, Task.folder_uuid, params.get('folders'))
+		query = _append_filter_list(query, Task.goal_uuid, params.get('goals'))
+		query = _append_filter_list(query, Task.status, params.get('statuses'))
+		query = _append_filter_list(query, Task.type, params.get('types'))
+		now = datetime.datetime.now()
+		if params.get('tags'):
+			query = query.filter(Task.tags.any(TaskTag.task_uuid.in_(params['tags'])))
+		if params.get('hide_until'):
 			query = query.filter(or_(Task.hide_until.is_(None),
 					Task.hide_until <= now))
-		if max_due_date:
-			query = query.filter(Task.due_date <= max_due_date)
+		# params hotlist
+		opt = []
+		if params.get('starred'):
+			opt.append(Task.starred > 0)
+		if params.get('min_priority') is not None:
+			opt.append(Task.priority >= params('min_priority'))
+		if params.get('max_due_date'):
+			opt.append(Task.due_date <= params['max_due_date'])
+		if params.get('next_action'):
+			opt.append(Task.status == 1)  # next action
+		if params.get('started'):
+			opt.append(Task.start_date <= now)
+		if opt:
+			if params.get('filter_operator', 'and') == 'or':
+				query = query.filter(or_(*opt))
+			else:
+				query = query.filter(*opt)
+		finished = params['finished']
 		if finished is not None:
 			if finished:
 				query = query.filter(Task.completed.isnot(None))
 			else:
 				query = query.filter(Task.completed.is_(None))
+		parent_uuid = params.get('parent_uuid')
 		if parent_uuid is not None:
 			if parent_uuid == 0:
 				query = query.filter(Task.parent_uuid.is_(None))

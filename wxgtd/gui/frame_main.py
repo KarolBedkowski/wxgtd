@@ -10,6 +10,7 @@ __version__ = "2011-03-29"
 import sys
 import gettext
 import logging
+import datetime
 
 import wx
 from wx import xrc
@@ -258,11 +259,7 @@ class FrameMain:
 		if group_id == 0:  # all
 			pass
 		elif group_id == 1:  # hot
-			# TODO: dodać obsługę hotlisty
-			# będzie to problematyczne, bo hotlista może działać na and-ach lub
-			# na orach (domyślne). And można tutaj dodać, ale dla or-ów musi
-			# być osobna metoda do zwracania
-			pass
+			_get_hotlist_settings(params)
 		elif group_id == 2:  # stared
 			params['starred'] = True
 		elif group_id == 3:  # basket
@@ -281,7 +278,7 @@ class FrameMain:
 				params['types'] = [enums.TYPE_CHECKLIST]
 
 		_LOG.debug("FrameMain._refresh_list; params=%r", params)
-		tasks = OBJ.Task.select_by_filters(**params)
+		tasks = OBJ.Task.select_by_filters(params)
 		items_list = self._items_list_ctrl
 		items_list.Freeze()
 		items_list.DeleteAllItems()
@@ -323,3 +320,13 @@ def _update_color(wnd, bgcolor):
 		if isinstance(child, wx.Panel):
 			child.SetBackgroundColour(bgcolor)
 		_update_color(child, bgcolor)
+
+
+def _get_hotlist_settings(params):
+	now = datetime.datetime.now()
+	params['filter_operator'] = 'or'
+	params['max_due_date'] = now - datetime.timedelta(days=5)
+	params['priority'] = 2
+	params['starred'] = True
+	params['next_action'] = True
+	params['started'] = False
