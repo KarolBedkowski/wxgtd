@@ -168,11 +168,13 @@ class Task(BaseModelMixin, Base):
 				query = query.filter(or_(*opt))
 			else:
 				query = query.filter(*opt)
-		finished = params['finished']
+		finished = params.get('finished')
 		if finished is not None:
 			if finished:
+				# zakończone
 				query = query.filter(Task.completed.isnot(None))
 			else:
+				# niezakończone
 				query = query.filter(Task.completed.is_(None))
 		parent_uuid = params.get('parent_uuid')
 		if parent_uuid is not None:

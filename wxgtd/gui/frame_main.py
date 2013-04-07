@@ -250,7 +250,8 @@ class FrameMain:
 		params['parent_uuid'] = parent = self._items_path[-1].uuid \
 				if self._items_path else None
 		params['tags'] = list(tmodel.checked_items_by_parent("TAGS"))
-		params['finished'] = self._btn_show_finished.GetValue()
+		if not self._btn_show_finished.GetValue():
+			params['finished'] = False
 		params['hide_until'] = self._btn_hide_until.GetValue()
 		if not parent:
 			if not self._btn_show_subtasks.GetValue():
