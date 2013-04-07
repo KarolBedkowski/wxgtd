@@ -123,6 +123,18 @@ class FrameMain:
 				wx.ART_NEW, wx.ART_TOOLBAR), shortHelp=_('Add new task'))
 		self.wnd.Bind(wx.EVT_TOOL, self._on_menu_file_new_task, id=tbi.GetId())
 
+		tbi = toolbar.AddLabelTool(-1, _('Edit Task'), wx.ArtProvider.GetBitmap(
+			wx.ART_FOLDER_OPEN, wx.ART_TOOLBAR), shortHelp=_('Edit selected task'))
+		self.wnd.Bind(wx.EVT_TOOL, self._on_btn_edit_selected_task,
+				id=tbi.GetId())
+
+		tbi = toolbar.AddLabelTool(-1, _('Toggle Task Completed'),
+				wx.ArtProvider.GetBitmap(wx.ART_TICK_MARK, wx.ART_TOOLBAR),
+				shortHelp=_('Toggle selected task completed'))
+		self.wnd.Bind(wx.EVT_TOOL, self._on_btn_complete_task, id=tbi.GetId())
+
+		toolbar.AddSeparator()
+
 		appconfig = AppConfig()
 
 		# show subtask
@@ -234,6 +246,30 @@ class FrameMain:
 		self._refresh_list()
 
 	def _on_btn_show_finished(self, _evt):
+		self._refresh_list()
+
+	def _on_btn_edit_selected_task(self, _evt):
+		sel = self._items_list_ctrl.GetNextItem(-1, wx.LIST_NEXT_ALL,
+				wx.LIST_STATE_SELECTED)
+		if sel == -1:
+			return
+		task_uuid, _task_type = self._items_uuids[
+				self._items_list_ctrl.GetItemData(sel)]
+		if task_uuid:
+			dlg = DlgTask.create(task_uuid, self.wnd, task_uuid)
+			dlg.run()
+
+	def _on_btn_complete_task(self, _evt):
+		sel = self._items_list_ctrl.GetNextItem(-1, wx.LIST_NEXT_ALL,
+				wx.LIST_STATE_SELECTED)
+		if sel == -1:
+			return
+		task_uuid, _task_type = self._items_uuids[
+				self._items_list_ctrl.GetItemData(sel)]
+		session = OBJ.Session()
+		task = session.query(OBJ.Task).filter_by(uuid=task_uuid).first()
+		task.task_completed = not task.task_completed
+		session.commit()
 		self._refresh_list()
 
 	# logic
