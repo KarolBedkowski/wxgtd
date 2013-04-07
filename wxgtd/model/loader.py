@@ -14,6 +14,7 @@ import time
 import datetime
 
 import objects
+import logic
 
 _LOG = logging.getLogger(__name__)
 
@@ -45,6 +46,7 @@ def _create_or_update(session, cls, datadict, cache=None):
 	if cache is not None:
 		cache[oid] = uuid
 		cache[uuid] = oid
+	return obj
 
 
 def _replace_ids(objdict, cache, key_id, key_uuid=None):
@@ -161,7 +163,8 @@ def load_json(strdata):
 		task['context_uuid'] = None
 		task['folder_uuid'] = None
 		task['goal_uuid'] = None
-		_create_or_update(session, objects.Task, task, tasks_cache)
+		task_obj = _create_or_update(session, objects.Task, task, tasks_cache)
+		logic.update_task_hide(task_obj)
 	if tasks:
 		del data['task']
 
@@ -182,6 +185,7 @@ def load_json(strdata):
 		_convert_timestamps(alarm, 'alarm')
 		task = session.query(objects.Task).filter_by(uuid=task_uuid).first()
 		task.alarm = alarm['alarm']
+		logic.update_task_alarm(task)
 	if alarms:
 		del data['alarm']
 

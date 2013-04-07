@@ -68,9 +68,9 @@ def update_task_hide(task):
 	num = float(num)
 	if period == 'week':
 		offset = datetime.timedelta(0, weeks=-num)
-	elif period.startwith('day'):
+	elif period.startswith('day'):
 		offset = datetime.timedelta(-num)
-	elif period.startwith('month'):
+	elif period.startswith('month'):
 		offset = relativedelta(months=-num)
 	else:
 		_LOG.warn('update_task_hide: invalid hide_period = %r',
