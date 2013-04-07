@@ -241,6 +241,11 @@ class DlgTask(BaseDialog):
 		for note in task.notes:
 			lb_notes_list.Append(note.title[:50], note.uuid)
 		self['l_prio'].SetLabel(enums.PRIORITIES[task.priority])
+		if task.completed:
+			self['l_completed_date'].SetLabel(fmt.format_timestamp(task.completed,
+					True))
+		else:
+			self['l_completed_date'].SetLabel('')
 
 	def _set_date(self, attr_date, attr_time_set):
 		""" Wyśweitlenie dlg wyboru daty dla danego atrybutu """
