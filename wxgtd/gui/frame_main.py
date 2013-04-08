@@ -7,6 +7,7 @@ __author__ = "Karol Będkowski"
 __copyright__ = "Copyright (c) Karol Będkowski, 2010"
 __version__ = "2011-03-29"
 
+import os
 import sys
 import gettext
 import logging
@@ -27,6 +28,7 @@ from wxgtd.lib import iconprovider
 
 from wxgtd.model import objects as OBJ
 from wxgtd.model import loader
+from wxgtd.model import exporter
 from wxgtd.model import enums
 from wxgtd.gui import dlg_about
 from wxgtd.gui._filtertreectrl import FilterTreeCtrl
@@ -102,6 +104,7 @@ class FrameMain:
 			self.wnd.Bind(wx.EVT_MENU, handler, id=xrc.XRCID(menu_id))
 
 		_create_menu_bind('menu_file_load', self._on_menu_file_load)
+		_create_menu_bind('menu_file_save', self._on_menu_file_save)
 		_create_menu_bind('menu_file_exit', self._on_menu_file_exit)
 		_create_menu_bind('menu_about', self._on_menu_help_about)
 
@@ -185,12 +188,33 @@ class FrameMain:
 		self.wnd.Destroy()
 
 	def _on_menu_file_load(self, _evt):
-		dlg = wx.FileDialog(self.wnd, style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST)
+		appconfig = AppConfig()
+		dlg = wx.FileDialog(self.wnd,
+				defaultDir=appconfig.get('files', 'last_dir', ''),
+				defaultFile=appconfig.get('files', 'last_file', 'GTD_SYNC.zip'),
+				style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST)
 		if dlg.ShowModal() == wx.ID_OK:
 			filename = dlg.GetPath()
 			loader.load_from_file(filename)
 			self._filter_tree_ctrl.RefreshItems()
 			Publisher.sendMessage('task.update')
+			appconfig.set('files', 'last_dir', os.path.dirname(filename))
+			appconfig.set('files', 'last_file', os.path.basename(filename))
+		dlg.Destroy()
+
+	def _on_menu_file_save(self, _evt):
+		appconfig = AppConfig()
+		dlg = wx.FileDialog(self.wnd,
+				defaultDir=appconfig.get('files', 'last_dir', ''),
+				defaultFile=appconfig.get('files', 'last_file', 'GTD_SYNC.zip'),
+				style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT)
+		if dlg.ShowModal() == wx.ID_OK:
+			filename = dlg.GetPath()
+			exporter.save_to_file(filename)
+			self._filter_tree_ctrl.RefreshItems()
+			Publisher.sendMessage('task.update')
+			appconfig.set('files', 'last_dir', os.path.dirname(filename))
+			appconfig.set('files', 'last_file', os.path.basename(filename))
 		dlg.Destroy()
 
 	def _on_menu_file_exit(self, _evt):
