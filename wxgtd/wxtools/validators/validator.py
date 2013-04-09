@@ -167,7 +167,7 @@ class Validator(wx.PyValidator):
 	def _set_value_to_control(self, value):
 		""" Ustawienei wartości w widgecie """
 		control = self.GetWindow()
-		if isinstance(control, (wx.lib.masked.NumCtrl, wx.Slider)):
+		if isinstance(control, (wx.lib.masked.NumCtrl, wx.Slider, wx.SpinCtrl)):
 			control.SetValue(value or 0)
 		elif isinstance(control, (wx.CheckBox, wx.RadioButton)):
 			control.SetValue(bool(value))
