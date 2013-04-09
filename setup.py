@@ -7,13 +7,14 @@ import time
 import sys
 import wx
 
-from distutils.core import setup
+from setuptools import setup, find_packages
 from distutils.cmd import Command
 import distutils.command.clean
 
 if sys.platform == 'win32':
 	try:
 		import py2exe
+		print py2exe.version
 	except:
 		pass
 
@@ -23,31 +24,12 @@ build = time.asctime()
 use_py2exe = 'py2exe' in sys.argv
 
 
-def packages_for(filename, basePackage=""):
-	"""Find all packages in filename"""
-	packages = {}
-	for item in os.listdir(filename):
-		dirname = os.path.join(filename, item)
-		if os.path.isdir(dirname) and os.path.isfile(os.path.join(
-				dirname, '__init__.py')):
-			if basePackage:
-				moduleName = basePackage + '.' + item
-			else:
-				moduleName = item
-			packages[moduleName] = dirname
-			packages.update(packages_for(dirname, moduleName))
-	return packages
-
-
 def find_files(directory, base, filter_func=None):
 	for name, subdirs, files in os.walk(directory):
 		if files:
 			yield (os.path.join(base[:-len(directory)], name),
 					[os.path.join(name, fname) for fname
 						in filter(filter_func, files)])
-
-
-packages = packages_for(".")
 
 
 def get_data_files():
@@ -220,51 +202,51 @@ class MakeXrcCommand(Command):
 					os.path.join(base_dir, '%s.wxg' % wxg))
 
 
-cmdclass = {'make_mo': MakeMoCommand,
-		'make_man': MakeManCommand,
-		'update_potfiles': UpdatePotfilesCommand,
-		'create_xrc': MakeXrcCommand,
-		'clean': CleanupCmd}
+if __name__ == '__main__':
+	cmdclass = {'make_mo': MakeMoCommand,
+			'make_man': MakeManCommand,
+			'update_potfiles': UpdatePotfilesCommand,
+			'create_xrc': MakeXrcCommand,
+			'clean': CleanupCmd}
 
+	target = {'script': "wxgtd_dbg.py",
+			'name': "wxgtd_dbg",
+			'version': version.VERSION,
+			'description': "%s - %s (%s, build: %s)"
+					% (version.NAME, version.DESCRIPTION, version.RELEASE, build),
+			'company_name': "Karol Będkowski",
+			'copyright': version.COPYRIGHT,
+			'icon_resources': [(0, "data/wxgtd.ico")],
+			'other_resources': [("VERSIONTAG", 1, build)]}
 
-target = {'script': "wxgtd_dbg.py",
-		'name': "wxgtd_dbg",
-		'version': version.VERSION,
-		'description': "%s - %s (%s, build: %s)"
-				% (version.NAME, version.DESCRIPTION, version.RELEASE, build),
-		'company_name': "Karol Będkowski",
-		'copyright': version.COPYRIGHT,
-		'icon_resources': [(0, "data/wxgtd.ico")],
-		'other_resources': [("VERSIONTAG", 1, build)]}
+	target_win = target.copy()
+	target_win.update({'script': "wxgtd.pyw", 'name': "wxgtd"})
 
-
-target_win = target.copy()
-target_win.update({'script': "wxgtd.pyw", 'name': "wxgtd"})
-
-
-setup(name='wxgtd',
-		version=version.VERSION,
-		author=target['company_name'],
-		author_email='karol.bedkowski@gmail.com',
-		description=target['description'],
-		long_description='-',
-		license='GPL v2',
-		url='-',
-		download_url='-',
-		classifiers=['Development Status :: 4 - Beta',
-			'Environment :: Win32 (MS Windows)',
-			'Environment :: X11 Applications',
-			'License :: OSI Approved :: GNU General Public License (GPL)',
-			'Operating System :: OS Independent',
-			'Programming Language :: Python',
-			'Topic :: Database :: Desktop'],
-		packages=packages.keys(),
-		package_dir=packages,
-		data_files=list(get_data_files()),
-		include_package_data=True,
-		scripts=['bin/wxgtd'],
-		install_requires=['wxPython>=2.8.0'],
-		zipfile=r"modules.dat",
-		windows=[target_win],
-		console=[target],
-		cmdclass=cmdclass)
+	setup(name='wxgtd',
+			version=version.VERSION,
+			author=target['company_name'],
+			author_email='karol.bedkowski@gmail.com',
+			description=target['description'],
+			long_description='-',
+			license='GPL v2',
+			url='-',
+			download_url='-',
+			classifiers=['Development Status :: 4 - Beta',
+				'Environment :: Win32 (MS Windows)',
+				'Environment :: X11 Applications',
+				'License :: OSI Approved :: GNU General Public License (GPL)',
+				'Operating System :: OS Independent',
+				'Programming Language :: Python',
+				'Topic :: Database :: Desktop'],
+			packages=find_packages(),
+			data_files=list(get_data_files()),
+			include_package_data=True,
+			scripts=['bin/wxgtd'],
+			install_requires=['wxPython>=2.8.0'],
+			setup_requires=['nose>=1.0'],
+			zipfile=r"modules.dat",
+			windows=[target_win],
+			console=[target],
+			cmdclass=cmdclass,
+			#namespace_packages=['wxgtd'],
+			test_suite='nose.collector')
