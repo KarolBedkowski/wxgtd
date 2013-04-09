@@ -106,6 +106,7 @@ class FrameMain:
 		_create_menu_bind('menu_file_load', self._on_menu_file_load)
 		_create_menu_bind('menu_file_save', self._on_menu_file_save)
 		_create_menu_bind('menu_file_exit', self._on_menu_file_exit)
+		_create_menu_bind('menu_file_sync', self._on_menu_file_sync)
 		_create_menu_bind('menu_about', self._on_menu_help_about)
 
 		self._filter_tree_ctrl.Bind(wx.EVT_TREE_ITEM_ACTIVATED,
@@ -216,6 +217,24 @@ class FrameMain:
 			appconfig.set('files', 'last_dir', os.path.dirname(filename))
 			appconfig.set('files', 'last_file', os.path.basename(filename))
 		dlg.Destroy()
+
+	def _on_menu_file_sync(self, _evt):
+		appconfig = AppConfig()
+		last_sync_file = appconfig.get('files', 'last_sync_file')
+		if not last_sync_file:
+			dlg = wx.FileDialog(self.wnd,
+					defaultDir=appconfig.get('files', 'last_dir', ''),
+					defaultFile=appconfig.get('files', 'last_file', 'GTD_SYNC.zip'),
+					style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST)
+			if dlg.ShowModal() == wx.ID_OK:
+				last_sync_file = dlg.GetPath()
+			dlg.Destroy()
+		if last_sync_file:
+			appconfig.set('files', 'last_sync_file', last_sync_file)
+			loader.load_from_file(last_sync_file) and exporter.save_to_file(
+					last_sync_file)
+			self._filter_tree_ctrl.RefreshItems()
+			Publisher.sendMessage('task.update')
 
 	def _on_menu_file_exit(self, _evt):
 		self.wnd.Close()
