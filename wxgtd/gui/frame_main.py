@@ -411,9 +411,13 @@ def _update_color(wnd, bgcolor):
 
 def _get_hotlist_settings(params):
 	now = datetime.datetime.now()
-	params['filter_operator'] = 'or'
-	params['max_due_date'] = now - datetime.timedelta(days=5)
-	params['priority'] = 2
-	params['starred'] = True
-	params['next_action'] = True
-	params['started'] = False
+	conf = AppConfig()
+	params['filter_operator'] = 'or' if conf.get('hotlist', 'cond', True) \
+			else 'and'
+	params['max_due_date'] = now + datetime.timedelta(days=conf.get('hotlist',
+			'due', 0))
+	params['min_priority'] = conf.get('hotlist', 'priority', 3)
+	params['starred'] = conf.get('hotlist', 'starred', False)
+	params['next_action'] = conf.get('hotlist', 'next_action', False)
+	params['started'] = conf.get('hotlist', 'started', False)
+	print params
