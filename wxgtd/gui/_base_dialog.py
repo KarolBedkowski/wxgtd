@@ -79,6 +79,8 @@ class BaseDialog:
 			position = self._appconfig.get(self._name, 'position')
 			if position:
 				self._wnd.Move(position)
+		else:
+			self._wnd.Centre()
 		self._wnd.SetFocus()
 		self._wnd.SetEscapeId(wx.ID_CLOSE)
 

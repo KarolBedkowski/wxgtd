@@ -31,7 +31,7 @@ class DlgRemaindSettings(BaseDialog):
 		"""
 		self._data = {'date': None, 'time': None, 'pattern': alarm_pattern,
 				'alarm': alarm}
-		BaseDialog.__init__(self, parent, 'dlg_remaind_settings')
+		BaseDialog.__init__(self, parent, 'dlg_remaind_settings', save_pos=False)
 		self._setup(alarm, alarm_pattern)
 
 	@property

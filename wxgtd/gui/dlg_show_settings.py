@@ -31,7 +31,7 @@ class DlgShowSettings(BaseDialog):
 		"""
 		self._data = {'date': None, 'time': None, 'pattern': pattern,
 				'datetime': date}
-		BaseDialog.__init__(self, parent, 'dlg_show_settings')
+		BaseDialog.__init__(self, parent, 'dlg_show_settings', save_pos=False)
 		self._setup(date, pattern)
 
 	@property

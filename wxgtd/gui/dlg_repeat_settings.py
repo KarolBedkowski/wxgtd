@@ -29,7 +29,7 @@ class DlgRepeatSettings(BaseDialog):
 		alarm_pattern - opis przpomnienia (z enums.REMAIND_PATTERNS)
 		"""
 		self._data = {'pattern': pattern, 'from': repeat_from}
-		BaseDialog.__init__(self, parent, 'dlg_repeat_settings')
+		BaseDialog.__init__(self, parent, 'dlg_repeat_settings', save_pos=False)
 		self._setup(pattern, repeat_from)
 
 	@property

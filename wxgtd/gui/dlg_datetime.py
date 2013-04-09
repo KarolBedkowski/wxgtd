@@ -24,7 +24,7 @@ class DlgDateTime(BaseDialog):
 	"""
 
 	def __init__(self, parent, timestamp, timeset):
-		BaseDialog.__init__(self, parent, 'dlg_datetime')
+		BaseDialog.__init__(self, parent, 'dlg_datetime', save_pos=False)
 		self._setup(timestamp, timeset)
 		self._timeset = timeset
 		self._timestamp = timestamp
