@@ -33,6 +33,7 @@ from wxgtd.model import enums
 from wxgtd.gui import dlg_about
 from wxgtd.gui._filtertreectrl import FilterTreeCtrl
 from wxgtd.gui.dlg_task import DlgTask
+from wxgtd.gui.dlg_preferences import DlgPreferences
 from wxgtd.gui import _fmt as fmt
 #from . import message_boxes as mbox
 
@@ -107,6 +108,8 @@ class FrameMain:
 		_create_menu_bind('menu_file_save', self._on_menu_file_save)
 		_create_menu_bind('menu_file_exit', self._on_menu_file_exit)
 		_create_menu_bind('menu_file_sync', self._on_menu_file_sync)
+		_create_menu_bind('menu_file_preferences',
+				self._on_menu_file_preferences)
 		_create_menu_bind('menu_about', self._on_menu_help_about)
 
 		self._filter_tree_ctrl.Bind(wx.EVT_TREE_ITEM_ACTIVATED,
@@ -235,6 +238,10 @@ class FrameMain:
 					last_sync_file)
 			self._filter_tree_ctrl.RefreshItems()
 			Publisher.sendMessage('task.update')
+
+	def _on_menu_file_preferences(self, evt):
+		if DlgPreferences(self.wnd).run(True):
+			self._filter_tree_ctrl.RefreshItems()
 
 	def _on_menu_file_exit(self, _evt):
 		self.wnd.Close()
