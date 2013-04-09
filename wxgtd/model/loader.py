@@ -1,12 +1,9 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 """
-
-
-TODO:
-	- goals
 """
 
+import os
 import logging
 import cjson
 import zipfile
@@ -21,13 +18,16 @@ _LOG = logging.getLogger(__name__)
 
 def load_from_file(filename):
 	"""Load data from zipfile"""
+	if not os.path.isfile(filename):
+		return False
 	if filename.endswith('.zip'):
 		with zipfile.ZipFile(filename, 'r') as zfile:
 			fname = zfile.namelist()[0]
-			load_json(zfile.read(fname))
+			return load_json(zfile.read(fname))
 	else:
 		with open(filename, 'r') as ifile:
-			load_json(ifile.read())
+			return load_json(ifile.read())
+	return False
 
 
 def _create_or_update(session, cls, datadict, cache=None):
@@ -182,6 +182,9 @@ def load_json(strdata):
 	alarms = data.get('alarm')
 	for alarm in alarms or []:
 		task_uuid = _replace_ids(alarm, tasks_cache, 'task_id')
+		if not task_uuid:
+			_LOG.error('load alarm error %r; %r; %r', alarm, task_uuid)
+			continue
 		_convert_timestamps(alarm, 'alarm')
 		task = session.query(objects.Task).filter_by(uuid=task_uuid).first()
 		task.alarm = alarm['alarm']
@@ -194,6 +197,10 @@ def load_json(strdata):
 	for task_folder in task_folders or []:
 		task_uuid = _replace_ids(task_folder, tasks_cache, 'task_id')
 		folder_uuid = _replace_ids(task_folder, folders_cache, 'folder_id')
+		if not task_uuid or not folder_uuid:
+			_LOG.error('load task folder error %r; %r; %r', task_folder,
+					task_uuid, folder_uuid)
+			continue
 		_convert_timestamps(task_folder)
 		task = session.query(objects.Task).filter_by(uuid=task_uuid).first()
 		task.folder_uuid = folder_uuid
@@ -205,6 +212,10 @@ def load_json(strdata):
 	for task_context in task_contexts or []:
 		task_uuid = _replace_ids(task_context, tasks_cache, 'task_id')
 		context_uuid = _replace_ids(task_context, contexts_cache, 'context_id')
+		if not task_uuid or not context_uuid:
+			_LOG.error('load task contexts error %r; %r; %r', task_context,
+					task_uuid, context_uuid)
+			continue
 		_convert_timestamps(task_context)
 		task = session.query(objects.Task).filter_by(uuid=task_uuid).first()
 		task.context_uuid = context_uuid
@@ -216,6 +227,10 @@ def load_json(strdata):
 	for task_goal in task_goals or []:
 		task_uuid = _replace_ids(task_goal, tasks_cache, 'task_id')
 		goal_uuid = _replace_ids(task_goal, goals_cache, 'goal_id')
+		if not task_uuid or not goal_uuid:
+			_LOG.error('load task goal error %r; %r; %r', task_goal,
+					task_uuid, goal_uuid)
+			continue
 		task = session.query(objects.Task).filter_by(uuid=task_uuid).first()
 		task.goal_uuid = goal_uuid
 	if task_goals:
@@ -266,6 +281,7 @@ def load_json(strdata):
 	if data:
 		_LOG.warn("Loader: remaining: %r", data.keys())
 		_LOG.debug("Loader: remainig: %r", data)
+	return True
 
 
 def test():
