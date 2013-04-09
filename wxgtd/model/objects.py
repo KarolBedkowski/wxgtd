@@ -156,7 +156,7 @@ class Task(BaseModelMixin, Base):
 		if params.get('starred'):
 			opt.append(Task.starred > 0)
 		if params.get('min_priority') is not None:
-			opt.append(Task.priority >= params('min_priority'))
+			opt.append(Task.priority >= params['min_priority'])
 		if params.get('max_due_date'):
 			opt.append(Task.due_date <= params['max_due_date'])
 		if params.get('next_action'):
