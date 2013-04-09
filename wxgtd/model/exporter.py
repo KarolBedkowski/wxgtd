@@ -36,7 +36,7 @@ def fmt_date(value):
 
 def _build_uuid_map(session, objclass):
 	cache = {}
-	for idx, obj in enumerate(session.query(objclass)):
+	for idx, obj in enumerate(session.query(objclass), 1):
 		cache[obj.uuid] = idx
 	return cache
 
@@ -126,6 +126,7 @@ def save_json():
 				'uuid': task.uuid,
 				'created': fmt_date(task.created),
 				'modified': fmt_date(task.modified),
+				'completed': fmt_date(task.completed),
 				'deleted': fmt_date(task.deleted),
 				'ordinal': obj.ordinal or 0,
 				'title': task.title,
