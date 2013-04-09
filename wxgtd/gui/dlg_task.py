@@ -67,7 +67,7 @@ class DlgTask(BaseDialog):
 	def _setup(self, task_uuid):
 		_LOG.debug("DlgTask(%r)", task_uuid)
 		self._current_note = None
-		self._dates = {}
+		self._data = {}
 		self._session = OBJ.Session()
 		if task_uuid:
 			self._task = self._session.query(OBJ.Task).filter_by(
@@ -76,8 +76,16 @@ class DlgTask(BaseDialog):
 			self._task = OBJ.Task()
 			self._session.add(self._task)
 		task = self._task
-		self._dates['due_time'] = self._dates['due_date'] = task.due_date
-		self._dates['start_time'] = self._dates['start_date'] = task.start_date
+		self._data['duration_d'] = self._data['duration_h'] = \
+				self._data['duration_m'] = 0
+		if task.duration:
+			duration = task.duration
+			self._data['duration_d'] = int(duration / 1440)
+			duration = duration % 1440
+			self._data['duration_h'] = int(duration / 60)
+			self._data['duration_m'] = duration % 60
+		self._data['due_time'] = self._data['due_date'] = task.due_date
+		self._data['start_time'] = self._data['start_date'] = task.start_date
 		self['tc_title'].SetValidator(Validator(task, 'title',
 				validators=LVALID.NotEmptyValidator(), field='title'))
 		self['tc_note'].SetValidator(Validator(task, 'note',))
@@ -94,6 +102,9 @@ class DlgTask(BaseDialog):
 		self['cb_completed'].SetValidator(Validator(task, 'task_completed'))
 		self['cb_starred'].SetValidator(Validator(task, 'starred'))
 		self['sl_priority'].SetValidator(Validator(task, 'priority'))
+		self['sc_duration_d'].SetValidator(Validator(self._data, 'duration_d'))
+		self['sc_duration_h'].SetValidator(Validator(self._data, 'duration_h'))
+		self['sc_duration_m'].SetValidator(Validator(self._data, 'duration_m'))
 
 	def _setup_comboboxes(self):
 		cb_status = self['cb_status']
@@ -121,6 +132,8 @@ class DlgTask(BaseDialog):
 			return
 		if not self._wnd.TransferDataFromWindow():
 			return
+		self._task.duration = self._data['duration_d'] * 1440 + \
+				self._data['duration_h'] * 60 + self._data['duration_m']
 		self._session.commit()
 		Publisher.sendMessage('task.update', data={'task_uuid': self._task.uuid})
 		self._on_ok(evt)

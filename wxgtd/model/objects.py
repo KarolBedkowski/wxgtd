@@ -92,7 +92,7 @@ class Task(BaseModelMixin, Base):
 	due_time_set = Column(Integer, default=0)
 	due_date_mod = Column(Integer, default=0)
 	floating_event = Column(Integer, default=0)
-	duration = Column(Integer, default=0)
+	duration = Column(Integer, default=0)  # czas trwania w minutach
 	energy_required = Column(Integer, default=0)
 	repeat_from = Column(Integer, default=0)
 	repeat_pattern = Column(String)
