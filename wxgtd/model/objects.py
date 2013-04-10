@@ -62,6 +62,15 @@ class BaseModelMixin(object):
 		return (session or Session()).query(cls).filter_by(
 				**kwargs).first()
 
+	def clone(self):
+		newobj = type(self)()
+		for prop in orm.object_mapper(self).iterate_properties:
+			if isinstance(prop, orm.ColumnProperty) or \
+					(isinstance(prop, orm.RelationshipProperty)
+							and prop.secondary):
+				setattr(newobj, prop.key, getattr(self, prop.key))
+		return newobj
+
 
 class Task(BaseModelMixin, Base):
 	"""Task
@@ -191,6 +200,18 @@ class Task(BaseModelMixin, Base):
 	@classmethod
 	def all_projects(cls):
 		return Session().query(cls).filter_by(type=enums.TYPE_PROJECT).all()
+
+	def clone(self):
+		newobj = BaseModelMixin.clone(self)
+		# clone tags
+		for tasktag in self.tags:
+			ntasktag = TaskTag()
+			ntasktag = tasktag.tag_uuid
+			newobj.tags.append(ntasktag)
+		# clone notes
+		for note in self.notes:
+			newobj.notes.append(note.clone())
+		return newobj
 
 
 def _append_filter_list(query, param, values):
