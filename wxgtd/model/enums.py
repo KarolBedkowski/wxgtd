@@ -103,7 +103,7 @@ PRIORITIES = {3: _("TOP"),
 
 REPEAT_PATTERN_LIST = [("Norepeat", _("Norepeat")),
 	("Daily", _("Daily")),
-	("Businessday", _("Business Day")),
+	("BusinessDay", _("Business Day")),
 	("Weekend", _("Weekend")),
 	("Weekly", _("Weekly")),
 	("Biweekly", _("Biweekly")),
