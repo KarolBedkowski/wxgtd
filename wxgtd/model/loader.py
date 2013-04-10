@@ -110,23 +110,33 @@ def _build_id_uuid_map(objects):
 	return cache
 
 
+def _check_synclog(data, session):
+	last_sync = 0
+	c_last_sync = session.query(objects.Conf).filter_by(key='last_sync').first()
+	if c_last_sync is None:
+		return True
+	last_sync = str2timestamp(c_last_sync.val)
+	deviceId = session.query(objects.Conf).filter_by(key='deviceId').first().val
+
+	synclog = data.get('syncLog')[0]
+	file_sync_time_str = synclog.get('syncTime')
+	file_sync_time = str2timestamp(file_sync_time_str)
+	sync_device = synclog.get('deviceId')
+
+	if last_sync >= file_sync_time and deviceId == sync_device:
+		_LOG.info("_check_synclog last_sync=%r, file=%r", c_last_sync.val,
+				file_sync_time_str)
+		return False
+	return True
+
+
 def load_json(strdata):
 	data = cjson.decode(strdata.decode('UTF-8'))
 	session = objects.Session()
 
-	last_sync = 0
-	c_last_sync = session.query(objects.Conf).filter_by(key='last_sync').first()
-	if c_last_sync:
-		last_sync = c_last_sync.val
-	else:
-		c_last_sync = objects.Conf(key='last_sync')
-
-	file_sync_time_str = data.get('syncLog')[0].get('syncTime')
-	file_sync_time = str2timestamp(file_sync_time_str)
-
-	if last_sync > file_sync_time:
-		_LOG.info("no loading file time=%r, last sync=%r", last_sync,
-				file_sync_time_str)
+	if not _check_synclog(data, session):
+		_LOG.info("load_json: no loading file")
+		return False
 
 	_LOG.info("load_json: folder")
 	folders = data.get('folder')
@@ -255,7 +265,6 @@ def load_json(strdata):
 		del data['tag']
 
 	_LOG.info("load_json: task_tag")
-	# TODO: dodać do sorm obsługe many2many i przerobić to
 	task_tags = data.get('task_tag')
 	for task_tag in task_tags or []:
 		task_uuid = _replace_ids(task_tag, tasks_cache, 'task_id')
@@ -276,12 +285,18 @@ def load_json(strdata):
 
 	_LOG.info("load_json: czyszczenie")
 	# pokasowanie staroci
+	synclog = data.get('syncLog')[0]
+	file_sync_time = str2timestamp(synclog.get('syncTime'))
 	_delete_missing(objects.Task, tasks_cache, file_sync_time)
 	_delete_missing(objects.Folder, folders_cache, file_sync_time)
 	_delete_missing(objects.Context, contexts_cache, file_sync_time)
 	_delete_missing(objects.Tasknote, tasknotes_cache, file_sync_time)
 
-	c_last_sync.val = time.time()
+	c_last_sync = session.query(objects.Conf).filter_by(key='last_sync').first()
+	if c_last_sync is None:
+		c_last_sync = objects.Conf(key='last_sync')
+		session.add(c_last_sync)
+	c_last_sync.val = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
 
 	session.commit()
 

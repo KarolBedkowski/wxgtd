@@ -253,6 +253,25 @@ def save_json():
 	return cjson.encode(res)
 
 
+def _check_existing_synclock(lock_filename, my_device_id):
+	""" Sprawdzenie, czy istniejący synclog jest nasz.
+		return True = można synchronizować
+				False = nie można
+	"""
+	if not os.path.isfile(lock_filename):
+		return True
+	data = None
+	with open(lock_filename, 'r') as lock_file:
+		data = cjson.decode(lock_file.read().decode('UTF-8'))
+	if data:
+		sync_device = data.get('deviceId')
+		if sync_device != my_device_id:
+			# lock utworzony przez inny program
+			return False
+	os.unlink(lock_filename)
+	return True
+
+
 def create_sync_lock(sync_filename):
 	session = objects.Session()
 	deviceId = session.query(objects.Conf).filter_by(key='deviceId').first()
@@ -263,7 +282,7 @@ def create_sync_lock(sync_filename):
 
 	lock_filename = os.path.join(os.path.dirname(sync_filename),
 			'sync.locked')
-	if os.path.isfile(lock_filename):
+	if not _check_existing_synclock(lock_filename, deviceId.val):
 		return False
 	with open(lock_filename, 'w') as ifile:
 		ifile.write(cjson.encode(synclog))
