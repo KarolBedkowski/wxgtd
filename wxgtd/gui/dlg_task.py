@@ -30,6 +30,7 @@ from dlg_datetime import DlgDateTime
 from dlg_remaind_settings import DlgRemaindSettings
 from dlg_show_settings import DlgShowSettings
 from dlg_repeat_settings import DlgRepeatSettings
+from dlg_select_tags import DlgSelectTags
 import _fmt as fmt
 
 _ = gettext.gettext
@@ -62,6 +63,7 @@ class DlgTask(BaseDialog):
 		self['btn_remaind_set'].Bind(wx.EVT_BUTTON, self._on_btn_remiand_set)
 		self['btn_hide_until_set'].Bind(wx.EVT_BUTTON, self._on_btn_hide_until_set)
 		self['btn_repeat_set'].Bind(wx.EVT_BUTTON, self._on_btn_repeat_set)
+		self['btn_select_tags'].Bind(wx.EVT_BUTTON, self._on_btn_select_tags)
 		self['sl_priority'].Bind(wx.EVT_SCROLL, self._on_sl_priority)
 
 	def _setup(self, task_uuid):
@@ -214,6 +216,24 @@ class DlgTask(BaseDialog):
 		if dlg.run(True):
 			task.repeat_from = dlg.repeat_from
 			task.repeat_pattern = dlg.pattern
+			self._refresh_static_texts()
+
+	def _on_btn_select_tags(self, _evt):
+		task = self._task
+		tags_uuids = [tasktag.tag_uuid for tasktag in task.tags]
+		dlg = DlgSelectTags(self._wnd, tags_uuids)
+		if dlg.run(True):
+			new_tags = dlg.selected_tags
+			for tasktag in list(task.tags):
+				if tasktag.tag_uuid not in new_tags:
+					task.tags.delete(tasktag)
+				else:
+					new_tags.remove(tasktag.tag_uuid)
+			for tag_uuid in new_tags:
+				tasktag = OBJ.TaskTag()
+				tasktag.tag = self._session.query(OBJ.Tag).filter_by(
+						uuid=tag_uuid).first()
+				task.tags.append(tasktag)
 			self._refresh_static_texts()
 
 	def _on_sl_priority(self, _evt):
