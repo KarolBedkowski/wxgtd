@@ -4,6 +4,7 @@
 Operacje na obiekatch
 """
 
+import uuid
 import datetime
 import logging
 
@@ -77,3 +78,85 @@ def update_task_hide(task):
 			hide_pattern)
 		return
 	task.hide_until = rel_date + offset
+
+
+_OFFSETS = {'Daily': relativedelta(days=1),
+		'Weekly': relativedelta(weeks=+1),
+		'Biweekly': relativedelta(weeks=+2),
+		'Monthly': relativedelta(months=+1),
+		'Bimonthly': relativedelta(months=+2),
+		'Quarterly': relativedelta(months=+3),
+		'Semiannually': relativedelta(months=+6),
+		'Yearly': relativedelta(years=+1)}
+
+
+def _move_date_repeat(date, repeat_pattern):
+	if not repeat_pattern:
+		return date
+	if not date:
+		return date
+	offset = _OFFSETS.get(repeat_pattern)
+	if offset is not None:
+		return date + offset
+	weekday = date.weekday()
+	if repeat_pattern == 'Businessday':
+		# pn - pt
+		if weekday < 4:  # pn-cz
+			return date + relativedelta(days=1)
+		return date + relativedelta(days=(7 - weekday))
+	if repeat_pattern == 'Weekend':
+		if weekday == 5:  # so
+			return date + relativedelta(days=1)
+		if weekday == 6:
+			return date + relativedelta(days=6)
+		return date + relativedelta(days=(5 - weekday))
+	return date
+
+
+def _get_date(date, repeat_from_completed):
+	if repeat_from_completed:
+		today = datetime.datetime.today()
+		date = today.replace(hour=date.hour, minute=date.minute,
+				second=date.second)
+	return date
+
+
+def repeat_task(task):
+	if not task.repeat_pattern:
+		return None
+	_LOG.info('repeat_task %r', task)
+	""" Trzeba zaktualizować:
+		- datę startu
+		- due
+		- alarm
+	"""
+	# TODO: repeat_end (??) sprawdzić czy to jest używane
+	ntask = task.clone()
+	ntask.uuid = str(uuid.uuid4())
+	repeat_pattern = task.repeat_pattern
+	repeat_from = task.repeat_from
+	if repeat_pattern == 'WITHPARENT':
+		if not ntask.parent_uuid:
+			_LOG.warn('repeat_task WITHPARENT parent_uuid == None: %r', task)
+			return ntask
+		repeat_pattern = ntask.parent.repeat_pattern
+		repeat_from = ntask.parent.repeat_from
+	offset = None
+	if task.due_date:
+		ntask.due_date = _move_date_repeat(_get_date(task.due_date, repeat_from),
+				repeat_pattern)
+		offset = ntask.due_date - task.due_date
+		ntask.start_date += offset
+	else:
+		ntask.start_date = _move_date_repeat(
+				_get_date(task.start_date, repeat_from), repeat_pattern)
+	if task.alarm:
+		if task.alarm_pattern:
+			update_task_alarm(ntask)
+		elif offset:
+			ntask.alarm += offset
+		else:
+			ntask.alarm = _move_date_repeat(task.alarm, repeat_pattern)
+	update_task_hide(ntask)
+	ntask.completed = None
+	return ntask

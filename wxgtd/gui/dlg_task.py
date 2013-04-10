@@ -67,7 +67,6 @@ class DlgTask(BaseDialog):
 	def _setup(self, task_uuid):
 		_LOG.debug("DlgTask(%r)", task_uuid)
 		self._current_note = None
-		self._data = {}
 		self._session = OBJ.Session()
 		if task_uuid:
 			self._task = self._session.query(OBJ.Task).filter_by(
@@ -76,6 +75,7 @@ class DlgTask(BaseDialog):
 			self._task = OBJ.Task()
 			self._session.add(self._task)
 		task = self._task
+		self._data = {'prev_completed': task.completed}
 		self._data['duration_d'] = self._data['duration_h'] = \
 				self._data['duration_m'] = 0
 		if task.duration:
@@ -134,6 +134,11 @@ class DlgTask(BaseDialog):
 			return
 		self._task.duration = self._data['duration_d'] * 1440 + \
 				self._data['duration_h'] * 60 + self._data['duration_m']
+		if not self._data['prev_completed'] and self._task.completed:
+			# zakonczono zadanie
+			repeated_task = logic.repeat_task(self._task)
+			if repeated_task is not None:
+				self._session.add(repeated_task)
 		self._session.commit()
 		Publisher.sendMessage('task.update', data={'task_uuid': self._task.uuid})
 		self._on_ok(evt)
