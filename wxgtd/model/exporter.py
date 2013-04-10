@@ -251,3 +251,29 @@ def save_json():
 	session.flush()
 
 	return cjson.encode(res)
+
+
+def create_sync_lock(sync_filename):
+	session = objects.Session()
+	deviceId = session.query(objects.Conf).filter_by(key='deviceId').first()
+	synclog = {
+			'deviceId': deviceId.val,
+			"startTime": fmt_date(datetime.datetime.now())}
+	session.flush()
+
+	lock_filename = os.path.join(os.path.dirname(sync_filename),
+			'sync.locked')
+	if os.path.isfile(lock_filename):
+		return False
+	with open(lock_filename, 'w') as ifile:
+		ifile.write(cjson.encode(synclog))
+	return True
+
+
+def delete_sync_lock(sync_filename):
+	lock_filename = os.path.join(os.path.dirname(sync_filename),
+			'sync.locked')
+	try:
+		os.unlink(lock_filename)
+	except:
+		_LOG.exception('delete_sync_lock error %r', lock_filename)

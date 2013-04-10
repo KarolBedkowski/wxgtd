@@ -234,8 +234,15 @@ class FrameMain:
 			dlg.Destroy()
 		if last_sync_file:
 			appconfig.set('files', 'last_sync_file', last_sync_file)
-			loader.load_from_file(last_sync_file) and exporter.save_to_file(
-					last_sync_file)
+			if exporter.create_sync_lock(last_sync_file):
+				loader.load_from_file(last_sync_file) and exporter.save_to_file(
+						last_sync_file)
+				exporter.delete_sync_lock(last_sync_file)
+			else:
+				msgbox = wx.MessageDialog(self.wnd, _("Sync file is locked."),
+						_("wxGTD"), wx.OK | wx.ICON_HAND)
+				msgbox.ShowModal()
+				msgbox.Destroy()
 			self._filter_tree_ctrl.RefreshItems()
 			Publisher.sendMessage('task.update')
 
