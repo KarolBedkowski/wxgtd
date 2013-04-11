@@ -37,6 +37,10 @@ class BaseDialog:
 		self._create_bindings()
 		self._setup_wnd(icon, save_pos)
 
+	@property
+	def wnd(self):
+		return self._wnd
+
 	@classmethod
 	def create(cls, key, *args, **kwargs):
 		""" Utworzenie okna jeżeli należy zachować pojedyńcze okno dla obiektu

@@ -72,6 +72,9 @@ class FrameMain:
 		items_list.InsertColumn(5, _('Alarm'), width=150)
 		self._filter_tree_ctrl.RefreshItems()
 		wx.CallAfter(self._refresh_list)
+		appconfig = AppConfig()
+		if appconfig.get('sync', 'sync_on_startup'):
+			wx.CallAfter(self._autosync)
 
 	def _setup_wnd(self):
 		self.wnd.SetIcon(iconprovider.get_icon('wxgtd'))
@@ -186,6 +189,8 @@ class FrameMain:
 
 	def _on_close(self, _event):
 		appconfig = AppConfig()
+		if appconfig.get('sync', 'sync_on_exit'):
+			wx.CallAfter(self._autosync)
 		appconfig.set('frame_main', 'size', self.wnd.GetSizeTuple())
 		appconfig.set('frame_main', 'position', self.wnd.GetPositionTuple())
 		appconfig.set('main', 'show_finished', self._btn_show_finished.GetValue())
@@ -241,10 +246,11 @@ class FrameMain:
 			try:
 				sync.sync(last_sync_file)
 			except sync.SyncLockedError:
-				msgbox = wx.MessageDialog(dlg, _("Sync file is locked."),
+				msgbox = wx.MessageDialog(dlg.wnd, _("Sync file is locked."),
 						_("wxGTD"), wx.OK | wx.ICON_HAND)
 				msgbox.ShowModal()
 				msgbox.Destroy()
+			dlg.mark_finished()
 			self._filter_tree_ctrl.RefreshItems()
 			Publisher.sendMessage('task.update')
 
@@ -409,6 +415,23 @@ class FrameMain:
 		path_str = ' / '.join(task.title for task in self._items_path)
 		self['l_path'].SetLabel(path_str)
 		self.wnd.FindWindowById(wx.ID_BACKWARD).Enable(bool(self._items_path))
+
+	def _autosync(self):
+		appconfig = AppConfig()
+		last_sync_file = appconfig.get('files', 'last_sync_file')
+		if last_sync_file:
+			dlg = DlgSyncProggress(self.wnd)
+			dlg.run()
+			try:
+				sync.sync(last_sync_file)
+			except sync.SyncLockedError:
+				msgbox = wx.MessageDialog(dlg.wnd, _("Sync file is locked."),
+						_("wxGTD"), wx.OK | wx.ICON_HAND)
+				msgbox.ShowModal()
+				msgbox.Destroy()
+			dlg.mark_finished(2)
+			self._filter_tree_ctrl.RefreshItems()
+			Publisher.sendMessage('task.update')
 
 
 def _update_color(wnd, bgcolor):
