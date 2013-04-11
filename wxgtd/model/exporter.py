@@ -9,23 +9,30 @@ import cjson
 import zipfile
 import datetime
 import uuid
+import gettext
 
 import objects
 
 _LOG = logging.getLogger(__name__)
+_ = gettext.gettext
 
 
-def save_to_file(filename):
+def _fake_update_func(*args, **kwargs):
+	_LOG.info('progress %r %r', args, kwargs)
+
+
+def save_to_file(filename, update_func=_fake_update_func):
 	"""Load data from zipfile"""
 	if filename.endswith('.zip'):
 		with zipfile.ZipFile(filename, 'w', zipfile.ZIP_DEFLATED) as zfile:
 			fname = os.path.basename(filename[:-4])
 			if not fname.endswith('.json'):
 				fname += '.json'
-			zfile.writestr(fname, save_json())
+			zfile.writestr(fname, save_json(update_func))
 	else:
 		with open(filename, 'w') as ifile:
-			ifile.write(save_json())
+			ifile.write(save_json(update_func))
+	update_func(100, _("Saved"))
 
 
 def fmt_date(value):
@@ -41,13 +48,14 @@ def _build_uuid_map(session, objclass):
 	return cache
 
 
-def save_json():
+def save_json(update_func):
 	res = {'version': 2}
 
 	session = objects.Session()
 
 	# folders
 	_LOG.info("save_json: folders")
+	update_func(1, _("Saving folders"))
 	folders_cache = _build_uuid_map(session, objects.Folder)
 	folders = []
 	for obj in session.query(objects.Folder):
@@ -66,9 +74,11 @@ def save_json():
 		folders.append(folder)
 	if folders:
 		res['folder'] = folders
+	update_func(5, _("Saved %d folders") % len(folders))
 
 	# contexts
 	_LOG.info("save_json: contexts")
+	update_func(6, _("Saving contexts"))
 	contexts_cache = _build_uuid_map(session, objects.Context)
 	contexts = []
 	for obj in session.query(objects.Context):
@@ -87,9 +97,11 @@ def save_json():
 		contexts.append(folder)
 	if contexts:
 		res['context'] = contexts
+	update_func(10, _("Saved %d contexts") % len(contexts))
 
 	# goals
 	_LOG.info("save_json: goals")
+	update_func(11, _("Saving goals"))
 	goals_cache = _build_uuid_map(session, objects.Goal)
 	goals = []
 	for obj in session.query(objects.Goal):
@@ -110,7 +122,9 @@ def save_json():
 		goals.append(folder)
 	if goals:
 		res['goal'] = goals
+	update_func(15, _("Saved %d goals") % len(goals))
 
+	update_func(16, _("Saving task, alarms..."))
 	_LOG.info("save_json: tasks")
 	tasks_cache = _build_uuid_map(session, objects.Task)
 	tasks = []
@@ -190,7 +204,13 @@ def save_json():
 		res['task_folder'] = task_folders
 		res['task_context'] = task_contexts
 		res['task_goal'] = task_goals
+	update_func(65, _("Saved %d tasks") % len(tasks))
+	update_func(66, _("Saved %d alatms") % len(alarms))
+	update_func(67, _("Saved %d task folders") % len(task_folders))
+	update_func(68, _("Saved %d task contexts") % len(task_contexts))
+	update_func(69, _("Saved %d task goals") % len(task_goals))
 
+	update_func(70, _("Saving tags"))
 	# tags
 	_LOG.info("save_json: tags")
 	tags_cache = _build_uuid_map(session, objects.Tag)
@@ -211,7 +231,9 @@ def save_json():
 		tags.append(folder)
 	if tags:
 		res['tag'] = tags
+	update_func(74, _("Saved %d tags") % len(tags))
 
+	update_func(75, _("Saving task notes"))
 	# tasknotes
 	_LOG.info("save_json: tasknotes")
 	tasknotes_cache = _build_uuid_map(session, objects.Tasknote)
@@ -229,7 +251,9 @@ def save_json():
 		tasknotes.append(folder)
 	if tasknotes:
 		res['tasknote'] = tasknotes
+	update_func(79, _("Saved %d task notes") % len(tasknotes))
 
+	update_func(80, _("Saving task tags"))
 	tasktags = []
 	for obj in session.query(objects.TaskTag):
 		ttag = {'task_id': tasks_cache[obj.task_uuid],
@@ -239,7 +263,9 @@ def save_json():
 		tasktags.append(ttag)
 	if tasktags:
 		res['task_tag'] = tasktags
+	update_func(84, _("Saved %d task tags") % len(tasktags))
 
+	update_func(85, _("Sync log"))
 	# synclog
 	deviceId = session.query(objects.Conf).filter_by(key='deviceId').first()
 	synclog = {
@@ -249,6 +275,7 @@ def save_json():
 	res['syncLog'] = [synclog]
 
 	session.flush()
+	update_func(80, _("Saving..."))
 
 	return cjson.encode(res)
 

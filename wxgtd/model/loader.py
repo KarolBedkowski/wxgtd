@@ -9,24 +9,32 @@ import cjson
 import zipfile
 import time
 import datetime
+import gettext
 
 import objects
 import logic
 
 _LOG = logging.getLogger(__name__)
+_ = gettext.gettext
 
 
-def load_from_file(filename):
+def _fake_update_func(*args, **kwargs):
+	_LOG.info('progress %r %r', args, kwargs)
+
+
+def load_from_file(filename, update_func=_fake_update_func):
 	"""Load data from zipfile"""
 	if not os.path.isfile(filename):
-		return False
+		update_func(50, _("File not found..."))
+		return True
+	update_func(0, _("Openning file"))
 	if filename.endswith('.zip'):
 		with zipfile.ZipFile(filename, 'r') as zfile:
 			fname = zfile.namelist()[0]
-			return load_json(zfile.read(fname))
+			return load_json(zfile.read(fname), update_func)
 	else:
 		with open(filename, 'r') as ifile:
-			return load_json(ifile.read())
+			return load_json(ifile.read(), update_func)
 	return False
 
 
@@ -105,7 +113,6 @@ def _build_id_uuid_map(objects):
 		uuid = obj.get('uuid')
 		oid = obj.get('_id')
 		if uuid and oid:
-			cache[uuid] = oid
 			cache[oid] = uuid
 	return cache
 
@@ -130,15 +137,19 @@ def _check_synclog(data, session):
 	return True
 
 
-def load_json(strdata):
+def load_json(strdata, update_func):
+	update_func(2, _("Decoding.."))
 	data = cjson.decode(strdata.decode('UTF-8'))
 	session = objects.Session()
 
+	update_func(5, _("Checking..."))
 	if not _check_synclog(data, session):
+		update_func(2, _("Don't load"))
 		_LOG.info("load_json: no loading file")
-		return False
+		return True
 
 	_LOG.info("load_json: folder")
+	update_func(6, _("Loading folders"))
 	folders = data.get('folder')
 	folders_cache = _build_id_uuid_map(folders)
 	for folder in sorted(folders or []):  # musi być sortowane,
@@ -148,8 +159,10 @@ def load_json(strdata):
 		_create_or_update(session, objects.Folder, folder)
 	if folders:
 		del data['folder']
+	update_func(10, _("Loaded %d folders") % len(folders_cache))
 
 	_LOG.info("load_json: context")
+	update_func(11, _("Loading contexts"))
 	contexts = data.get('context')
 	contexts_cache = _build_id_uuid_map(contexts)
 	for context in sorted(contexts or []):
@@ -158,9 +171,11 @@ def load_json(strdata):
 		_create_or_update(session, objects.Context, context)
 	if contexts:
 		del data['context']
+	update_func(15, _("Loaded %d contexts") % len(contexts_cache))
 
 	# Goals
 	_LOG.info("load_json: goals")
+	update_func(16, _("Loading goals"))
 	goals = data.get('goal')
 	goals_cache = _build_id_uuid_map(goals)
 	for goal in sorted(goals or []):
@@ -169,8 +184,10 @@ def load_json(strdata):
 		_create_or_update(session, objects.Goal, goal)
 	if goal:
 		del data['goal']
+	update_func(20, _("Loaded %d goals") % len(goals_cache))
 
 	_LOG.info("load_json: tasks")
+	update_func(21, _("Loading tasks"))
 	tasks = data.get('task')
 	tasks_cache = _build_id_uuid_map(tasks)
 	for task in sorted(tasks or []):
@@ -184,8 +201,10 @@ def load_json(strdata):
 		logic.update_task_hide(task_obj)
 	if tasks:
 		del data['task']
+	update_func(38, _("Loaded %d tasks") % len(tasks_cache))
 
 	_LOG.info("load_json: tasknote")
+	update_func(39, _("Loading task notes"))
 	tasknotes = data.get('tasknote')
 	tasknotes_cache = _build_id_uuid_map(tasknotes)
 	for tasknote in tasknotes or []:
@@ -194,8 +213,10 @@ def load_json(strdata):
 		_create_or_update(session, objects.Tasknote, tasknote)
 	if tasknotes:
 		del data['tasknote']
+	update_func(43, _("Loaded %d task notes") % len(tasknotes_cache))
 
 	_LOG.info("load_json: alarms")
+	update_func(44, _("Loading alarms"))
 	alarms = data.get('alarm')
 	for alarm in alarms or []:
 		task_uuid = _replace_ids(alarm, tasks_cache, 'task_id')
@@ -206,10 +227,12 @@ def load_json(strdata):
 		task = session.query(objects.Task).filter_by(uuid=task_uuid).first()
 		task.alarm = alarm['alarm']
 		logic.update_task_alarm(task)
+	update_func(46, _("Loaded %d alarms") % len(alarms))
 	if alarms:
 		del data['alarm']
 
 	_LOG.info("load_json: task_folder")
+	update_func(47, _("Loading task folders"))
 	task_folders = data.get('task_folder')
 	for task_folder in task_folders or []:
 		task_uuid = _replace_ids(task_folder, tasks_cache, 'task_id')
@@ -221,10 +244,12 @@ def load_json(strdata):
 		_convert_timestamps(task_folder)
 		task = session.query(objects.Task).filter_by(uuid=task_uuid).first()
 		task.folder_uuid = folder_uuid
+	update_func(51, _("Loaded %d task folders") % len(task_folders))
 	if task_folders:
 		del data['task_folder']
 
 	_LOG.info("load_json: task_contexts")
+	update_func(52, _("Loading task contexts"))
 	task_contexts = data.get('task_context')
 	for task_context in task_contexts or []:
 		task_uuid = _replace_ids(task_context, tasks_cache, 'task_id')
@@ -236,10 +261,12 @@ def load_json(strdata):
 		_convert_timestamps(task_context)
 		task = session.query(objects.Task).filter_by(uuid=task_uuid).first()
 		task.context_uuid = context_uuid
+	update_func(56, _("Loaded %d tasks contexts") % len(task_contexts))
 	if task_contexts:
 		del data['task_context']
 
 	_LOG.info("load_json: task_goal")
+	update_func(57, _("Loading task goals"))
 	task_goals = data.get('task_goal')
 	for task_goal in task_goals or []:
 		task_uuid = _replace_ids(task_goal, tasks_cache, 'task_id')
@@ -250,11 +277,13 @@ def load_json(strdata):
 			continue
 		task = session.query(objects.Task).filter_by(uuid=task_uuid).first()
 		task.goal_uuid = goal_uuid
+	update_func(61, _("Loaded %d task goals") % len(task_goals))
 	if task_goals:
 		del data['task_goal']
 
 	# tagi
 	_LOG.info("load_json: tag")
+	update_func(62, _("Loading tags"))
 	tags = data.get('tag')
 	tags_cache = _build_id_uuid_map(tags)
 	for tag in sorted(tags or []):
@@ -263,8 +292,10 @@ def load_json(strdata):
 		_create_or_update(session, objects.Tag, tag)
 	if tags:
 		del data['tag']
+	update_func(66, _("Loaded %d tags") % len(tags))
 
 	_LOG.info("load_json: task_tag")
+	update_func(67, _("Loading task tagss"))
 	task_tags = data.get('task_tag')
 	for task_tag in task_tags or []:
 		task_uuid = _replace_ids(task_tag, tasks_cache, 'task_id')
@@ -280,10 +311,12 @@ def load_json(strdata):
 			obj = objects.TaskTag(task_uuid=task_uuid, tag_uuid=tag_uuid)
 			obj.load_from_dict(task_tag)
 			session.add(obj)
+	update_func(71, _("Loaded %d task tags") % len(task_tags))
 	if task_tags:
 		del data['task_tag']
 
 	_LOG.info("load_json: czyszczenie")
+	update_func(72, _("Cleanup"))
 	# pokasowanie staroci
 	synclog = data.get('syncLog')[0]
 	file_sync_time = str2timestamp(synclog.get('syncTime'))
@@ -291,6 +324,7 @@ def load_json(strdata):
 	_delete_missing(objects.Folder, folders_cache, file_sync_time)
 	_delete_missing(objects.Context, contexts_cache, file_sync_time)
 	_delete_missing(objects.Tasknote, tasknotes_cache, file_sync_time)
+	update_func(78, _("Cleanup done"))
 
 	c_last_sync = session.query(objects.Conf).filter_by(key='last_sync').first()
 	if c_last_sync is None:
@@ -298,7 +332,9 @@ def load_json(strdata):
 		session.add(c_last_sync)
 	c_last_sync.val = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
 
+	update_func(80, _("Commiting..."))
 	session.commit()
+	update_func(100, _("Load completed"))
 
 	if data:
 		_LOG.warn("Loader: remaining: %r", data.keys())

@@ -29,11 +29,13 @@ from wxgtd.lib import iconprovider
 from wxgtd.model import objects as OBJ
 from wxgtd.model import loader
 from wxgtd.model import exporter
+from wxgtd.model import sync
 from wxgtd.model import enums
 from wxgtd.gui import dlg_about
 from wxgtd.gui._filtertreectrl import FilterTreeCtrl
 from wxgtd.gui.dlg_task import DlgTask
 from wxgtd.gui.dlg_preferences import DlgPreferences
+from wxgtd.gui.dlg_sync_progress import DlgSyncProggress
 from wxgtd.gui import _fmt as fmt
 #from . import message_boxes as mbox
 
@@ -234,12 +236,12 @@ class FrameMain:
 			dlg.Destroy()
 		if last_sync_file:
 			appconfig.set('files', 'last_sync_file', last_sync_file)
-			if exporter.create_sync_lock(last_sync_file):
-				loader.load_from_file(last_sync_file) and exporter.save_to_file(
-						last_sync_file)
-				exporter.delete_sync_lock(last_sync_file)
-			else:
-				msgbox = wx.MessageDialog(self.wnd, _("Sync file is locked."),
+			dlg = DlgSyncProggress(self.wnd)
+			dlg.run()
+			try:
+				sync.sync(last_sync_file)
+			except sync.SyncLockedError:
+				msgbox = wx.MessageDialog(dlg, _("Sync file is locked."),
 						_("wxGTD"), wx.OK | wx.ICON_HAND)
 				msgbox.ShowModal()
 				msgbox.Destroy()
