@@ -79,5 +79,8 @@ def logging_setup(filename, debug=False):
 	console.setFormatter(fmtr('%(levelname)-8s %(name)s - %(message)s'))
 	logging.getLogger('').addHandler(console)
 
+	logging.getLogger('sqlalchemy.engine').setLevel(logging.info if debug
+			else logging.WARN)
+
 	log = logging.getLogger(__name__)
 	log.debug('logging_setup() finished')
