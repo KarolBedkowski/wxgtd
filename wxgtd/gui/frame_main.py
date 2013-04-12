@@ -34,6 +34,7 @@ from wxgtd.model import enums
 from wxgtd.gui import dlg_about
 from wxgtd.gui._filtertreectrl import FilterTreeCtrl
 from wxgtd.gui.dlg_task import DlgTask
+from wxgtd.gui.dlg_checklistitem import DlgChecklistitem
 from wxgtd.gui.dlg_preferences import DlgPreferences
 from wxgtd.gui.dlg_sync_progress import DlgSyncProggress
 from wxgtd.gui import _fmt as fmt
@@ -292,9 +293,13 @@ class FrameMain:
 			self._items_path.append(task)
 			self._refresh_list()
 			return
-		if task_uuid:
+		if not task_uuid:
+			return
+		if task_type == enums.TYPE_CHECKLIST_ITEM:
+			dlg = DlgChecklistitem.create(task_uuid, self.wnd, task_uuid)
+		else:
 			dlg = DlgTask.create(task_uuid, self.wnd, task_uuid)
-			dlg.run()
+		dlg.run()
 
 	def _on_btn_path_back(self, _evt):
 		if self._items_path:

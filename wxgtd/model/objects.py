@@ -201,6 +201,10 @@ class Task(BaseModelMixin, Base):
 	def all_projects(cls):
 		return Session().query(cls).filter_by(type=enums.TYPE_PROJECT).all()
 
+	@classmethod
+	def all_checklists(cls):
+		return Session().query(cls).filter_by(type=enums.TYPE_CHECKLIST).all()
+
 	def clone(self):
 		newobj = BaseModelMixin.clone(self)
 		# clone tags
