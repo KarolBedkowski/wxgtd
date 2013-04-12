@@ -263,8 +263,14 @@ class FrameMain:
 		self.wnd.Close()
 
 	def _on_menu_file_new_task(self, _evt):
-		task = OBJ.Task()
-		dlg = DlgTask.create(task.uuid, self.wnd, task)
+		parent_uuid = None
+		if self._items_path:
+			parent_uuid = self._items_path[-1].uuid
+			if self._items_path[-1].type == enums.TYPE_CHECKLIST:
+				dlg = DlgChecklistitem(self.wnd, None, parent_uuid)
+				dlg.run()
+				return
+		dlg = DlgTask(self.wnd, None, parent_uuid)
 		dlg.run()
 
 	def _on_menu_help_about(self, _evt):

@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 
 """
-Klasa bazowa dla wszystkich dlg.
+Klasa dialogu edycji elementu check listy
 """
 
 __author__ = "Karol Będkowski"
-__copyright__ = "Copyright (c) Karol Będkowski, 2010-2013"
+__copyright__ = "Copyright (c) Karol Będkowski, 2013"
 __version__ = "2010-11-25"
 
 import logging
@@ -36,10 +36,10 @@ class DlgChecklistitem(BaseDialog):
 	WARRNING: okienko niemodalne; obsługa zapisywania tutaj
 	"""
 
-	def __init__(self, parent, task_uuid):
+	def __init__(self, parent, task_uuid, parent_uuid):
 		BaseDialog.__init__(self, parent, 'dlg_checklistitem')
 		self._setup_comboboxes()
-		self._setup(task_uuid)
+		self._setup(task_uuid, parent_uuid)
 		self._refresh_static_texts()
 
 	def _load_controls(self, wnd):
@@ -52,7 +52,7 @@ class DlgChecklistitem(BaseDialog):
 		self['btn_del_note'].Bind(wx.EVT_BUTTON, self._on_btn_del_note)
 		self['btn_save_note'].Bind(wx.EVT_BUTTON, self._on_btn_save_note)
 
-	def _setup(self, task_uuid):
+	def _setup(self, task_uuid, parent_uuid):
 		_LOG.debug("DlgTask(%r)", task_uuid)
 		self._current_note = None
 		self._session = OBJ.Session()
@@ -60,7 +60,8 @@ class DlgChecklistitem(BaseDialog):
 			self._task = self._session.query(OBJ.Task).filter_by(
 					uuid=task_uuid).first()
 		else:
-			self._task = OBJ.Task(type=enums.TYPE_CHECKLIST_ITEM)
+			self._task = OBJ.Task(type=enums.TYPE_CHECKLIST_ITEM,
+					parent_uuid=parent_uuid)
 			self._session.add(self._task)
 		task = self._task
 		self._data = {'prev_completed': task.completed}
