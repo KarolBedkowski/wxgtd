@@ -118,7 +118,9 @@ class DlgTask(BaseDialog):
 			cb_status.Append(status, key)
 		cb_types = self['cb_type']
 		for key, typename in sorted(enums.TYPES.iteritems()):
-			cb_types.Append(typename, key)
+			if key != enums.TYPE_CHECKLIST_ITEM:
+				# nie można utworzyć checklist item bez checlisty jako parenta
+				cb_types.Append(typename, key)
 		cb_context = self['cb_context']
 		for context in OBJ.Context.all():
 			cb_context.Append(context.title, context.uuid)
