@@ -109,7 +109,7 @@ class FrameMain:
 		_create_menu_bind('menu_file_sync', self._on_menu_file_sync)
 		_create_menu_bind('menu_file_preferences',
 				self._on_menu_file_preferences)
-		_create_menu_bind('menu_about', self._on_menu_help_about)
+		_create_menu_bind('menu_help_about', self._on_menu_help_about)
 
 		self._filter_tree_ctrl.Bind(wx.EVT_TREE_ITEM_ACTIVATED,
 				self._on_filter_tree_item_activated)
