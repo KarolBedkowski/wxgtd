@@ -81,6 +81,9 @@ class _ListItemRenderer(object):
 			info.append("◎" + task.goal.title)
 		if task.folder:
 			info.append("▫" + task.folder.title)
+		if task.tags:
+			info.append("☘" + ",".join(tasktag.tag.title for tasktag in
+				task.tags))
 		if info:
 			info = '  '.join(info)
 			mdc.DrawText(info, 0, self._info_offset)
