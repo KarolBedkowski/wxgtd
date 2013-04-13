@@ -270,7 +270,13 @@ class FrameMain:
 				dlg = DlgChecklistitem(self.wnd, None, parent_uuid)
 				dlg.run()
 				return
-		dlg = DlgTask(self.wnd, None, parent_uuid)
+		group_id = self['rb_show_selection'].GetSelection()
+		task_type = enums.TYPE_TASK
+		if group_id == 5:
+			task_type = enums.TYPE_PROJECT
+		elif group_id == 6:
+			task_type = enums.TYPE_CHECKLIST
+		dlg = DlgTask(self.wnd, None, parent_uuid, task_type)
 		dlg.run()
 
 	def _on_menu_help_about(self, _evt):

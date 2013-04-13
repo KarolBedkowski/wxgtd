@@ -46,10 +46,10 @@ class DlgTask(BaseDialog):
 	WARRNING: okienko niemodalne; obsługa zapisywania tutaj
 	"""
 
-	def __init__(self, parent, task_uuid, parent_uuid=None):
+	def __init__(self, parent, task_uuid, parent_uuid=None, task_type=None):
 		BaseDialog.__init__(self, parent, 'dlg_task')
 		self._setup_comboboxes()
-		self._setup(task_uuid, parent_uuid)
+		self._setup(task_uuid, parent_uuid, task_type)
 		self._refresh_static_texts()
 
 	def _load_controls(self, wnd):
@@ -69,8 +69,8 @@ class DlgTask(BaseDialog):
 		self['btn_select_tags'].Bind(wx.EVT_BUTTON, self._on_btn_select_tags)
 		self['sl_priority'].Bind(wx.EVT_SCROLL, self._on_sl_priority)
 
-	def _setup(self, task_uuid, parent_uuid):
-		_LOG.debug("DlgTask(%r)", task_uuid, parent_uuid)
+	def _setup(self, task_uuid, parent_uuid, task_type):
+		_LOG.debug("DlgTask(%r)", (task_uuid, parent_uuid, task_type))
 		self._current_note = None
 		self._session = OBJ.Session()
 		if task_uuid:
@@ -78,7 +78,7 @@ class DlgTask(BaseDialog):
 					uuid=task_uuid).first()
 		else:
 			self._task = OBJ.Task(parent_uuid=parent_uuid, priority=0,
-					type=enums.TYPE_TASK)
+					type=(task_type or enums.TYPE_TASK))
 			self._session.add(self._task)
 		task = self._task
 		self._data = {'prev_completed': task.completed}
