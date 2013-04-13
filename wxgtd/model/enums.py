@@ -31,16 +31,21 @@ TYPE_TASK = 0
 TYPE_PROJECT = 1
 TYPE_CHECKLIST = 2
 TYPE_CHECKLIST_ITEM = 3
-\
+TYPE_NOTE = 4
+TYPE_CALL = 5
+TYPE_EMAIL = 6
+TYPE_SMS = 7
+TYPE_RETURN_CALL = 8
+
 TYPES = {TYPE_TASK: _("Task"),
 		TYPE_PROJECT: _("Project"),
 		TYPE_CHECKLIST: _("Checklist"),
 		TYPE_CHECKLIST_ITEM: _("Checklist Item"),
-		4: _("Note"),
-		5: _("Call"),
-		6: _("Email"),
-		7: _("SMS"),
-		8: _("Return Call")}
+		TYPE_NOTE: _("Note"),
+		TYPE_CALL: _("Call"),
+		TYPE_EMAIL: _("Email"),
+		TYPE_SMS: _("SMS"),
+		TYPE_RETURN_CALL: _("Return Call")}
 
 
 # Hide until patterns
