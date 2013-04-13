@@ -13,6 +13,7 @@ import logging
 
 import wx
 from wx.lib.agw import ultimatelistctrl as ULC
+import wx.lib.mixins.listctrl as listmix
 
 from wxgtd.lib import iconprovider
 from wxgtd.model import enums
@@ -107,19 +108,23 @@ class _ListItemRenderer(object):
 		return 400
 
 
-class TaskListControl(ULC.UltimateListCtrl):
+class TaskListControl(ULC.UltimateListCtrl, listmix.ColumnSorterMixin):
 
 	def __init__(self, parent, id=wx.ID_ANY, pos=wx.DefaultPosition,
 				size=wx.DefaultSize, style=0, agwStyle=0):
 		agwStyle = agwStyle | wx.LC_REPORT | wx.BORDER_SUNKEN | wx.LC_HRULES \
 				| wx.LC_SINGLE_SEL | ULC.ULC_HAS_VARIABLE_ROW_HEIGHT
 		ULC.UltimateListCtrl.__init__(self, parent, id, pos, size, style, agwStyle)
+		listmix.ColumnSorterMixin.__init__(self, 4)
 		self._icons = icon_prov = iconprovider.IconProvider()
 		icon_prov.load_icons(['task_done', 'prio-1', 'prio0', 'prio1', 'prio2',
-				'prio3'])
+				'prio3', 'sm_up', 'sm_down'])
 		self.SetImageList(icon_prov.image_list, wx.IMAGE_LIST_SMALL)
 		self._setup_columns()
 		self._items = {}
+		self.itemDataMap = {}  # for sorting
+		self._icon_sm_up = icon_prov.get_image_index('sm_up')
+		self._icon_sm_down = icon_prov.get_image_index('sm_down')
 
 	@property
 	def items(self):
@@ -139,6 +144,7 @@ class TaskListControl(ULC.UltimateListCtrl):
 	def fill(self, tasks):
 		self.Freeze()
 		self._items.clear()
+		self.itemDataMap.clear()
 		self.DeleteAllItems()
 		icon_completed = self._icons.get_image_index('task_done')
 		prio_icon = {-1: self._icons.get_image_index('prio-1'),
@@ -166,6 +172,10 @@ class TaskListControl(ULC.UltimateListCtrl):
 			self.SetStringItem(index, 3, info)
 			self.SetItemData(index, index)
 			self._items[index] = (task.uuid, task.type)
+			self.itemDataMap[index] = (task.priority, task.title,
+					tuple(task.due_date.timetuple() if task.due_date
+							else (9999, )),
+					(1 if task.starred else 0))
 		self.Thaw()
 		self.Update()
 
@@ -173,31 +183,39 @@ class TaskListControl(ULC.UltimateListCtrl):
 		info = ULC.UltimateListItem()
 		info._mask = wx.LIST_MASK_TEXT | wx.LIST_MASK_FORMAT
 		info._format = 0
-		info._text = ""
+		info._text = _("Prio")
 		self.InsertColumnInfo(0, info)
 
 		info = ULC.UltimateListItem()
 		info._format = wx.LIST_FORMAT_LEFT
 		info._mask = wx.LIST_MASK_TEXT | wx.LIST_MASK_FORMAT
 		info._image = []
-		info._text = "Task"
+		info._text = _("Title")
 		self.InsertColumnInfo(1, info)
 
 		info = ULC.UltimateListItem()
 		info._format = wx.LIST_FORMAT_LEFT
 		info._mask = wx.LIST_MASK_TEXT | wx.LIST_MASK_FORMAT
 		info._image = []
-		info._text = "Due"
+		info._text = _("Due")
 		self.InsertColumnInfo(2, info)
 
 		info = ULC.UltimateListItem()
 		info._format = wx.LIST_FORMAT_LEFT
 		info._mask = wx.LIST_MASK_TEXT | wx.LIST_MASK_FORMAT
 		info._image = []
-		info._text = "Info"
+		info._text = _("Info")
 		self.InsertColumnInfo(3, info)
 
 		self.SetColumnWidth(0, 24)
 		self.SetColumnWidth(1, 500)
 		self.SetColumnWidth(2, 100)
 		self.SetColumnWidth(3, 50)
+
+	# used by the ColumnSorterMixin
+	def GetListCtrl(self):
+		return self
+
+	# Used by the ColumnSorterMixin
+	def GetSortImages(self):
+		return (self._icon_sm_down, self._icon_sm_up)
