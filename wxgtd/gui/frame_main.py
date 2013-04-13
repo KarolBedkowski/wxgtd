@@ -8,7 +8,6 @@ __copyright__ = "Copyright (c) Karol Będkowski, 2010"
 __version__ = "2011-03-29"
 
 import os
-import sys
 import gettext
 import logging
 import datetime
@@ -37,7 +36,7 @@ from wxgtd.gui.dlg_task import DlgTask
 from wxgtd.gui.dlg_checklistitem import DlgChecklistitem
 from wxgtd.gui.dlg_preferences import DlgPreferences
 from wxgtd.gui.dlg_sync_progress import DlgSyncProggress
-from wxgtd.gui import _fmt as fmt
+from wxgtd.gui._tasklistctrl import TaskListControl
 #from . import message_boxes as mbox
 
 _ = gettext.gettext
@@ -62,15 +61,7 @@ class FrameMain:
 		return ctrl
 
 	def _setup(self):
-		self._items_uuids = {}
 		self._items_path = []
-		items_list = self._items_list_ctrl
-		items_list.InsertColumn(0, _('Type'), width=50)
-		items_list.InsertColumn(1, _('Title'), width=400)
-		items_list.InsertColumn(2, _('Context'), width=100)
-		items_list.InsertColumn(3, _('Status'), width=100)
-		items_list.InsertColumn(4, _('Duo'), width=150)
-		items_list.InsertColumn(5, _('Alarm'), width=150)
 		self._filter_tree_ctrl.RefreshItems()
 		wx.CallAfter(self._refresh_list)
 		appconfig = AppConfig()
@@ -81,8 +72,6 @@ class FrameMain:
 		self.wnd.SetIcon(iconprovider.get_icon('wxgtd'))
 		self._icons = icon_prov = iconprovider.IconProvider()
 		icon_prov.load_icons(['project', 'task_done', 'checklist', 'task'])
-		self._items_list_ctrl.AssignImageList(icon_prov.image_list,
-				wx.IMAGE_LIST_SMALL)
 
 		if wx.Platform == '__WXMSW__':
 			# fix controls background
@@ -95,13 +84,18 @@ class FrameMain:
 	def _load_controls(self):
 		self.wnd = self.res.LoadFrame(None, 'frame_main')
 		assert self.wnd is not None, 'Frame not found'
-		self._items_list_ctrl = self['lc_main_list']
 		# filter tree ctrl
 		filter_tree_panel = self['filter_tree_panel']
 		box = wx.BoxSizer(wx.HORIZONTAL)
 		self._filter_tree_ctrl = FilterTreeCtrl(filter_tree_panel, -1)
 		box.Add(self._filter_tree_ctrl, 1, wx.EXPAND)
 		filter_tree_panel.SetSizer(box)
+		# tasklist
+		tasklist_panel = self['tasklist_panel']
+		box = wx.BoxSizer(wx.HORIZONTAL)
+		self._items_list_ctrl = TaskListControl(tasklist_panel)
+		box.Add(self._items_list_ctrl, 1, wx.EXPAND)
+		tasklist_panel.SetSizer(box)
 
 	def _create_bindings(self):
 		wnd = self.wnd
@@ -297,7 +291,7 @@ class FrameMain:
 		evt.Skip()
 
 	def _on_items_list_activated(self, evt):
-		task_uuid, task_type = self._items_uuids[evt.GetData()]
+		task_uuid, task_type = self._items_list_ctrl.items[evt.GetData()]
 		if task_type in (enums.TYPE_PROJECT, enums.TYPE_CHECKLIST):
 			session = OBJ.Session()
 			task = session.query(OBJ.Task).filter_by(uuid=task_uuid).first()
@@ -331,23 +325,15 @@ class FrameMain:
 		self._refresh_list()
 
 	def _on_btn_edit_selected_task(self, _evt):
-		sel = self._items_list_ctrl.GetNextItem(-1, wx.LIST_NEXT_ALL,
-				wx.LIST_STATE_SELECTED)
-		if sel == -1:
-			return
-		task_uuid, _task_type = self._items_uuids[
-				self._items_list_ctrl.GetItemData(sel)]
+		task_uuid, _task_type = self._items_list_ctrl.get_item_info(None)
 		if task_uuid:
 			dlg = DlgTask.create(task_uuid, self.wnd, task_uuid)
 			dlg.run()
 
 	def _on_btn_complete_task(self, _evt):
-		sel = self._items_list_ctrl.GetNextItem(-1, wx.LIST_NEXT_ALL,
-				wx.LIST_STATE_SELECTED)
-		if sel == -1:
+		task_uuid, _task_type = self._items_list_ctrl.get_item_info(None)
+		if task_uuid is None:  # not selected
 			return
-		task_uuid, _task_type = self._items_uuids[
-				self._items_list_ctrl.GetItemData(sel)]
 		session = OBJ.Session()
 		task = session.query(OBJ.Task).filter_by(uuid=task_uuid).first()
 		task.task_completed = not task.task_completed
@@ -395,40 +381,11 @@ class FrameMain:
 				params['types'] = [enums.TYPE_CHECKLIST, enums.TYPE_CHECKLIST_ITEM]
 			else:
 				params['types'] = [enums.TYPE_CHECKLIST]
-
 		_LOG.debug("FrameMain._refresh_list; params=%r", params)
 		tasks = OBJ.Task.select_by_filters(params)
 		items_list = self._items_list_ctrl
-		items_list.Freeze()
-		items_list.DeleteAllItems()
-		self._items_uuids.clear()
-		icon_task = self._icons.get_image_index('task')
-		icon_project = self._icons.get_image_index('project')
-		icon_checklist = self._icons.get_image_index('checklist')
-		icon_task_done = self._icons.get_image_index('task_done')
-		for task in tasks:
-			if task.type == enums.TYPE_PROJECT:
-				icon = icon_project
-			elif task.type == enums.TYPE_CHECKLIST:
-				icon = icon_checklist
-			elif task.completed:
-				icon = icon_task_done
-			else:
-				icon = icon_task
-			idx = items_list.InsertImageStringItem(sys.maxint,
-					enums.TYPES[task.type], icon)
-			items_list.SetStringItem(idx, 1, task.title)
-			items_list.SetStringItem(idx, 2, task.context.title if task.context
-					else '')
-			items_list.SetStringItem(idx, 3, task.status_name)
-			items_list.SetStringItem(idx, 4, fmt.format_timestamp(task.due_date,
-					task.due_time_set))
-			items_list.SetStringItem(idx, 5, fmt.format_timestamp(task.alarm, True)),
-			items_list.SetItemData(idx, idx)
-			self._items_uuids[idx] = (task.uuid, task.type)
-		items_list.Thaw()
+		self._items_list_ctrl.fill(tasks)
 		self.wnd.SetStatusText(_("Showed %d items") % items_list.GetItemCount())
-
 		path_str = ' / '.join(task.title for task in self._items_path)
 		self['l_path'].SetLabel(path_str)
 		self.wnd.FindWindowById(wx.ID_BACKWARD).Enable(bool(self._items_path))

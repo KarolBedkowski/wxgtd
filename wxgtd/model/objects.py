@@ -194,6 +194,7 @@ class Task(BaseModelMixin, Base):
 		query = query.options(orm.joinedload(Task.context)) \
 				.options(orm.joinedload(Task.folder)) \
 				.options(orm.joinedload(Task.goal)) \
+				.options(orm.subqueryload(Task.tags)) \
 				.order_by(Task.title)
 		return query.all()
 
@@ -344,4 +345,4 @@ class TaskTag(BaseModelMixin, Base):
 	created = Column(DateTime, default=datetime.datetime.now)
 	modified = Column(DateTime, onupdate=datetime.datetime.now)
 
-	tag = orm.relationship("Tag", cascade="all")
+	tag = orm.relationship("Tag", cascade="all", lazy="joined")
