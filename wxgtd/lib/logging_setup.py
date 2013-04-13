@@ -38,7 +38,7 @@ class ColorFormatter(logging.Formatter):
 		return logging.Formatter.format(self, record)
 
 
-def logging_setup(filename, debug=False):
+def logging_setup(filename, debug=False, debug_sql=False):
 
 	log_fullpath = os.path.abspath(filename)
 	log_dir = os.path.dirname(log_fullpath)
@@ -79,7 +79,7 @@ def logging_setup(filename, debug=False):
 	console.setFormatter(fmtr('%(levelname)-8s %(name)s - %(message)s'))
 	logging.getLogger('').addHandler(console)
 
-	logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO if debug
+	logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO if debug_sql
 			else logging.WARN)
 
 	log = logging.getLogger(__name__)

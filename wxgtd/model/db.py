@@ -24,9 +24,9 @@ import objects
 _LOG = logging.getLogger(__name__)
 
 
-def connect(filename, *args, **kwargs):
+def connect(filename, debug=False, *args, **kwargs):
 	_LOG.info('connect %r', (filename, args, kwargs))
-	engine = sqlalchemy.create_engine("sqlite:///" + filename, echo=__debug__,
+	engine = sqlalchemy.create_engine("sqlite:///" + filename, echo=debug,
 			connect_args={'detect_types': sqlite3.PARSE_DECLTYPES |
 				sqlite3.PARSE_COLNAMES}, native_datetime=True)
 	for schema in sqls.SCHEMA_DEF:

@@ -35,6 +35,8 @@ def _parse_opt():
 	optp = optparse.OptionParser()
 	optp.add_option('--debug', '-d', action="store_true", default=False,
 			help='enable debug messages')
+	optp.add_option('--debug-sql', action="store_true", default=False,
+			help='enable sql debug messages')
 	optp.add_option('--version', action="callback", callback=show_version,
 		help='show information about application version')
 	optp.add_option('--wx-inspection', action="store_true", default=False)
@@ -66,17 +68,17 @@ def _setup_locale(app_config):
 
 
 def run():
-	_OPTIONS = _parse_opt()
+	options = _parse_opt()
 
 	# logowanie
 	from wxgtd.lib.logging_setup import logging_setup
-	logging_setup('wxgtd.log', _OPTIONS.debug)
+	logging_setup('wxgtd.log', options.debug, options.debug_sql)
 
 	# konfiguracja
 	config = appconfig.AppConfig('wxgtd.cfg', 'wxgtd')
 	config.load_defaults(config.get_data_file('defaults.cfg'))
 	config.load()
-	config.debug = _OPTIONS.debug
+	config.debug = options.debug
 
 	# locale
 	_setup_locale(config)
@@ -130,7 +132,6 @@ def run():
 	if not os.path.isdir(db_dirname):
 		os.mkdir(db_dirname)
 
-
 	if sys.platform == 'win32':
 		wx.Locale.AddCatalogLookupPathPrefix(config.locales_dir)
 		wxloc = wx.Locale(wx.LANGUAGE_DEFAULT)
@@ -138,13 +139,13 @@ def run():
 
 	iconprovider.init_icon_cache(None, config.data_dir)
 
-	conn = db.connect(db_filename)
+	db.connect(db_filename, options.debug_sql)
 
 	main_frame = FrameMain()
 	app.SetTopWindow(main_frame.wnd)
 	main_frame.wnd.Show()
 
-	if _OPTIONS.wx_inspection:
+	if options.wx_inspection:
 		import wx.lib.inspection
 		wx.lib.inspection.InspectionTool().Show()
 
