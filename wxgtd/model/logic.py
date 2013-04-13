@@ -7,13 +7,17 @@ Operacje na obiekatch
 import uuid
 import datetime
 import logging
+import gettext
 
 from dateutil.relativedelta import relativedelta
+
+from wxgtd.gui import message_boxes as mbox
 
 import objects as OBJ
 import enums
 
 _LOG = logging.getLogger(__name__)
+_ = gettext.gettext
 
 
 def update_task_alarm(task):
@@ -187,3 +191,17 @@ def update_task_from_parent(task, parent_uuid, session, appconfig):
 	if appconfig.get('tasks', 'inerit_tags') and not task.tags and parent.tags:
 		for tasktag in parent.tags:
 			task.task.append(OBJ.TaskTag(tag_uuid=tasktag.tag_uuid))
+
+
+def delete_task(task_uuid, parent=None, session=None):
+	if not mbox.message_box_delete_confirm(parent, _("task")):
+		return False
+
+	session = session or OBJ.Session()
+	task = session.query(OBJ.Task).filter_by(uuid=task_uuid).first()
+	if not task:
+		return False
+
+	session.delete(task)
+	session.commit()
+	return True

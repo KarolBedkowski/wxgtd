@@ -30,6 +30,7 @@ from wxgtd.model import loader
 from wxgtd.model import exporter
 from wxgtd.model import sync
 from wxgtd.model import enums
+from wxgtd.model import logic
 from wxgtd.gui import dlg_about
 from wxgtd.gui._filtertreectrl import FilterTreeCtrl
 from wxgtd.gui.dlg_task import DlgTask
@@ -70,8 +71,6 @@ class FrameMain:
 
 	def _setup_wnd(self):
 		self.wnd.SetIcon(iconprovider.get_icon('wxgtd'))
-		self._icons = icon_prov = iconprovider.IconProvider()
-		icon_prov.load_icons(['project', 'task_done', 'checklist', 'task'])
 
 		if wx.Platform == '__WXMSW__':
 			# fix controls background
@@ -123,6 +122,7 @@ class FrameMain:
 		wnd.Bind(wx.EVT_BUTTON, self._on_btn_path_back, id=wx.ID_BACKWARD)
 
 		Publisher.subscribe(self._on_tasks_update, ('task', 'update'))
+		Publisher.subscribe(self._on_tasks_update, ('task', 'delete'))
 
 	def _create_toolbar(self):
 		toolbar = self.wnd.CreateToolBar()
@@ -130,13 +130,22 @@ class FrameMain:
 				wx.ART_NEW, wx.ART_TOOLBAR), shortHelp=_('Add new task'))
 		self.wnd.Bind(wx.EVT_TOOL, self._on_menu_file_new_task, id=tbi.GetId())
 
-		tbi = toolbar.AddLabelTool(-1, _('Edit Task'), wx.ArtProvider.GetBitmap(
-			wx.ART_FOLDER_OPEN, wx.ART_TOOLBAR), shortHelp=_('Edit selected task'))
+		tbi = toolbar.AddLabelTool(-1, _('Edit Task'),
+				iconprovider.get_image('task_edit'),
+				shortHelp=_('Edit selected task'))
 		self.wnd.Bind(wx.EVT_TOOL, self._on_btn_edit_selected_task,
 				id=tbi.GetId())
 
+		tbi = toolbar.AddLabelTool(-1, _('Delete Task'),
+				iconprovider.get_image('task_delete'),
+				shortHelp=_('Delete selected task'))
+		self.wnd.Bind(wx.EVT_TOOL, self._on_btn_delete_selected_task,
+				id=tbi.GetId())
+
+		toolbar.AddSeparator()
+
 		tbi = toolbar.AddLabelTool(-1, _('Toggle Task Completed'),
-				wx.ArtProvider.GetBitmap(wx.ART_TICK_MARK, wx.ART_TOOLBAR),
+				iconprovider.get_image('task_done'),
 				shortHelp=_('Toggle selected task completed'))
 		self.wnd.Bind(wx.EVT_TOOL, self._on_btn_complete_task, id=tbi.GetId())
 
@@ -329,6 +338,12 @@ class FrameMain:
 		if task_uuid:
 			dlg = DlgTask.create(task_uuid, self.wnd, task_uuid)
 			dlg.run()
+
+	def _on_btn_delete_selected_task(self, _evt):
+		task_uuid, _task_type = self._items_list_ctrl.get_item_info(None)
+		if task_uuid:
+			if logic.delete_task(task_uuid, self.wnd):
+				Publisher.sendMessage('task.delete', data={'task_uuid': task_uuid})
 
 	def _on_btn_complete_task(self, _evt):
 		task_uuid, _task_type = self._items_list_ctrl.get_item_info(None)
