@@ -194,6 +194,7 @@ class Task(BaseModelMixin, Base):
 		query = query.options(orm.joinedload(Task.context)) \
 				.options(orm.joinedload(Task.folder)) \
 				.options(orm.joinedload(Task.goal)) \
+				.options(orm.subqueryload(Task.tags)) \
 				.order_by(Task.title)
 		return query.all()
 
