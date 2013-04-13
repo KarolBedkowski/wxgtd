@@ -58,13 +58,13 @@ class _ListItemRenderer(object):
 
 		task = self._task
 
-		if highlighted:
-			mdc.SetBackground(wx.Brush(wx.SystemSettings_GetColour(
-					wx.SYS_COLOUR_HIGHLIGHT)))
-			mdc.SetTextForeground(wx.WHITE)
-		else:
-			mdc.SetBackground(wx.Brush(wx.SystemSettings_GetColour(
-					wx.SYS_COLOUR_WINDOW)))
+#		if highlighted:
+#			mdc.SetBackground(wx.Brush(wx.SystemSettings_GetColour(
+#					wx.SYS_COLOUR_HIGHLIGHT)))
+#			mdc.SetTextForeground(wx.WHITE)
+#		else:
+#			mdc.SetBackground(wx.Brush(wx.SystemSettings_GetColour(
+#					wx.SYS_COLOUR_WINDOW)))
 		mdc.Clear()
 
 		mdc.SetFont(self._font_task)
