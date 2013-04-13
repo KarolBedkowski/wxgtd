@@ -44,4 +44,8 @@ def connect(filename, debug=False, *args, **kwargs):
 		session.add(conf)
 		_LOG.info('DB bootstrap: create deviceId=%r', conf.val)
 		session.commit()
+	# 2. cleanup
+	engine.execute("delete from task_tags "
+			"where task_uuid not in (select uuid from tasks)"
+			"or tag_uuid not in (select uuid from tags)")
 	return objects.Session

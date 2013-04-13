@@ -121,10 +121,10 @@ class Task(BaseModelMixin, Base):
 	folder = orm.relationship("Folder")
 	context = orm.relationship("Context")
 	goal = orm.relationship("Goal")
-	tags = orm.relationship("TaskTag", cascade="all, delete-orphan")
+	tags = orm.relationship("TaskTag", cascade="all, delete, delete-orphan")
 	children = orm.relationship("Task", backref=orm.backref('parent',
 		remote_side=[uuid]))
-	notes = orm.relationship("Tasknote", cascade="all, delete-orphan")
+	notes = orm.relationship("Tasknote", cascade="all, delete, delete-orphan")
 
 	@property
 	def status_name(self):
