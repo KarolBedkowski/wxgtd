@@ -79,6 +79,8 @@ class DlgTask(BaseDialog):
 		else:
 			self._task = OBJ.Task(parent_uuid=parent_uuid, priority=0,
 					type=(task_type or enums.TYPE_TASK))
+			logic.update_task_from_parent(self._task, parent_uuid, self._session,
+					self._appconfig)
 			self._session.add(self._task)
 		task = self._task
 		self._data = {'prev_completed': task.completed}

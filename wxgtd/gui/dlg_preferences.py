@@ -75,6 +75,16 @@ class DlgPreferences(BaseDialog):
 		cond_or = config.get('hotlist/condition_or', True)
 		self['rb_hotlist_cond_or'].SetValue(cond_or)
 		self['rb_hotlist_cond_and'].SetValue(not cond_or)
+		# task
+		# # inheritance from project
+		self['cb_tasks_inh_context'].SetValidator(Validator(config,
+				'task/inerit_context'))
+		self['cb_tasks_inh_goal'].SetValidator(Validator(config,
+				'task/inerit_goal'))
+		self['cb_tasks_inh_folder'].SetValidator(Validator(config,
+				'task/inerit_folder'))
+		self['cb_tasks_inh_tags'].SetValidator(Validator(config,
+				'task/inerit_tags'))
 
 	def _create_bindings(self):
 		BaseDialog._create_bindings(self)
