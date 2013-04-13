@@ -8,7 +8,6 @@ __copyright__ = "Copyright (c) Karol Będkowski, 2010"
 __version__ = "2011-03-29"
 
 import os
-import sys
 import gettext
 import logging
 import datetime
@@ -37,7 +36,6 @@ from wxgtd.gui.dlg_task import DlgTask
 from wxgtd.gui.dlg_checklistitem import DlgChecklistitem
 from wxgtd.gui.dlg_preferences import DlgPreferences
 from wxgtd.gui.dlg_sync_progress import DlgSyncProggress
-from wxgtd.gui import _fmt as fmt
 from wxgtd.gui._tasklistctrl import TaskListControl
 #from . import message_boxes as mbox
 
@@ -63,7 +61,6 @@ class FrameMain:
 		return ctrl
 
 	def _setup(self):
-		self._items_uuids = {}
 		self._items_path = []
 		self._filter_tree_ctrl.RefreshItems()
 		wx.CallAfter(self._refresh_list)
@@ -294,7 +291,7 @@ class FrameMain:
 		evt.Skip()
 
 	def _on_items_list_activated(self, evt):
-		task_uuid, task_type = self._items_uuids[evt.GetData()]
+		task_uuid, task_type = self._items_list_ctrl.items[evt.GetData()]
 		if task_type in (enums.TYPE_PROJECT, enums.TYPE_CHECKLIST):
 			session = OBJ.Session()
 			task = session.query(OBJ.Task).filter_by(uuid=task_uuid).first()
@@ -328,23 +325,15 @@ class FrameMain:
 		self._refresh_list()
 
 	def _on_btn_edit_selected_task(self, _evt):
-		sel = self._items_list_ctrl.GetNextItem(-1, wx.LIST_NEXT_ALL,
-				wx.LIST_STATE_SELECTED)
-		if sel == -1:
-			return
-		task_uuid, _task_type = self._items_uuids[
-				self._items_list_ctrl.GetItemData(sel)]
+		task_uuid, _task_type = self._items_list_ctrl.get_item_info(None)
 		if task_uuid:
 			dlg = DlgTask.create(task_uuid, self.wnd, task_uuid)
 			dlg.run()
 
 	def _on_btn_complete_task(self, _evt):
-		sel = self._items_list_ctrl.GetNextItem(-1, wx.LIST_NEXT_ALL,
-				wx.LIST_STATE_SELECTED)
-		if sel == -1:
+		task_uuid, _task_type = self._items_list_ctrl.get_item_info(None)
+		if task_uuid is None:  # not selected
 			return
-		task_uuid, _task_type = self._items_uuids[
-				self._items_list_ctrl.GetItemData(sel)]
 		session = OBJ.Session()
 		task = session.query(OBJ.Task).filter_by(uuid=task_uuid).first()
 		task.task_completed = not task.task_completed
@@ -392,15 +381,11 @@ class FrameMain:
 				params['types'] = [enums.TYPE_CHECKLIST, enums.TYPE_CHECKLIST_ITEM]
 			else:
 				params['types'] = [enums.TYPE_CHECKLIST]
-
 		_LOG.debug("FrameMain._refresh_list; params=%r", params)
 		tasks = OBJ.Task.select_by_filters(params)
 		items_list = self._items_list_ctrl
-		self._items_uuids.clear()
 		self._items_list_ctrl.fill(tasks)
-		self._items_uuids = self._items_list_ctrl.items.copy()
 		self.wnd.SetStatusText(_("Showed %d items") % items_list.GetItemCount())
-
 		path_str = ' / '.join(task.title for task in self._items_path)
 		self['l_path'].SetLabel(path_str)
 		self.wnd.FindWindowById(wx.ID_BACKWARD).Enable(bool(self._items_path))

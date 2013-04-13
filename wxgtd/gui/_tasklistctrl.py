@@ -125,6 +125,17 @@ class TaskListControl(ULC.UltimateListCtrl):
 	def items(self):
 		return self._items
 
+	@property
+	def selected(self):
+		return self.GetNextItem(-1, wx.LIST_NEXT_ALL, wx.LIST_STATE_SELECTED)
+
+	def get_item_info(self, idx):
+		if idx is None:
+			idx = self.selected
+			if idx < 0:
+				return None, None
+		return self._items[self.GetItemData(idx)]
+
 	def fill(self, tasks):
 		self.Freeze()
 		self._items.clear()
