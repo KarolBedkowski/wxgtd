@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
 
 """
-Klasa bazowa dla wszystkich dlg.
+Klasa dlg edycji zadania.
+
+TODO: dziedziczenie z projektu
+TODO: wydzielenie cześci wspólnej z dlg_checklistitem
 """
 
 __author__ = "Karol Będkowski"
@@ -43,10 +46,10 @@ class DlgTask(BaseDialog):
 	WARRNING: okienko niemodalne; obsługa zapisywania tutaj
 	"""
 
-	def __init__(self, parent, task_uuid):
+	def __init__(self, parent, task_uuid, parent_uuid=None):
 		BaseDialog.__init__(self, parent, 'dlg_task')
 		self._setup_comboboxes()
-		self._setup(task_uuid)
+		self._setup(task_uuid, parent_uuid)
 		self._refresh_static_texts()
 
 	def _load_controls(self, wnd):
@@ -66,15 +69,16 @@ class DlgTask(BaseDialog):
 		self['btn_select_tags'].Bind(wx.EVT_BUTTON, self._on_btn_select_tags)
 		self['sl_priority'].Bind(wx.EVT_SCROLL, self._on_sl_priority)
 
-	def _setup(self, task_uuid):
-		_LOG.debug("DlgTask(%r)", task_uuid)
+	def _setup(self, task_uuid, parent_uuid):
+		_LOG.debug("DlgTask(%r)", task_uuid, parent_uuid)
 		self._current_note = None
 		self._session = OBJ.Session()
 		if task_uuid:
 			self._task = self._session.query(OBJ.Task).filter_by(
 					uuid=task_uuid).first()
 		else:
-			self._task = OBJ.Task()
+			self._task = OBJ.Task(parent_uuid=parent_uuid, priority=0,
+					type=enums.TYPE_TASK)
 			self._session.add(self._task)
 		task = self._task
 		self._data = {'prev_completed': task.completed}
@@ -114,7 +118,9 @@ class DlgTask(BaseDialog):
 			cb_status.Append(status, key)
 		cb_types = self['cb_type']
 		for key, typename in sorted(enums.TYPES.iteritems()):
-			cb_types.Append(typename, key)
+			if key != enums.TYPE_CHECKLIST_ITEM:
+				# nie można utworzyć checklist item bez checlisty jako parenta
+				cb_types.Append(typename, key)
 		cb_context = self['cb_context']
 		for context in OBJ.Context.all():
 			cb_context.Append(context.title, context.uuid)

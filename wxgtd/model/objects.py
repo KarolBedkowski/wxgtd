@@ -92,7 +92,7 @@ class Task(BaseModelMixin, Base):
 	type = Column(Integer)
 	starred = Column(Integer)
 	status = Column(Integer)
-	priority = Column(Integer)
+	priority = Column(Integer, default=0)
 	importance = Column(Integer, default=0)
 	start_date = Column(DateTime)
 	start_time_set = Column(Integer, default=0)
@@ -200,6 +200,10 @@ class Task(BaseModelMixin, Base):
 	@classmethod
 	def all_projects(cls):
 		return Session().query(cls).filter_by(type=enums.TYPE_PROJECT).all()
+
+	@classmethod
+	def all_checklists(cls):
+		return Session().query(cls).filter_by(type=enums.TYPE_CHECKLIST).all()
 
 	def clone(self):
 		newobj = BaseModelMixin.clone(self)
