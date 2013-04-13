@@ -43,6 +43,7 @@ class _ListItemRenderer(object):
 	_line_height = None
 	_font_task = None
 	_font_info = None
+	_info_offset = None
 
 	def __init__(self, _parent, task):
 		self._task = task
@@ -68,10 +69,7 @@ class _ListItemRenderer(object):
 		mdc.Clear()
 
 		mdc.SetFont(self._font_task)
-		ypos = 5
-		_xtext, ytext = mdc.GetTextExtent(task.title)
-		mdc.DrawText(task.title, 0, ypos)
-		ypos += ytext + 5
+		mdc.DrawText(task.title, 0, 5)
 
 		mdc.SetFont(self._font_info)
 		info = []
@@ -85,8 +83,7 @@ class _ListItemRenderer(object):
 			info.append("▫" + task.folder.title)
 		if info:
 			info = '  '.join(info)
-			_xtext, ytext = mdc.GetTextExtent(info)
-			mdc.DrawText(info, 0, ypos)
+			mdc.DrawText(info, 0, self._info_offset)
 		dc.Blit(rect.x + 3, rect.y, rect.width - 6, rect.height, mdc, 0, 0)
 
 	def GetLineHeight(self):
@@ -94,9 +91,10 @@ class _ListItemRenderer(object):
 			return self._line_height
 		dc = wx.MemoryDC()
 		dc.SelectObject(wx.EmptyBitmap(1, 1))
-		dc.SetFont(wx.Font(9, wx.SWISS, wx.NORMAL, wx.BOLD, False))
+		dc.SetFont(self._font_task)
 		dummy, ytext1 = dc.GetTextExtent("Agw")
-		dc.SetFont(wx.Font(7, wx.SWISS, wx.NORMAL, wx.NORMAL, False))
+		dc.SetFont(self._font_info)
+		self._info_offset = ytext1 + 10
 		dummy, ytext2 = dc.GetTextExtent("Agw")
 		dc.SelectObject(wx.NullBitmap)
 		self._line_height = ytext1 + ytext2 + 10
