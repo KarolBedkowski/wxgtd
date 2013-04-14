@@ -8,4 +8,5 @@ __version__ = '2013-03-23'
 __all__ = ['ValidatorDv', 'Validator']
 
 
-from validator import Validator, ValidatorDv, ValidatorDate, ValidatorTime
+from validator import Validator, ValidatorDv, ValidatorDate, ValidatorTime, \
+		ValidatorColorStr

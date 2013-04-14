@@ -203,6 +203,23 @@ class ValidatorDv(Validator):
 		return value
 
 
+class ValidatorColorStr(Validator):
+	""" Walidator wxColorPickerCtrl przyjmujący wartości jako str"""
+
+	def _set_value_to_control(self, value):
+		if value:
+			if value[0] != "#":
+				value = '#' + value
+			color = wx.Color()
+			color.SetFromString(value)
+			self.GetWindow().SetColour(color)
+
+	def _get_value_from_control(self):
+		ctrl = self.GetWindow()
+		color = ctrl.GetColour()
+		return color.GetAsString(wx.C2S_HTML_SYNTAX)
+
+
 class ValidatorDate(Validator):
 	""" Walidator dla wxDatePicker, wartości proste - timestamp"""
 
