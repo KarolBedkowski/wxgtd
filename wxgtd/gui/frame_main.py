@@ -110,6 +110,9 @@ class FrameMain:
 		_create_menu_bind('menu_file_preferences',
 				self._on_menu_file_preferences)
 		_create_menu_bind('menu_help_about', self._on_menu_help_about)
+		_create_menu_bind('menu_task_new', self._on_menu_task_new)
+		_create_menu_bind('menu_task_edit', self._on_menu_task_edit)
+		_create_menu_bind('menu_task_delete', self._on_menu_task_delete)
 
 		self._filter_tree_ctrl.Bind(wx.EVT_TREE_ITEM_ACTIVATED,
 				self._on_filter_tree_item_activated)
@@ -128,7 +131,7 @@ class FrameMain:
 		toolbar = self.wnd.CreateToolBar()
 		tbi = toolbar.AddLabelTool(-1, _('New Task'), wx.ArtProvider.GetBitmap(
 				wx.ART_NEW, wx.ART_TOOLBAR), shortHelp=_('Add new task'))
-		self.wnd.Bind(wx.EVT_TOOL, self._on_menu_file_new_task, id=tbi.GetId())
+		self.wnd.Bind(wx.EVT_TOOL, self._on_btn_new_task, id=tbi.GetId())
 
 		tbi = toolbar.AddLabelTool(-1, _('Edit Task'),
 				iconprovider.get_image('task_edit'),
@@ -265,26 +268,21 @@ class FrameMain:
 	def _on_menu_file_exit(self, _evt):
 		self.wnd.Close()
 
-	def _on_menu_file_new_task(self, _evt):
-		parent_uuid = None
-		if self._items_path:
-			parent_uuid = self._items_path[-1].uuid
-			if self._items_path[-1].type == enums.TYPE_CHECKLIST:
-				dlg = DlgChecklistitem(self.wnd, None, parent_uuid)
-				dlg.run()
-				return
-		group_id = self['rb_show_selection'].GetSelection()
-		task_type = enums.TYPE_TASK
-		if group_id == 5:
-			task_type = enums.TYPE_PROJECT
-		elif group_id == 6:
-			task_type = enums.TYPE_CHECKLIST
-		dlg = DlgTask(self.wnd, None, parent_uuid, task_type)
-		dlg.run()
+	def _on_btn_new_task(self, _evt):
+		self._new_task()
 
 	def _on_menu_help_about(self, _evt):
 		""" Show about dialog """
 		dlg_about.show_about_box(self.wnd)
+
+	def _on_menu_task_new(self, _evt):
+		self._new_task()
+
+	def _on_menu_task_delete(self, _evt):
+		self._delete_selected_task()
+
+	def _on_menu_task_edit(self, _evt):
+		self._edit_selected_task()
 
 	def _on_filter_tree_item_activated(self, evt):
 		wx.CallAfter(self._refresh_list)
@@ -334,16 +332,10 @@ class FrameMain:
 		self._refresh_list()
 
 	def _on_btn_edit_selected_task(self, _evt):
-		task_uuid, _task_type = self._items_list_ctrl.get_item_info(None)
-		if task_uuid:
-			dlg = DlgTask.create(task_uuid, self.wnd, task_uuid)
-			dlg.run()
+		self._edit_selected_task()
 
 	def _on_btn_delete_selected_task(self, _evt):
-		task_uuid, _task_type = self._items_list_ctrl.get_item_info(None)
-		if task_uuid:
-			if logic.delete_task(task_uuid, self.wnd):
-				Publisher.sendMessage('task.delete', data={'task_uuid': task_uuid})
+		self._delete_selected_task()
 
 	def _on_btn_complete_task(self, _evt):
 		task_uuid, _task_type = self._items_list_ctrl.get_item_info(None)
@@ -421,6 +413,35 @@ class FrameMain:
 			dlg.mark_finished(2)
 			self._filter_tree_ctrl.RefreshItems()
 			Publisher.sendMessage('task.update')
+
+	def _delete_selected_task(self):
+		task_uuid, _task_type = self._items_list_ctrl.get_item_info(None)
+		if task_uuid:
+			if logic.delete_task(task_uuid, self.wnd):
+				Publisher.sendMessage('task.delete', data={'task_uuid': task_uuid})
+
+	def _new_task(self):
+		parent_uuid = None
+		if self._items_path:
+			parent_uuid = self._items_path[-1].uuid
+			if self._items_path[-1].type == enums.TYPE_CHECKLIST:
+				dlg = DlgChecklistitem(self.wnd, None, parent_uuid)
+				dlg.run()
+				return
+		group_id = self['rb_show_selection'].GetSelection()
+		task_type = enums.TYPE_TASK
+		if group_id == 5:
+			task_type = enums.TYPE_PROJECT
+		elif group_id == 6:
+			task_type = enums.TYPE_CHECKLIST
+		dlg = DlgTask(self.wnd, None, parent_uuid, task_type)
+		dlg.run()
+
+	def _edit_selected_task(self):
+		task_uuid, _task_type = self._items_list_ctrl.get_item_info(None)
+		if task_uuid:
+			dlg = DlgTask.create(task_uuid, self.wnd, task_uuid)
+			dlg.run()
 
 
 def _update_color(wnd, bgcolor):
