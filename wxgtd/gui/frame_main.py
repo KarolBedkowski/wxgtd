@@ -37,6 +37,7 @@ from wxgtd.gui.dlg_task import DlgTask
 from wxgtd.gui.dlg_checklistitem import DlgChecklistitem
 from wxgtd.gui.dlg_preferences import DlgPreferences
 from wxgtd.gui.dlg_sync_progress import DlgSyncProggress
+from wxgtd.gui.dlg_tags import DlgTags
 from wxgtd.gui._tasklistctrl import TaskListControl
 #from . import message_boxes as mbox
 
@@ -113,6 +114,7 @@ class FrameMain:
 		_create_menu_bind('menu_task_new', self._on_menu_task_new)
 		_create_menu_bind('menu_task_edit', self._on_menu_task_edit)
 		_create_menu_bind('menu_task_delete', self._on_menu_task_delete)
+		_create_menu_bind('menu_sett_tags', self._on_menu_sett_tags)
 
 		self._filter_tree_ctrl.Bind(wx.EVT_TREE_ITEM_ACTIVATED,
 				self._on_filter_tree_item_activated)
@@ -283,6 +285,10 @@ class FrameMain:
 
 	def _on_menu_task_edit(self, _evt):
 		self._edit_selected_task()
+
+	def _on_menu_sett_tags(self, _evt):
+		DlgTags(self.wnd).run(True)
+		self._filter_tree_ctrl.RefreshItems()
 
 	def _on_filter_tree_item_activated(self, evt):
 		wx.CallAfter(self._refresh_list)
