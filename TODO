@@ -6,15 +6,14 @@
 Prio 1
 ======
 
-2. sprawdzić poprawność powtarzania zadań
-
-3. sprawdzić poprawność wyświetlania podzadań
-
-
+- sprawdzić poprawność powtarzania zadań
+- sprawdzić poprawność wyświetlania podzadań
+- sortowanie checlistitem przez order
 
 Prio 2
 ======
 
-2. Ładniejsza lista
+- liczenie podzadań aktywnych
+- liczenie zadań przekroczonych
 
   vim: set ft=rst: 
