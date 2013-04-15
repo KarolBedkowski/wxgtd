@@ -17,7 +17,8 @@ import datetime
 
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import orm, or_
+from sqlalchemy import orm, or_, and_
+from sqlalchemy import select, func
 
 import enums
 
@@ -70,6 +71,11 @@ class BaseModelMixin(object):
 							and prop.secondary):
 				setattr(newobj, prop.key, getattr(self, prop.key))
 		return newobj
+
+	@property
+	def child_count(self):
+		return orm.object_session(self).scalar(select([func.count(Task.uuid)])
+				.where(Task.parent_uuid == self.uuid))
 
 	def __repr__(self):
 		info = []
@@ -149,6 +155,14 @@ class Task(BaseModelMixin, Base):
 			self.completed = None
 
 	task_completed = property(_get_task_completed, _set_task_completed)
+
+	@property
+	def child_overdue(self):
+		now = datetime.datetime.now()
+		return orm.object_session(self).scalar(select([func.count(Task.uuid)])
+				.where(and_(Task.parent_uuid == self.uuid,
+						Task.due_date.isnot(None), Task.due_date < now,
+						Task.completed.is_(None))))
 
 	@classmethod
 	def get_finished(cls):
