@@ -37,7 +37,7 @@ class DlgGoals(DictBaseDlg):
 		self['tc_title'].SetValidator(Validator(self._proxy, 'title'))
 		self['tc_note'].SetValidator(Validator(self._proxy, 'note'))
 		self['colorselect'].SetValidator(ValidatorColorStr(self._proxy,
-				'bg_color'))
+				'bg_color', with_alpha=True))
 		self['c_timeperiod'].SetValidator(ValidatorDv(self._proxy,
 				'time_period'))
 

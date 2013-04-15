@@ -206,6 +206,20 @@ class ValidatorDv(Validator):
 class ValidatorColorStr(Validator):
 	""" Walidator wxColorPickerCtrl przyjmujący wartości jako str"""
 
+	def __init__(self, data_obj=None, data_key=None, validators=None,
+			field=None, default=None, readonly=False, with_alpha=False,
+			add_hash=False):
+		Validator.__init__(self, data_obj, data_key, validators, field,
+				default, readonly)
+		self._with_alpha = with_alpha
+		self._add_hash = add_hash
+
+	def Clone(self):
+		"""	"""
+		return self.__class__(self._object, self._key, self._validators,
+				self._field, self._default, self._readonly, self._with_alpha,
+				self._add_hash)
+
 	def _set_value_to_control(self, value):
 		if value:
 			if value[0] != "#":
@@ -217,7 +231,18 @@ class ValidatorColorStr(Validator):
 	def _get_value_from_control(self):
 		ctrl = self.GetWindow()
 		color = ctrl.GetColour()
-		return color.GetAsString(wx.C2S_HTML_SYNTAX)
+		value = color.GetAsString(wx.C2S_HTML_SYNTAX)
+		print value, self._with_alpha,
+		if self._with_alpha:
+			value += "%02X" % color.alpha
+		if self._add_hash:
+			if value[0] != '#':
+				value = "#" + value
+		else:
+			if value[0] == '#':
+				value = value[1:]
+		print value
+		return value
 
 
 class ValidatorDate(Validator):

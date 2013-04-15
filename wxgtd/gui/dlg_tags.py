@@ -35,7 +35,7 @@ class DlgTags(DictBaseDlg):
 		self['tc_title'].SetValidator(Validator(self._proxy, 'title'))
 		self['tc_note'].SetValidator(Validator(self._proxy, 'note'))
 		self['colorselect'].SetValidator(ValidatorColorStr(self._proxy,
-				'bg_color'))
+				'bg_color', with_alpha=True))
 
 	def _set_buttons_state(self):
 		DictBaseDlg._set_buttons_state(self)
