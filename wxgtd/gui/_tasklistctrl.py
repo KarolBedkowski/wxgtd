@@ -180,13 +180,16 @@ class TaskListControl(ULC.UltimateListCtrl, listmix.ColumnSorterMixin):
 			self.SetStringItem(index, 1, "")
 			self.SetItemCustomRenderer(index, 1, _ListItemRenderer(self,
 				task, task_is_overdue))
-			self.SetStringItem(index, 2, fmt.format_timestamp(task.due_date,
-					task.due_time_set).replace(' ', '\n'))
+			if task.type == enums.TYPE_CHECKLIST_ITEM:
+				self.SetStringItem(index, 2, str(task.importance + 1))
+			else:
+				self.SetStringItem(index, 2, fmt.format_timestamp(task.due_date,
+						task.due_time_set).replace(' ', '\n'))
 			self.SetStringItem(index, 3, info)
 			self.SetItemData(index, index)
 			self._items[index] = (task.uuid, task.type)
 			self.itemDataMap[index] = (task.priority, task.title,
-					(task.ordinal or 0, ) +
+					(task.importance or 0, ) +
 					tuple(task.due_date.timetuple() if task.due_date
 							else (9999, )),
 					(1 if task.starred else 0))

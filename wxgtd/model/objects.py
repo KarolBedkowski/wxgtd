@@ -108,7 +108,7 @@ class Task(BaseModelMixin, Base):
 	starred = Column(Integer)
 	status = Column(Integer)
 	priority = Column(Integer, default=0)
-	importance = Column(Integer, default=0)
+	importance = Column(Integer, default=0)  # dla checlist pozycja
 	start_date = Column(DateTime)
 	start_time_set = Column(Integer, default=0)
 	due_date = Column(DateTime)
