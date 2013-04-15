@@ -120,3 +120,7 @@ REPEAT_PATTERN_LIST = [("Norepeat", _("Norepeat")),
 	("WITHPARENT", _("With parrent"))]
 
 REPEAT_PATTERN = dict(REPEAT_PATTERN_LIST)
+
+GOAL_TIME_TERM = {0: _("Lifelong"),
+		1: _("Long Term"),
+		2: _("Short Term")}
