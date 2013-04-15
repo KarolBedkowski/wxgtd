@@ -173,6 +173,7 @@ class TaskListControl(ULC.UltimateListCtrl, listmix.ColumnSorterMixin):
 			self.SetItemData(index, index)
 			self._items[index] = (task.uuid, task.type)
 			self.itemDataMap[index] = (task.priority, task.title,
+					(task.ordinal or 0, ) +
 					tuple(task.due_date.timetuple() if task.due_date
 							else (9999, )),
 					(1 if task.starred else 0))
