@@ -10,6 +10,7 @@ __version__ = "2011-03-29"
 import sys
 import gettext
 import logging
+import datetime
 
 import wx
 from wx.lib.agw import ultimatelistctrl as ULC
@@ -46,8 +47,9 @@ class _ListItemRenderer(object):
 	_font_info = None
 	_info_offset = None
 
-	def __init__(self, _parent, task):
+	def __init__(self, _parent, task, overdue=False):
 		self._task = task
+		self._overdue = overdue
 		if not self._font_task:
 			self._font_task = wx.Font(10, wx.NORMAL, wx.NORMAL, wx.BOLD, False)
 		if not self._font_info:
@@ -69,9 +71,9 @@ class _ListItemRenderer(object):
 #					wx.SYS_COLOUR_WINDOW)))
 		mdc.Clear()
 
+		mdc.SetTextForeground(wx.RED if self._overdue else wx.BLACK)
 		mdc.SetFont(self._font_task)
 		mdc.DrawText(task.title, 0, 5)
-
 		mdc.SetFont(self._font_info)
 		info = []
 		if task.status:
@@ -152,23 +154,34 @@ class TaskListControl(ULC.UltimateListCtrl, listmix.ColumnSorterMixin):
 				1: self._icons.get_image_index('prio1'),
 				2: self._icons.get_image_index('prio2'),
 				3: self._icons.get_image_index('prio3')}
+		now = datetime.datetime.now()
 		for task in tasks:
 			icon = icon_completed if task.completed else prio_icon[task.priority]
-			index = self.InsertImageStringItem(sys.maxint, "", icon)
-			self.SetStringItem(index, 1, "")
-			self.SetItemCustomRenderer(index, 1, _ListItemRenderer(self,
-				task))
-			self.SetStringItem(index, 2, fmt.format_timestamp(task.due_date,
-					task.due_time_set).replace(' ', '\n'))
 			info = ""
 			if task.starred:
-				info += "★"
+				info += "★ "
 			info += _TASK_TYPE_ICONS.get(task.type, "")
+			task_is_overdue = False
+			child_count = task.child_count
+			if child_count > 0:
+				overdue = task.child_overdue
+				if overdue > 0:
+					info += " %d / " % overdue
+					task_is_overdue = True
+				info += " %d " % child_count
 			info += '\n'
 			if task.alarm:
 				info += '⌚ '
 			if task.repeat_pattern:
 				info += '↻'  # ⥁
+			task_is_overdue = task_is_overdue or (task.due_date and
+					task.due_date < now)
+			index = self.InsertImageStringItem(sys.maxint, "", icon)
+			self.SetStringItem(index, 1, "")
+			self.SetItemCustomRenderer(index, 1, _ListItemRenderer(self,
+				task, task_is_overdue))
+			self.SetStringItem(index, 2, fmt.format_timestamp(task.due_date,
+					task.due_time_set).replace(' ', '\n'))
 			self.SetStringItem(index, 3, info)
 			self.SetItemData(index, index)
 			self._items[index] = (task.uuid, task.type)
@@ -177,6 +190,8 @@ class TaskListControl(ULC.UltimateListCtrl, listmix.ColumnSorterMixin):
 					tuple(task.due_date.timetuple() if task.due_date
 							else (9999, )),
 					(1 if task.starred else 0))
+			if task_is_overdue:
+				self.SetItemTextColour(index, wx.RED)
 		self.Thaw()
 		self.Update()
 
@@ -211,7 +226,7 @@ class TaskListControl(ULC.UltimateListCtrl, listmix.ColumnSorterMixin):
 		self.SetColumnWidth(0, 24)
 		self.SetColumnWidth(1, 500)
 		self.SetColumnWidth(2, 100)
-		self.SetColumnWidth(3, 50)
+		self.SetColumnWidth(3, 70)
 
 	# used by the ColumnSorterMixin
 	def GetListCtrl(self):
