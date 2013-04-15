@@ -71,6 +71,15 @@ class BaseModelMixin(object):
 				setattr(newobj, prop.key, getattr(self, prop.key))
 		return newobj
 
+	def __repr__(self):
+		info = []
+		for prop in orm.object_mapper(self).iterate_properties:
+			if isinstance(prop, orm.ColumnProperty) or \
+					(isinstance(prop, orm.RelationshipProperty)
+							and prop.secondary):
+				info.append("%r=%r" % (prop.key, getattr(self, prop.key)))
+		return "<" + self.__class__.__name__ + ' ' + ','.join(info) + ">"
+
 
 class Task(BaseModelMixin, Base):
 	"""Task
