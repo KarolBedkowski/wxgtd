@@ -83,6 +83,7 @@ class DlgTask(BaseDialog):
 			logic.update_task_from_parent(self._task, parent_uuid, self._session,
 					self._appconfig)
 			self._session.add(self._task)
+		_LOG.debug("Task=%r", self._task)
 		self[wx.ID_DELETE].Enable(bool(task_uuid))
 		task = self._task
 		self._data = {'prev_completed': task.completed}
@@ -310,7 +311,9 @@ class DlgTask(BaseDialog):
 		dlg = DlgDateTime(self._wnd, value,
 				getattr(self._task, attr_time_set))
 		if dlg.run(True):
-			date = datetime.datetime.fromtimestamp(dlg.timestamp)
+			date = None
+			if dlg.timestamp:
+				date = datetime.datetime.fromtimestamp(dlg.timestamp)
 			setattr(self._task, attr_date, date)
 			setattr(self._task, attr_time_set, dlg.is_time_set)
 			self._refresh_static_texts()
