@@ -67,8 +67,8 @@ def save_json(update_func):
 				'modified': fmt_date(obj.modified),
 				'deleted': fmt_date(obj.deleted),
 				'ordinal': obj.ordinal or 0,
-				'title': obj.title,
-				'note': obj.note,
+				'title': obj.title or '',
+				'note': obj.note or '',
 				'bg_color': obj.bg_color or "FFFFFF00",
 				'visible': obj.visible}
 		folders.append(folder)
@@ -90,8 +90,8 @@ def save_json(update_func):
 				'modified': fmt_date(obj.modified),
 				'deleted': fmt_date(obj.deleted),
 				'ordinal': obj.ordinal or 0,
-				'title': obj.title,
-				'note': obj.note,
+				'title': obj.title or '',
+				'note': obj.note or '',
 				'bg_color': obj.bg_color or "FFFFFF00",
 				'visible': obj.visible}
 		contexts.append(folder)
@@ -113,8 +113,8 @@ def save_json(update_func):
 				'modified': fmt_date(obj.modified),
 				'deleted': fmt_date(obj.deleted),
 				'ordinal': obj.ordinal or 0,
-				'title': obj.title,
-				'note': obj.note,
+				'title': obj.title or '',
+				'note': obj.note or '',
 				'time_period': obj.time_period,
 				'archived': obj.archived,
 				'bg_color': obj.bg_color or "FFFFFF00",
@@ -143,30 +143,30 @@ def save_json(update_func):
 				'completed': fmt_date(task.completed),
 				'deleted': fmt_date(task.deleted),
 				'ordinal': obj.ordinal or 0,
-				'title': task.title,
-				'note': task.note,
-				'type': task.type,
+				'title': task.title or '',
+				'note': task.note or "",
+				'type': task.type or 0,
 				'starred': 1 if task.starred else 0,
-				'status': task.status,
+				'status': task.status or 0,
 				'priority': task.priority,
 				'importance': task.importance,
 				'start_date': fmt_date(task.start_date),
 				'start_time_set': task.start_time_set,
 				'due_date': fmt_date(task.due_date),
 				"due_date_project": fmt_date(task.due_date_project),
-				"due_time_set": task.due_time_set,
-				"due_date_mod": task.due_date_mod,
+				"due_time_set": task.due_time_set or 0,
+				"due_date_mod": task.due_date_mod or 0,
 				"floating_event": task.floating_event,
-				"duration": task.duration,  # TODO: nie data?
+				"duration": task.duration or 0,  # TODO: nie data?
 				"energy_required": task.energy_required,
-				"repeat_from": task.repeat_from,
-				"repeat_pattern": task.repeat_pattern,
-				"repeat_end": task.repeat_end,
-				"hide_pattern": task.hide_pattern,
+				"repeat_from": task.repeat_from or 0,
+				"repeat_pattern": task.repeat_pattern or "",
+				"repeat_end": task.repeat_end or 0,
+				"hide_pattern": task.hide_pattern or "",
 				"hide_until": fmt_date(task.hide_until),
-				"prevent_auto_purge": task.prevent_auto_purge,
-				"trash_bin": task.trash_bin,
-				"metainf": task.metainf}
+				"prevent_auto_purge": task.prevent_auto_purge or 0,
+				"trash_bin": task.trash_bin or 0,
+				"metainf": task.metainf or ''}
 		tasks.append(taskd)
 		if task.alarm:
 			alarmd = {'_id': alarm_idx,
@@ -177,7 +177,7 @@ def save_json(update_func):
 					'alarm': fmt_date(task.alarm),
 					'reminder': 0,
 					'active': 1,
-					'note': None}
+					'note': ""}
 			alarms.append(alarmd)
 			alarm_idx += 1
 		if task.folder_uuid:
@@ -224,8 +224,8 @@ def save_json(update_func):
 				'modified': fmt_date(obj.modified),
 				'deleted': fmt_date(obj.deleted),
 				'ordinal': obj.ordinal or 0,
-				'title': obj.title,
-				'note': obj.note,
+				'title': obj.title or '',
+				'note': obj.note or "",
 				'bg_color': obj.bg_color or "FFFFFF00",
 				'visible': obj.visible}
 		tags.append(folder)
@@ -245,7 +245,7 @@ def save_json(update_func):
 				'created': fmt_date(obj.created),
 				'modified': fmt_date(obj.modified),
 				'ordinal': obj.ordinal or 0,
-				'title': obj.title,
+				'title': obj.title or '',
 				'bg_color': obj.bg_color or "FFEFFF00",
 				'visible': obj.visible}
 		tasknotes.append(folder)
