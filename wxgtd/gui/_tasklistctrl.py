@@ -143,8 +143,11 @@ class TaskListControl(ULC.UltimateListCtrl, listmix.ColumnSorterMixin):
 				return None, None
 		return self._items[self.GetItemData(idx)]
 
-	def fill(self, tasks):
+	def fill(self, tasks, active_only=False):
 		self.Freeze()
+		current_sort_state = self.GetSortState()
+		if current_sort_state[0] == -1:
+			current_sort_state = (2, 1)
 		self._items.clear()
 		self.itemDataMap.clear()
 		self.DeleteAllItems()
@@ -156,13 +159,15 @@ class TaskListControl(ULC.UltimateListCtrl, listmix.ColumnSorterMixin):
 				3: self._icons.get_image_index('prio3')}
 		now = datetime.datetime.now()
 		for task in tasks:
-			icon = icon_completed if task.completed else prio_icon[task.priority]
 			info = ""
 			if task.starred:
 				info += "★ "
 			info += _TASK_TYPE_ICONS.get(task.type, "")
 			task_is_overdue = False
-			child_count = task.child_count
+			child_count = task.active_child_count if active_only else \
+					task.child_count
+			if active_only and child_count == 0 and task.completed:
+				continue
 			if child_count > 0:
 				overdue = task.child_overdue
 				if overdue > 0:
@@ -176,6 +181,8 @@ class TaskListControl(ULC.UltimateListCtrl, listmix.ColumnSorterMixin):
 				info += '↻'  # ⥁
 			task_is_overdue = task_is_overdue or (task.due_date and
 					task.due_date < now)
+			task_is_overdue = task_is_overdue and not task.completed
+			icon = icon_completed if task.completed else prio_icon[task.priority]
 			index = self.InsertImageStringItem(sys.maxint, "", icon)
 			self.SetStringItem(index, 1, "")
 			self.SetItemCustomRenderer(index, 1, _ListItemRenderer(self,
@@ -188,13 +195,10 @@ class TaskListControl(ULC.UltimateListCtrl, listmix.ColumnSorterMixin):
 			self.SetStringItem(index, 3, info)
 			self.SetItemData(index, index)
 			self._items[index] = (task.uuid, task.type)
-			self.itemDataMap[index] = (task.priority, task.title,
-					(task.importance or 0, ) +
-					tuple(task.due_date.timetuple() if task.due_date
-							else (9999, )),
-					(1 if task.starred else 0))
+			self.itemDataMap[index] = tuple(_get_sort_info_for_task(task))
 			if task_is_overdue:
 				self.SetItemTextColour(index, wx.RED)
+		self.SortListItems(*current_sort_state)
 		self.Thaw()
 		self.Update()
 
@@ -238,3 +242,16 @@ class TaskListControl(ULC.UltimateListCtrl, listmix.ColumnSorterMixin):
 	# Used by the ColumnSorterMixin
 	def GetSortImages(self):
 		return (self._icon_sm_down, self._icon_sm_up)
+
+
+def _get_sort_info_for_task(task):
+	""" Wartośći sortowań kolejnych kolumn dla danego zadania """
+	due = tuple(task.due_date.timetuple()) if task.due_date else (9999, )
+	# 1 col - priorytet
+	yield (task.priority, task.importance, task.starred, due)
+	# 2 col - nazwa
+	yield task.title
+	# 3 col - due / importance
+	yield (task.importance or 0, due, 3 - task.starred, 10 - task.priority)
+	# starred
+	yield (task.starred, task.priority, task.importance, due)

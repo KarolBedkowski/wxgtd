@@ -157,6 +157,12 @@ class Task(BaseModelMixin, Base):
 	task_completed = property(_get_task_completed, _set_task_completed)
 
 	@property
+	def active_child_count(self):
+		return orm.object_session(self).scalar(select([func.count(Task.uuid)])
+				.where(and_(Task.parent_uuid == self.uuid,
+						Task.completed.is_(None))))
+
+	@property
 	def child_overdue(self):
 		now = datetime.datetime.now()
 		return orm.object_session(self).scalar(select([func.count(Task.uuid)])

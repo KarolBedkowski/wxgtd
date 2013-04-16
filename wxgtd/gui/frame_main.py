@@ -407,13 +407,16 @@ class FrameMain:
 			else:
 				params['types'] = [enums.TYPE_CHECKLIST]
 		_LOG.debug("FrameMain._refresh_list; params=%r", params)
+		wx.SetCursor(wx.HOURGLASS_CURSOR)
 		tasks = OBJ.Task.select_by_filters(params)
 		items_list = self._items_list_ctrl
-		self._items_list_ctrl.fill(tasks)
+		self._items_list_ctrl.fill(tasks,
+				active_only=not self._btn_show_finished.GetValue())
 		self.wnd.SetStatusText(_("Showed %d items") % items_list.GetItemCount())
 		path_str = ' / '.join(task.title for task in self._items_path)
 		self['l_path'].SetLabel(path_str)
 		self.wnd.FindWindowById(wx.ID_BACKWARD).Enable(bool(self._items_path))
+		wx.SetCursor(wx.STANDARD_CURSOR)
 
 	def _autosync(self):
 		appconfig = AppConfig()
