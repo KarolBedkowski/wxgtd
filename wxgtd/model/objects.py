@@ -104,9 +104,9 @@ class Task(BaseModelMixin, Base):
 	ordinal = Column(Integer, default=0)
 	title = Column(String)
 	note = Column(String)
-	type = Column(Integer)
-	starred = Column(Integer)
-	status = Column(Integer)
+	type = Column(Integer, nullable=False)
+	starred = Column(Integer, default=0)
+	status = Column(Integer, default=0)
 	priority = Column(Integer, default=0)
 	importance = Column(Integer, default=0)  # dla checlist pozycja
 	start_date = Column(DateTime)
