@@ -26,9 +26,9 @@ def update_task_alarm(task):
 	Formaty:
 		- data i czas
 		- due
-		x minutes
-		x hours
-		x days
+		x minute(s)
+		x hour(s)
+		x day(s)
 	"""
 	_LOG.debug('update_task_alarm: %r', task)
 	alarm_pattern = task.alarm_pattern
@@ -41,11 +41,11 @@ def update_task_alarm(task):
 		return
 	num, period = alarm_pattern.split(' ')
 	num = float(num)
-	if period.startswith('day'):
+	if period in ('day', 'days'):
 		offset = datetime.timedelta(days=-num)
-	elif period.startswith('hour'):
+	elif period in ('hour', 'hours'):
 		offset = datetime.timedelta(hours=-num)
-	elif period.startswith('minute'):
+	elif period in ('minute', 'minutes'):
 		offset = datetime.timedelta(minutes=-num)
 	else:
 		_LOG.warn('update_task_alarm: invalid alarm_pattern = %r',
@@ -57,14 +57,20 @@ def update_task_alarm(task):
 
 def update_task_hide(task):
 	""" Aktualizacja Task.hide_until na postawie Task.hide_pattern i
-	pozostłaych pól"""
+	pozostłaych pól.
+
+	Przykładowe wzroce:
+		- "task is due"
+		- "given date"
+		- "<number> <weak|day|month> before <due|start>
+	"""
 	hide_pattern = task.hide_pattern
-	_LOG.debug('update_task_hide: date=%r, pattern=%r', task.hide_until,
-			task.hide_pattern)
+	_LOG.debug('update_task_hide: date=%r, pattern=%r, due=%r, start=%r',
+			task.hide_until, task.hide_pattern, task.due_date, task.start_date)
 	if not hide_pattern:
 		task.hide_until = None
 		return
-	elif hide_pattern == 'give date':
+	elif hide_pattern == 'given date':
 		return
 	elif hide_pattern == "task is due":
 		task.hide_until = task.due_date
@@ -74,12 +80,12 @@ def update_task_hide(task):
 	if not rel_date:
 		return
 	num = float(num)
-	if period == 'week':
+	if period in ('week', 'weeks'):
 		offset = datetime.timedelta(0, weeks=-num)
-	elif period.startswith('day'):
+	elif period in ('day', 'days'):
 		offset = datetime.timedelta(-num)
-	elif period.startswith('month'):
-		offset = relativedelta(months=-num)
+	elif period in ('month', 'months'):
+		offset = relativedelta(months=-int(num))
 	else:
 		_LOG.warn('update_task_hide: invalid hide_period = %r',
 			hide_pattern)
@@ -98,6 +104,7 @@ _OFFSETS = {'Daily': relativedelta(days=1),
 
 
 def _move_date_repeat(date, repeat_pattern):
+	# TODO: czy przy uwzględnianiu należy uwzględniać aktualną datę?
 	if not repeat_pattern:
 		return date
 	if not date:
@@ -120,10 +127,9 @@ def _move_date_repeat(date, repeat_pattern):
 	return date
 
 
-def _get_date(date, repeat_from_completed):
+def _get_date(date, completed_date, repeat_from_completed):
 	if repeat_from_completed:
-		today = datetime.datetime.today()
-		date = today.replace(hour=date.hour, minute=date.minute,
+		date = completed_date.replace(hour=date.hour, minute=date.minute,
 				second=date.second)
 	return date
 
@@ -136,6 +142,8 @@ def repeat_task(task):
 		- datę startu
 		- due
 		- alarm
+
+		repeat_from : 1= from completed, 0= from start
 	"""
 	# TODO: repeat_end (??) sprawdzić czy to jest używane
 	ntask = task.clone()
@@ -150,13 +158,13 @@ def repeat_task(task):
 		repeat_from = ntask.parent.repeat_from
 	offset = None
 	if task.due_date:
-		ntask.due_date = _move_date_repeat(_get_date(task.due_date, repeat_from),
-				repeat_pattern)
+		ntask.due_date = _move_date_repeat(_get_date(task.due_date,
+				task.completed, repeat_from), repeat_pattern)
 		offset = ntask.due_date - task.due_date
 		ntask.start_date += offset
 	else:
-		ntask.start_date = _move_date_repeat(
-				_get_date(task.start_date, repeat_from), repeat_pattern)
+		ntask.start_date = _move_date_repeat(_get_date(task.start_date,
+				task.completed, repeat_from), repeat_pattern)
 	if task.alarm:
 		if task.alarm_pattern:
 			update_task_alarm(ntask)
