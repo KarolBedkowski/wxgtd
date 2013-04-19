@@ -55,37 +55,37 @@ class TestLogicUpdateTaskAlarm(TestCase):
 		self.assertEqual(obj.alarm, obj.due_date)
 
 	def test_03_minutes(self):
-		now = datetime(2000, 01, 02, 03, 04, 05)
+		now = datetime(2000, 1, 2, 3, 4, 5)
 		obj = _FTask(now, None, '1 minute')
 		logic.update_task_alarm(obj)
-		self.assertEqual(obj.alarm,  datetime(2000, 01, 02, 03, 03, 05))
+		self.assertEqual(obj.alarm,  datetime(2000, 1, 2, 3, 3, 5))
 		obj = _FTask(now, None, '30 minutes')
 		logic.update_task_alarm(obj)
-		self.assertEqual(obj.alarm,  datetime(2000, 01, 02, 02, 34, 05))
+		self.assertEqual(obj.alarm,  datetime(2000, 1, 2, 2, 34, 5))
 		obj = _FTask(now, None, '90 minutes')
 		logic.update_task_alarm(obj)
-		self.assertEqual(obj.alarm,  datetime(2000, 01, 02, 01, 34, 05))
+		self.assertEqual(obj.alarm,  datetime(2000, 1, 2, 1, 34, 5))
 
 	def test_04_hours(self):
-		now = datetime(2000, 01, 02, 03, 04, 05)
+		now = datetime(2000, 1, 2, 3, 4, 5)
 		obj = _FTask(now, None, '1 hour')
 		logic.update_task_alarm(obj)
-		self.assertEqual(obj.alarm,  datetime(2000, 01, 02, 02, 04, 05))
+		self.assertEqual(obj.alarm,  datetime(2000, 1, 2, 2, 4, 5))
 		obj = _FTask(now, None, '25 hours')
 		logic.update_task_alarm(obj)
-		self.assertEqual(obj.alarm,  datetime(2000, 01, 01, 02, 04, 05))
+		self.assertEqual(obj.alarm,  datetime(2000, 1, 1, 2, 4, 5))
 		obj = _FTask(now, None, '1.5 hours')
 		logic.update_task_alarm(obj)
-		self.assertEqual(obj.alarm,  datetime(2000, 01, 02, 01, 34, 05))
+		self.assertEqual(obj.alarm,  datetime(2000, 1, 2, 1, 34, 5))
 
 	def test_05_days(self):
-		now = datetime(2000, 01, 02, 03, 04, 05)
+		now = datetime(2000, 1, 2, 3, 4, 5)
 		obj = _FTask(now, None, '1 day')
 		logic.update_task_alarm(obj)
-		self.assertEqual(obj.alarm,  datetime(2000, 01, 01, 3, 4, 5))
+		self.assertEqual(obj.alarm,  datetime(2000, 1, 1, 3, 4, 5))
 		obj = _FTask(now, None, '30 days')
 		logic.update_task_alarm(obj)
-		self.assertEqual(obj.alarm,  datetime(1999, 12, 03, 3, 4, 5))
+		self.assertEqual(obj.alarm,  datetime(1999, 12, 3, 3, 4, 5))
 
 
 class TestLogicUpdateTaskHide(TestCase):
@@ -103,44 +103,44 @@ class TestLogicUpdateTaskHide(TestCase):
 		self.assertEqual(obj.hide_until, None)
 
 	def test_03_task_is_due(self):
-		now = datetime(2012, 01, 02, 03, 04, 05)
+		now = datetime(2012, 1, 2, 3, 4, 5)
 		obj = _FTask(now, None, None)
 		obj.hide_pattern = "task is due"
 		logic.update_task_hide(obj)
 		self.assertEqual(obj.hide_until, now)
 
 	def test_04_week(self):
-		due = datetime(2012, 06, 15, 03, 04, 05)
-		start = datetime(2010, 06, 15, 03, 04, 05)
+		due = datetime(2012, 6, 15, 3, 4, 5)
+		start = datetime(2010, 6, 15, 3, 4, 5)
 		obj = _FTask(due, start, None)
 		obj.hide_pattern = "1 week before due"
 		logic.update_task_hide(obj)
-		self.assertEqual(obj.hide_until, datetime(2012, 06, 8, 3, 4, 5))
+		self.assertEqual(obj.hide_until, datetime(2012, 6, 8, 3, 4, 5))
 		obj.hide_pattern = "2 weeks before start"
 		logic.update_task_hide(obj)
-		self.assertEqual(obj.hide_until, datetime(2010, 06, 1, 3, 4, 5))
+		self.assertEqual(obj.hide_until, datetime(2010, 6, 1, 3, 4, 5))
 
 	def test_05_day(self):
-		due = datetime(2012, 06, 15, 03, 04, 05)
-		start = datetime(2010, 06, 15, 03, 04, 05)
+		due = datetime(2012, 6, 15, 3, 4, 5)
+		start = datetime(2010, 6, 15, 3, 4, 5)
 		obj = _FTask(due, start, None)
 		obj.hide_pattern = "1 day before due"
 		logic.update_task_hide(obj)
-		self.assertEqual(obj.hide_until, datetime(2012, 06, 14, 3, 4, 5))
+		self.assertEqual(obj.hide_until, datetime(2012, 6, 14, 3, 4, 5))
 		obj.hide_pattern = "2 days before start"
 		logic.update_task_hide(obj)
-		self.assertEqual(obj.hide_until, datetime(2010, 06, 13, 3, 4, 5))
+		self.assertEqual(obj.hide_until, datetime(2010, 6, 13, 3, 4, 5))
 
 	def test_05_month(self):
-		due = datetime(2012, 06, 15, 03, 04, 05)
-		start = datetime(2010, 06, 15, 03, 04, 05)
+		due = datetime(2012, 6, 15, 3, 4, 5)
+		start = datetime(2010, 6, 15, 3, 4, 5)
 		obj = _FTask(due, start, None)
 		obj.hide_pattern = "1 month before due"
 		logic.update_task_hide(obj)
-		self.assertEqual(obj.hide_until, datetime(2012, 05, 15, 3, 4, 5))
+		self.assertEqual(obj.hide_until, datetime(2012, 5, 15, 3, 4, 5))
 		obj.hide_pattern = "2 months before start"
 		logic.update_task_hide(obj)
-		self.assertEqual(obj.hide_until, datetime(2010, 04, 15, 3, 4, 5))
+		self.assertEqual(obj.hide_until, datetime(2010, 4, 15, 3, 4, 5))
 
 
 class TestRepeatTask(TestCase):
@@ -158,48 +158,181 @@ class TestRepeatTask(TestCase):
 		self.assertIsNone(obj2.completed)
 
 	def test_03_daily_compl_due(self):
-		start = datetime(2000, 06, 15, 03, 04, 05)
-		due = datetime(2005, 06, 15, 03, 04, 05)
+		start = datetime(2000, 6, 15, 3, 4, 5)
+		due = datetime(2005, 6, 15, 3, 4, 5)
 		obj = _FTask(due, start, None)
 		obj.repeat_pattern = 'Daily'
 		obj.repeat_from = 1  # completed
-		obj.completed = datetime(2010, 06, 15, 03, 04, 05)
+		obj.completed = datetime(2010, 6, 15, 3, 4, 5)
 		obj2 = logic.repeat_task(obj)
-		self.assertEqual(obj2.due_date, datetime(2010, 06, 16, 3, 4, 5))
+		self.assertEqual(obj2.due_date, datetime(2010, 6, 16, 3, 4, 5))
 		# n.start =  start +  ( 20100616 (n.due) - 20050615 (due))
 		# n.start =  start + 1827d
-		self.assertEqual(obj2.start_date, datetime(2005, 06, 16, 3, 4, 5))
+		self.assertEqual(obj2.start_date, datetime(2005, 6, 16, 3, 4, 5))
 
 	def test_04_daily_due_due(self):
-		start = datetime(2000, 06, 15, 03, 04, 05)
-		due = datetime(2005, 06, 15, 03, 04, 05)
+		start = datetime(2000, 6, 15, 3, 4, 5)
+		due = datetime(2005, 6, 15, 3, 4, 5)
 		obj = _FTask(due, start, None)
 		obj.repeat_pattern = 'Daily'
 		obj.repeat_from = 0  # due
-		obj.completed = datetime(2010, 06, 15, 03, 04, 05)
+		obj.completed = datetime(2010, 6, 15, 3, 4, 5)
 		obj2 = logic.repeat_task(obj)
-		self.assertEqual(obj2.due_date, datetime(2005, 06, 16, 3, 4, 5))
-		self.assertEqual(obj2.start_date, datetime(2000, 06, 16, 3, 4, 5))
+		self.assertEqual(obj2.due_date, datetime(2005, 6, 16, 3, 4, 5))
+		self.assertEqual(obj2.start_date, datetime(2000, 6, 16, 3, 4, 5))
 
 	def test_05_daily_compl_start(self):
-		start = datetime(2000, 06, 15, 03, 04, 05)
+		start = datetime(2000, 6, 15, 3, 4, 5)
 		due = None  # no due
 		obj = _FTask(due, start, None)
 		obj.repeat_pattern = 'Daily'
 		obj.repeat_from = 1  # completed
-		obj.completed = datetime(2010, 06, 15, 03, 04, 05)
+		obj.completed = datetime(2010, 6, 15, 3, 4, 5)
 		obj2 = logic.repeat_task(obj)
-		self.assertEqual(obj2.start_date, datetime(2010, 06, 16, 3, 4, 5))
+		self.assertEqual(obj2.start_date, datetime(2010, 6, 16, 3, 4, 5))
 
 	def test_06_daily_due_start(self):
-		start = datetime(2000, 06, 15, 03, 04, 05)
+		start = datetime(2000, 6, 15, 3, 4, 5)
 		due = None  # no due
 		obj = _FTask(due, start, None)
 		obj.repeat_pattern = 'Daily'
 		obj.repeat_from = 0  # due
-		obj.completed = datetime(2010, 06, 15, 03, 04, 05)
+		obj.completed = datetime(2010, 6, 15, 3, 4, 5)
 		obj2 = logic.repeat_task(obj)
-		self.assertEqual(obj2.start_date, datetime(2000, 06, 16, 3, 4, 5))
+		self.assertEqual(obj2.start_date, datetime(2000, 6, 16, 3, 4, 5))
+
+	def test_07_businessday_compl_start(self):
+		start = datetime(2000, 6, 15, 3, 4, 5)
+		due = None  # no due
+		obj = _FTask(due, start, None)
+		obj.repeat_pattern = 'Businessday'
+		obj.repeat_from = 1  # completed
+		obj.completed = datetime(2010, 6, 15, 3, 4, 5)  # wt
+		obj2 = logic.repeat_task(obj)
+		self.assertEqual(obj2.start_date, datetime(2010, 6, 16, 3, 4, 5))
+		obj.completed = datetime(2010, 6, 16, 3, 4, 5)  # sr
+		obj2 = logic.repeat_task(obj)
+		self.assertEqual(obj2.start_date, datetime(2010, 6, 17, 3, 4, 5))
+		obj.completed = datetime(2010, 6, 17, 3, 4, 5)  # cz
+		obj2 = logic.repeat_task(obj)
+		self.assertEqual(obj2.start_date, datetime(2010, 6, 18, 3, 4, 5))
+		obj.completed = datetime(2010, 6, 18, 3, 4, 5)  # pt
+		obj2 = logic.repeat_task(obj)
+		self.assertEqual(obj2.start_date, datetime(2010, 6, 21, 3, 4, 5))
+		obj.completed = datetime(2010, 6, 19, 3, 4, 5)  # so
+		obj2 = logic.repeat_task(obj)
+		self.assertEqual(obj2.start_date, datetime(2010, 6, 21, 3, 4, 5))
+		obj.completed = datetime(2010, 6, 20, 3, 4, 5)  # n
+		obj2 = logic.repeat_task(obj)
+		self.assertEqual(obj2.start_date, datetime(2010, 6, 21, 3, 4, 5))
+		obj.completed = datetime(2010, 6, 21, 3, 4, 5)  # pn
+		obj2 = logic.repeat_task(obj)
+		self.assertEqual(obj2.start_date, datetime(2010, 6, 22, 3, 4, 5))
+
+	def test_08_weekend_compl_start(self):
+		start = datetime(2000, 6, 15, 3, 4, 5)
+		due = None  # no due
+		obj = _FTask(due, start, None)
+		obj.repeat_pattern = 'Weekend'
+		obj.repeat_from = 1  # completed
+		obj.completed = datetime(2010, 6, 15, 3, 4, 5)  # wt
+		obj2 = logic.repeat_task(obj)
+		self.assertEqual(obj2.start_date, datetime(2010, 6, 19, 3, 4, 5))
+		obj.completed = datetime(2010, 6, 16, 3, 4, 5)  # sr
+		obj2 = logic.repeat_task(obj)
+		self.assertEqual(obj2.start_date, datetime(2010, 6, 19, 3, 4, 5))
+		obj.completed = datetime(2010, 6, 17, 3, 4, 5)  # cz
+		obj2 = logic.repeat_task(obj)
+		self.assertEqual(obj2.start_date, datetime(2010, 6, 19, 3, 4, 5))
+		obj.completed = datetime(2010, 6, 18, 3, 4, 5)  # pt
+		obj2 = logic.repeat_task(obj)
+		self.assertEqual(obj2.start_date, datetime(2010, 6, 19, 3, 4, 5))
+		obj.completed = datetime(2010, 6, 19, 3, 4, 5)  # so
+		obj2 = logic.repeat_task(obj)
+		self.assertEqual(obj2.start_date, datetime(2010, 6, 20, 3, 4, 5))
+		obj.completed = datetime(2010, 6, 20, 3, 4, 5)  # n
+		obj2 = logic.repeat_task(obj)
+		self.assertEqual(obj2.start_date, datetime(2010, 6, 26, 3, 4, 5))
+		obj.completed = datetime(2010, 6, 21, 3, 4, 5)  # pn
+		obj2 = logic.repeat_task(obj)
+		self.assertEqual(obj2.start_date, datetime(2010, 6, 26, 3, 4, 5))
+
+	def test_09_weekly_compl_start(self):
+		obj = _FTask(None, datetime(2000, 6, 15, 3, 4, 5), None)
+		obj.repeat_pattern = 'Weekly'
+		obj.repeat_from = 1  # completed
+		obj.completed = datetime(2010, 6, 15, 3, 4, 5)
+		obj2 = logic.repeat_task(obj)
+		self.assertEqual(obj2.start_date, datetime(2010, 6, 22, 3, 4, 5))
+		obj.completed = datetime(2010, 6, 30, 3, 4, 5)
+		obj2 = logic.repeat_task(obj)
+		self.assertEqual(obj2.start_date, datetime(2010, 7, 7, 3, 4, 5))
+
+	def test_10_biweekly_compl_start(self):
+		obj = _FTask(None, datetime(2000, 6, 15, 3, 4, 5), None)
+		obj.repeat_pattern = 'Biweekly'
+		obj.repeat_from = 1  # completed
+		obj.completed = datetime(2010, 6, 15, 3, 4, 5)
+		obj2 = logic.repeat_task(obj)
+		self.assertEqual(obj2.start_date, datetime(2010, 6, 29, 3, 4, 5))
+		obj.completed = datetime(2010, 6, 30, 3, 4, 5)
+		obj2 = logic.repeat_task(obj)
+		self.assertEqual(obj2.start_date, datetime(2010, 7, 14, 3, 4, 5))
+
+	def test_10_monthly_compl_start(self):
+		obj = _FTask(None, datetime(2000, 6, 15, 3, 4, 5), None)
+		obj.repeat_pattern = 'Monthly'
+		obj.repeat_from = 1  # completed
+		obj.completed = datetime(2010, 6, 15, 3, 4, 5)
+		obj2 = logic.repeat_task(obj)
+		self.assertEqual(obj2.start_date, datetime(2010, 7, 15, 3, 4, 5))
+		obj.completed = datetime(2010, 6, 30, 3, 4, 5)
+		obj2 = logic.repeat_task(obj)
+		self.assertEqual(obj2.start_date, datetime(2010, 7, 30, 3, 4, 5))
+
+	def test_11_bimonthly_compl_start(self):
+		obj = _FTask(None, datetime(2000, 6, 15, 3, 4, 5), None)
+		obj.repeat_pattern = 'Bimonthly'
+		obj.repeat_from = 1  # completed
+		obj.completed = datetime(2010, 6, 15, 3, 4, 5)
+		obj2 = logic.repeat_task(obj)
+		self.assertEqual(obj2.start_date, datetime(2010, 8, 15, 3, 4, 5))
+		obj.completed = datetime(2010, 6, 30, 3, 4, 5)
+		obj2 = logic.repeat_task(obj)
+		self.assertEqual(obj2.start_date, datetime(2010, 8, 30, 3, 4, 5))
+
+	def test_12_quarterly_compl_start(self):
+		obj = _FTask(None, datetime(2000, 6, 15, 3, 4, 5), None)
+		obj.repeat_pattern = 'Quarterly'
+		obj.repeat_from = 1  # completed
+		obj.completed = datetime(2010, 6, 15, 3, 4, 5)
+		obj2 = logic.repeat_task(obj)
+		self.assertEqual(obj2.start_date, datetime(2010, 9, 15, 3, 4, 5))
+		obj.completed = datetime(2010, 6, 30, 3, 4, 5)
+		obj2 = logic.repeat_task(obj)
+		self.assertEqual(obj2.start_date, datetime(2010, 9, 30, 3, 4, 5))
+
+	def test_13_semiannually_compl_start(self):
+		obj = _FTask(None, datetime(2000, 6, 15, 3, 4, 5), None)
+		obj.repeat_pattern = 'Semiannually'
+		obj.repeat_from = 1  # completed
+		obj.completed = datetime(2010, 6, 15, 3, 4, 5)
+		obj2 = logic.repeat_task(obj)
+		self.assertEqual(obj2.start_date, datetime(2010, 12, 15, 3, 4, 5))
+		obj.completed = datetime(2010, 7, 30, 3, 4, 5)
+		obj2 = logic.repeat_task(obj)
+		self.assertEqual(obj2.start_date, datetime(2011, 1, 30, 3, 4, 5))
+
+	def test_14_yearly_compl_start(self):
+		obj = _FTask(None, datetime(2000, 6, 15, 3, 4, 5), None)
+		obj.repeat_pattern = 'Yearly'
+		obj.repeat_from = 1  # completed
+		obj.completed = datetime(2010, 6, 15, 3, 4, 5)
+		obj2 = logic.repeat_task(obj)
+		self.assertEqual(obj2.start_date, datetime(2011, 6, 15, 3, 4, 5))
+		obj.completed = datetime(2010, 7, 30, 3, 4, 5)
+		obj2 = logic.repeat_task(obj)
+		self.assertEqual(obj2.start_date, datetime(2011, 7, 30, 3, 4, 5))
 
 
 if __name__ == '__main__':
