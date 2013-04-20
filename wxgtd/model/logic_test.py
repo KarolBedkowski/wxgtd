@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-"""
+""" Tests for logic module.
 """
 
 __author__ = "Karol Będkowski"
@@ -11,7 +11,7 @@ import copy
 from unittest import main, TestCase
 from datetime import datetime
 
-import logic
+from wxgtd.model import logic
 
 
 class _FTask(object):
@@ -153,7 +153,7 @@ class TestRepeatTask(TestCase):
 	def test_02_daily(self):
 		obj = _FTask(None, None, None)
 		obj.repeat_pattern = 'Daily'
-		obj2 = logic.repeat_task(obj)
+		obj2 = logic.repeat_task(obj, False)
 		self.assertEqual(obj, obj2)
 		self.assertIsNone(obj2.completed)
 
@@ -208,25 +208,25 @@ class TestRepeatTask(TestCase):
 		obj.repeat_pattern = 'Businessday'
 		obj.repeat_from = 1  # completed
 		obj.completed = datetime(2010, 6, 15, 3, 4, 5)  # wt
-		obj2 = logic.repeat_task(obj)
+		obj2 = logic.repeat_task(obj, False)
 		self.assertEqual(obj2.start_date, datetime(2010, 6, 16, 3, 4, 5))
 		obj.completed = datetime(2010, 6, 16, 3, 4, 5)  # sr
-		obj2 = logic.repeat_task(obj)
+		obj2 = logic.repeat_task(obj, False)
 		self.assertEqual(obj2.start_date, datetime(2010, 6, 17, 3, 4, 5))
 		obj.completed = datetime(2010, 6, 17, 3, 4, 5)  # cz
-		obj2 = logic.repeat_task(obj)
+		obj2 = logic.repeat_task(obj, False)
 		self.assertEqual(obj2.start_date, datetime(2010, 6, 18, 3, 4, 5))
 		obj.completed = datetime(2010, 6, 18, 3, 4, 5)  # pt
-		obj2 = logic.repeat_task(obj)
+		obj2 = logic.repeat_task(obj, False)
 		self.assertEqual(obj2.start_date, datetime(2010, 6, 21, 3, 4, 5))
 		obj.completed = datetime(2010, 6, 19, 3, 4, 5)  # so
-		obj2 = logic.repeat_task(obj)
+		obj2 = logic.repeat_task(obj, False)
 		self.assertEqual(obj2.start_date, datetime(2010, 6, 21, 3, 4, 5))
 		obj.completed = datetime(2010, 6, 20, 3, 4, 5)  # n
-		obj2 = logic.repeat_task(obj)
+		obj2 = logic.repeat_task(obj, False)
 		self.assertEqual(obj2.start_date, datetime(2010, 6, 21, 3, 4, 5))
 		obj.completed = datetime(2010, 6, 21, 3, 4, 5)  # pn
-		obj2 = logic.repeat_task(obj)
+		obj2 = logic.repeat_task(obj, False)
 		self.assertEqual(obj2.start_date, datetime(2010, 6, 22, 3, 4, 5))
 
 	def test_08_weekend_compl_start(self):
@@ -236,25 +236,25 @@ class TestRepeatTask(TestCase):
 		obj.repeat_pattern = 'Weekend'
 		obj.repeat_from = 1  # completed
 		obj.completed = datetime(2010, 6, 15, 3, 4, 5)  # wt
-		obj2 = logic.repeat_task(obj)
+		obj2 = logic.repeat_task(obj, False)
 		self.assertEqual(obj2.start_date, datetime(2010, 6, 19, 3, 4, 5))
 		obj.completed = datetime(2010, 6, 16, 3, 4, 5)  # sr
-		obj2 = logic.repeat_task(obj)
+		obj2 = logic.repeat_task(obj, False)
 		self.assertEqual(obj2.start_date, datetime(2010, 6, 19, 3, 4, 5))
 		obj.completed = datetime(2010, 6, 17, 3, 4, 5)  # cz
-		obj2 = logic.repeat_task(obj)
+		obj2 = logic.repeat_task(obj, False)
 		self.assertEqual(obj2.start_date, datetime(2010, 6, 19, 3, 4, 5))
 		obj.completed = datetime(2010, 6, 18, 3, 4, 5)  # pt
-		obj2 = logic.repeat_task(obj)
+		obj2 = logic.repeat_task(obj, False)
 		self.assertEqual(obj2.start_date, datetime(2010, 6, 19, 3, 4, 5))
 		obj.completed = datetime(2010, 6, 19, 3, 4, 5)  # so
-		obj2 = logic.repeat_task(obj)
+		obj2 = logic.repeat_task(obj, False)
 		self.assertEqual(obj2.start_date, datetime(2010, 6, 20, 3, 4, 5))
 		obj.completed = datetime(2010, 6, 20, 3, 4, 5)  # n
-		obj2 = logic.repeat_task(obj)
+		obj2 = logic.repeat_task(obj, False)
 		self.assertEqual(obj2.start_date, datetime(2010, 6, 26, 3, 4, 5))
 		obj.completed = datetime(2010, 6, 21, 3, 4, 5)  # pn
-		obj2 = logic.repeat_task(obj)
+		obj2 = logic.repeat_task(obj, False)
 		self.assertEqual(obj2.start_date, datetime(2010, 6, 26, 3, 4, 5))
 
 	def test_09_weekly_compl_start(self):
@@ -262,10 +262,10 @@ class TestRepeatTask(TestCase):
 		obj.repeat_pattern = 'Weekly'
 		obj.repeat_from = 1  # completed
 		obj.completed = datetime(2010, 6, 15, 3, 4, 5)
-		obj2 = logic.repeat_task(obj)
+		obj2 = logic.repeat_task(obj, False)
 		self.assertEqual(obj2.start_date, datetime(2010, 6, 22, 3, 4, 5))
 		obj.completed = datetime(2010, 6, 30, 3, 4, 5)
-		obj2 = logic.repeat_task(obj)
+		obj2 = logic.repeat_task(obj, False)
 		self.assertEqual(obj2.start_date, datetime(2010, 7, 7, 3, 4, 5))
 
 	def test_10_biweekly_compl_start(self):
@@ -273,10 +273,10 @@ class TestRepeatTask(TestCase):
 		obj.repeat_pattern = 'Biweekly'
 		obj.repeat_from = 1  # completed
 		obj.completed = datetime(2010, 6, 15, 3, 4, 5)
-		obj2 = logic.repeat_task(obj)
+		obj2 = logic.repeat_task(obj, False)
 		self.assertEqual(obj2.start_date, datetime(2010, 6, 29, 3, 4, 5))
 		obj.completed = datetime(2010, 6, 30, 3, 4, 5)
-		obj2 = logic.repeat_task(obj)
+		obj2 = logic.repeat_task(obj, False)
 		self.assertEqual(obj2.start_date, datetime(2010, 7, 14, 3, 4, 5))
 
 	def test_10_monthly_compl_start(self):
@@ -284,10 +284,10 @@ class TestRepeatTask(TestCase):
 		obj.repeat_pattern = 'Monthly'
 		obj.repeat_from = 1  # completed
 		obj.completed = datetime(2010, 6, 15, 3, 4, 5)
-		obj2 = logic.repeat_task(obj)
+		obj2 = logic.repeat_task(obj, False)
 		self.assertEqual(obj2.start_date, datetime(2010, 7, 15, 3, 4, 5))
 		obj.completed = datetime(2010, 6, 30, 3, 4, 5)
-		obj2 = logic.repeat_task(obj)
+		obj2 = logic.repeat_task(obj, False)
 		self.assertEqual(obj2.start_date, datetime(2010, 7, 30, 3, 4, 5))
 
 	def test_11_bimonthly_compl_start(self):
@@ -295,10 +295,10 @@ class TestRepeatTask(TestCase):
 		obj.repeat_pattern = 'Bimonthly'
 		obj.repeat_from = 1  # completed
 		obj.completed = datetime(2010, 6, 15, 3, 4, 5)
-		obj2 = logic.repeat_task(obj)
+		obj2 = logic.repeat_task(obj, False)
 		self.assertEqual(obj2.start_date, datetime(2010, 8, 15, 3, 4, 5))
 		obj.completed = datetime(2010, 6, 30, 3, 4, 5)
-		obj2 = logic.repeat_task(obj)
+		obj2 = logic.repeat_task(obj, False)
 		self.assertEqual(obj2.start_date, datetime(2010, 8, 30, 3, 4, 5))
 
 	def test_12_quarterly_compl_start(self):
@@ -306,10 +306,10 @@ class TestRepeatTask(TestCase):
 		obj.repeat_pattern = 'Quarterly'
 		obj.repeat_from = 1  # completed
 		obj.completed = datetime(2010, 6, 15, 3, 4, 5)
-		obj2 = logic.repeat_task(obj)
+		obj2 = logic.repeat_task(obj, False)
 		self.assertEqual(obj2.start_date, datetime(2010, 9, 15, 3, 4, 5))
 		obj.completed = datetime(2010, 6, 30, 3, 4, 5)
-		obj2 = logic.repeat_task(obj)
+		obj2 = logic.repeat_task(obj, False)
 		self.assertEqual(obj2.start_date, datetime(2010, 9, 30, 3, 4, 5))
 
 	def test_13_semiannually_compl_start(self):
@@ -317,10 +317,10 @@ class TestRepeatTask(TestCase):
 		obj.repeat_pattern = 'Semiannually'
 		obj.repeat_from = 1  # completed
 		obj.completed = datetime(2010, 6, 15, 3, 4, 5)
-		obj2 = logic.repeat_task(obj)
+		obj2 = logic.repeat_task(obj, False)
 		self.assertEqual(obj2.start_date, datetime(2010, 12, 15, 3, 4, 5))
 		obj.completed = datetime(2010, 7, 30, 3, 4, 5)
-		obj2 = logic.repeat_task(obj)
+		obj2 = logic.repeat_task(obj, False)
 		self.assertEqual(obj2.start_date, datetime(2011, 1, 30, 3, 4, 5))
 
 	def test_14_yearly_compl_start(self):
@@ -328,10 +328,10 @@ class TestRepeatTask(TestCase):
 		obj.repeat_pattern = 'Yearly'
 		obj.repeat_from = 1  # completed
 		obj.completed = datetime(2010, 6, 15, 3, 4, 5)
-		obj2 = logic.repeat_task(obj)
+		obj2 = logic.repeat_task(obj, False)
 		self.assertEqual(obj2.start_date, datetime(2011, 6, 15, 3, 4, 5))
 		obj.completed = datetime(2010, 7, 30, 3, 4, 5)
-		obj2 = logic.repeat_task(obj)
+		obj2 = logic.repeat_task(obj, False)
 		self.assertEqual(obj2.start_date, datetime(2011, 7, 30, 3, 4, 5))
 
 

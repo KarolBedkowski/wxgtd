@@ -179,7 +179,7 @@ def _get_date(date, completed_date, repeat_from_completed):
 	return date
 
 
-def repeat_task(task):
+def repeat_task(task, reset_task=True):
 	""" Create repeated task.
 
 	If task has repeat_pattern create new task bassed on it and set new values
@@ -225,7 +225,8 @@ def repeat_task(task):
 	update_task_hide(ntask)
 	ntask.completed = None
 	# reset repeat pattern on previous task
-	task.repeat_pattern = 'Norepeat'
+	if reset_task:
+		task.repeat_pattern = 'Norepeat'
 	return ntask
 
 
