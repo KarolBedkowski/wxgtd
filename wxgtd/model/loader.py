@@ -133,7 +133,7 @@ def _check_synclog(data, session):
 	if last_sync >= file_sync_time and deviceId == sync_device:
 		_LOG.info("_check_synclog last_sync=%r, file=%r", c_last_sync.val,
 				file_sync_time_str)
-		return False
+		#return False
 	return True
 
 
