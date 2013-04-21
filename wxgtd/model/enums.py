@@ -53,6 +53,7 @@ HIDE_PATTERNS_LIST = [
 		("task is due", _("Task Is Due")),
 		("given date", _("Given Date")),
 		("1 week before due", _("Week Before Due")),
+		("1 day before due", _("Day Before Due")),
 		("1 day before start", _("Day Before Start Date")),
 		("1 week before start", _("Week Before Start Date")),
 		("1 month before due", _("One Month Before Due")),
