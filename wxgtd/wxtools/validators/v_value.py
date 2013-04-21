@@ -1,29 +1,37 @@
 # -*- coding: utf-8 -*-
-'''
-validators/validators.py
+""" Validators for numeric values.
 
-kpylibs 1.x
 Copyright (c) Karol Będkowski, 2006-2013
 
-This file is part of kpylibs
+This file is part of wxGTD
 
-kpylibs is free software; you can redistribute it and/or modify it under the
+This is free software; you can redistribute it and/or modify it under the
 terms of the GNU General Public License as published by the Free Software
 Foundation, version 2.
-'''
+"""
 
+__author__ = "Karol Będkowski"
+__copyright__ = "Copyright (c) Karol Będkowski, 2006-2013"
+__version__ = '2013-04-21'
 
-import wx
+import gettext
 
 from ._simple_validator import SimpleValidator
 
-_ = wx.GetTranslation
+_ = gettext.gettext
 
 
 ##############################################################################
 
 
 class MinValueValidator(SimpleValidator):
+	""" Check if value is not less than configured.
+
+	Args:
+		min_value: minimal acceptable value
+		error_message: optional error message
+	"""
+
 	def __init__(self, min_value, error_message=None):
 		if error_message is None:
 			error_message = _('Value too low (min=%d)') % min_value
@@ -33,7 +41,6 @@ class MinValueValidator(SimpleValidator):
 	def value_from_window(self, value):
 		if value < self._min:
 			self._raise_error()
-
 		return value
 
 
@@ -41,6 +48,12 @@ class MinValueValidator(SimpleValidator):
 
 
 class MaxValueValidator(SimpleValidator):
+	""" Validate if the value is not greater than configured.
+
+	Args:
+		max_value: maximal acceptable value
+		error_message: optional error message
+	"""
 	def __init__(self, max_value, error_message=None):
 		if error_message is None:
 			error_message = _('Value too high (max=%d)') % max_value

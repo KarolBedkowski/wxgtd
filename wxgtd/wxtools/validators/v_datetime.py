@@ -1,25 +1,29 @@
 # -*- coding: utf-8 -*-
-'''
-validators/validators/time_validator.py
+""" Validators for time and date.
 
-kpylibs 1.x
 Copyright (c) Karol Będkowski, 2006-2013
 
-This file is part of kpylibs
+This file is part of wxGTD
 
-kpylibs is free software; you can redistribute it and/or modify it under the
+This is free software; you can redistribute it and/or modify it under the
 terms of the GNU General Public License as published by the Free Software
 Foundation, version 2.
-'''
+"""
+
+__author__ = "Karol Będkowski"
+__copyright__ = "Copyright (c) Karol Będkowski, 2006-2013"
+__version__ = '2013-04-21'
 
 import re
+import gettext
 
 import wx
 
 from ._simple_validator import SimpleValidator
 from .errors import ValidateError
 
-_ = wx.GetTranslation
+_ = gettext.gettext
+
 _RE_CHECK_TIME = re.compile(r'^(\d+):(\d\d)$')
 _RE_CHECK_TIME_SEC = re.compile(r'^(\d+):(\d\d):(\d\d)$')
 
@@ -28,8 +32,12 @@ _RE_CHECK_TIME_SEC = re.compile(r'^(\d+):(\d\d):(\d\d)$')
 
 
 class TimeValidator(SimpleValidator):
-	''' Walidator czasu str -> wnd[str] -> str '''
+	""" Validate if the string is time formated as HH:MM[:SS].
 
+	Args:
+		show_sec: if True, validate using format HH:MM:SS
+		error_message: optional error message
+	"""
 	def __init__(self, show_sec=False, error_message=None):
 		if error_message is None:
 			if show_sec:
@@ -44,14 +52,10 @@ class TimeValidator(SimpleValidator):
 	def value_from_window(self, value):
 		if value is None or value == '':
 			return True
-		try:
-			m = re.match(_RE_CHECK_TIME_SEC if self._show_sec
-					else _RE_CHECK_TIME, value)
-			if int(m.group(2)) > 59:
-				raise Exception()
-			if self._show_sec and int(m.group(3)) > 59:
-				raise Exception()
-		except:
+		match = re.match(_RE_CHECK_TIME_SEC if self._show_sec
+				else _RE_CHECK_TIME, value)
+		if (not match or int(match.group(2)) > 59 or
+				(self._show_sec and int(match.group(3)) > 59)):
 			raise ValidateError(self._error_message)
 		return value
 
@@ -60,8 +64,14 @@ class TimeValidator(SimpleValidator):
 
 
 class TimeToIntConv(SimpleValidator):
-	''' Konwerter czasu int/long/str -> wnd [str] -> long '''
+	""" Convert time as timestamp (number) to string for use in textctrl.
 
+	Validator convert timestamp to string "HH:DD[:SS]" for display in widget,
+	and from string to number for store in object.
+
+	Args:
+		show_sec: if True using format HH:MM:SS
+	"""
 	def __init__(self, show_sec=False):
 		SimpleValidator.__init__(self)
 		self._show_sec = show_sec
@@ -79,15 +89,14 @@ class TimeToIntConv(SimpleValidator):
 			return value
 		value = long(value or 0)
 		if self._show_sec:
-			s = value % 60
-			m = value / 60 % 60
-			h = value / 3600
-			value = "%0d:%02d:%02d" % (h, m, s)
+			sec = value % 60
+			minutes = value / 60 % 60
+			hours = value / 3600
+			value = "%0d:%02d:%02d" % (hours, minutes, sec)
 		else:
-			m = value % 60
-			h = value / 60
-			value = "%02d:%02d" % (h, m)
-
+			minutes = value % 60
+			hours = value / 60
+			value = "%02d:%02d" % (hours, minutes)
 		return value
 
 
@@ -95,8 +104,15 @@ class TimeToIntConv(SimpleValidator):
 
 
 class DateValidator(SimpleValidator):
-	''' walidator -> string/wxDateTime -> wnd[str/wxDateTime] -> wxDateTime '''
+	""" Convert date value (as string or wx.DateTime to use in control.
 
+	Validator convert given value (long/string) to wx.DateTime for show in
+	control, and back to wx.DateTime when storing in object.
+	Date as string must be in format acceptable by wx.DateTime.
+
+	Args:
+		error_message: optional error message.
+	"""
 	def __init__(self, error_message=None):
 		if error_message is None:
 			error_message = _("Date isn't in correct format - "
@@ -141,7 +157,7 @@ class DateValidator(SimpleValidator):
 
 
 class DateToIsoConv(SimpleValidator):
-	''' conwerter any -> wnd -> str/long '''
+	""" Convert date as wx.DateTime to string in ISO format. """
 
 	def value_from_window(self, value):
 		if isinstance(value, wx.DateTime):

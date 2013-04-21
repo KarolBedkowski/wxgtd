@@ -1,17 +1,21 @@
 # -*- coding: utf-8 -*-
-'''
-validators/validators/errors.py
+""" Validation errors definition.
 
-kpylibs 1.x
 Copyright (c) Karol Będkowski, 2006-2013
 
-This file is part of kpylibs
+This file is part of wxGTD.
 
-kpylibs is free software; you can redistribute it and/or modify it under the
+This is free software; you can redistribute it and/or modify it under the
 terms of the GNU General Public License as published by the Free Software
 Foundation, version 2.
-'''
+"""
+
+__author__ = "Karol Będkowski"
+__copyright__ = "Copyright (c) Karol Będkowski, 2006-2013"
+__version__ = '2013-04-21'
 
 
 class ValidateError(StandardError):
+	""" Generic validate error.
+	"""
 	pass
