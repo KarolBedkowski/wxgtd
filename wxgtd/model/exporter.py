@@ -21,11 +21,20 @@ def _fake_update_func(*args, **kwargs):
 	_LOG.info('progress %r %r', args, kwargs)
 
 
-def save_to_file(filename, update_func=_fake_update_func):
-	"""Load data from zipfile"""
+def save_to_file(filename, update_func=_fake_update_func, internal_fname=None):
+	"""Load data from (zip)file.
+
+	Load data from and insert/update it into database.
+
+	Args:
+		filename: source filename
+		update_func: function that is called after each step
+		internal_fname: name of file inside zip file; default - filename
+			without ".zip" extension.
+	"""
 	if filename.endswith('.zip'):
 		with zipfile.ZipFile(filename, 'w', zipfile.ZIP_DEFLATED) as zfile:
-			fname = os.path.basename(filename[:-4])
+			fname = internal_fname or os.path.basename(filename[:-4])
 			if not fname.endswith('.json'):
 				fname += '.json'
 			zfile.writestr(fname, save_json(update_func))
