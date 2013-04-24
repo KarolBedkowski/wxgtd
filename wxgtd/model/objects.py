@@ -240,7 +240,7 @@ class Task(BaseModelMixin, Base):
 		# clone tags
 		for tasktag in self.tags:
 			ntasktag = TaskTag()
-			ntasktag = tasktag.tag_uuid
+			ntasktag.tag_uuid = tasktag.tag_uuid
 			newobj.tags.append(ntasktag)
 		# clone notes
 		for note in self.notes:
