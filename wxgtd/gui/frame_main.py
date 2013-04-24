@@ -361,7 +361,11 @@ class FrameMain:
 			return
 		session = OBJ.Session()
 		task = session.query(OBJ.Task).filter_by(uuid=task_uuid).first()
-		task.task_completed = not task.task_completed
+		if not task.task_completed:
+			if not logic.complete_task(task, self.wnd, session):
+				return
+		else:
+			task.task_completed = False
 		session.commit()
 		self._refresh_list()
 

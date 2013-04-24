@@ -149,9 +149,8 @@ class DlgTask(BaseDialog):
 				self._data['duration_h'] * 60 + self._data['duration_m']
 		if not self._data['prev_completed'] and self._task.completed:
 			# zakonczono zadanie
-			repeated_task = logic.repeat_task(self._task)
-			if repeated_task is not None:
-				self._session.add(repeated_task)
+			if not logic.complete_task(self._task, self._wnd, self._session):
+				return
 		self._session.commit()
 		Publisher.sendMessage('task.update', data={'task_uuid': self._task.uuid})
 		self._on_ok(evt)
