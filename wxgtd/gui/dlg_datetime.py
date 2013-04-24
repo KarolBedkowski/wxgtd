@@ -52,7 +52,7 @@ class DlgDateTime(BaseDialog):
 		self['tc_time'].SetValidator(ValidatorTime(self._values, 'time'))
 		if timestamp:
 			self['rb_date'].SetValue(True)
-		self['cb_set_time'].SetValue(timeset)
+		self['cb_set_time'].SetValue(bool(timeset))
 
 	def _on_ok(self, evt):
 		if self['rb_no_date'].GetValue():
