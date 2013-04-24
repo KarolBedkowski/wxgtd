@@ -287,3 +287,27 @@ def delete_task(task_uuid, parent_wnd=None, session=None):
 	session.delete(task)
 	session.commit()
 	return True
+
+
+def complete_task(task, parent_wnd=None, session=None):
+	""" Complete task.
+
+	Repeat task if necessary.
+
+	Args:
+		task: Task object
+		parent_wnd: current wxWindow
+		session: sqlalchemy session
+
+	Returns:
+		True if task is completed
+	"""
+	if not mbox.message_box_question(parent_wnd, _("Set task completed?"),
+			None, _("Set complete"), _("Close")):
+		return False
+	session = session or OBJ.Session.objects_session(task) or OBJ.Session()
+	task.task_completed = True
+	repeated_task = repeat_task(task)
+	if repeated_task is not None:
+		session.add(repeated_task)
+	return True
