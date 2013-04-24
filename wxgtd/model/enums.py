@@ -96,7 +96,7 @@ REMAIND_PATTERNS_LIST = [
 		("5 days", _("5 days")),
 		("6 days", _("6 days")),
 		("7 days", _("7 days")),
-		("16 days", _("16 days")),
+		("14 days", _("14 days")),
 		("30 days", _("30 days"))]
 
 REMAIND_PATTERNS = dict(REMAIND_PATTERNS_LIST)
