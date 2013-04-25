@@ -175,8 +175,8 @@ class Task(BaseModelMixin, Base):
 		return cls.select(where_stmt="completed is not null")
 
 	@classmethod
-	def select_by_filters(cls, params):
-		session = Session()
+	def select_by_filters(cls, params, session=None):
+		session = session or Session()
 		query = session.query(cls)
 		query = _append_filter_list(query, Task.context_uuid, params.get('contexts'))
 		query = _append_filter_list(query, Task.folder_uuid, params.get('folders'))
