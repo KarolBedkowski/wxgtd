@@ -498,6 +498,7 @@ class FrameMain:
 				parent.due_time_set).replace(' ', '\n'))
 		self['l_parent_tags'].SetLabel(fmt.format_task_info_icons(parent,
 				active_only)[0])
+		self['panel_parent'].GetSizer().Layout()
 
 
 def _update_color(wnd, bgcolor):
