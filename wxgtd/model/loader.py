@@ -305,7 +305,7 @@ def load_json(strdata, update_func):
 				tag_uuid=tag_uuid).first()
 		if obj:
 			modified = task_tag.get('modified')
-			if not modified or modified > obj.modified:
+			if not modified or not obj.modified or modified > obj.modified:
 				obj.load_from_dict(task_tag)
 		else:
 			obj = objects.TaskTag(task_uuid=task_uuid, tag_uuid=tag_uuid)
