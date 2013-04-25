@@ -32,6 +32,7 @@ from wxgtd.model import sync
 from wxgtd.model import enums
 from wxgtd.model import logic
 from wxgtd.gui import dlg_about
+from wxgtd.gui import _fmt as fmt
 from wxgtd.gui._filtertreectrl import FilterTreeCtrl
 from wxgtd.gui.dlg_task import DlgTask
 from wxgtd.gui.dlg_checklistitem import DlgChecklistitem
@@ -65,6 +66,7 @@ class FrameMain:
 		return ctrl
 
 	def _setup(self):
+		self._session = OBJ.Session()
 		self._items_path = []
 		self._filter_tree_ctrl.RefreshItems()
 		wx.CallAfter(self._refresh_list)
@@ -128,7 +130,8 @@ class FrameMain:
 				self._on_rb_show_selection)
 		self._items_list_ctrl.Bind(wx.EVT_LIST_ITEM_ACTIVATED,
 				self._on_items_list_activated)
-		wnd.Bind(wx.EVT_BUTTON, self._on_btn_path_back, id=wx.ID_BACKWARD)
+		wnd.Bind(wx.EVT_BUTTON, self._on_btn_path_back, id=wx.ID_UP)
+		self['btn_parent_edit'].Bind(wx.EVT_BUTTON, self._on_btn_edit_parent)
 
 		Publisher.subscribe(self._on_tasks_update, ('task', 'update'))
 		Publisher.subscribe(self._on_tasks_update, ('task', 'delete'))
@@ -317,9 +320,8 @@ class FrameMain:
 	def _on_items_list_activated(self, evt):
 		task_uuid, task_type = self._items_list_ctrl.items[evt.GetData()]
 		if task_type in (enums.TYPE_PROJECT, enums.TYPE_CHECKLIST):
-			session = OBJ.Session()
+			session = self._session
 			task = session.query(OBJ.Task).filter_by(uuid=task_uuid).first()
-			session.close()
 			self._items_path.append(task)
 			self._refresh_list()
 			return
@@ -358,7 +360,7 @@ class FrameMain:
 		task_uuid, _task_type = self._items_list_ctrl.get_item_info(None)
 		if task_uuid is None:  # not selected
 			return
-		session = OBJ.Session()
+		session = self._session
 		task = session.query(OBJ.Task).filter_by(uuid=task_uuid).first()
 		if not task.task_completed:
 			if not logic.complete_task(task, self.wnd, session):
@@ -367,6 +369,14 @@ class FrameMain:
 			task.task_completed = False
 		session.commit()
 		self._refresh_list()
+
+	def _on_btn_edit_parent(self, _evt):
+		if not self._items_path:
+			return
+		task_uuid = self._items_path[-1].uuid
+		if task_uuid:
+			dlg = DlgTask.create(task_uuid, self.wnd, task_uuid)
+			dlg.run()
 
 	# logic
 
@@ -415,14 +425,13 @@ class FrameMain:
 				params['types'] = [enums.TYPE_CHECKLIST]
 		_LOG.debug("FrameMain._refresh_list; params=%r", params)
 		wx.SetCursor(wx.HOURGLASS_CURSOR)
-		tasks = OBJ.Task.select_by_filters(params)
+		tasks = OBJ.Task.select_by_filters(params, session=self._session)
 		items_list = self._items_list_ctrl
-		self._items_list_ctrl.fill(tasks,
-				active_only=not self._btn_show_finished.GetValue())
+		active_only = not self._btn_show_finished.GetValue()
+		self._items_list_ctrl.fill(tasks, active_only=active_only)
 		self.wnd.SetStatusText(_("Showed %d items") % items_list.GetItemCount())
-		path_str = ' / '.join(task.title for task in self._items_path)
-		self['l_path'].SetLabel(path_str)
-		self.wnd.FindWindowById(wx.ID_BACKWARD).Enable(bool(self._items_path))
+		#path_str = ' / '.join(task.title for task in self._items_path)
+		self._show_parent_info(active_only)
 		wx.SetCursor(wx.STANDARD_CURSOR)
 
 	def _autosync(self):
@@ -470,6 +479,25 @@ class FrameMain:
 		if task_uuid:
 			dlg = DlgTask.create(task_uuid, self.wnd, task_uuid)
 			dlg.run()
+
+	def _show_parent_info(self, active_only):
+		if not self._items_path:
+			self['l_parent_title'].SetLabel('')
+			self['l_parent_info'].SetLabel('')
+			self['l_parent_due'].SetLabel('')
+			self['l_parent_tags'].SetLabel('')
+			self.wnd.FindWindowById(wx.ID_UP).Enable(False)
+			self['btn_parent_edit'].Enable(False)
+			return
+		self['btn_parent_edit'].Enable(True)
+		self.wnd.FindWindowById(wx.ID_UP).Enable(True)
+		parent = self._items_path[-1]
+		self['l_parent_title'].SetLabel(parent.title or '')
+		self['l_parent_info'].SetLabel(fmt.format_task_info(parent) or '')
+		self['l_parent_due'].SetLabel(fmt.format_timestamp(parent.due_date,
+				parent.due_time_set).replace(' ', '\n'))
+		self['l_parent_tags'].SetLabel(fmt.format_task_info_icons(parent,
+				active_only)[0])
 
 
 def _update_color(wnd, bgcolor):
