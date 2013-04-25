@@ -1,7 +1,16 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+""" Function for duping content of database into file.
+
+Copyright (c) Karol Będkowski, 2006-2013
+
+This file is part of wxGTD
+Licence: GPLv2+
 """
-"""
+
+__author__ = "Karol Będkowski"
+__copyright__ = "Copyright (c) Karol Będkowski, 2013"
+__version__ = '2013-04-21'
 
 import os
 import logging
@@ -11,7 +20,7 @@ import datetime
 import uuid
 import gettext
 
-import objects
+from wxgtd.model import objects
 
 _LOG = logging.getLogger(__name__)
 _ = gettext.gettext
@@ -37,33 +46,63 @@ def save_to_file(filename, update_func=_fake_update_func, internal_fname=None):
 			fname = internal_fname or os.path.basename(filename[:-4])
 			if not fname.endswith('.json'):
 				fname += '.json'
-			zfile.writestr(fname, save_json(update_func))
+			zfile.writestr(fname, dump_database_to_json(update_func))
 	else:
 		with open(filename, 'w') as ifile:
-			ifile.write(save_json(update_func))
+			ifile.write(dump_database_to_json(update_func))
 	update_func(100, _("Saved"))
 
 
-def fmt_date(value):
-	if not value:
+def fmt_date(date):
+	""" Format date to format required by GTD.
+
+	Args:
+		date: date & time as datetime.datetime object
+
+	Returns:
+		formatted date or empty string when date is None
+	"""
+	if not date:
 		return ""
-	return value.strftime("%Y-%m-%dT%H:%M:%S.") + value.strftime("%f")[:3] + 'Z'
+	return date.strftime("%Y-%m-%dT%H:%M:%S.") + date.strftime("%f")[:3] + 'Z'
 
 
 def _build_uuid_map(session, objclass):
+	""" Create cache "object uuid" -> "object id" from object in database.
+
+	Object id is generated from sequence for all object given class.
+
+	Args:
+		session: sqlalchemy session
+		objclass: class of objects to query
+
+	Returns:
+		Dictionary uuid -> object id
+	"""
 	cache = {}
 	for idx, obj in enumerate(session.query(objclass), 1):
 		cache[obj.uuid] = idx
 	return cache
 
 
-def save_json(update_func):
+_DEFAULT_BG_COLOR = "FFFFFF00"
+
+
+def dump_database_to_json(update_func):
+	""" Dump object in database to json string in GTD sync file format.
+
+	Args:
+		update_func: function called on each step.
+
+	Returns:
+		Data encoded in json format.
+	"""
 	res = {'version': 2}
 
 	session = objects.Session()
 
 	# folders
-	_LOG.info("save_json: folders")
+	_LOG.info("dump_database_to_json: folders")
 	update_func(1, _("Saving folders"))
 	folders_cache = _build_uuid_map(session, objects.Folder)
 	folders = []
@@ -78,7 +117,7 @@ def save_json(update_func):
 				'ordinal': obj.ordinal or 0,
 				'title': obj.title or '',
 				'note': obj.note or '',
-				'bg_color': obj.bg_color or "FFFFFF00",
+				'bg_color': obj.bg_color or _DEFAULT_BG_COLOR,
 				'visible': obj.visible}
 		folders.append(folder)
 	if folders:
@@ -86,7 +125,7 @@ def save_json(update_func):
 	update_func(5, _("Saved %d folders") % len(folders))
 
 	# contexts
-	_LOG.info("save_json: contexts")
+	_LOG.info("dump_database_to_json: contexts")
 	update_func(6, _("Saving contexts"))
 	contexts_cache = _build_uuid_map(session, objects.Context)
 	contexts = []
@@ -101,7 +140,7 @@ def save_json(update_func):
 				'ordinal': obj.ordinal or 0,
 				'title': obj.title or '',
 				'note': obj.note or '',
-				'bg_color': obj.bg_color or "FFFFFF00",
+				'bg_color': obj.bg_color or _DEFAULT_BG_COLOR,
 				'visible': obj.visible}
 		contexts.append(folder)
 	if contexts:
@@ -109,7 +148,7 @@ def save_json(update_func):
 	update_func(10, _("Saved %d contexts") % len(contexts))
 
 	# goals
-	_LOG.info("save_json: goals")
+	_LOG.info("dump_database_to_json: goals")
 	update_func(11, _("Saving goals"))
 	goals_cache = _build_uuid_map(session, objects.Goal)
 	goals = []
@@ -126,7 +165,7 @@ def save_json(update_func):
 				'note': obj.note or '',
 				'time_period': obj.time_period,
 				'archived': obj.archived,
-				'bg_color': obj.bg_color or "FFFFFF00",
+				'bg_color': obj.bg_color or _DEFAULT_BG_COLOR,
 				'visible': obj.visible}
 		goals.append(folder)
 	if goals:
@@ -134,7 +173,7 @@ def save_json(update_func):
 	update_func(15, _("Saved %d goals") % len(goals))
 
 	update_func(16, _("Saving task, alarms..."))
-	_LOG.info("save_json: tasks")
+	_LOG.info("dump_database_to_json: tasks")
 	tasks_cache = _build_uuid_map(session, objects.Task)
 	tasks = []
 	alarms = []
@@ -166,7 +205,7 @@ def save_json(update_func):
 				"due_time_set": task.due_time_set or 0,
 				"due_date_mod": task.due_date_mod or 0,
 				"floating_event": task.floating_event,
-				"duration": task.duration or 0,  # TODO: nie data?
+				"duration": task.duration or 0,
 				"energy_required": task.energy_required,
 				"repeat_from": task.repeat_from or 0,
 				"repeat_pattern": task.repeat_pattern or "",
@@ -221,7 +260,7 @@ def save_json(update_func):
 
 	update_func(70, _("Saving tags"))
 	# tags
-	_LOG.info("save_json: tags")
+	_LOG.info("dump_database_to_json: tags")
 	tags_cache = _build_uuid_map(session, objects.Tag)
 	tags = []
 	for obj in session.query(objects.Tag):
@@ -235,7 +274,7 @@ def save_json(update_func):
 				'ordinal': obj.ordinal or 0,
 				'title': obj.title or '',
 				'note': obj.note or "",
-				'bg_color': obj.bg_color or "FFFFFF00",
+				'bg_color': obj.bg_color or _DEFAULT_BG_COLOR,
 				'visible': obj.visible}
 		tags.append(folder)
 	if tags:
@@ -244,7 +283,7 @@ def save_json(update_func):
 
 	update_func(75, _("Saving task notes"))
 	# tasknotes
-	_LOG.info("save_json: tasknotes")
+	_LOG.info("dump_database_to_json: tasknotes")
 	tasknotes_cache = _build_uuid_map(session, objects.Tasknote)
 	tasknotes = []
 	for obj in session.query(objects.Tasknote):
@@ -276,9 +315,9 @@ def save_json(update_func):
 
 	update_func(85, _("Sync log"))
 	# synclog
-	deviceId = session.query(objects.Conf).filter_by(key='deviceId').first()
+	device_id = session.query(objects.Conf).filter_by(key='deviceId').first()
 	synclog = {
-			'deviceId': deviceId.val,
+			'deviceId': device_id.val,
 			"prevSyncTime": "",
 			"syncTime": fmt_date(datetime.datetime.now())}
 	res['syncLog'] = [synclog]
@@ -290,9 +329,14 @@ def save_json(update_func):
 
 
 def _check_existing_synclock(lock_filename, my_device_id):
-	""" Sprawdzenie, czy istniejący synclog jest nasz.
-		return True = można synchronizować
-				False = nie można
+	""" Check if lockfile exists.
+
+	Args:
+		lock_filename: full file path,
+		my_device_id: device UUID
+
+	Returns:
+		False if sync is locked by other device.
 	"""
 	if not os.path.isfile(lock_filename):
 		return True
@@ -309,16 +353,24 @@ def _check_existing_synclock(lock_filename, my_device_id):
 
 
 def create_sync_lock(sync_filename):
+	""" Check if lockfile exists in sync folder. Create if not.
+
+	Args:
+		sync_filename: path of sync file
+
+	Returns:
+		False, if directory is locked.
+	"""
 	session = objects.Session()
-	deviceId = session.query(objects.Conf).filter_by(key='deviceId').first()
+	device_id = session.query(objects.Conf).filter_by(key='deviceId').first()
 	synclog = {
-			'deviceId': deviceId.val,
+			'deviceId': device_id.val,
 			"startTime": fmt_date(datetime.datetime.now())}
 	session.flush()
 
 	lock_filename = os.path.join(os.path.dirname(sync_filename),
 			'sync.locked')
-	if not _check_existing_synclock(lock_filename, deviceId.val):
+	if not _check_existing_synclock(lock_filename, device_id.val):
 		return False
 	with open(lock_filename, 'w') as ifile:
 		ifile.write(cjson.encode(synclog))
@@ -326,9 +378,14 @@ def create_sync_lock(sync_filename):
 
 
 def delete_sync_lock(sync_filename):
+	""" Delete sync lock file.
+
+	Args:
+		sync_filename: path of sync file
+	"""
 	lock_filename = os.path.join(os.path.dirname(sync_filename),
 			'sync.locked')
 	try:
 		os.unlink(lock_filename)
-	except:
+	except IOError:
 		_LOG.exception('delete_sync_lock error %r', lock_filename)
