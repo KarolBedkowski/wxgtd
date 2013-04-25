@@ -29,17 +29,6 @@ _LOG = logging.getLogger(__name__)
 """
 
 
-_TASK_TYPE_ICONS = {enums.TYPE_TASK: "",
-		enums.TYPE_PROJECT: "⛁",
-		enums.TYPE_CHECKLIST: "☑",
-		enums.TYPE_CHECKLIST_ITEM: "☑",
-		enums.TYPE_NOTE: "⍰",
-		enums.TYPE_CALL: "☎",
-		enums.TYPE_EMAIL: "✉",
-		enums.TYPE_SMS: "✍",
-		enums.TYPE_RETURN_CALL: "☏"}
-
-
 class _ListItemRenderer(object):
 
 	_line_height = None
@@ -75,20 +64,8 @@ class _ListItemRenderer(object):
 		mdc.SetFont(self._font_task)
 		mdc.DrawText(task.title, 0, 5)
 		mdc.SetFont(self._font_info)
-		info = []
-		if task.status:
-			info.append(enums.STATUSES[task.status])
-		if task.context:
-			info.append(task.context.title)
-		if task.goal:
-			info.append("◎" + task.goal.title)
-		if task.folder:
-			info.append("▫" + task.folder.title)
-		if task.tags:
-			info.append("☘" + ",".join(tasktag.tag.title for tasktag in
-				task.tags))
+		info = fmt.format_task_info(task)
 		if info:
-			info = '  '.join(info)
 			mdc.DrawText(info, 0, self._info_offset)
 		dc.Blit(rect.x + 3, rect.y, rect.width - 6, rect.height, mdc, 0, 0)
 
@@ -159,26 +136,10 @@ class TaskListControl(ULC.UltimateListCtrl, listmix.ColumnSorterMixin):
 				3: self._icons.get_image_index('prio3')}
 		now = datetime.datetime.now()
 		for task in tasks:
-			info = ""
-			if task.starred:
-				info += "★ "
-			info += _TASK_TYPE_ICONS.get(task.type, "")
-			task_is_overdue = False
-			child_count = task.active_child_count if active_only else \
-					task.child_count
-			if active_only and child_count == 0 and task.completed:
+			info, task_is_overdue = fmt.format_task_info_icons(task,
+					active_only)
+			if info is None and task_is_overdue is None:
 				continue
-			if child_count > 0:
-				overdue = task.child_overdue
-				if overdue > 0:
-					info += " %d / " % overdue
-					task_is_overdue = True
-				info += " %d " % child_count
-			info += '\n'
-			if task.alarm:
-				info += '⌚ '
-			if task.repeat_pattern:
-				info += '↻'  # ⥁
 			task_is_overdue = task_is_overdue or (task.due_date and
 					task.due_date < now)
 			task_is_overdue = task_is_overdue and not task.completed
