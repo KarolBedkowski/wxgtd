@@ -392,9 +392,13 @@ class FrameMain:
 		if group_id == 0:  # all
 			pass
 		elif group_id == 1:  # hot
-			_get_hotlist_settings(params)
+			if not params['parent_uuid']:
+				# ignore hotlist settings when showing subtasks
+				_get_hotlist_settings(params)
 		elif group_id == 2:  # stared
-			params['starred'] = True
+			if not params['parent_uuid']:
+				# ignore starred when showing subtasks
+				params['starred'] = True
 		elif group_id == 3:  # basket
 			# no status, no context
 			params['contexts'] = [None]
