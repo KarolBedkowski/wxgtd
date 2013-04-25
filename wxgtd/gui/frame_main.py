@@ -311,7 +311,6 @@ class FrameMain:
 		evt.Skip()
 
 	def _on_rb_show_selection(self, evt):
-		self._items_path = []
 		wx.CallAfter(self._refresh_list)
 		evt.Skip()
 
