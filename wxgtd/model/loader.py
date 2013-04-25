@@ -1,7 +1,16 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+""" Load data from GTD sync file format.
+
+Copyright (c) Karol Będkowski, 2006-2013
+
+This file is part of wxGTD
+Licence: GPLv2+
 """
-"""
+
+__author__ = "Karol Będkowski"
+__copyright__ = "Copyright (c) Karol Będkowski, 2013"
+__version__ = '2013-04-21'
 
 import os
 import logging
@@ -11,8 +20,8 @@ import time
 import datetime
 import gettext
 
-import objects
-import logic
+from wxgtd.model import objects
+from wxgtd.model import logic
 
 _LOG = logging.getLogger(__name__)
 _ = gettext.gettext
@@ -23,7 +32,15 @@ def _fake_update_func(*args, **kwargs):
 
 
 def load_from_file(filename, update_func=_fake_update_func):
-	"""Load data from zipfile"""
+	"""Load data from (zip)file.
+
+	Args:
+		filename: file to load
+		update_func: function called in each step.
+
+	Returns:
+		True if success.
+	"""
 	if not os.path.isfile(filename):
 		update_func(50, _("File not found..."))
 		return True
@@ -39,6 +56,16 @@ def load_from_file(filename, update_func=_fake_update_func):
 
 
 def _create_or_update(session, cls, datadict):
+	""" Create object given class or update existing with loaded data.
+
+	Args:
+		session: sqlalchemy session
+		cls: class object to load/created.
+		datadict: data (dict) to set in object
+
+	Returns:
+		Updated or created object.
+	"""
 	uuid = datadict.pop('uuid')
 	obj = session.query(cls).filter_by(uuid=uuid).first()
 	if obj:
@@ -54,6 +81,18 @@ def _create_or_update(session, cls, datadict):
 
 
 def _replace_ids(objdict, cache, key_id, key_uuid=None):
+	""" Replace ids objects in loaded data by suitable uuid.
+
+	Args:
+		objdict: loaded data as dict
+		cache: dict id -> uuid
+		key_id: name of key attibute in objdict
+		key_uuid: name of attibute that will be set to uuid. By default
+			key_id[:-2] + "uuid".
+
+	Returns:
+		Founded uuid or None.
+	"""
 	key = objdict.get(key_id)
 	res = None
 	if key:
@@ -71,15 +110,31 @@ def _replace_ids(objdict, cache, key_id, key_uuid=None):
 
 
 def str2timestamp(string):
-	""" Convert timestamps like '2013-03-22T21:27:46.461Z'"""
+	""" Convert string like '2013-03-22T21:27:46.461Z' into timestamp.
+
+	Args:
+		string: string to convert
+
+	Returns:
+		Timestamp as long or None if error.
+	"""
 	if string and len(string) > 18:
 		try:
 			return time.mktime(time.strptime(string[:19], "%Y-%m-%dT%H:%M:%S"))
-		except:
+		except ValueError:
 			_LOG.exception("str2timestamp %r", string)
+	return None
 
 
 def _convert_timestamps(dictobj, *fields):
+	""" Converts timestamps in string into datetime objects in read data.
+
+	Converted are for default "created", "modified", "deleted".
+
+	Args:
+		dictobj: loaded object as dict
+		fields: list of additional fields to convert
+	"""
 	def convert(field):
 		value = dictobj.get(field)
 		if value is None:
@@ -95,8 +150,16 @@ def _convert_timestamps(dictobj, *fields):
 
 
 def _delete_missing(objcls, ids, last_sync):
-	""" skasowanie starych obiektów klasy objcls, których uuid-y nie są w ids,
-		o ile data modyfikacji < last_sync """
+	""" Delete old object given class.
+
+	Deleted are objects given class, thats uuids not found in list ``ids``
+	and with last date of modification < ``last_sync``.
+
+	Args:
+		objcls: object class for search / delete
+		ids: list of uuid to keep
+		last_sync: items with modification older that this date will be deleted.
+	"""
 	objs = objcls.selecy_by_modified_is_less(last_sync)
 	to_delete = []
 	for obj in objs:
@@ -107,9 +170,17 @@ def _delete_missing(objcls, ids, last_sync):
 		obj.delete()
 
 
-def _build_id_uuid_map(objects):
+def _build_id_uuid_map(objects_list):
+	""" Build dict that map id to uuid.
+
+	Args:
+		objects_list: list of dict containing loaded objects.
+
+	Returns:
+		Dict[id->uuid] for all objects.
+	"""
 	cache = {}
-	for obj in objects or []:
+	for obj in objects_list or []:
 		uuid = obj.get('uuid')
 		oid = obj.get('_id')
 		if uuid and oid:
@@ -118,19 +189,21 @@ def _build_id_uuid_map(objects):
 
 
 def _check_synclog(data, session):
+	""" Check synclog for last modification.
+	"""
 	last_sync = 0
 	c_last_sync = session.query(objects.Conf).filter_by(key='last_sync').first()
 	if c_last_sync is None:
 		return True
 	last_sync = str2timestamp(c_last_sync.val)
-	deviceId = session.query(objects.Conf).filter_by(key='deviceId').first().val
+	device_id = session.query(objects.Conf).filter_by(key='deviceId').first().val
 
 	synclog = data.get('syncLog')[0]
 	file_sync_time_str = synclog.get('syncTime')
 	file_sync_time = str2timestamp(file_sync_time_str)
 	sync_device = synclog.get('deviceId')
 
-	if last_sync >= file_sync_time and deviceId == sync_device:
+	if last_sync >= file_sync_time and device_id == sync_device:
 		_LOG.info("_check_synclog last_sync=%r, file=%r", c_last_sync.val,
 				file_sync_time_str)
 		#return False
@@ -138,6 +211,15 @@ def _check_synclog(data, session):
 
 
 def load_json(strdata, update_func):
+	""" Load data from json string.
+
+	Args:
+		strdata: json-encoded data
+		update_func: function called on each step.
+
+	Returns:
+		true if success.
+	"""
 	update_func(2, _("Decoding.."))
 	data = cjson.decode(strdata.decode('UTF-8'))
 	session = objects.Session()
@@ -182,7 +264,7 @@ def load_json(strdata, update_func):
 		_replace_ids(goal, goals_cache, 'parent_id')
 		_convert_timestamps(goal)
 		_create_or_update(session, objects.Goal, goal)
-	if goal:
+	if goals:
 		del data['goal']
 	update_func(20, _("Loaded %d goals") % len(goals_cache))
 
@@ -346,10 +428,9 @@ def test():
 	logging.basicConfig(level=logging.DEBUG,
 			format='%(asctime)s %(levelname)-8s %(name)s - %(message)s')
 
-	import db
-	database = db.connect('wxgtd.db')
-	print load_json(open('/home/k/GTD_SYNC.json').read())
-	database.commit()
+	from wxgtd.model import db
+	db.connect('wxgtd.db')
+	print load_json(open('/home/k/GTD_SYNC.json').read(), _fake_update_func)
 
 if __name__ == '__main__':
 	test()
