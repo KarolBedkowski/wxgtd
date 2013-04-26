@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """ Function for duping content of database into file.
 
-Copyright (c) Karol Będkowski, 2006-2013
+Copyright (c) Karol Będkowski, 2013
 
 This file is part of wxGTD
 Licence: GPLv2+
@@ -17,7 +17,6 @@ import logging
 import cjson
 import zipfile
 import datetime
-import uuid
 import gettext
 
 from wxgtd.model import objects
@@ -219,7 +218,7 @@ def dump_database_to_json(update_func):
 		if task.alarm:
 			alarmd = {'_id': alarm_idx,
 					'task_id': tasks_cache[task.uuid],
-					'uuid': str(uuid.uuid4()),
+					'uuid': objects.generate_uuid(),
 					'created': fmt_date(task.created),
 					'modified': fmt_date(task.modified),
 					'alarm': fmt_date(task.alarm),

@@ -1,7 +1,16 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+""" Functions for synchronisation data between database and sync file.
+
+Copyright (c) Karol Będkowski, 2013
+
+This file is part of wxGTD
+Licence: GPLv2+
 """
-"""
+
+__author__ = "Karol Będkowski"
+__copyright__ = "Copyright (c) Karol Będkowski, 2013"
+__version__ = '2013-04-26'
 
 import logging
 import gettext
@@ -15,8 +24,8 @@ except ImportError:
 
 from wxgtd.lib import appconfig
 
-import exporter
-import loader
+from wxgtd.model import exporter
+from wxgtd.model import loader
 
 
 _LOG = logging.getLogger(__name__)
@@ -24,7 +33,8 @@ _ = gettext.gettext
 
 
 class SyncLockedError(RuntimeError):
-	""" Synchronizacja jest zablokowana """
+	""" Sync folder is locked.
+	"""
 	pass
 
 
@@ -44,7 +54,16 @@ def _notify_progress(progress, msg):
 
 
 def sync(filename):
-	""" Synchronizacja danych z podanym plikiem """
+	""" Sync data from/to given file.
+
+	Notify progress by Publisher.
+
+	Args:
+		filename: full path to file
+
+	Raises:
+		SyncLockedError when source file is locked.
+	"""
 	_LOG.info("sync: %r", filename)
 	_notify_progress(0, _("Creating backup"))
 	create_backup()

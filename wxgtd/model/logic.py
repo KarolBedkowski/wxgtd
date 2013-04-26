@@ -12,7 +12,6 @@ __author__ = "Karol Będkowski"
 __copyright__ = "Copyright (c) Karol Będkowski, 2013"
 __version__ = "2013-04-19"
 
-import uuid
 import datetime
 import logging
 import gettext
@@ -197,7 +196,7 @@ def repeat_task(task, reset_task=True):
 		return None
 	_LOG.info('repeat_task %r', task)
 	ntask = task.clone()
-	ntask.uuid = str(uuid.uuid4())
+	ntask.uuid = OBJ.generate_uuid()
 	repeat_pattern = task.repeat_pattern
 	repeat_from = task.repeat_from
 	if repeat_pattern == 'WITHPARENT':

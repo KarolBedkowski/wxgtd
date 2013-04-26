@@ -1,9 +1,12 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-"""
-Obiekty
+""" SqlAlchemy objects definition.
 
+Copyright (c) Karol Będkowski, 2013
+
+This file is part of wxGTD
+Licence: GPLv2+
 """
 __author__ = "Karol Będkowski"
 __copyright__ = "Copyright (c) Karol Będkowski, 2013"
@@ -20,18 +23,19 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import orm, or_, and_
 from sqlalchemy import select, func
 
-import enums
+from wxgtd.model import enums
 
 _LOG = logging.getLogger(__name__)
 _ = gettext.gettext
-
 
 # SQLAlchemy
 Base = declarative_base()
 Session = orm.sessionmaker()
 
 
-def _gen_uuid():
+def generate_uuid():
+	""" Create uuid identifier.
+	"""
 	return str(uuid.uuid4())
 
 
@@ -39,31 +43,19 @@ class BaseModelMixin(object):
 	""" Bazowy model - tworzenie kluczy, aktualizacja timestampów """
 
 	def save(self):
+		""" Save object into database. """
 		session = Session.object_session(self) or Session()
 		session.add(self)
 		return session
 
-	@classmethod
-	def selecy_by_modified_is_less(cls, timestamp):
-		session = Session()
-		return session.query(cls).filter(cls.modified < timestamp).all()
-
-	@classmethod
-	def all(cls):
-		session = Session()
-		return session.query(cls).all()
-
 	def load_from_dict(self, dict_):
+		""" Update object attributes from dictionary. """
 		for key, val in dict_.iteritems():
 			if hasattr(self, key):
 				setattr(self, key, val)
 
-	@classmethod
-	def get(cls, session=None, **kwargs):
-		return (session or Session()).query(cls).filter_by(
-				**kwargs).first()
-
 	def clone(self):
+		""" Clone current object. """
 		newobj = type(self)()
 		for prop in orm.object_mapper(self).iterate_properties:
 			if isinstance(prop, orm.ColumnProperty) or \
@@ -72,10 +64,31 @@ class BaseModelMixin(object):
 				setattr(newobj, prop.key, getattr(self, prop.key))
 		return newobj
 
-	@property
-	def child_count(self):
-		return orm.object_session(self).scalar(select([func.count(Task.uuid)])
-				.where(Task.parent_uuid == self.uuid))
+	@classmethod
+	def selecy_by_modified_is_less(cls, timestamp):
+		""" Find object with modified date less than given. """
+		session = Session()
+		return session.query(cls).filter(cls.modified < timestamp).all()
+
+	@classmethod
+	def all(cls):
+		""" Return all objects this class. """
+		session = Session()
+		return session.query(cls).all()
+
+	@classmethod
+	def get(cls, session=None, **kwargs):
+		""" Get one object with given attributes.
+
+		Args:
+			session: optional sqlalchemy session
+			kwargs: query filters.
+
+		Return:
+			One object.
+		"""
+		return (session or Session()).query(cls).filter_by(
+				**kwargs).first()
 
 	def __repr__(self):
 		info = []
@@ -88,14 +101,11 @@ class BaseModelMixin(object):
 
 
 class Task(BaseModelMixin, Base):
-	"""Task
-
-	TODO:
-		- importance - nie używane (?)
+	""" Task.
 	"""
 	__tablename__ = "tasks"
 
-	uuid = Column(String(36), primary_key=True, default=_gen_uuid)
+	uuid = Column(String(36), primary_key=True, default=generate_uuid)
 	parent_uuid = Column(String(36), ForeignKey('tasks.uuid'))
 	created = Column(DateTime, default=datetime.datetime.now)
 	modified = Column(DateTime, onupdate=datetime.datetime.now)
@@ -155,15 +165,21 @@ class Task(BaseModelMixin, Base):
 			self.completed = None
 
 	task_completed = property(_get_task_completed, _set_task_completed)
+	""" Get/Set task completed flag.
+
+	When setting task to completed, complete date is setting to current .
+	"""
 
 	@property
 	def active_child_count(self):
+		""" Count of not-complete subtask. """
 		return orm.object_session(self).scalar(select([func.count(Task.uuid)])
 				.where(and_(Task.parent_uuid == self.uuid,
 						Task.completed.is_(None))))
 
 	@property
 	def child_overdue(self):
+		""" Count of not-complete subtask with due date in past. """
 		now = datetime.datetime.now()
 		return orm.object_session(self).scalar(select([func.count(Task.uuid)])
 				.where(and_(Task.parent_uuid == self.uuid,
@@ -171,11 +187,16 @@ class Task(BaseModelMixin, Base):
 						Task.completed.is_(None))))
 
 	@classmethod
-	def get_finished(cls):
-		return cls.select(where_stmt="completed is not null")
-
-	@classmethod
 	def select_by_filters(cls, params, session=None):
+		""" Get tasks list according to given criteria.
+
+		Args:
+			params: dict with filter parameters (criteria)
+			sessoin: optional sqlalchemy session
+
+		Returns:
+			list of task
+		"""
 		session = session or Session()
 		query = session.query(cls)
 		query = _append_filter_list(query, Task.context_uuid, params.get('contexts'))
@@ -185,40 +206,43 @@ class Task(BaseModelMixin, Base):
 		query = _append_filter_list(query, Task.type, params.get('types'))
 		now = datetime.datetime.now()
 		if params.get('tags'):
+			# filter by tags
 			query = query.filter(Task.tags.any(TaskTag.task_uuid.in_(params['tags'])))
 		if params.get('hide_until'):
+			# hide task with hide_until value in future
 			query = query.filter(or_(Task.hide_until.is_(None),
 					Task.hide_until <= now))
-		# params hotlist
+		# params hotlistd
 		opt = []
-		if params.get('starred'):
+		if params.get('starred'):  # show starred task
 			opt.append(Task.starred > 0)
-		if params.get('min_priority') is not None:
+		if params.get('min_priority') is not None:  # minimal task priority
 			opt.append(Task.priority >= params['min_priority'])
 		if params.get('max_due_date'):
 			opt.append(Task.due_date <= params['max_due_date'])
 		if params.get('next_action'):
-			opt.append(Task.status == 1)  # next action
-		if params.get('started'):
+			opt.append(Task.status == 1)  # status = next action
+		if params.get('started'):  # started task (with start date in past)
 			opt.append(Task.start_date <= now)
 		if opt:
+			# use "or" or "and" operator for hotlist params
 			if params.get('filter_operator', 'and') == 'or':
 				query = query.filter(or_(*opt))
 			else:
 				query = query.filter(*opt)
-		finished = params.get('finished')
+		finished = params.get('finished')  # filter by completed value
 		if finished is not None:
-			if finished:
-				# zakończone
+			if finished:  # only finished
 				query = query.filter(Task.completed.isnot(None))
-			else:
-				# niezakończone
+			else:  # only not-completed
 				query = query.filter(Task.completed.is_(None))
 		parent_uuid = params.get('parent_uuid')
 		if parent_uuid is not None:
 			if parent_uuid == 0:
+				# filter by parent (show only master task (not subtask))
 				query = query.filter(Task.parent_uuid.is_(None))
 			elif parent_uuid:
+				# filter by parent (show only subtask)
 				query = query.filter(Task.parent_uuid == parent_uuid)
 		query = query.options(orm.joinedload(Task.context)) \
 				.options(orm.joinedload(Task.folder)) \
@@ -229,13 +253,22 @@ class Task(BaseModelMixin, Base):
 
 	@classmethod
 	def all_projects(cls):
+		""" Get all projects from database. """
 		return Session().query(cls).filter_by(type=enums.TYPE_PROJECT).all()
 
 	@classmethod
 	def all_checklists(cls):
+		""" Get all checklists from database. """
 		return Session().query(cls).filter_by(type=enums.TYPE_CHECKLIST).all()
 
+	@property
+	def child_count(self):
+		"""  Count subtask. """
+		return orm.object_session(self).scalar(select([func.count(Task.uuid)])
+				.where(Task.parent_uuid == self.uuid))
+
 	def clone(self):
+		""" Clone current object. """
 		newobj = BaseModelMixin.clone(self)
 		# clone tags
 		for tasktag in self.tags:
@@ -249,7 +282,15 @@ class Task(BaseModelMixin, Base):
 
 
 def _append_filter_list(query, param, values):
-	""" Dodanie do query filtra dla atrybutu param dla wartości z listy values
+	""" Build sqlalachemy filter object from params and values.
+
+	Args:
+		query: current sqlalchemy query object
+		param: field in object (database column) used to filter
+		values: values acceptable for given field
+
+	Returns:
+		Updated query object.
 	"""
 	if not values:
 		# brak filtra
@@ -267,10 +308,10 @@ def _append_filter_list(query, param, values):
 
 
 class Folder(BaseModelMixin, Base):
-	"""folder"""
+	""" Folder. """
 	__tablename__ = "folders"
 
-	uuid = Column(String(36), primary_key=True, default=_gen_uuid)
+	uuid = Column(String(36), primary_key=True, default=generate_uuid)
 	parent_uuid = Column(String(36), ForeignKey("folders.uuid"))
 	created = Column(DateTime, default=datetime.datetime.now)
 	modified = Column(DateTime, onupdate=datetime.datetime.now)
@@ -293,7 +334,7 @@ class Folder(BaseModelMixin, Base):
 class Context(BaseModelMixin, Base):
 	"""context"""
 	__tablename__ = "contexts"
-	uuid = Column(String(36), primary_key=True, default=_gen_uuid)
+	uuid = Column(String(36), primary_key=True, default=generate_uuid)
 	parent_uuid = Column(String(36), ForeignKey("contexts.uuid"))
 	created = Column(DateTime, default=datetime.datetime.now)
 	modified = Column(DateTime, onupdate=datetime.datetime.now)
@@ -309,9 +350,9 @@ class Context(BaseModelMixin, Base):
 
 
 class Tasknote(BaseModelMixin, Base):
-	"""tasknote"""
+	""" Task note object. """
 	__tablename__ = "tasknotes"
-	uuid = Column(String(36), primary_key=True, default=_gen_uuid)
+	uuid = Column(String(36), primary_key=True, default=generate_uuid)
 	task_uuid = Column(String(36), ForeignKey("tasks.uuid"))
 	created = Column(DateTime, default=datetime.datetime.now)
 	modified = Column(DateTime, onupdate=datetime.datetime.now)
@@ -324,7 +365,7 @@ class Tasknote(BaseModelMixin, Base):
 class Goal(BaseModelMixin, Base):
 	""" Goal """
 	__tablename__ = "goals"
-	uuid = Column(String(36), primary_key=True, default=_gen_uuid)
+	uuid = Column(String(36), primary_key=True, default=generate_uuid)
 	parent_uuid = Column(String(36), ForeignKey("goals.uuid"))
 	created = Column(DateTime, default=datetime.datetime.now)
 	modified = Column(DateTime, onupdate=datetime.datetime.now)
@@ -342,17 +383,17 @@ class Goal(BaseModelMixin, Base):
 
 
 class Conf(Base):
+	""" Internal configuration table  / object. """
 	__tablename__ = 'wxgtd'
 	key = Column(String(50), primary_key=True)
 	val = Column(String)
 
 
 class Tag(BaseModelMixin, Base):
-	""" Obiekt tag.
-	Task może mieć wiele tagów."""
+	""" Tag object. """
 
 	__tablename__ = 'tags'
-	uuid = Column(String(36), primary_key=True, default=_gen_uuid)
+	uuid = Column(String(36), primary_key=True, default=generate_uuid)
 	parent_uuid = Column(String(36), ForeignKey("tags.uuid"))
 	created = Column(DateTime, default=datetime.datetime.now)
 	modified = Column(DateTime, onupdate=datetime.datetime.now)
@@ -368,6 +409,7 @@ class Tag(BaseModelMixin, Base):
 
 
 class TaskTag(BaseModelMixin, Base):
+	""" Association object for task and tags. """
 	__tablename__ = "task_tags"
 	task_uuid = Column(String(50), ForeignKey("tasks.uuid"), primary_key=True)
 	tag_uuid = Column(String(50), ForeignKey("tags.uuid"), primary_key=True)

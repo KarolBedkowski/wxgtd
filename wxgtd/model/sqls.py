@@ -1,12 +1,16 @@
 # -*- coding: utf-8 -*-
 
-"""
-Obiekt bazy dany - sql-e
+""" Database  objects definition.
+
+Copyright (c) Karol Będkowski, 2013
+
+This file is part of wxGTD
+Licence: GPLv2+
 """
 
 __author__ = "Karol Będkowski"
-__copyright__ = "Copyright (c) Karol Będkowski, 2009-2013"
-__version__ = "2011-05-15"
+__copyright__ = "Copyright (c) Karol Będkowski, 2013"
+__version__ = '2013-04-26'
 
 
 SCHEMA_DEF = []
