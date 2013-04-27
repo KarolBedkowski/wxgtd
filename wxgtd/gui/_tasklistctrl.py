@@ -16,9 +16,9 @@ import wx
 from wx.lib.agw import ultimatelistctrl as ULC
 import wx.lib.mixins.listctrl as listmix
 
-from wxgtd.lib import iconprovider
 from wxgtd.model import enums
 from wxgtd.gui import _fmt as fmt
+from wxgtd.wxtools import iconprovider
 
 _ = gettext.gettext
 _LOG = logging.getLogger(__name__)

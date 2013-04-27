@@ -20,9 +20,9 @@ try:
 except ImportError:
 	from wx.lib.pubsub import Publisher
 
-from wxgtd.wxtools import wxresources
 from wxgtd.lib.appconfig import AppConfig
-from wxgtd.lib import iconprovider
+from wxgtd.wxtools import wxresources
+from wxgtd.wxtools import iconprovider
 #from wxgtd.lib import wxutils
 
 from wxgtd.model import objects as OBJ

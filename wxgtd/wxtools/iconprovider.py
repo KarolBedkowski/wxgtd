@@ -22,7 +22,7 @@ import os.path
 
 import wx
 
-from .singleton import Singleton
+from wxgtd.lib.singleton import Singleton
 
 
 _LOG = logging.getLogger(__name__)

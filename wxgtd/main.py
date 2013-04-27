@@ -107,7 +107,7 @@ def run():
 	# program
 	from wxgtd.gui.frame_main import FrameMain
 	from wxgtd.model import db
-	from wxgtd.lib import iconprovider
+	from wxgtd.wxtools import iconprovider
 
 	# ustalnienie położenia głównego pliku bazy
 

@@ -13,9 +13,9 @@ import weakref
 import wx
 from wx import xrc
 
-from wxgtd.wxtools import wxresources
 from wxgtd.lib.appconfig import AppConfig
-from wxgtd.lib import iconprovider
+from wxgtd.wxtools import iconprovider
+from wxgtd.wxtools import wxresources
 
 
 class BaseDialog:
