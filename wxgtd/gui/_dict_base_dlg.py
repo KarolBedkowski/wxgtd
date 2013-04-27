@@ -1,11 +1,16 @@
 # -*- coding: utf-8 -*-
 
-""" Klasa bazowa dla wszystkich dlg, które sterują słownikami.
+""" Base class for dialogs that manage application dictionaries.
+
+Copyright (c) Karol Będkowski, 2013
+
+This file is part of wxGTD
+Licence: GPLv2+
 """
 
 __author__ = "Karol Będkowski"
 __copyright__ = "Copyright (c) Karol Będkowski, 2013"
-__version__ = "2013-04-14"
+__version__ = "2013-04-27"
 
 import gettext
 import logging
@@ -13,15 +18,21 @@ import logging
 import wx
 
 from wxgtd.model.objects import Session
-
-from _base_dialog import BaseDialog
-import message_boxes as mbox
+from wxgtd.gui._base_dialog import BaseDialog
+from wxgtd.gui import message_boxes as mbox
 
 _LOG = logging.getLogger(__name__)
 _ = gettext.gettext
 
 
 class DictBaseDlg(BaseDialog):
+	""" Base class for dialogs that manage application dictionaries stored
+	in class managed by SqlAlchemy.
+
+	Args:
+		parent: parent window
+		dlg_name: name of dialog in resource file
+	"""
 
 	_items_list_control = "lb_items"  # nazwa widgeta zawierającego listę
 			# elementów
@@ -32,7 +43,8 @@ class DictBaseDlg(BaseDialog):
 		self._displayed_item = None  # aktualnie wuświetlany obiekt
 
 		class _Proxy(object):
-			""" Klasa proxy dla obejścia braku dynamiki w walidatorach"""
+			""" Proxy class that allow use validators on dynamically changed
+			objects. """
 			def __getattr__(selfi, key):
 				if not self._displayed_item:
 					return ""
@@ -43,8 +55,8 @@ class DictBaseDlg(BaseDialog):
 
 		self._proxy = _Proxy()
 		self._current_selected_uuid = None
-		BaseDialog.__init__(self, parent, dlg_name, save_pos=False)
 		self._session = Session()
+		BaseDialog.__init__(self, parent, dlg_name, save_pos=False)
 		wx.CallAfter(self._refresh_list)
 
 	def _load_controls(self, wnd):
@@ -61,10 +73,12 @@ class DictBaseDlg(BaseDialog):
 		BaseDialog._on_ok(self, evt)
 
 	def _on_add_item(self, _evt):
+		""" Action for add item button. """
 		self._on_save(None)  # wymuszone zapisanie zmian
 		self._display_item(self._item_class())
 
 	def _on_save(self, _evt):
+		""" Save selected & edited item. """
 		if not self._displayed_item:
 			return
 		if not self._wnd.Validate():
@@ -76,6 +90,7 @@ class DictBaseDlg(BaseDialog):
 		self._refresh_list()
 
 	def _on_del_item(self, _evt):
+		""" Acton for delete item button. """
 		sel = self._selected_item_uuid
 		if sel is None:
 			return
@@ -88,12 +103,13 @@ class DictBaseDlg(BaseDialog):
 			return True
 
 	def _on_list_item_activate(self, _evt):
+		""" Items on list is activated. """
 		uuid = self._selected_item_uuid
 		item = self._get_item(uuid)
 		self._display_item(item)
 
 	def _refresh_list(self,):
-		""" Odświeżenie listy elementów """
+		""" Refresh list of all elements. """
 		self._displayed_item = None
 		self._items_lctrl.Clear()
 		for title, uuid in self._get_items():
@@ -102,29 +118,29 @@ class DictBaseDlg(BaseDialog):
 
 	@property
 	def _selected_item_uuid(self):
-		""" UUID aktualnie zaznaczonego elementu na liście """
+		""" Get UUID currently selected element on list. """
 		sel = self._items_lctrl.GetSelection()
 		if sel == wx.NOT_FOUND:
 			return None
 		return self._items_lctrl.GetClientData(sel)
 
 	def _get_item(self, uuid):
-		""" Pobranie jednego elementu wg uuid """
+		""" Get item from database on the basis of uuid. """
 		return self._session.query(self._item_class).filter_by(uuid=uuid).first()
 
 	def _get_items(self):
-		""" Pobranie wszystkich elementów do wyświetlenia """
+		""" Get all items given class from database. """
 		for obj in self._session.query(self._item_class):
 			yield obj.title, obj.uuid
 
 	def _display_item(self, item):
-		""" Wyświetlenie elementu w oknie """
+		""" Display item in window. """
 		self._displayed_item = item
 		self._set_buttons_state()
 		self._wnd.TransferDataToWindow()
 
 	def _set_buttons_state(self):
-		""" Ustawienie stanu przycisków """
+		""" Set state of buttons in window. """
 		item_in_edit = self._displayed_item is not None
 		self[wx.ID_SAVE].Enable(item_in_edit)
 		self[wx.ID_DELETE].Enable(item_in_edit)

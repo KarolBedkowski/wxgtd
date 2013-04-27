@@ -1,6 +1,10 @@
 # -*- coding: utf-8 -*-
-"""
-Główne okno programu
+""" Filter tree widget.
+
+Copyright (c) Karol Będkowski, 2013
+
+This file is part of wxGTD
+Licence: GPLv2+
 """
 
 __author__ = "Karol Będkowski"
@@ -10,10 +14,10 @@ __version__ = "2013-03-10"
 import gettext
 
 import wx
-
 import wx.lib.customtreectrl as CT
 import wx.gizmos
 from wx.lib.mixins import treemixin
+
 from wxgtd.model import objects as OBJ
 from wxgtd.model import enums
 
@@ -58,6 +62,8 @@ class TreeItemCB(TreeItem):
 
 
 class FilterTreeModel(object):
+	""" Model used in FilterTreeModel. """
+
 	def __init__(self):
 		self._items = []
 		self._items.append(TreeItemCB(_("Statuses"), "STATUSES",
@@ -112,6 +118,7 @@ class FilterTreeModel(object):
 
 class FilterTreeCtrl(treemixin.VirtualTree, treemixin.ExpansionState,
 		CT.CustomTreeCtrl):
+	""" TreeControl with checboxes allows to filter elements to show. """
 
 	def __init__(self, *args, **kwargs):
 		self._model = FilterTreeModel()
@@ -157,5 +164,6 @@ class FilterTreeCtrl(treemixin.VirtualTree, treemixin.ExpansionState,
 		event.Skip()
 
 	def refresh(self):
+		""" Refresh tree. """
 		self.ExpandAll()
 		wx.CallAfter(self.RefreshItems)

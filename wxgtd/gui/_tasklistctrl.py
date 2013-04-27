@@ -1,6 +1,10 @@
 # -*- coding: utf-8 -*-
-"""
-Główne okno programu
+"""Task list control.
+
+Copyright (c) Karol Będkowski, 2013
+
+This file is part of wxGTD
+Licence: GPLv2+
 """
 
 __author__ = "Karol Będkowski"
@@ -30,6 +34,13 @@ _LOG = logging.getLogger(__name__)
 
 
 class _ListItemRenderer(object):
+	""" Renderer for one / first row of TaskListControl.
+
+	Args:
+		parent: parent windows (TaskListControl)
+		task: task to disiplay
+		overdue: task or any child of it are overdue.
+	"""
 
 	_line_height = None
 	_font_task = None
@@ -88,6 +99,7 @@ class _ListItemRenderer(object):
 
 
 class TaskListControl(ULC.UltimateListCtrl, listmix.ColumnSorterMixin):
+	""" TaskList Control based on wxListCtrl. """
 
 	def __init__(self, parent, id=wx.ID_ANY, pos=wx.DefaultPosition,
 				size=wx.DefaultSize, style=0, agwStyle=0):
@@ -107,20 +119,33 @@ class TaskListControl(ULC.UltimateListCtrl, listmix.ColumnSorterMixin):
 
 	@property
 	def items(self):
+		""" Get items showed in control.
+
+		Returns:
+			Dict idx -> (task.uuid, task.type)
+		"""
 		return self._items
 
 	@property
 	def selected(self):
+		""" Get selected item index. """
 		return self.GetNextItem(-1, wx.LIST_NEXT_ALL, wx.LIST_STATE_SELECTED)
 
-	def get_item_info(self, idx):
+	def get_item_uuid(self, idx):
+		""" Get given or selected (when idx is None) task uuid. """
 		if idx is None:
 			idx = self.selected
 			if idx < 0:
 				return None, None
-		return self._items[self.GetItemData(idx)]
+		return self._items[self.GetItemData(idx)][0]
 
 	def fill(self, tasks, active_only=False):
+		""" Fill the list with tasks.
+
+		Args:
+			task: list of tasks
+			active_only: boolean - show/count only active tasks.
+		"""
 		self.Freeze()
 		current_sort_state = self.GetSortState()
 		if current_sort_state[0] == -1:

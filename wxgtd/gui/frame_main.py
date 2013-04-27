@@ -357,7 +357,7 @@ class FrameMain:
 		self._delete_selected_task()
 
 	def _on_btn_complete_task(self, _evt):
-		task_uuid, _task_type = self._items_list_ctrl.get_item_info(None)
+		task_uuid = self._items_list_ctrl.get_item_uuid(None)
 		if task_uuid is None:  # not selected
 			return
 		session = self._session
@@ -452,7 +452,7 @@ class FrameMain:
 			Publisher.sendMessage('task.update')
 
 	def _delete_selected_task(self):
-		task_uuid, _task_type = self._items_list_ctrl.get_item_info(None)
+		task_uuid = self._items_list_ctrl.get_item_uuid(None)
 		if task_uuid:
 			if logic.delete_task(task_uuid, self.wnd):
 				Publisher.sendMessage('task.delete', data={'task_uuid': task_uuid})
@@ -475,7 +475,7 @@ class FrameMain:
 		dlg.run()
 
 	def _edit_selected_task(self):
-		task_uuid, _task_type = self._items_list_ctrl.get_item_info(None)
+		task_uuid = self._items_list_ctrl.get_item_uuid(None)
 		if task_uuid:
 			dlg = DlgTask.create(task_uuid, self.wnd, task_uuid)
 			dlg.run()

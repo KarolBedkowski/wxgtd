@@ -1,12 +1,15 @@
 # -*- coding: utf-8 -*-
+""" Various formatting function.
 
-"""
-Formatery
+Copyright (c) Karol Będkowski, 2013
+
+This file is part of wxGTD
+Licence: GPLv2+
 """
 
 __author__ = "Karol Będkowski"
 __copyright__ = "Copyright (c) Karol Będkowski, 2010-2013"
-__version__ = "2010-11-25"
+__version__ = "2013-04-27"
 
 import time
 import logging
@@ -17,7 +20,13 @@ from wxgtd.model import enums
 _LOG = logging.getLogger(__name__)
 
 
-def format_timestamp(timestamp, show_time):
+def format_timestamp(timestamp, show_time=True):
+	""" Format date time object.
+
+	Args:
+		timestamp: date/time as str/unicode, datetime or number.
+		show_time: if true also show time.
+	"""
 	if not timestamp:
 		return ""
 	if isinstance(timestamp, (str, unicode)):
@@ -32,6 +41,7 @@ def format_timestamp(timestamp, show_time):
 
 
 def format_task_info(task):
+	""" Format information about task (status, context, tags, etc.). """
 	info = []
 	if task.status:
 		info.append(enums.STATUSES[task.status])
@@ -61,6 +71,12 @@ _TASK_TYPE_ICONS = {enums.TYPE_TASK: "",
 
 
 def format_task_info_icons(task, active_only):
+	""" Format information about task (type, child count, repeat, alarm).
+
+	Args:
+		task: task to gather information
+		active_only: count only active task/subtask.
+	"""
 	info = ""
 	if task.starred:
 		info += "★ "
