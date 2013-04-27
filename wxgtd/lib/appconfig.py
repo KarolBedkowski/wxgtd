@@ -1,7 +1,14 @@
 # -*- coding: utf-8 -*-
 # pylint: disable-msg=C0103
-"""
-Konfiguracja programu
+""" Application configuration.
+
+Copyright (c) Karol Będkowski, 2007-2013
+
+This file is part of kPyLibs
+
+This is free software; you can redistribute it and/or modify it under the
+terms of the GNU General Public License as published by the Free Software
+Foundation, version 2.
 """
 
 __author__ = "Karol Będkowski"
@@ -14,6 +21,7 @@ import imp
 import logging
 import ConfigParser
 import base64
+import binascii
 
 from wxgtd import configuration
 from wxgtd.lib.singleton import Singleton
@@ -22,10 +30,16 @@ _LOG = logging.getLogger(__name__)
 
 
 class AppConfig(Singleton):
-	''' konfiguracja aplikacji '''
+	""" Object holding, loading and saving configuration.
 
+	Args:
+		filename: path for configuration file
+		app_name: name of applicaiton
+		main_dir: directory containing main file
+	"""
 	def _init(self, filename, app_name, main_dir=None):
-		_LOG.debug('__init__(%s)' % filename)
+		_LOG.debug('AppConfig.__init__(%r, %r, %r)', filename, app_name,
+				main_dir)
 		self._user_home = os.path.expanduser('~')
 		self.app_name = app_name
 		self.main_is_frozen = is_frozen()
@@ -36,26 +50,10 @@ class AppConfig(Singleton):
 		self._config = ConfigParser.SafeConfigParser()
 		self.clear()
 		_LOG.debug('AppConfig.__init__: frozen=%(main_is_frozen)r, '
-				'main_dir=%(main_dir)s, config=%(_filename)s, data=%(data_dir)s',
-				self.__dict__)
+				'main_dir=%(main_dir)s, config=%(_filename)s, '
+				'data=%(data_dir)s', self.__dict__)
 
 	###########################################################################
-
-	# dostęp do _runtime_params
-	def __len__(self):
-		return self._runtime_params.__len__()
-
-	def __getitem__(self, key):
-		return self._runtime_params.__getitem__(key)
-
-	def __setitem__(self, key, value):
-		self._runtime_params.__setitem__(key, value)
-
-	def __delitem__(self, key):
-		self._runtime_params.__delitem__(key)
-
-	def __iter__(self):
-		self._runtime_params.__iter__()
 
 	def _get_debug(self):
 		return self._runtime_params.get('DEBUG', False)
@@ -65,13 +63,17 @@ class AppConfig(Singleton):
 
 	debug = property(_get_debug, _set_debug)
 
-	def get_rt(self, key, default=None):
-		return self._runtime_params.get(key, default)
+	def r_set(self, key, value):
+		self._runtime_params[key] = value
+
+	def r_get(self, key, default=None):
+		self._runtime_params.get(key, default)
 
 	###########################################################################
 
 	@property
 	def locales_dir(self):
+		""" Find directory with localisation files. """
 		if self.main_is_frozen:
 			if not sys.platform.startswith('win32'):
 				return os.path.join(sys.prefix, configuration.LINUX_LOCALES_DIR)
@@ -79,54 +81,75 @@ class AppConfig(Singleton):
 
 	@property
 	def user_share_dir(self):
+		""" Get path to app local/share directory.
+
+		Default: ~/.local/share/<app_name>/
+		"""
 		return os.path.join(self._user_home, '.local', 'share', self.app_name)
 
 	def clear(self):
+		""" Clear all data in object. """
 		self.last_open_files = []
 		for section in self._config.sections():
 			self._config.remove_section(section)
 		self._runtime_params = {}
 
 	def load(self):
-		if os.path.exists(self._filename):
-			_LOG.debug('load: %s', self._filename)
-			try:
-				with open(self._filename, 'r') as cfile:
-					self._config.readfp(cfile)
-			except StandardError:
-				_LOG.exception('load error')
-			else:
-				self._after_load(self._config)
-			_LOG.debug('load end')
+		""" Load application configuration file. """
+		if self.load_configuration_file(self._filename):
+			self._after_load(self._config)
 
 	def load_defaults(self, filename):
-		_LOG.debug('load_defaults: %s', filename)
-		if filename and os.path.exists(filename):
-			try:
-				with open(filename, 'r') as cfile:
-					self._config.readfp(cfile)
-			except StandardError:
-				_LOG.exception('load_defaults error')
-			_LOG.debug('load_defaults end')
+		""" Load default configuration file. """
+		if filename:
+			self.load_configuration_file(filename)
+
+	def load_configuration_file(self, filename):
+		""" Load configuration file. """
+		if not os.path.exists(filename):
+			_LOG.warn("AppConfig.load_configuration_file: file %r not found",
+					filename)
+			return False
+		_LOG.info('AppConfig.load_configuration_file: %r', filename)
+		try:
+			with open(filename, 'r') as cfile:
+				self._config.readfp(cfile)
+		except StandardError:
+			_LOG.exception('AppConfig.load_configuration_file error')
+			return False
+		_LOG.debug('AppConfig.load_configuration_file finished')
+		return True
 
 	def save(self):
-		_LOG.debug('save')
+		""" Save configuration. """
+		_LOG.debug('AppConfig.save')
 		self._before_save(self._config)
-		cfile = None
 		try:
 			with open(self._filename, 'w') as cfile:
 				self._config.write(cfile)
 		except StandardError:
-			_LOG.exception('save error')
-		_LOG.debug('save end')
+			_LOG.exception('AppConfig.save error')
+		_LOG.debug('AppConfig.save finished')
 
 	def add_last_open_file(self, filename):
+		""" Put filename into last files list.
+
+		Given filename is appended (moved if exists) on the beginning.
+		"""
 		if filename in self.last_open_files:
 			self.last_open_files.remove(filename)
 		self.last_open_files.insert(0, filename)
 		self.last_open_files = self.last_open_files[:7]
 
 	def get_data_file(self, filename):
+		""" Get full path to file in data directory.
+
+		Args:
+			filename: file name to find
+
+		Returns:
+			Full path or None if file not exists.
+		"""
 		path = os.path.join(self.data_dir, filename)
 		if os.path.exists(path):
 			return path
@@ -134,8 +157,15 @@ class AppConfig(Singleton):
 		return None
 
 	def get(self, section, key, default=None):
-		if self._config.has_section(section) \
-				and self._config.has_option(section, key):
+		""" Get value from configuration.
+
+		Args:
+			section: section of configuration (string)
+			key: key name (string)
+			default: optional default value (default=None)
+		"""
+		if (self._config.has_section(section)
+				and self._config.has_option(section, key)):
 			try:
 				return eval(self._config.get(section, key))
 			except:
@@ -143,32 +173,65 @@ class AppConfig(Singleton):
 		return default
 
 	def get_items(self, section):
+		""" Get all key-value pairs in given config section.
+
+		Args:
+			section: section name (string)
+
+		Return:
+			List of (key, value) or None if section not found.
+		"""
 		if self._config.has_section(section):
 			try:
 				items = self._config.items(section)
 				if items:
-					result = tuple((key, eval(val)) for key, val in items)
+					result = list((key, eval(val)) for key, val in items)
 				return result
 			except:
 				_LOG.exception('AppConfig.get(%s)' % section)
 		return None
 
 	def get_secure(self, section, key, default=None):
+		""" Get "secure" stored value.
+
+		Args:
+			section: section of configuration (string)
+			key: key name (string)
+			default: optional default value (default=None)
+		"""
 		value = self.get(section, key, default)
 		try:
-			val = base64.decodestring(value)
-		except:
+			value = base64.decodestring(value)
+		except binascii.Error:
 			_LOG.warn('AppConfig.get_secure error for (%r, %r, %r), %r', section,
 					key, default, value)
-			val = value
-		return val
+		return value
 
 	def set(self, section, key, val):
+		""" Store value in configuration.
+
+		Create section if necessary.
+
+		Args:
+			section: section of configuration (string)
+			key: key name (string)
+			val:  value to store.
+		"""
 		if not self._config.has_section(section):
 			self._config.add_section(section)
 		self._config.set(section, key, repr(val))
 
 	def set_items(self, section, key, items):
+		""" Store values in configuration.
+
+		Create section if necessary.
+		Each item in items is stored as key+sequence number.
+
+		Args:
+			section: section of configuration (string)
+			key: key name (string)
+			items: values to store.
+		"""
 		config = self._config
 		if config.has_section(section):
 			config.remove_section(section)
@@ -177,37 +240,52 @@ class AppConfig(Singleton):
 			config.set(section, '%s%05d' % (key, idx), repr(item))
 
 	def set_secure(self, section, key, val):
-		value = base64.encodestring(val)
-		self.set(section, key, value)
+		""" Store "secure" value in configuration.
+		Args:
+			section: section of configuration (string)
+			key: key name (string)
+			val: value to store.
+		"""
+		self.set(section, key, base64.encodestring(val))
 
 	def _get_main_dir(self):
+		""" Find main application directory. """
 		if self.main_is_frozen:
 			if sys.platform == 'win32':
 				return os.path.abspath(os.path.dirname(sys.executable))
 		return os.path.abspath(os.path.dirname(sys.argv[0]))
 
 	def _get_config_path(self, app_name):
+		""" Get path to config file. Create directories if not exists.
+
+		Config is stored in ~/.config/<app_name>
+		"""
 		config_path = os.path.join(self._user_home, '.config', app_name)
 		if not os.path.exists(config_path):
 			try:
 				os.makedirs(config_path)
-			except:
+			except IOError:
 				_LOG.exception('Error creating config directory: %s' \
 						% self.config_path)
 				config_path = self.main_dir
 		return config_path
 
 	def _get_data_dir(self):
+		""" Find path to directory with data files. """
 		if self.main_is_frozen:
 			if not sys.platform == 'win32':
 				return os.path.join(sys.prefix, configuration.LINUX_DATA_DIR)
 		return os.path.join(self.main_dir, configuration.DATA_DIR)
 
 	def _after_load(self, config):
+		""" Action to take after loaded configuration. """
 		if config.has_section('last_files'):
+			# load last files
 			self.last_open_files = [val[1] for val in config.items('last_files')]
 
 	def _before_save(self, config):
+		""" Action to take before save configuration. """
+		# store last files
 		if config.has_section('last_files'):
 			config.remove_section('last_files')
 		config.add_section('last_files')
@@ -217,6 +295,7 @@ class AppConfig(Singleton):
 
 
 def is_frozen():
+	""" Check if application is frozen. """
 	if __file__.startswith(sys.prefix):
 		return True
 	return (hasattr(sys, "frozen")		# new py2exe

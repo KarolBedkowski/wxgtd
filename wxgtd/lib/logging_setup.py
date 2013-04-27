@@ -1,14 +1,14 @@
 #!/usr/bin/python2.4
 # -*- coding: utf-8 -*-
-"""
-Logging setup.
+""" Logging setup.
+Copyright (c) Karol Będkowski, 2013
+
+This file is part of wxGTD
+Licence: GPLv2+
 """
 __author__ = "Karol Będkowski"
 __copyright__ = "Copyright (c) Karol Będkowski, 2013"
-__version__ = "2011-04-06"
-
-__all__ = ['logging_setup']
-
+__version__ = "2013-04-27"
 
 import sys
 import os.path
@@ -20,26 +20,28 @@ from . import appconfig
 
 
 class ColorFormatter(logging.Formatter):
-	COLORS = {
-		'DEBUG': 34,
-		'INFO': 37,
-		'WARNING': 33,
-		'ERROR': 31,
-		'CRITICAL': 31,
-	}
+	""" Formatter for logs that color messages according to level. """
+	COLORS = {'DEBUG': 34,
+			'INFO': 37,
+			'WARNING': 33,
+			'ERROR': 31,
+			'CRITICAL': 31}
 	FORMAT_SEQ = "\033[1;%dm%s\033[0m"
 
-	def __init__(self, *argv, **kwarg):
-		logging.Formatter.__init__(self, *argv, **kwarg),
-
 	def format(self, record):
-		record.levelname = self.FORMAT_SEQ % (self.COLORS.get(record.levelname, 37),
-				record.levelname)
+		record.levelname = self.FORMAT_SEQ % (
+				self.COLORS.get(record.levelname, 37), record.levelname)
 		return logging.Formatter.format(self, record)
 
 
 def logging_setup(filename, debug=False, debug_sql=False):
+	""" Setup configuration.
 
+	Args:
+		filename: log file name
+		debug: (bool) set more messages
+		debug_sql: (bool) log sqls (sqlalchemy)
+	"""
 	log_fullpath = os.path.abspath(filename)
 	log_dir = os.path.dirname(log_fullpath)
 	log_dir_access = os.access(log_dir, os.W_OK)
