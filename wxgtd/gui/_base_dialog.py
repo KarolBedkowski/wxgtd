@@ -13,7 +13,7 @@ import weakref
 import wx
 from wx import xrc
 
-from wxgtd.lib import wxresources
+from wxgtd.wxtools import wxresources
 from wxgtd.lib.appconfig import AppConfig
 from wxgtd.lib import iconprovider
 

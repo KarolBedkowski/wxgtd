@@ -19,7 +19,7 @@ from wx import xrc
 from wx.lib import masked
 from wx.lib import colourselect as csel
 
-from .appconfig import AppConfig
+from wxgtd.lib.appconfig import AppConfig
 
 _ = gettext.gettext
 
