@@ -1,11 +1,15 @@
 # -*- coding: utf-8 -*-
+""" Main module.
 
-"""
+Copyright (c) Karol Będkowski, 2013
+
+This file is part of wxGTD
+Licence: GPLv2+
 """
 
 __author__ = "Karol Będkowski"
-__copyright__ = "Copyright (c) Karol Będkowski, 2009-2013"
-__version__ = "2011-01-16"
+__copyright__ = "Copyright (c) Karol Będkowski, 2013"
+__version__ = "2013-04-27"
 
 
 import os
@@ -25,29 +29,27 @@ except AttributeError:
 _LOG = logging.getLogger(__name__)
 
 
-def show_version(*_args, **_kwargs):
+def _show_version(*_args, **_kwargs):
 	from wxgtd import version
 	print version.INFO
 	exit(0)
 
 
 def _parse_opt():
+	""" Parse cli options. """
 	optp = optparse.OptionParser()
 	optp.add_option('--debug', '-d', action="store_true", default=False,
 			help='enable debug messages')
 	optp.add_option('--debug-sql', action="store_true", default=False,
 			help='enable sql debug messages')
-	optp.add_option('--version', action="callback", callback=show_version,
+	optp.add_option('--version', action="callback", callback=_show_version,
 		help='show information about application version')
 	optp.add_option('--wx-inspection', action="store_true", default=False)
 	return optp.parse_args()[0]
 
 
-from wxgtd.lib import appconfig
-
-
 def _setup_locale(app_config):
-	''' setup locales and gettext '''
+	""" setup locales and gettext """
 	locales_dir = app_config.locales_dir
 	package_name = 'wxgtd'
 	_LOG.info('run: locale dir: %s' % locales_dir)
@@ -68,7 +70,13 @@ def _setup_locale(app_config):
 
 
 def run():
+	""" Run application. """
+	# parse options
 	options = _parse_opt()
+
+
+	# app config
+	from wxgtd.lib import appconfig
 
 	# logowanie
 	from wxgtd.lib.logging_setup import logging_setup
@@ -109,7 +117,7 @@ def run():
 	from wxgtd.model import db
 	from wxgtd.wxtools import iconprovider
 
-	# ustalnienie położenia głównego pliku bazy
+	# find database file.
 
 	def try_path(path):
 		file_path = os.path.join(path, 'wxgtd.db')
@@ -127,7 +135,7 @@ def run():
 	if not db_filename:
 		db_filename = os.path.join(config.user_share_dir, 'wxgtd.db')
 
-	# utworzenie katalogu
+	#  create dir for database if not exist
 	db_dirname = os.path.dirname(db_filename)
 	if not os.path.isdir(db_dirname):
 		os.mkdir(db_dirname)
@@ -137,18 +145,23 @@ def run():
 		wxloc = wx.Locale(wx.LANGUAGE_DEFAULT)
 		wxloc.AddCatalog('wxstd')
 
+	# init icons
 	iconprovider.init_icon_cache(None, config.data_dir)
 
+	# connect to databse
 	db.connect(db_filename, options.debug_sql)
 
+	# show main window
 	main_frame = FrameMain()
 	app.SetTopWindow(main_frame.wnd)
 	main_frame.wnd.Show()
 
+	# optionally show inspection tool
 	if options.wx_inspection:
 		import wx.lib.inspection
 		wx.lib.inspection.InspectionTool().Show()
 
 	app.MainLoop()
 
+	# app closed; save config
 	config.save()

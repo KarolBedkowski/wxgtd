@@ -1,19 +1,23 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-"""
+""" Startup application in debug mode.
+
+Copyright (c) Karol Będkowski, 2013
+
+This file is part of wxGTD
+Licence: GPLv2+
 """
 
 __author__ = "Karol Będkowski"
 __copyright__ = "Copyright (c) Karol Będkowski, 2013"
-__version__ = "2013-03-02"
+__version__ = "2013-04-27"
 
 import sys
 if '--profile' not in sys.argv:
 	sys.argv.append('-d')
 
-
 def _profile():
-	''' profile app '''
+	""" profile app """
 	import cProfile
 	print 'Profiling....'
 	cProfile.run('from wxgtd.main import run; run()', 'profile.tmp')
@@ -32,7 +36,7 @@ def _profile():
 
 
 def _memprofile():
-	''' mem profile app '''
+	""" mem profile app """
 	from wxgtd.main import run
 	run()
 	import gc
@@ -47,15 +51,16 @@ def _memprofile():
 	pdb.set_trace()
 
 
-if '--profile' in sys.argv:
-	sys.argv.remove('--profile')
-	_profile()
-elif '--memprofile' in sys.argv:
-	sys.argv.remove('--memprofile')
-	_memprofile()
-elif '--version' in sys.argv:
-	from wxgtd import version
-	print version.INFO
-else:
-	from wxgtd.main import run
-	run()
+if __name__ == "__main__":
+	if '--profile' in sys.argv:
+		sys.argv.remove('--profile')
+		_profile()
+	elif '--memprofile' in sys.argv:
+		sys.argv.remove('--memprofile')
+		_memprofile()
+	elif '--version' in sys.argv:
+		from wxgtd import version
+		print version.INFO
+	else:
+		from wxgtd.main import run
+		run()

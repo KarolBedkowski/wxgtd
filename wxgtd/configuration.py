@@ -1,12 +1,16 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-'''
-Standard paths
-'''
+""" Standard paths.
+
+Copyright (c) Karol Będkowski, 2004-2013
+
+This file is part of wxGTD
+Licence: GPLv2+
+"""
 
 __author__ = "Karol Będkowski"
-__copyright__ = "Copyright (c) Karol Będkowski, 2009-2013"
-__version__ = "2011-04-29"
+__copyright__ = "Copyright (c) Karol Będkowski, 2013"
+__version__ = "2013-04-27"
 
 
 from wxgtd import version

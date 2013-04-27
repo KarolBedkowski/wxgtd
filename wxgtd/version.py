@@ -1,19 +1,19 @@
 # -*- coding: utf-8 -*-
-"""
-Licence and version informations.
+""" Licence and version informations.
+
+Copyright (c) Karol Będkowski, 2004-2013
+
+This file is part of wxGTD
+Licence: GPLv2+
 """
 
 __author__ = "Karol Będkowski"
 __copyright__ = "Copyright (c) Karol Będkowski, 2013"
 __version__ = "2013-03-02"
 
+import gettext
 
-try:
-	_('wxGTD')
-except NameError:
-	import gettext
-	_ = gettext.gettext
-
+_ = gettext.gettext
 
 SHORTNAME = 'wxgtd'
 NAME = _("wxGTD")
