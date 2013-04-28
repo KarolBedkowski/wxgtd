@@ -44,7 +44,7 @@ TYPES = {TYPE_TASK: _("Task"),
 		TYPE_PROJECT: _("Project"),
 		TYPE_CHECKLIST: _("Checklist"),
 		TYPE_CHECKLIST_ITEM: _("Checklist Item"),
-		TYPE_NOTE: _("Note"),
+#		TYPE_NOTE: _("Note"),
 		TYPE_CALL: _("Call"),
 		TYPE_EMAIL: _("Email"),
 		TYPE_SMS: _("SMS"),
@@ -124,6 +124,10 @@ REPEAT_PATTERN_LIST = [("Norepeat", _("Norepeat")),
 	("WITHPARENT", _("With parrent"))]
 
 REPEAT_PATTERN = dict(REPEAT_PATTERN_LIST)
+
+"""
+"The fourth Thu every 10 months"
+"""
 
 GOAL_TIME_TERM = {0: _("Lifelong"),
 		1: _("Long Term"),
