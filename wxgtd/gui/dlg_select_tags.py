@@ -1,11 +1,15 @@
 # -*- coding: utf-8 -*-
+""" Select tags dialog.
 
-""" Klasa bazowa dla wszystkich dlg.
+Copyright (c) Karol Będkowski, 2013
+
+This file is part of wxGTD
+Licence: GPLv2+
 """
 
 __author__ = "Karol Będkowski"
 __copyright__ = "Copyright (c) Karol Będkowski, 2013"
-__version__ = "2010-11-25"
+__version__ = "2013-04-28"
 
 import gettext
 import logging
@@ -14,15 +18,18 @@ import wx
 
 from wxgtd.model.objects import Session, Tag
 
-from _base_dialog import BaseDialog
+from ._base_dialog import BaseDialog
 
 _LOG = logging.getLogger(__name__)
 _ = gettext.gettext
 
 
 class DlgSelectTags(BaseDialog):
-	""" Dlg wyboru daty i czasu (opcjonalnie)
-	TODO: maska na timestamp
+	""" Select tags dialog.
+
+	Args:
+		parent: parent window
+		selected: list of uuid selected tags.
 	"""
 
 	def __init__(self, parent, selected=None):

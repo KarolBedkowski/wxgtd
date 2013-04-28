@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+## pylint: disable-msg=W0401, C0103
 """Task list control.
 
 Copyright (c) Karol Będkowski, 2013
@@ -27,11 +28,6 @@ from wxgtd.wxtools import iconprovider
 _ = gettext.gettext
 _LOG = logging.getLogger(__name__)
 
-"""
-| completed | title                 | due  | star, type    |
-| priority  | status, goal, project |      | alarm, repeat |
-"""
-
 
 class _ListItemRenderer(object):
 	""" Renderer for one / first row of TaskListControl.
@@ -40,8 +36,12 @@ class _ListItemRenderer(object):
 		parent: parent windows (TaskListControl)
 		task: task to disiplay
 		overdue: task or any child of it are overdue.
-	"""
 
+	+-----------+-----------------------+------+---------------+
+	| completed | title                 | due  | star, type    |
+	| priority  | status, goal, project |      | alarm, repeat |
+	+-----------+-----------------------+------+---------------+
+	"""
 	_line_height = None
 	_font_task = None
 	_font_info = None
@@ -55,7 +55,7 @@ class _ListItemRenderer(object):
 		if not self._font_info:
 			self._font_info = wx.Font(8, wx.NORMAL, wx.NORMAL, wx.NORMAL, False)
 
-	def DrawSubItem(self, dc, rect, line, highlighted, enabled):
+	def DrawSubItem(self, dc, rect, _line, _highlighted, _enabled):
 		canvas = wx.EmptyBitmap(rect.width, rect.height)
 		mdc = wx.MemoryDC()
 		mdc.SelectObject(canvas)
@@ -101,11 +101,12 @@ class _ListItemRenderer(object):
 class TaskListControl(ULC.UltimateListCtrl, listmix.ColumnSorterMixin):
 	""" TaskList Control based on wxListCtrl. """
 
-	def __init__(self, parent, id=wx.ID_ANY, pos=wx.DefaultPosition,
+	def __init__(self, parent, wid=wx.ID_ANY, pos=wx.DefaultPosition,
 				size=wx.DefaultSize, style=0, agwStyle=0):
 		agwStyle = agwStyle | wx.LC_REPORT | wx.BORDER_SUNKEN | wx.LC_HRULES \
 				| wx.LC_SINGLE_SEL | ULC.ULC_HAS_VARIABLE_ROW_HEIGHT
-		ULC.UltimateListCtrl.__init__(self, parent, id, pos, size, style, agwStyle)
+		ULC.UltimateListCtrl.__init__(self, parent, wid, pos, size, style,
+				agwStyle)
 		listmix.ColumnSorterMixin.__init__(self, 4)
 		self._icons = icon_prov = iconprovider.IconProvider()
 		icon_prov.load_icons(['task_done', 'prio-1', 'prio0', 'prio1', 'prio2',

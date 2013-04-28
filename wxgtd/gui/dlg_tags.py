@@ -1,27 +1,29 @@
 # -*- coding: utf-8 -*-
+""" Tags edit dialog.
 
-""" Okno edycji tagów
+Copyright (c) Karol Będkowski, 2013
+
+This file is part of wxGTD
+Licence: GPLv2+
 """
 
 __author__ = "Karol Będkowski"
 __copyright__ = "Copyright (c) Karol Będkowski, 2013"
-__version__ = "2013-04-14"
+__version__ = "2013-04-28"
 
 import gettext
-import logging
-
-#import wx
 
 from wxgtd.model import objects as OBJ
 from wxgtd.wxtools.validators import Validator, ValidatorColorStr
 
-from _dict_base_dlg import DictBaseDlg
+from ._dict_base_dlg import DictBaseDlg
 
-_LOG = logging.getLogger(__name__)
 _ = gettext.gettext
 
 
 class DlgTags(DictBaseDlg):
+	""" Tags edit dialog.
+	"""
 
 	_items_list_control = "lb_tags"
 	_item_name = _("tag")

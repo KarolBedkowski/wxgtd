@@ -1,11 +1,15 @@
 # -*- coding: utf-8 -*-
+""" Remind setting dialog.
 
-""" Klasa bazowa dla wszystkich dlg.
+Copyright (c) Karol Będkowski, 2013
+
+This file is part of wxGTD
+Licence: GPLv2+
 """
 
 __author__ = "Karol Będkowski"
-__copyright__ = "Copyright (c) Karol Będkowski, 2010-2013"
-__version__ = "2010-11-25"
+__copyright__ = "Copyright (c) Karol Będkowski, 2013"
+__version__ = "2013-04-28"
 
 import logging
 
@@ -14,21 +18,21 @@ import wx
 from wxgtd.wxtools.validators import ValidatorDate, ValidatorTime
 from wxgtd.model import enums
 
-from _base_dialog import BaseDialog
+from ._base_dialog import BaseDialog
 
 _LOG = logging.getLogger(__name__)
 
 
 class DlgRemaindSettings(BaseDialog):
-	""" Dlg wyboru ustawień dot. przypomnien
+	""" Remind setting dialog.
+
+	Args:
+		parent: parent window
+		alarm: current alarm (date, time)
+		alarm_pattern: alarm pattern used to set alarm dynamically.
 	"""
 
 	def __init__(self, parent, alarm, alarm_pattern):
-		""" Konst
-		parent - okno nadrzędne
-		alarm - czas jako long
-		alarm_pattern - opis przpomnienia (z enums.REMAIND_PATTERNS)
-		"""
 		self._data = {'date': None, 'time': None, 'pattern': alarm_pattern,
 				'alarm': alarm}
 		BaseDialog.__init__(self, parent, 'dlg_remaind_settings', save_pos=False)

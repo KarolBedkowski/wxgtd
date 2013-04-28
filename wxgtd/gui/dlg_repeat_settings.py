@@ -1,11 +1,15 @@
 # -*- coding: utf-8 -*-
+""" Repeat task settings dialog,
 
-""" Klasa bazowa dla wszystkich dlg.
+Copyright (c) Karol Będkowski, 2013
+
+This file is part of wxGTD
+Licence: GPLv2+
 """
 
 __author__ = "Karol Będkowski"
-__copyright__ = "Copyright (c) Karol Będkowski, 2010-2013"
-__version__ = "2010-11-25"
+__copyright__ = "Copyright (c) Karol Będkowski, 2013"
+__version__ = "2013-04-28"
 
 import logging
 
@@ -13,21 +17,21 @@ import wx
 
 from wxgtd.model import enums
 
-from _base_dialog import BaseDialog
+from ._base_dialog import BaseDialog
 
 _LOG = logging.getLogger(__name__)
 
 
 class DlgRepeatSettings(BaseDialog):
-	""" Dlg wyboru ustawień dot. przypomnien
+	""" Repeat task settings dialog.
+
+	Args:
+		parent: parent windows
+		pattern: repeat pattern (enums.REMAIND_PATTERNS)
+		repeat_from: true = repeat for complete; false = from due.
 	"""
 
 	def __init__(self, parent, pattern, repeat_from):
-		""" Konst
-		parent - okno nadrzędne
-		alarm - czas jako long
-		alarm_pattern - opis przpomnienia (z enums.REMAIND_PATTERNS)
-		"""
 		self._data = {'pattern': pattern, 'from': repeat_from}
 		BaseDialog.__init__(self, parent, 'dlg_repeat_settings', save_pos=False)
 		self._setup(pattern, repeat_from)

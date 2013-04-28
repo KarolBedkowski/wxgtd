@@ -72,7 +72,7 @@ class BaseDialog:
 			return cls(*args, **kwargs)
 		dlg = cls._windows.get(key)
 		if dlg:
-			wx.CallAfter(dlg._wnd.Raise)
+			wx.CallAfter(dlg.wnd.Raise)
 		else:
 			cls._windows[key] = dlg = cls(*args, **kwargs)
 			dlg._obj_key = key
@@ -147,7 +147,7 @@ class BaseDialog:
 		wnd.Bind(wx.EVT_BUTTON, self._on_ok, id=wx.ID_OK)
 		wnd.Bind(wx.EVT_BUTTON, self._on_cancel, id=wx.ID_CANCEL)
 
-	def _on_close(self, evt):
+	def _on_close(self, _evt):
 		""" Action launched on close event. """
 		if self._save_pos:
 			# save size & posiotion

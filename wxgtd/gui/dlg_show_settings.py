@@ -1,11 +1,15 @@
 # -*- coding: utf-8 -*-
+""" Task show options dialog.
 
-""" Klasa bazowa dla wszystkich dlg.
+Copyright (c) Karol Będkowski, 2013
+
+This file is part of wxGTD
+Licence: GPLv2+
 """
 
 __author__ = "Karol Będkowski"
-__copyright__ = "Copyright (c) Karol Będkowski, 2010-2013"
-__version__ = "2010-11-25"
+__copyright__ = "Copyright (c) Karol Będkowski, 2013"
+__version__ = "2013-04-28"
 
 import logging
 
@@ -14,21 +18,21 @@ import wx
 from wxgtd.wxtools.validators import ValidatorDate, ValidatorTime
 from wxgtd.model import enums
 
-from _base_dialog import BaseDialog
+from ._base_dialog import BaseDialog
 
 _LOG = logging.getLogger(__name__)
 
 
 class DlgShowSettings(BaseDialog):
-	""" Dlg wyboru ustawień dot. wyświetlania zadania
+	""" Task show options dialog.
+
+	Args:
+		parent: parent windows
+		date: date when show task
+		parent: pattern to set date dynamically (enums.HIDE_PATTERNS)
 	"""
 
 	def __init__(self, parent, date, pattern):
-		""" Konst
-		parent - okno nadrzędne
-		date - czas jako long
-		pattern - opis przpomnienia (z enums.HIDE_PATTERNS)
-		"""
 		self._data = {'date': None, 'time': None, 'pattern': pattern,
 				'datetime': date}
 		BaseDialog.__init__(self, parent, 'dlg_show_settings', save_pos=False)

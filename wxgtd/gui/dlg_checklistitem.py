@@ -1,12 +1,16 @@
 # -*- coding: utf-8 -*-
 
-"""
-Klasa dialogu edycji elementu check listy
+"""Checklist item dialog.
+
+Copyright (c) Karol Będkowski, 2013
+
+This file is part of wxGTD
+Licence: GPLv2+
 """
 
 __author__ = "Karol Będkowski"
 __copyright__ = "Copyright (c) Karol Będkowski, 2013"
-__version__ = "2010-11-25"
+__version__ = "2013-04-28"
 
 import logging
 import datetime
@@ -23,17 +27,22 @@ from wxgtd.model import enums
 from wxgtd.wxtools.validators import Validator, ValidatorDv
 from wxgtd.wxtools.validators import v_length as LVALID
 
-from _base_dialog import BaseDialog
-import _fmt as fmt
+from ._base_dialog import BaseDialog
+from . import _fmt as fmt
 
 _ = gettext.gettext
 _LOG = logging.getLogger(__name__)
 
 
 class DlgChecklistitem(BaseDialog):
-	"""
-	Dlg edycji elementów listy.
-	WARRNING: okienko niemodalne; obsługa zapisywania tutaj
+	""" Edit checllist item dialog class.
+
+	WARRNING: non-modal window.
+
+	Args:
+		parent: parent window
+		task_uuid: uuid task for edit; if empty - create new task
+		parent_uuid: parent task uuid.
 	"""
 
 	def __init__(self, parent, task_uuid, parent_uuid=None):

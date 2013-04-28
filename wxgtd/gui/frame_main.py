@@ -1,11 +1,15 @@
 # -*- coding: utf-8 -*-
-"""
-Główne okno programu
+""" Main application window.
+
+Copyright (c) Karol Będkowski, 2013
+
+This file is part of wxGTD
+Licence: GPLv2+
 """
 
 __author__ = "Karol Będkowski"
-__copyright__ = "Copyright (c) Karol Będkowski, 2010"
-__version__ = "2011-03-29"
+__copyright__ = "Copyright (c) Karol Będkowski, 2013"
+__version__ = "2013-04-28"
 
 import os
 import gettext
@@ -23,8 +27,6 @@ except ImportError:
 from wxgtd.lib.appconfig import AppConfig
 from wxgtd.wxtools import wxresources
 from wxgtd.wxtools import iconprovider
-#from wxgtd.lib import wxutils
-
 from wxgtd.model import objects as OBJ
 from wxgtd.model import loader
 from wxgtd.model import exporter
@@ -34,6 +36,7 @@ from wxgtd.model import logic
 from wxgtd.gui import dlg_about
 from wxgtd.gui import _fmt as fmt
 from wxgtd.gui._filtertreectrl import FilterTreeCtrl
+from wxgtd.gui._tasklistctrl import TaskListControl
 from wxgtd.gui.dlg_task import DlgTask
 from wxgtd.gui.dlg_checklistitem import DlgChecklistitem
 from wxgtd.gui.dlg_preferences import DlgPreferences
@@ -41,15 +44,14 @@ from wxgtd.gui.dlg_sync_progress import DlgSyncProggress
 from wxgtd.gui.dlg_tags import DlgTags
 from wxgtd.gui.dlg_goals import DlgGoals
 from wxgtd.gui.dlg_folders import DlgFolders
-from wxgtd.gui._tasklistctrl import TaskListControl
-#from . import message_boxes as mbox
 
 _ = gettext.gettext
 _LOG = logging.getLogger(__name__)
 
 
 class FrameMain:
-	''' Klasa głównego okna programu'''
+	""" Main window class. """
+
 	def __init__(self):
 		self.res = wxresources.load_xrc_resource('wxgtd.xrc')
 		self._load_controls()
@@ -270,7 +272,7 @@ class FrameMain:
 			self._filter_tree_ctrl.RefreshItems()
 			Publisher.sendMessage('task.update')
 
-	def _on_menu_file_preferences(self, evt):
+	def _on_menu_file_preferences(self, _evt):
 		if DlgPreferences(self.wnd).run(True):
 			self._filter_tree_ctrl.RefreshItems()
 

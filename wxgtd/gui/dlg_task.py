@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
+""" Edit task dialog.
 
-"""
-Klasa dlg edycji zadania.
-
-TODO: dziedziczenie z projektu
 TODO: wydzielenie cześci wspólnej z dlg_checklistitem
+
+Copyright (c) Karol Będkowski, 2013
+
+This file is part of wxGTD
+Licence: GPLv2+
 """
 
 __author__ = "Karol Będkowski"
@@ -28,22 +30,28 @@ from wxgtd.model import logic
 from wxgtd.wxtools.validators import Validator, ValidatorDv
 from wxgtd.wxtools.validators import v_length as LVALID
 
-from _base_dialog import BaseDialog
-from dlg_datetime import DlgDateTime
-from dlg_remaind_settings import DlgRemaindSettings
-from dlg_show_settings import DlgShowSettings
-from dlg_repeat_settings import DlgRepeatSettings
-from dlg_select_tags import DlgSelectTags
-import _fmt as fmt
+from ._base_dialog import BaseDialog
+from .dlg_datetime import DlgDateTime
+from .dlg_remaind_settings import DlgRemaindSettings
+from .dlg_show_settings import DlgShowSettings
+from .dlg_repeat_settings import DlgRepeatSettings
+from .dlg_select_tags import DlgSelectTags
+from . import _fmt as fmt
 
 _ = gettext.gettext
 _LOG = logging.getLogger(__name__)
 
 
 class DlgTask(BaseDialog):
-	"""
-	Dlg edycji zadań.
-	WARRNING: okienko niemodalne; obsługa zapisywania tutaj
+	""" Edit task dialog.
+
+	WARRNING: non-modal dialog
+
+	Args:
+		parent: parent windows
+		task_uuid: uuid task to edit; if none create new task
+		parent_uuid: optional uuid of parent task
+		task_type: optional task type to create
 	"""
 
 	def __init__(self, parent, task_uuid, parent_uuid=None, task_type=None):
@@ -207,10 +215,10 @@ class DlgTask(BaseDialog):
 
 	def _on_btn_hide_until_set(self, _evt):
 		task = self._task
-		datetime = None
+		date_time = None
 		if task.hide_until:
-			datetime = time.mktime(task.hide_until.timetuple())
-		dlg = DlgShowSettings(self._wnd, datetime, task.hide_pattern)
+			date_time = time.mktime(task.hide_until.timetuple())
+		dlg = DlgShowSettings(self._wnd, date_time, task.hide_pattern)
 		if dlg.run(True):
 			if dlg.datetime:
 				task.hide_until = datetime.datetime.fromtimestamp(dlg.datetime)

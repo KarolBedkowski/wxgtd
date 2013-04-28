@@ -1,6 +1,10 @@
 # -*- coding: utf-8 -*-
+""" Edit goals dialog.
 
-""" Okno edycji tagów
+Copyright (c) Karol Będkowski, 2013
+
+This file is part of wxGTD
+Licence: GPLv2+
 """
 
 __author__ = "Karol Będkowski"
@@ -8,21 +12,19 @@ __copyright__ = "Copyright (c) Karol Będkowski, 2013"
 __version__ = "2013-04-14"
 
 import gettext
-import logging
-
-#import wx
 
 from wxgtd.model import objects as OBJ
 from wxgtd.model import enums
 from wxgtd.wxtools.validators import Validator, ValidatorColorStr, ValidatorDv
 
-from _dict_base_dlg import DictBaseDlg
+from ._dict_base_dlg import DictBaseDlg
 
-_LOG = logging.getLogger(__name__)
 _ = gettext.gettext
 
 
 class DlgGoals(DictBaseDlg):
+	""" Edit goals dialog.
+	"""
 
 	_items_list_control = "lb_goals"
 	_item_name = _("goal")

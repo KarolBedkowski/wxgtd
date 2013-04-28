@@ -1,11 +1,15 @@
 # -*- coding: utf-8 -*-
+""" Dialog for selecting date and time.
 
-""" Klasa bazowa dla wszystkich dlg.
+Copyright (c) Karol Będkowski, 2013
+
+This file is part of wxGTD
+Licence: GPLv2+
 """
 
 __author__ = "Karol Będkowski"
-__copyright__ = "Copyright (c) Karol Będkowski, 2010-2013"
-__version__ = "2010-11-25"
+__copyright__ = "Copyright (c) Karol Będkowski, 2013"
+__version__ = "2013-04-28"
 
 import logging
 
@@ -13,14 +17,19 @@ import wx
 
 from wxgtd.wxtools.validators import ValidatorDate, ValidatorTime
 
-from _base_dialog import BaseDialog
+from ._base_dialog import BaseDialog
 
 _LOG = logging.getLogger(__name__)
 
 
 class DlgDateTime(BaseDialog):
-	""" Dlg wyboru daty i czasu (opcjonalnie)
+	""" Dialog for edit date and time.
 	TODO: maska na timestamp
+
+	Args:
+		parent: parent window
+		timestamp: date and time as long or datetime
+		timeset: boolean - is time is set.
 	"""
 
 	def __init__(self, parent, timestamp, timeset):

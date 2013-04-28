@@ -1,11 +1,15 @@
 # -*- coding: utf-8 -*-
+""" Preferences dialog.
 
-""" Klasa dialogu ustawień.
+Copyright (c) Karol Będkowski, 2013
+
+This file is part of wxGTD
+Licence: GPLv2+
 """
 
 __author__ = "Karol Będkowski"
 __copyright__ = "Copyright (c) Karol Będkowski, 2013"
-__version__ = "2010-11-25"
+__version__ = "2013-04-28"
 
 import os
 import logging
@@ -16,12 +20,14 @@ from wxgtd.wxtools.validators import Validator
 from wxgtd.model import enums
 from wxgtd.lib.appconfig import AppConfig
 
-from _base_dialog import BaseDialog
+from ._base_dialog import BaseDialog
 
 _LOG = logging.getLogger(__name__)
 
 
 class AppConfigWrapper(object):
+	""" Wrapper for AppConfig class that allow use it with validators. """
+
 	def __init__(self):
 		self._config = AppConfig()
 
@@ -39,13 +45,13 @@ class AppConfigWrapper(object):
 
 
 class DlgPreferences(BaseDialog):
-	""" Dlg wyboru ustawień dot. przypomnien
+	""" Preferences dialog.
+
+	Args:
+		parent: parent window
 	"""
 
 	def __init__(self, parent):
-		""" Konst
-		parent - okno nadrzędne
-		"""
 		BaseDialog.__init__(self, parent, 'dlg_preferences', save_pos=False)
 		self._setup()
 
