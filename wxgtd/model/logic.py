@@ -133,8 +133,8 @@ _OFFSETS = {'Daily': relativedelta(days=1),
 		'Quarterly': relativedelta(months=+3),
 		'Semiannually': relativedelta(months=+6),
 		'Yearly': relativedelta(years=+1)}
-_RE_REPEAT_XT = re.compile("^Every (\d+) (\w+)$", re.IGNORECASE)
-_RE_REPEAT_EVERYW = re.compile("^Every ((Mon|Tue|Wed|Thu|Fri|Sat|Sun),? ?)+$",
+RE_REPEAT_XT = re.compile("^Every (\d+) (\w+)$", re.IGNORECASE)
+RE_REPEAT_EVERYW = re.compile("^Every ((Mon|Tue|Wed|Thu|Fri|Sat|Sun),? ?)+$",
 		re.IGNORECASE)
 _WEEKDAYS = {'mon': 0,
 		'tue': 1,
@@ -181,7 +181,7 @@ def _move_date_repeat(date, repeat_pattern):
 			return date + relativedelta(days=6)
 		date += relativedelta(days=(5 - weekday))
 	elif repeat_pattern.startswith("Every "):
-		m_repeat_xt = _RE_REPEAT_XT.match(repeat_pattern.lower())
+		m_repeat_xt = RE_REPEAT_XT.match(repeat_pattern.lower())
 		# every X T
 		if m_repeat_xt:
 			num = int(m_repeat_xt.group(1))
@@ -194,7 +194,7 @@ def _move_date_repeat(date, repeat_pattern):
 				return date + relativedelta(months=+num)
 			if period in ('years', 'year'):
 				return date + relativedelta(years=+num)
-		if _RE_REPEAT_EVERYW.match(repeat_pattern):
+		if RE_REPEAT_EVERYW.match(repeat_pattern):
 			# every w
 			days = [_WEEKDAYS[day.strip(" ,")]
 					for day in repeat_pattern.lower().split(' ')[1:]]
