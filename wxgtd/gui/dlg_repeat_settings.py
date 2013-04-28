@@ -55,10 +55,10 @@ class DlgRepeatSettings(BaseDialog):
 			c_every.Append(rem_name, rem_key)
 		c_every.Select(0)
 		c_everyxt_period = self['c_everyxt_period']
-		c_everyxt_period.Append(_("days"), "day")
-		c_everyxt_period.Append(_("weeks"), "week")
-		c_everyxt_period.Append(_("months"), "month")
-		c_everyxt_period.Append(_("years"), "year")
+		c_everyxt_period.Append(_("days"), "Day")
+		c_everyxt_period.Append(_("weeks"), "Week")
+		c_everyxt_period.Append(_("months"), "Month")
+		c_everyxt_period.Append(_("years"), "Year")
 		c_everyxt_period.Select(0)
 		cb_xdm_num_wday = self['cb_xdm_num_wday']
 		cb_xdm_num_wday.Append(_("first"), 'first')
@@ -92,9 +92,9 @@ class DlgRepeatSettings(BaseDialog):
 			m_repeat_xt = logic.RE_REPEAT_XT.match(pattern)
 			if m_repeat_xt:
 				self['sc_everyxt_num'].SetValue(int(m_repeat_xt.group(1)))
-				period = m_repeat_xt.group(2).lower()
-				period = {'weeks': 'week', 'days': 'day', 'months': 'month',
-						'years': 'year'}.get(period, period)
+				period = m_repeat_xt.group(2)
+				period = {'Weeks': 'Week', 'Days': 'Day', 'Months': 'Month',
+						'Years': 'Year'}.get(period, period)
 				if _choice_select_by_data(self['c_everyxt_period'], period):
 					self['rb_everyxt'].SetValue(True)
 					return
@@ -123,12 +123,29 @@ class DlgRepeatSettings(BaseDialog):
 		self._data['from'] = 1 if self['rb_completion'].GetValue() else 0
 		if self['rb_never'].GetValue():
 			self._data['pattern'] = None
-		elif self['rb_custom'].GetValue():
-			self._data['pattern'] = self['tc_pattern'].GetValue()
+		elif self['rb_everyxt'].GetValue():
+			pattern = logic.build_repeat_pattern_every_xt(
+					self['sc_everyxt_num'].GetValue(),
+					_get_choice_selected(self['c_everyxt_period']))
+			self._data['pattern'] = pattern
+		elif self['rb_everyw'].GetValue():
+			pattern = logic.build_repeat_pattern_every_w(
+					self['cb_mon'].GetValue(),
+					self['cb_tue'].GetValue(),
+					self['cb_wed'].GetValue(),
+					self['cb_thu'].GetValue(),
+					self['cb_fri'].GetValue(),
+					self['cb_sat'].GetValue(),
+					self['cb_sun'].GetValue())
+			self._data['pattern'] = pattern
+		elif self['rb_xdm'].GetValue():
+			pattern = logic.build_repeat_pattern_every_xdm(
+					_get_choice_selected(self['cb_xdm_num_wday']),
+					_get_choice_selected(self['c_xdm_weekday']),
+					self['sc_xdm_months'].GetValue())
+			self._data['pattern'] = pattern
 		else:
-			c_every = self['c_every']
-			self._data['pattern'] = c_every.GetClientData(
-					c_every.GetSelection())
+			self._data['pattern'] = _get_choice_selected(self['c_every'])
 		BaseDialog._on_ok(self, evt)
 
 
@@ -139,3 +156,7 @@ def _choice_select_by_data(control, value):
 			return True
 	_LOG.warn('_choice_select_by_data value=%r not found', value)
 	return False
+
+
+def _get_choice_selected(control):
+	return control.GetClientData(control.GetSelection())
