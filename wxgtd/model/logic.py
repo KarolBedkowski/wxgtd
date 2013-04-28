@@ -369,3 +369,41 @@ def complete_task(task, parent_wnd=None, session=None):
 	if repeated_task is not None:
 		session.add(repeated_task)
 	return True
+
+
+_PERIOD_PL = {'Week': "Weeks", "Day": "Days", "Month": "Months",
+		"Year": "Years"}
+
+
+def build_repeat_pattern_every_xt(num, period):
+	""" Build repeat pattern - Every <num> (Day|Month|Week|Year). """
+	if num > 1:
+		period = _PERIOD_PL[period]
+	return "Every %d %s" % (num, period)
+
+
+def build_repeat_pattern_every_w(mon, tue, wed, thu, fri, sat, sun):
+	""" Build repeat pattern - Every <week day list>. """
+	pattern = []
+	if mon:
+		pattern.append("Mon")
+	if tue:
+		pattern.append("Tue")
+	if wed:
+		pattern.append("Wed")
+	if thu:
+		pattern.append("Thu")
+	if fri:
+		pattern.append("Fri")
+	if sat:
+		pattern.append("Sat")
+	if sun:
+		pattern.append("Sun")
+	return "Every " + ", ".join(pattern)
+
+
+def build_repeat_pattern_every_xdm(num_weekday, weekday, num_months):
+	""" Build repeat pattern - The <num> <weekday> every <num> month. """
+	mname = "months" if num_months > 1 else "month"
+	return "The %s %s every %d %s" % (num_weekday, weekday, num_months,
+			mname)
