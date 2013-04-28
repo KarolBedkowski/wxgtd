@@ -95,6 +95,6 @@ def format_task_info_icons(task, active_only):
 	info += '\n'
 	if task.alarm:
 		info += '⌚ '
-	if task.repeat_pattern:
+	if task.repeat_pattern and task.repeat_pattern != 'Norepeat':
 		info += '↻'  # ⥁
 	return info, task_is_overdue
