@@ -133,8 +133,14 @@ _OFFSETS = {'Daily': relativedelta(days=1),
 		'Quarterly': relativedelta(months=+3),
 		'Semiannually': relativedelta(months=+6),
 		'Yearly': relativedelta(years=+1)}
-
 _RE_REPEAT_XT = re.compile("^Every (\d+) (\w+)$", re.IGNORECASE)
+_WEEKDAYS = {'mon': 0,
+		'tue': 1,
+		'wed': 2,
+		'thu': 3,
+		'fri': 4,
+		'sat': 5,
+		'sun': 6}
 
 
 def _move_date_repeat(date, repeat_pattern):
@@ -181,6 +187,14 @@ def _move_date_repeat(date, repeat_pattern):
 				return date + relativedelta(months=+num)
 			if period in ('years', 'year'):
 				return date + relativedelta(years=+num)
+		# every w
+		days = [_WEEKDAYS[day.strip(" ,")]
+				for day in repeat_pattern.lower().split(' ')[1:]]
+		while True:
+			date += relativedelta(days=+1)
+			if date.weekday() in days:
+				return date
+
 	_LOG.warning("_move_date_repeat: unknown repeat_pattern: %r",
 			repeat_pattern)
 	return date

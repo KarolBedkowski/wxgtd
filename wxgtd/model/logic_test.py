@@ -351,6 +351,62 @@ class TestRepeatTask(TestCase):
 		obj2 = logic.repeat_task(obj, False)
 		self.assertEqual(obj2.start_date, datetime(2013, 6, 15, 3, 4, 5))
 
+	def test_15_every_w_01(self):
+		obj = _FTask(None, datetime(2000, 6, 15, 3, 4, 5), None)
+		obj.repeat_from = 1  # completed
+		obj.repeat_pattern = 'Every Mon'
+		obj.completed = datetime(2010, 6, 15, 3, 4, 5)  # wt
+		obj2 = logic.repeat_task(obj, False)
+		self.assertEqual(obj2.start_date, datetime(2010, 6, 21, 3, 4, 5))
+		obj.completed = datetime(2010, 6, 16, 3, 4, 5)  # sr
+		obj2 = logic.repeat_task(obj, False)
+		self.assertEqual(obj2.start_date, datetime(2010, 6, 21, 3, 4, 5))
+		obj.completed = datetime(2010, 6, 21, 3, 4, 5)  # pn
+		obj2 = logic.repeat_task(obj, False)
+		self.assertEqual(obj2.start_date, datetime(2010, 6, 28, 3, 4, 5))
+
+	def test_15_every_w_02(self):
+		obj = _FTask(None, datetime(2000, 6, 15, 3, 4, 5), None)
+		obj.repeat_from = 1  # completed
+		obj.repeat_pattern = 'Every Mon, Thu'
+		obj.completed = datetime(2010, 6, 15, 3, 4, 5)  # wt
+		obj2 = logic.repeat_task(obj, False)
+		self.assertEqual(obj2.start_date, datetime(2010, 6, 17, 3, 4, 5))
+		obj.completed = datetime(2010, 6, 16, 3, 4, 5)  # sr
+		obj2 = logic.repeat_task(obj, False)
+		self.assertEqual(obj2.start_date, datetime(2010, 6, 17, 3, 4, 5))
+		obj.completed = datetime(2010, 6, 17, 3, 4, 5)  # cz
+		obj2 = logic.repeat_task(obj, False)
+		self.assertEqual(obj2.start_date, datetime(2010, 6, 21, 3, 4, 5))
+		obj.completed = datetime(2010, 6, 19, 3, 4, 5)  # so
+		obj2 = logic.repeat_task(obj, False)
+		self.assertEqual(obj2.start_date, datetime(2010, 6, 21, 3, 4, 5))
+
+	def test_15_every_w_03(self):
+		obj = _FTask(None, datetime(2000, 6, 15, 3, 4, 5), None)
+		obj.repeat_from = 1  # completed
+		obj.repeat_pattern = 'Every Mon, Thu, Wed, Fri, Sat, Sun, Tue'
+		obj.completed = datetime(2010, 6, 15, 3, 4, 5)  # wt
+		obj2 = logic.repeat_task(obj, False)
+		self.assertEqual(obj2.start_date, datetime(2010, 6, 16, 3, 4, 5))
+		obj.completed = datetime(2010, 6, 16, 3, 4, 5)  # sr
+		obj2 = logic.repeat_task(obj, False)
+		self.assertEqual(obj2.start_date, datetime(2010, 6, 17, 3, 4, 5))
+		obj.completed = datetime(2010, 6, 17, 3, 4, 5)  # cz
+		obj2 = logic.repeat_task(obj, False)
+		self.assertEqual(obj2.start_date, datetime(2010, 6, 18, 3, 4, 5))
+		obj.completed = datetime(2010, 6, 18, 3, 4, 5)  # pr
+		obj2 = logic.repeat_task(obj, False)
+		self.assertEqual(obj2.start_date, datetime(2010, 6, 19, 3, 4, 5))
+		obj.completed = datetime(2010, 6, 19, 3, 4, 5)  # so
+		obj2 = logic.repeat_task(obj, False)
+		self.assertEqual(obj2.start_date, datetime(2010, 6, 20, 3, 4, 5))
+		obj.completed = datetime(2010, 6, 20, 3, 4, 5)  # n
+		obj2 = logic.repeat_task(obj, False)
+		self.assertEqual(obj2.start_date, datetime(2010, 6, 21, 3, 4, 5))
+		obj.completed = datetime(2010, 6, 21, 3, 4, 5)  # pn
+		obj2 = logic.repeat_task(obj, False)
+		self.assertEqual(obj2.start_date, datetime(2010, 6, 22, 3, 4, 5))
 
 if __name__ == '__main__':
 	main()
