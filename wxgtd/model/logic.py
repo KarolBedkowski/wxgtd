@@ -15,6 +15,7 @@ __version__ = "2013-04-19"
 import datetime
 import logging
 import gettext
+import re
 
 from dateutil.relativedelta import relativedelta
 
@@ -133,6 +134,8 @@ _OFFSETS = {'Daily': relativedelta(days=1),
 		'Semiannually': relativedelta(months=+6),
 		'Yearly': relativedelta(years=+1)}
 
+_RE_REPEAT_XT = re.compile("^Every (\d+) (\w+)$", re.IGNORECASE)
+
 
 def _move_date_repeat(date, repeat_pattern):
 	""" Change date according to repeat_pattern.
@@ -152,7 +155,7 @@ def _move_date_repeat(date, repeat_pattern):
 	offset = _OFFSETS.get(repeat_pattern)
 	weekday = date.weekday()
 	if offset is not None:
-		date += offset
+		return date + offset
 	elif repeat_pattern == 'Businessday':
 		# pn - pt
 		if weekday < 4:  # pn-cz
@@ -164,9 +167,22 @@ def _move_date_repeat(date, repeat_pattern):
 		if weekday == 6:
 			return date + relativedelta(days=6)
 		date += relativedelta(days=(5 - weekday))
-	else:
-		_LOG.warning("_move_date_repeat: unknown repeat_pattern: %r",
-				repeat_pattern)
+	elif repeat_pattern.startswith("Every "):
+		m_repeat_xt = _RE_REPEAT_XT.match(repeat_pattern.lower())
+		# every X T
+		if m_repeat_xt:
+			num = int(m_repeat_xt.group(1))
+			period = m_repeat_xt.group(2)
+			if period in ("days", "day"):
+				return date + relativedelta(days=+num)
+			if period in ('weeks', 'week'):
+				return date + relativedelta(weeks=+num)
+			if period in ('months', 'month'):
+				return date + relativedelta(months=+num)
+			if period in ('years', 'year'):
+				return date + relativedelta(years=+num)
+	_LOG.warning("_move_date_repeat: unknown repeat_pattern: %r",
+			repeat_pattern)
 	return date
 
 

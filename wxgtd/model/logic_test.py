@@ -334,6 +334,23 @@ class TestRepeatTask(TestCase):
 		obj2 = logic.repeat_task(obj, False)
 		self.assertEqual(obj2.start_date, datetime(2011, 7, 30, 3, 4, 5))
 
+	def test_15_xt(self):
+		obj = _FTask(None, datetime(2000, 6, 15, 3, 4, 5), None)
+		obj.repeat_from = 1  # completed
+		obj.completed = datetime(2010, 6, 15, 3, 4, 5)
+		obj.repeat_pattern = 'Every 6 days'
+		obj2 = logic.repeat_task(obj, False)
+		self.assertEqual(obj2.start_date, datetime(2010, 6, 21, 3, 4, 5))
+		obj.repeat_pattern = 'Every 1 week'
+		obj2 = logic.repeat_task(obj, False)
+		self.assertEqual(obj2.start_date, datetime(2010, 6, 22, 3, 4, 5))
+		obj.repeat_pattern = 'Every 2 months'
+		obj2 = logic.repeat_task(obj, False)
+		self.assertEqual(obj2.start_date, datetime(2010, 8, 15, 3, 4, 5))
+		obj.repeat_pattern = 'Every 3 years'
+		obj2 = logic.repeat_task(obj, False)
+		self.assertEqual(obj2.start_date, datetime(2013, 6, 15, 3, 4, 5))
+
 
 if __name__ == '__main__':
 	main()
