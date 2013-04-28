@@ -192,6 +192,12 @@ class FrameMain:
 				self._btn_hide_until)
 		self._btn_hide_until.SetValue(appconfig.get('main', 'show_hide_until', True))
 
+		toolbar.AddSeparator()
+
+		tbi = toolbar.AddLabelTool(-1, _('Synchronize tasks'),
+				iconprovider.get_image('sync'))
+		self.wnd.Bind(wx.EVT_TOOL, self._on_menu_file_sync, id=tbi.GetId())
+
 		toolbar.Realize()
 
 	def _set_size_pos(self):
