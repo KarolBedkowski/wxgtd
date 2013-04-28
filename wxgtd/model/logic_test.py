@@ -334,6 +334,131 @@ class TestRepeatTask(TestCase):
 		obj2 = logic.repeat_task(obj, False)
 		self.assertEqual(obj2.start_date, datetime(2011, 7, 30, 3, 4, 5))
 
+	def test_15_xt(self):
+		obj = _FTask(None, datetime(2000, 6, 15, 3, 4, 5), None)
+		obj.repeat_from = 1  # completed
+		obj.completed = datetime(2010, 6, 15, 3, 4, 5)
+		obj.repeat_pattern = 'Every 6 days'
+		obj2 = logic.repeat_task(obj, False)
+		self.assertEqual(obj2.start_date, datetime(2010, 6, 21, 3, 4, 5))
+		obj.repeat_pattern = 'Every 1 week'
+		obj2 = logic.repeat_task(obj, False)
+		self.assertEqual(obj2.start_date, datetime(2010, 6, 22, 3, 4, 5))
+		obj.repeat_pattern = 'Every 2 months'
+		obj2 = logic.repeat_task(obj, False)
+		self.assertEqual(obj2.start_date, datetime(2010, 8, 15, 3, 4, 5))
+		obj.repeat_pattern = 'Every 3 years'
+		obj2 = logic.repeat_task(obj, False)
+		self.assertEqual(obj2.start_date, datetime(2013, 6, 15, 3, 4, 5))
+
+	def test_15_every_w_01(self):
+		obj = _FTask(None, datetime(2000, 6, 15, 3, 4, 5), None)
+		obj.repeat_from = 1  # completed
+		obj.repeat_pattern = 'Every Mon'
+		obj.completed = datetime(2010, 6, 15, 3, 4, 5)  # wt
+		obj2 = logic.repeat_task(obj, False)
+		self.assertEqual(obj2.start_date, datetime(2010, 6, 21, 3, 4, 5))
+		obj.completed = datetime(2010, 6, 16, 3, 4, 5)  # sr
+		obj2 = logic.repeat_task(obj, False)
+		self.assertEqual(obj2.start_date, datetime(2010, 6, 21, 3, 4, 5))
+		obj.completed = datetime(2010, 6, 21, 3, 4, 5)  # pn
+		obj2 = logic.repeat_task(obj, False)
+		self.assertEqual(obj2.start_date, datetime(2010, 6, 28, 3, 4, 5))
+
+	def test_15_every_w_02(self):
+		obj = _FTask(None, datetime(2000, 6, 15, 3, 4, 5), None)
+		obj.repeat_from = 1  # completed
+		obj.repeat_pattern = 'Every Mon, Thu'
+		obj.completed = datetime(2010, 6, 15, 3, 4, 5)  # wt
+		obj2 = logic.repeat_task(obj, False)
+		self.assertEqual(obj2.start_date, datetime(2010, 6, 17, 3, 4, 5))
+		obj.completed = datetime(2010, 6, 16, 3, 4, 5)  # sr
+		obj2 = logic.repeat_task(obj, False)
+		self.assertEqual(obj2.start_date, datetime(2010, 6, 17, 3, 4, 5))
+		obj.completed = datetime(2010, 6, 17, 3, 4, 5)  # cz
+		obj2 = logic.repeat_task(obj, False)
+		self.assertEqual(obj2.start_date, datetime(2010, 6, 21, 3, 4, 5))
+		obj.completed = datetime(2010, 6, 19, 3, 4, 5)  # so
+		obj2 = logic.repeat_task(obj, False)
+		self.assertEqual(obj2.start_date, datetime(2010, 6, 21, 3, 4, 5))
+
+	def test_15_every_w_03(self):
+		obj = _FTask(None, datetime(2000, 6, 15, 3, 4, 5), None)
+		obj.repeat_from = 1  # completed
+		obj.repeat_pattern = 'Every Mon, Thu, Wed, Fri, Sat, Sun, Tue'
+		obj.completed = datetime(2010, 6, 15, 3, 4, 5)  # wt
+		obj2 = logic.repeat_task(obj, False)
+		self.assertEqual(obj2.start_date, datetime(2010, 6, 16, 3, 4, 5))
+		obj.completed = datetime(2010, 6, 16, 3, 4, 5)  # sr
+		obj2 = logic.repeat_task(obj, False)
+		self.assertEqual(obj2.start_date, datetime(2010, 6, 17, 3, 4, 5))
+		obj.completed = datetime(2010, 6, 17, 3, 4, 5)  # cz
+		obj2 = logic.repeat_task(obj, False)
+		self.assertEqual(obj2.start_date, datetime(2010, 6, 18, 3, 4, 5))
+		obj.completed = datetime(2010, 6, 18, 3, 4, 5)  # pr
+		obj2 = logic.repeat_task(obj, False)
+		self.assertEqual(obj2.start_date, datetime(2010, 6, 19, 3, 4, 5))
+		obj.completed = datetime(2010, 6, 19, 3, 4, 5)  # so
+		obj2 = logic.repeat_task(obj, False)
+		self.assertEqual(obj2.start_date, datetime(2010, 6, 20, 3, 4, 5))
+		obj.completed = datetime(2010, 6, 20, 3, 4, 5)  # n
+		obj2 = logic.repeat_task(obj, False)
+		self.assertEqual(obj2.start_date, datetime(2010, 6, 21, 3, 4, 5))
+		obj.completed = datetime(2010, 6, 21, 3, 4, 5)  # pn
+		obj2 = logic.repeat_task(obj, False)
+		self.assertEqual(obj2.start_date, datetime(2010, 6, 22, 3, 4, 5))
+
+	def test_16_the_x_d_every_m_months_01(self):
+		obj = _FTask(None, datetime(2000, 6, 15, 3, 4, 5), None)
+		obj.repeat_from = 1  # completed
+		obj.completed = datetime(2010, 1, 11, 3, 4, 5)  # pt
+		obj.repeat_pattern = 'The first Mon every 1 months'
+		obj2 = logic.repeat_task(obj, False)
+		self.assertEqual(obj2.start_date, datetime(2010, 2, 1, 3, 4, 5))
+		obj.repeat_pattern = 'The second Mon every 1 months'
+		obj2 = logic.repeat_task(obj, False)
+		self.assertEqual(obj2.start_date, datetime(2010, 2, 8, 3, 4, 5))
+		obj.repeat_pattern = 'The third Mon every 1 months'
+		obj2 = logic.repeat_task(obj, False)
+		self.assertEqual(obj2.start_date, datetime(2010, 2, 15, 3, 4, 5))
+		obj.repeat_pattern = 'The fourth Mon every 1 months'
+		obj2 = logic.repeat_task(obj, False)
+		self.assertEqual(obj2.start_date, datetime(2010, 2, 22, 3, 4, 5))
+		obj.repeat_pattern = 'The fifth Mon every 1 months'
+		obj2 = logic.repeat_task(obj, False)  # next month
+		self.assertEqual(obj2.start_date, datetime(2010, 3, 1, 3, 4, 5))
+		obj.repeat_pattern = 'The last Mon every 1 months'
+		obj2 = logic.repeat_task(obj, False)
+		self.assertEqual(obj2.start_date, datetime(2010, 2, 22, 3, 4, 5))
+
+	def test_16_the_x_d_every_m_months_02(self):
+		obj = _FTask(None, datetime(2000, 6, 15, 3, 4, 5), None)
+		obj.repeat_from = 1  # completed
+		obj.completed = datetime(2010, 1, 11, 3, 4, 5)  # pt
+		obj.repeat_pattern = 'The first Mon every 2 months'
+		obj2 = logic.repeat_task(obj, False)
+		self.assertEqual(obj2.start_date, datetime(2010, 3, 1, 3, 4, 5))
+		obj.repeat_pattern = 'The second Tue every 3 months'
+		obj2 = logic.repeat_task(obj, False)
+		self.assertEqual(obj2.start_date, datetime(2010, 4, 13, 3, 4, 5))
+		obj.repeat_pattern = 'The third Wed every 1 months'
+		obj2 = logic.repeat_task(obj, False)
+		self.assertEqual(obj2.start_date, datetime(2010, 2, 17, 3, 4, 5))
+		obj.repeat_pattern = 'The fourth Thu every 6 months'
+		obj2 = logic.repeat_task(obj, False)
+		self.assertEqual(obj2.start_date, datetime(2010, 7, 22, 3, 4, 5))
+		obj.repeat_pattern = 'The fifth Thu every 6 months'
+		obj2 = logic.repeat_task(obj, False)
+		self.assertEqual(obj2.start_date, datetime(2010, 7, 29, 3, 4, 5))
+		obj.repeat_pattern = 'The last Fri every 3 months'
+		obj2 = logic.repeat_task(obj, False)  # next month
+		self.assertEqual(obj2.start_date, datetime(2010, 4, 30, 3, 4, 5))
+		obj.repeat_pattern = 'The first Sat every 1 months'
+		obj2 = logic.repeat_task(obj, False)
+		self.assertEqual(obj2.start_date, datetime(2010, 2, 6, 3, 4, 5))
+		obj.repeat_pattern = 'The first Sun every 2 months'
+		obj2 = logic.repeat_task(obj, False)
+		self.assertEqual(obj2.start_date, datetime(2010, 3, 7, 3, 4, 5))
 
 if __name__ == '__main__':
 	main()

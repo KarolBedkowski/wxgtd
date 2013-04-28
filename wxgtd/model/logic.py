@@ -15,6 +15,7 @@ __version__ = "2013-04-19"
 import datetime
 import logging
 import gettext
+import re
 
 from dateutil.relativedelta import relativedelta
 
@@ -132,6 +133,21 @@ _OFFSETS = {'Daily': relativedelta(days=1),
 		'Quarterly': relativedelta(months=+3),
 		'Semiannually': relativedelta(months=+6),
 		'Yearly': relativedelta(years=+1)}
+RE_REPEAT_XT = re.compile("^Every (\d+) (\w+)$", re.IGNORECASE)
+RE_REPEAT_EVERYW = re.compile("^Every ((Mon|Tue|Wed|Thu|Fri|Sat|Sun),? ?)+$",
+		re.IGNORECASE)
+_WEEKDAYS = {'mon': 0,
+		'tue': 1,
+		'wed': 2,
+		'thu': 3,
+		'fri': 4,
+		'sat': 5,
+		'sun': 6}
+_ORDINALS = {'first': 0,
+		'second': 1,
+		'third': 2,
+		'fourth': 3,
+		'fifth': 4}  # + last
 
 
 def _move_date_repeat(date, repeat_pattern):
@@ -152,7 +168,7 @@ def _move_date_repeat(date, repeat_pattern):
 	offset = _OFFSETS.get(repeat_pattern)
 	weekday = date.weekday()
 	if offset is not None:
-		date += offset
+		return date + offset
 	elif repeat_pattern == 'Businessday':
 		# pn - pt
 		if weekday < 4:  # pn-cz
@@ -164,9 +180,52 @@ def _move_date_repeat(date, repeat_pattern):
 		if weekday == 6:
 			return date + relativedelta(days=6)
 		date += relativedelta(days=(5 - weekday))
-	else:
-		_LOG.warning("_move_date_repeat: unknown repeat_pattern: %r",
-				repeat_pattern)
+	elif repeat_pattern.startswith("Every "):
+		m_repeat_xt = RE_REPEAT_XT.match(repeat_pattern.lower())
+		# every X T
+		if m_repeat_xt:
+			num = int(m_repeat_xt.group(1))
+			period = m_repeat_xt.group(2)
+			if period in ("days", "day"):
+				return date + relativedelta(days=+num)
+			if period in ('weeks', 'week'):
+				return date + relativedelta(weeks=+num)
+			if period in ('months', 'month'):
+				return date + relativedelta(months=+num)
+			if period in ('years', 'year'):
+				return date + relativedelta(years=+num)
+		if RE_REPEAT_EVERYW.match(repeat_pattern):
+			# every w
+			days = [_WEEKDAYS[day.strip(" ,")]
+					for day in repeat_pattern.lower().split(' ')[1:]]
+			while True:
+				date += relativedelta(days=+1)
+				if date.weekday() in days:
+					return date
+	elif (repeat_pattern.startswith("The ")
+			and repeat_pattern.endswith(' months')):
+		# The X D every M months
+		_foo, num_wday, wday, _foo, num_month, _foo = repeat_pattern.split(' ')
+		num_month = int(num_month)
+		wday = _WEEKDAYS[wday.lower()]
+		date += relativedelta(months=+num_month)
+		if num_wday == 'last':
+			date += relativedelta(months=+1)
+			date = date.replace(day=1) + relativedelta(days=-1)
+			while date.weekday() != wday:
+				date += relativedelta(days=-1)
+			return date
+		else:
+			date = date.replace(day=1)
+			cntr = _ORDINALS[num_wday]
+			while True:
+				if date.weekday() == wday:
+					cntr -= 1
+					if cntr < 0:
+						return date
+				date += relativedelta(days=1)
+	_LOG.warning("_move_date_repeat: unknown repeat_pattern: %r",
+			repeat_pattern)
 	return date
 
 
@@ -310,3 +369,41 @@ def complete_task(task, parent_wnd=None, session=None):
 	if repeated_task is not None:
 		session.add(repeated_task)
 	return True
+
+
+_PERIOD_PL = {'Week': "Weeks", "Day": "Days", "Month": "Months",
+		"Year": "Years"}
+
+
+def build_repeat_pattern_every_xt(num, period):
+	""" Build repeat pattern - Every <num> (Day|Month|Week|Year). """
+	if num > 1:
+		period = _PERIOD_PL[period]
+	return "Every %d %s" % (num, period)
+
+
+def build_repeat_pattern_every_w(mon, tue, wed, thu, fri, sat, sun):
+	""" Build repeat pattern - Every <week day list>. """
+	pattern = []
+	if mon:
+		pattern.append("Mon")
+	if tue:
+		pattern.append("Tue")
+	if wed:
+		pattern.append("Wed")
+	if thu:
+		pattern.append("Thu")
+	if fri:
+		pattern.append("Fri")
+	if sat:
+		pattern.append("Sat")
+	if sun:
+		pattern.append("Sun")
+	return "Every " + ", ".join(pattern)
+
+
+def build_repeat_pattern_every_xdm(num_weekday, weekday, num_months):
+	""" Build repeat pattern - The <num> <weekday> every <num> month. """
+	mname = "months" if num_months > 1 else "month"
+	return "The %s %s every %d %s" % (num_weekday, weekday, num_months,
+			mname)
