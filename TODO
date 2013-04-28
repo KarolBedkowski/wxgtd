@@ -3,12 +3,8 @@
 ######
 
 
-Prio 1
-======
-
+- wyszukiwanie
+- przenoszenie między projektami a checklistami
 - sprawdzić poprawność wyświetlania podzadań
-
-Prio 2
-======
 
   vim: set ft=rst: 
