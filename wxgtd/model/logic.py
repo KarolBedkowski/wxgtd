@@ -134,6 +134,8 @@ _OFFSETS = {'Daily': relativedelta(days=1),
 		'Semiannually': relativedelta(months=+6),
 		'Yearly': relativedelta(years=+1)}
 _RE_REPEAT_XT = re.compile("^Every (\d+) (\w+)$", re.IGNORECASE)
+_RE_REPEAT_EVERYW = re.compile("^Every ((Mon|Tue|Wed|Thu|Fri|Sat|Sun),? ?)+$",
+		re.IGNORECASE)
 _WEEKDAYS = {'mon': 0,
 		'tue': 1,
 		'wed': 2,
@@ -141,6 +143,11 @@ _WEEKDAYS = {'mon': 0,
 		'fri': 4,
 		'sat': 5,
 		'sun': 6}
+_ORDINALS = {'first': 0,
+		'second': 1,
+		'third': 2,
+		'fourth': 3,
+		'fifth': 4}  # + last
 
 
 def _move_date_repeat(date, repeat_pattern):
@@ -187,14 +194,36 @@ def _move_date_repeat(date, repeat_pattern):
 				return date + relativedelta(months=+num)
 			if period in ('years', 'year'):
 				return date + relativedelta(years=+num)
-		# every w
-		days = [_WEEKDAYS[day.strip(" ,")]
-				for day in repeat_pattern.lower().split(' ')[1:]]
-		while True:
-			date += relativedelta(days=+1)
-			if date.weekday() in days:
-				return date
-
+		if _RE_REPEAT_EVERYW.match(repeat_pattern):
+			# every w
+			days = [_WEEKDAYS[day.strip(" ,")]
+					for day in repeat_pattern.lower().split(' ')[1:]]
+			while True:
+				date += relativedelta(days=+1)
+				if date.weekday() in days:
+					return date
+	elif (repeat_pattern.startswith("The ")
+			and repeat_pattern.endswith(' months')):
+		# The X D every M months
+		_foo, num_wday, wday, _foo, num_month, _foo = repeat_pattern.split(' ')
+		num_month = int(num_month)
+		wday = _WEEKDAYS[wday.lower()]
+		date += relativedelta(months=+num_month)
+		if num_wday == 'last':
+			date += relativedelta(months=+1)
+			date = date.replace(day=1) + relativedelta(days=-1)
+			while date.weekday() != wday:
+				date += relativedelta(days=-1)
+			return date
+		else:
+			date = date.replace(day=1)
+			cntr = _ORDINALS[num_wday]
+			while True:
+				if date.weekday() == wday:
+					cntr -= 1
+					if cntr < 0:
+						return date
+				date += relativedelta(days=1)
 	_LOG.warning("_move_date_repeat: unknown repeat_pattern: %r",
 			repeat_pattern)
 	return date
