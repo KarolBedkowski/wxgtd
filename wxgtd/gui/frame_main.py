@@ -140,8 +140,9 @@ class FrameMain:
 
 	def _create_toolbar(self):
 		toolbar = self.wnd.CreateToolBar()
-		tbi = toolbar.AddLabelTool(-1, _('New Task'), wx.ArtProvider.GetBitmap(
-				wx.ART_NEW, wx.ART_TOOLBAR), shortHelp=_('Add new task'))
+		tbi = toolbar.AddLabelTool(-1, _('New Task'),
+				iconprovider.get_image("task_new"),
+				shortHelp=_('Add new task'))
 		self.wnd.Bind(wx.EVT_TOOL, self._on_btn_new_task, id=tbi.GetId())
 
 		tbi = toolbar.AddLabelTool(-1, _('Edit Task'),
