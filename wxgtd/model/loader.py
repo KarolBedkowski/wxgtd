@@ -377,7 +377,7 @@ def load_json(strdata, update_func):
 	update_func(66, _("Loaded %d tags") % len(tags))
 
 	_LOG.info("load_json: task_tag")
-	update_func(67, _("Loading task tagss"))
+	update_func(67, _("Loading task tags"))
 	task_tags = data.get('task_tag')
 	for task_tag in task_tags or []:
 		task_uuid = _replace_ids(task_tag, tasks_cache, 'task_id')

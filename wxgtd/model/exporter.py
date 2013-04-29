@@ -252,7 +252,7 @@ def dump_database_to_json(update_func):
 		res['task_context'] = task_contexts
 		res['task_goal'] = task_goals
 	update_func(65, _("Saved %d tasks") % len(tasks))
-	update_func(66, _("Saved %d alatms") % len(alarms))
+	update_func(66, _("Saved %d alarms") % len(alarms))
 	update_func(67, _("Saved %d task folders") % len(task_folders))
 	update_func(68, _("Saved %d task contexts") % len(task_contexts))
 	update_func(69, _("Saved %d task goals") % len(task_goals))
