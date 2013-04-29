@@ -62,8 +62,9 @@ def _setup_locale(app_config):
 	locale.setlocale(locale.LC_ALL, '')
 	os.environ['LC_ALL'] = os.environ.get('LC_ALL') or default_locale[0]
 	gettext.install(package_name, localedir=locales_dir, unicode=True,
-			names=("ngettext",))
+			names=("ngettext", ))
 	gettext.bindtextdomain(package_name, locales_dir)
+	gettext.textdomain(package_name)
 	gettext.bindtextdomain('wxstd', locales_dir)
 	gettext.bind_textdomain_codeset(package_name, "UTF-8")
 	_LOG.info('locale: %s' % str(locale.getlocale()))

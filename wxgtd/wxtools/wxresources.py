@@ -26,8 +26,11 @@ _ = gettext.gettext
 
 def _localize(match_object):
 	""" Replace strings by it localized version. """
-	return ''.join((match_object.group(1), _(match_object.group(2)),
-			match_object.group(3)))
+	if match_object.group(2).strip():
+		return ''.join((match_object.group(1), _(match_object.group(2)),
+				match_object.group(3)))
+	else:
+		return ''.join(match_object.groups())
 
 
 class NumCtrlXmlHandler(xrc.XmlResourceHandler):
@@ -123,6 +126,8 @@ def load_xrc_resource(filename):
 		re_gettext = re.compile(r'(\<title\>)(.*?)(\<\/title\>)')
 		data = re_gettext.sub(_localize, data)
 		re_gettext = re.compile(r'(\<tooltip\>)(.*?)(\<\/tooltip\>)')
+		data = re_gettext.sub(_localize, data)
+		re_gettext = re.compile(r'(\<item\>)(.*?)(\<\/item\>)')
 		data = re_gettext.sub(_localize, data)
 		data = data.encode('UTF-8')
 		res = xrc.EmptyXmlResource()
