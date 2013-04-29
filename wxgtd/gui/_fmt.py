@@ -47,6 +47,8 @@ def format_task_info(task):
 		info.append(enums.STATUSES[task.status])
 	if task.context:
 		info.append(task.context.title)
+	if task.parent:
+		info.append("⛁" + task.parent.title)
 	if task.goal:
 		info.append("◎" + task.goal.title)
 	if task.folder:
