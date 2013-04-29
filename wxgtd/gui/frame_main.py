@@ -475,9 +475,9 @@ class FrameMain:
 				return
 		group_id = self['rb_show_selection'].GetSelection()
 		task_type = enums.TYPE_TASK
-		if group_id == 5:
+		if group_id == 5 and not self._items_path:
 			task_type = enums.TYPE_PROJECT
-		elif group_id == 6:
+		elif group_id == 6 and not self._items_path:
 			task_type = enums.TYPE_CHECKLIST
 		dlg = DlgTask(self.wnd, None, parent_uuid, task_type)
 		dlg.run()
