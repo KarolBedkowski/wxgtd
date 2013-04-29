@@ -528,3 +528,14 @@ def _get_hotlist_settings(params):
 	params['next_action'] = conf.get('hotlist', 'next_action', False)
 	params['started'] = conf.get('hotlist', 'started', False)
 	print params
+
+
+# additional strings to translate
+def _fake_strings():
+	_('All')
+	_('Hot')
+	_('Stared')
+	_('Basket')
+	_('Finished')
+	_('Projects')
+	_('Checklists')
