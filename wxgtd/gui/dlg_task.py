@@ -124,6 +124,9 @@ class DlgTask(BaseDialog):
 		self['sc_duration_d'].SetValidator(Validator(self._data, 'duration_d'))
 		self['sc_duration_h'].SetValidator(Validator(self._data, 'duration_h'))
 		self['sc_duration_m'].SetValidator(Validator(self._data, 'duration_m'))
+		# lock type change if there are subtasks
+		if task_uuid and self._task.child_count > 0:
+			self['cb_type'].Enable(False)
 
 	def _setup_comboboxes(self):
 		cb_status = self['cb_status']
