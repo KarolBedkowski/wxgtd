@@ -2,9 +2,9 @@
  TODO
 ######
 
-
+- active alarms
 - wyszukiwanie
 - przenoszenie między projektami a checklistami
 - sprawdzić poprawność wyświetlania podzadań
 
-  vim: set ft=rst: 
+..  vim ft=rst tw=72
