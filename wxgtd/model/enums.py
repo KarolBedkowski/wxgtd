@@ -16,6 +16,7 @@ __version__ = "2013-04-26"
 import gettext
 
 _ = gettext.gettext
+ngettext = gettext.ngettext
 
 
 STATUSES = {0: _("No Status"),  # no status
@@ -77,30 +78,30 @@ HIDE_PATTERNS = dict(HIDE_PATTERNS_LIST)
 
 REMAIND_PATTERNS_LIST = [
 		('due', _("When task is due")),
-		("1 minute", _("1 minute")),
-		("5 minutes", _("5 minutes")),
-		("10 minutes",  _("10 minutes")),
-		("15 minutes", _("15 minutes")),
-		("30 minutes", _("30 minutes")),
-		("45 minutes", _("45 minutes")),
-		("1 hour", _("1 hour")),
+		("1 minute", ngettext("%d minute", "%d minutes", 1) % 1),
+		("5 minutes", ngettext("%d minute", "%d minutes", 5) % 5),
+		("10 minutes", ngettext("%d minute", "%d minutes", 10) % 10),
+		("15 minutes", ngettext("%d minute", "%d minutes", 15) % 15),
+		("30 minutes", ngettext("%d minute", "%d minutes", 15) % 30),
+		("45 minutes", ngettext("%d minute", "%d minutes", 15) % 45),
+		("1 hour", ngettext("%d hour", "%d hours", 1) % 1),
 		("1.5 hours", _("1.5 hours")),
-		("2 hours", _("2 hours")),
-		("3 hours", _("3 hours")),
-		("4 hours", _("4 hours")),
-		("6 hours", _("6 hours")),
-		("8 hours", _("8 hours")),
-		("10 hours", _("10 hours")),
-		("12 hours", _("12 hours")),
-		("1 day", _("1 day")),
-		("2 days", _("2 days")),
-		("3 days", _("3 days")),
-		("4 days", _("4 days")),
-		("5 days", _("5 days")),
-		("6 days", _("6 days")),
-		("7 days", _("7 days")),
-		("14 days", _("14 days")),
-		("30 days", _("30 days"))]
+		("2 hours", ngettext("%d hour", "%d hours", 2) % 2),
+		("3 hours", ngettext("%d hour", "%d hours", 3) % 3),
+		("4 hours", ngettext("%d hour", "%d hours", 4) % 4),
+		("6 hours", ngettext("%d hour", "%d hours", 6) % 6),
+		("8 hours", ngettext("%d hour", "%d hours", 8) % 8),
+		("10 hours", ngettext("%d hour", "%d hours", 10) % 10),
+		("12 hours", ngettext("%d hour", "%d hours", 12) % 12),
+		("1 day",  ngettext("%d day", "%d days", 1) % 1),
+		("2 days", ngettext("%d day", "%d days", 2) % 2),
+		("3 days", ngettext("%d day", "%d days", 3) % 3),
+		("4 days", ngettext("%d day", "%d days", 4) % 4),
+		("5 days", ngettext("%d day", "%d days", 5) % 5),
+		("6 days", ngettext("%d day", "%d days", 6) % 6),
+		("7 days", ngettext("%d day", "%d days", 7) % 7),
+		("14 days", ngettext("%d day", "%d days", 14) % 14),
+		("30 days", ngettext("%d day", "%d days", 30) % 30)]
 
 REMAIND_PATTERNS = dict(REMAIND_PATTERNS_LIST)
 
