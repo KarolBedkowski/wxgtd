@@ -115,6 +115,8 @@ class UpdatePotfilesCommand(Command):
 		for root, dirs, files in os.walk('.'):
 			if root == '.':
 				continue
+			if os.path.basename(root).startswith('.'):
+				continue
 			if root.startswith('./wxgtd_tests'):
 				continue
 			if root.startswith('./build'):
