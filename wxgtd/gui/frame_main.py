@@ -199,6 +199,20 @@ class FrameMain:
 				iconprovider.get_image('sync'))
 		self.wnd.Bind(wx.EVT_TOOL, self._on_menu_file_sync, id=tbi.GetId())
 
+		toolbar.AddSeparator()
+
+		# search box
+		self._searchbox = wx.SearchCtrl(toolbar, -1, size=(150, -1))
+		self._searchbox.SetDescriptiveText(_('Search'))
+		self._searchbox.ShowCancelButton(True)
+		toolbar.AddControl(self._searchbox)
+		self.wnd.Bind(wx.EVT_TEXT, self._on_search, self._searchbox)
+		self.wnd.Bind(wx.EVT_SEARCHCTRL_SEARCH_BTN, self._on_search,
+				self._searchbox)
+		self.wnd.Bind(wx.EVT_SEARCHCTRL_CANCEL_BTN, self._on_search_cancel,
+				self._searchbox)
+		self.wnd.Bind(wx.EVT_TEXT_ENTER, self._on_search, self._searchbox)
+
 		toolbar.Realize()
 
 	def _set_size_pos(self):
@@ -387,6 +401,14 @@ class FrameMain:
 			dlg = DlgTask.create(task_uuid, self.wnd, task_uuid)
 			dlg.run()
 
+	def _on_search(self, _evt):
+		self._refresh_list()
+
+	def _on_search_cancel(self, _evt):
+		if self._searchbox.GetValue():
+			self._searchbox.SetValue('')
+			self._refresh_list()
+
 	# logic
 
 	def _refresh_list(self):
@@ -404,6 +426,7 @@ class FrameMain:
 		if not self._btn_show_finished.GetValue():
 			params['finished'] = False
 		params['hide_until'] = self._btn_hide_until.GetValue()
+		params['search_str'] = self._searchbox.GetValue()
 		if not parent:
 			if not self._btn_show_subtasks.GetValue():
 				# tylko nadrzędne
