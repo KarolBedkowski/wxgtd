@@ -1,0 +1,12 @@
+[Desktop Entry]
+Encoding=UTF-8
+Icon=/usr/share/wxgtd/data/wxgtd.svg
+Name=wxGTD
+Comment=Task management application
+Comment[pl]=Manager zadań.
+Exec=exgtd
+Terminal=false
+Type=Application
+Categories=GNOME;GTK;Office;
+StartupNotify=true
+
