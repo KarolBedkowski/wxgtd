@@ -307,8 +307,11 @@ def load_json(strdata, update_func):
 			continue
 		_convert_timestamps(alarm, 'alarm')
 		task = session.query(objects.Task).filter_by(uuid=task_uuid).first()
-		task.alarm = alarm['alarm']
-		logic.update_task_alarm(task)
+		if task.modified <= alarm['modified']:
+			task.alarm = alarm['alarm']
+			logic.update_task_alarm(task)
+		else:
+			_LOG.debug('skip %r', alarm)
 	update_func(46, _("Loaded %d alarms") % len(alarms))
 	if alarms:
 		del data['alarm']
@@ -325,7 +328,10 @@ def load_json(strdata, update_func):
 			continue
 		_convert_timestamps(task_folder)
 		task = session.query(objects.Task).filter_by(uuid=task_uuid).first()
-		task.folder_uuid = folder_uuid
+		if task.modified <= task_folder['modified']:
+			task.folder_uuid = folder_uuid
+		else:
+			_LOG.debug('skip %r', task_folder)
 	update_func(51, _("Loaded %d task folders") % len(task_folders))
 	if task_folders:
 		del data['task_folder']
@@ -342,7 +348,10 @@ def load_json(strdata, update_func):
 			continue
 		_convert_timestamps(task_context)
 		task = session.query(objects.Task).filter_by(uuid=task_uuid).first()
-		task.context_uuid = context_uuid
+		if task.modified <= task_context['modified']:
+			task.context_uuid = context_uuid
+		else:
+			_LOG.debug('skip %r', task_context)
 	update_func(56, _("Loaded %d tasks contexts") % len(task_contexts))
 	if task_contexts:
 		del data['task_context']
@@ -357,8 +366,12 @@ def load_json(strdata, update_func):
 			_LOG.error('load task goal error %r; %r; %r', task_goal,
 					task_uuid, goal_uuid)
 			continue
+		_convert_timestamps(task_goal)
 		task = session.query(objects.Task).filter_by(uuid=task_uuid).first()
-		task.goal_uuid = goal_uuid
+		if task.modified <= task_goal['modified']:
+			task.goal_uuid = goal_uuid
+		else:
+			_LOG.debug('skip %r', task_goal)
 	update_func(61, _("Loaded %d task goals") % len(task_goals))
 	if task_goals:
 		del data['task_goal']
