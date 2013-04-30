@@ -94,7 +94,7 @@ def update_task_hide(task):
 					task)
 		return True
 	elif hide_pattern == "task is due":
-		task.hide_until = task.due_date
+		task.hide_until = task.due_date or task.start_date
 		return True
 	try:
 		num, period, dummy_, rel = hide_pattern.split(' ')
@@ -103,7 +103,8 @@ def update_task_hide(task):
 		_LOG.warning("update_task_hide: wrong hide_pattern: %r",
 				hide_pattern)
 		return False
-	rel_date = task.due_date if rel == 'due' else task.start_date
+	rel_date = ((task.due_date or task.start_date) if rel == 'due' else
+			(task.start_date or task.due_date))
 	if not rel_date:  # missing date
 		return True
 	if num < 1 or num > 99:

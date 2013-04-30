@@ -8,10 +8,16 @@ __copyright__ = "Copyright (c) Karol Będkowski, 2013"
 __version__ = "2013-04-17"
 
 import copy
+import time
 from unittest import main, TestCase
 from datetime import datetime
 
 from wxgtd.model import logic
+
+
+def _convert_timestamp(date_time):
+	return datetime.fromtimestamp(time.mktime(time.strptime(date_time[:19],
+		"%Y-%m-%dT%H:%M:%S")))
 
 
 class _FTask(object):
@@ -19,6 +25,7 @@ class _FTask(object):
 		self.alarm_pattern = alarm_pattern
 		self.start_date = start_date
 		self.due_date = due_date
+		self.due_time_set = 1
 		self.alarm = None
 		self.hide_until = None
 		self.hide_pattern = None
@@ -41,6 +48,7 @@ class _FTask(object):
 				print attr, repr(getattr(obj, attr)), repr(val)
 				return False
 		return True
+
 
 
 class TestLogicUpdateTaskAlarm(TestCase):
@@ -459,6 +467,39 @@ class TestRepeatTask(TestCase):
 		obj.repeat_pattern = 'The first Sun every 2 months'
 		obj2 = logic.repeat_task(obj, False)
 		self.assertEqual(obj2.start_date, datetime(2010, 3, 7, 3, 4, 5))
+
+
+class TestRealExamples(TestCase):
+	def test_01(self):
+		obj = _FTask()
+		obj.due_date = _convert_timestamp("2013-01-29T07:15:00.000Z")
+		obj.due_time_set = 1
+		obj.repeat_pattern = "Norepeat"
+		obj.hide_pattern = "1 week before due"
+		logic.update_task_hide(obj)
+		self.assertEqual(obj.hide_until,
+				_convert_timestamp("2013-01-22T07:15:00.000Z"))
+
+	def test_02(self):
+		obj = _FTask()
+		obj.due_date = _convert_timestamp("2013-02-08T08:00:00.000Z")
+		obj.due_time_set = 1
+		obj.repeat_pattern = "Norepeat"
+		obj.hide_pattern = "1 day before due"
+		logic.update_task_hide(obj)
+		self.assertEqual(obj.hide_until,
+				_convert_timestamp("2013-02-07T08:00:00.000Z"))
+
+	def test_03(self):
+		obj = _FTask()
+		obj.start_date = _convert_timestamp("2013-04-11T11:00:00.000Z")
+		obj.due_date = _convert_timestamp("2013-04-11T16:00:00.000Z")
+		obj.due_time_set = 1
+		obj.repeat_pattern = "Norepeat"
+		obj.hide_pattern = "1 week before start"
+		logic.update_task_hide(obj)
+		self.assertEqual(obj.hide_until,
+				_convert_timestamp("2013-04-04T11:00:00.000Z"))
 
 if __name__ == '__main__':
 	main()
