@@ -345,6 +345,8 @@ def _check_existing_synclock(lock_filename, my_device_id):
 	if data:
 		sync_device = data.get('deviceId')
 		if sync_device != my_device_id:
+			_LOG.debug("_check_existing_synclock; different devid %r, %r",
+					sync_device, my_device_id)
 			# lock utworzony przez inny program
 			return False
 	os.unlink(lock_filename)
@@ -371,6 +373,7 @@ def create_sync_lock(sync_filename):
 			'sync.locked')
 	if not _check_existing_synclock(lock_filename, device_id.val):
 		return False
+	_LOG.debug('create_sync_lock: writing synclog: %r', lock_filename)
 	with open(lock_filename, 'w') as ifile:
 		ifile.write(cjson.encode(synclog))
 	return True
@@ -382,6 +385,7 @@ def delete_sync_lock(sync_filename):
 	Args:
 		sync_filename: path of sync file
 	"""
+	_LOG.debug('delete_sync_lock: %r', sync_filename)
 	lock_filename = os.path.join(os.path.dirname(sync_filename),
 			'sync.locked')
 	try:

@@ -81,6 +81,9 @@ def sync(filename):
 			_notify_progress(99, _("Removing sync lock"))
 			exporter.delete_sync_lock(filename)
 		_notify_progress(100, _("Completed"))
+	else:
+		_notify_progress(100, _("Synchronization file is locked. "
+			"Can't synchronize..."))
 
 
 def create_backup():
