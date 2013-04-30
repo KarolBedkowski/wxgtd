@@ -270,8 +270,9 @@ def repeat_task(task, reset_task=True):
 		ntask.due_date = _move_date_repeat(_get_date(task.due_date,
 				task.completed, repeat_from), repeat_pattern)
 		offset = ntask.due_date - task.due_date
-		ntask.start_date += offset
-	else:
+		if ntask.start_date:
+			ntask.start_date += offset
+	elif ntask.start_date:
 		ntask.start_date = _move_date_repeat(_get_date(task.start_date,
 				task.completed, repeat_from), repeat_pattern)
 	if task.alarm:
