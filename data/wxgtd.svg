@@ -46,15 +46,6 @@
        gradientUnits="userSpaceOnUse" />
     <filter
        inkscape:collect="always"
-       id="filter3879"
-       color-interpolation-filters="sRGB">
-      <feGaussianBlur
-         inkscape:collect="always"
-         stdDeviation="3.6686037"
-         id="feGaussianBlur3881" />
-    </filter>
-    <filter
-       inkscape:collect="always"
        id="filter3897"
        color-interpolation-filters="sRGB">
       <feGaussianBlur
@@ -101,7 +92,7 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="7.9195959"
-     inkscape:cx="10.16521"
+     inkscape:cx="-7.3861906"
      inkscape:cy="36.876248"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
@@ -111,7 +102,14 @@
      inkscape:window-height="885"
      inkscape:window-x="0"
      inkscape:window-y="0"
-     inkscape:window-maximized="1" />
+     inkscape:window-maximized="1"
+     showguides="true"
+     inkscape:guide-bbox="true">
+    <sodipodi:guide
+       orientation="0,1"
+       position="78.791899,-5.0507628"
+       id="guide2998" />
+  </sodipodi:namedview>
   <metadata
      id="metadata7">
     <rdf:RDF>
@@ -129,6 +127,15 @@
      inkscape:groupmode="layer"
      id="layer1"
      transform="translate(0,-988.36218)">
+    <rect
+       style="fill:#ffffff;fill-opacity:1;stroke:#ffffff;stroke-width:0.18977553;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+       id="rect2996"
+       width="60.745647"
+       height="60.745647"
+       x="1.6271763"
+       y="989.98938"
+       rx="0.70094132"
+       ry="0.76943231" />
     <path
        sodipodi:nodetypes="ccccccc"
        inkscape:connector-curvature="0"
@@ -142,6 +149,6 @@
        id="path3066"
        inkscape:connector-curvature="0"
        sodipodi:nodetypes="ccccccc"
-       transform="matrix(0.09307387,0,0,0.09307387,-4.0828186,982.60701)" />
+       transform="matrix(0.09307387,0,0,0.09307387,-3.949856,984.60145)" />
   </g>
 </svg>
