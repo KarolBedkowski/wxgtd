@@ -204,6 +204,11 @@ class Task(BaseModelMixin, Base):
 		query = _append_filter_list(query, Task.goal_uuid, params.get('goals'))
 		query = _append_filter_list(query, Task.status, params.get('statuses'))
 		query = _append_filter_list(query, Task.type, params.get('types'))
+		search_str = params.get('search_str', '').strip()
+		if search_str:
+			search_str = '%%' + search_str + "%%"
+			query = query.filter(or_(Task.title.like(search_str),
+					Task.note.like(search_str)))
 		now = datetime.datetime.now()
 		if params.get('tags'):
 			# filter by tags
