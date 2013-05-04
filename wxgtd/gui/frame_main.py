@@ -455,6 +455,10 @@ class FrameMain:
 				params['types'] = [enums.TYPE_CHECKLIST, enums.TYPE_CHECKLIST_ITEM]
 			else:
 				params['types'] = [enums.TYPE_CHECKLIST]
+		elif group_id == 7:  # future alarms
+			params['active_alarm'] = True
+			params['finished'] = (None if self._btn_show_finished.GetValue()
+					else False)
 		_LOG.debug("FrameMain._refresh_list; params=%r", params)
 		wx.SetCursor(wx.HOURGLASS_CURSOR)
 		tasks = OBJ.Task.select_by_filters(params, session=self._session)
