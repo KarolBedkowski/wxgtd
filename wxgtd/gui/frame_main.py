@@ -240,6 +240,7 @@ class FrameMain:
 	def _on_menu_file_load(self, _evt):
 		appconfig = AppConfig()
 		dlg = wx.FileDialog(self.wnd,
+				_("Please select sync file."),
 				defaultDir=appconfig.get('files', 'last_dir', ''),
 				defaultFile=appconfig.get('files', 'last_file', 'GTD_SYNC.zip'),
 				style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST)
@@ -255,6 +256,7 @@ class FrameMain:
 	def _on_menu_file_save(self, _evt):
 		appconfig = AppConfig()
 		dlg = wx.FileDialog(self.wnd,
+				_("Please select target sync file."),
 				defaultDir=appconfig.get('files', 'last_dir', ''),
 				defaultFile=appconfig.get('files', 'last_file', 'GTD_SYNC.zip'),
 				style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT)
@@ -272,6 +274,7 @@ class FrameMain:
 		last_sync_file = appconfig.get('files', 'last_sync_file')
 		if not last_sync_file:
 			dlg = wx.FileDialog(self.wnd,
+					_("Please select sync file."),
 					defaultDir=appconfig.get('files', 'last_dir', ''),
 					defaultFile=appconfig.get('files', 'last_file', 'GTD_SYNC.zip'),
 					style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST)
