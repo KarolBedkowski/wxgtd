@@ -249,6 +249,9 @@ class Task(BaseModelMixin, Base):
 			elif parent_uuid:
 				# filter by parent (show only subtask)
 				query = query.filter(Task.parent_uuid == parent_uuid)
+		# future alarms
+		if params.get('active_alarm'):
+			query = query.filter(Task.alarm >= now)
 		query = query.options(orm.joinedload(Task.context)) \
 				.options(orm.joinedload(Task.folder)) \
 				.options(orm.joinedload(Task.goal)) \
