@@ -24,6 +24,26 @@ _ = gettext.gettext
 _LOG = logging.getLogger(__name__)
 
 
+SETTINGS = {}
+
+
+def configure():
+	if SETTINGS:
+		return SETTINGS
+	SETTINGS['font_task'] = wx.Font(10, wx.NORMAL, wx.NORMAL, wx.BOLD, False)
+	SETTINGS['font_info'] = wx.Font(8, wx.NORMAL, wx.NORMAL, wx.NORMAL, False)
+
+	# info line height
+	dc = wx.MemoryDC()
+	dc.SelectObject(wx.EmptyBitmap(1, 1))
+	dc.SetFont(SETTINGS['font_task'])
+	dummy, ytext1 = dc.GetTextExtent("Agw")
+	dc.SetFont(SETTINGS['font_info'])
+	dummy, ytext2 = dc.GetTextExtent("Agw")
+	dc.SelectObject(wx.NullBitmap)
+	SETTINGS['line_height'] = ytext1 + ytext2 + 10
+
+
 def draw_info(mdc, task, overdue):
 	""" Draw information about task on given DC.
 
@@ -32,13 +52,10 @@ def draw_info(mdc, task, overdue):
 		task: task to render
 		overdue: is task overdue
 	"""
-	font_task = wx.Font(10, wx.NORMAL, wx.NORMAL, wx.BOLD, False)
-	font_info = wx.Font(8, wx.NORMAL, wx.NORMAL, wx.NORMAL, False)
-
 	mdc.SetTextForeground(wx.RED if overdue else wx.BLACK)
-	mdc.SetFont(font_task)
+	mdc.SetFont(SETTINGS['font_task'])
 	mdc.DrawText(task.title, 0, 5)
-	mdc.SetFont(font_info)
+	mdc.SetFont(SETTINGS['font_info'])
 	inf_y_offset = mdc.GetTextExtent("Agw")[1] + 10
 	inf_x_offset = 0
 	if task.status:
@@ -102,8 +119,7 @@ def draw_icons(mdc, task, overdue, active_only):
 		overdue: is task overdue
 		active_only: showing information only active subtask.
 	"""
-	font = wx.Font(8, wx.NORMAL, wx.NORMAL, wx.NORMAL, False)
-	mdc.SetFont(font)
+	mdc.SetFont(SETTINGS['font_info'])
 	inf_y_offset = mdc.GetTextExtent("Agw")[1] + 10
 	if task.starred:
 		mdc.DrawBitmap(iconprovider.get_image('starred_small'), 0, 7, False)
@@ -136,6 +152,7 @@ class TaskInfoPanel(wx.Panel):
 		wx.Panel.__init__(self, *args, **kwargs)
 		self.task = None
 		self.overdue = False
+		configure()
 		self.Bind(wx.EVT_PAINT, self._on_paint)
 
 	def _on_paint(self, _evt):
@@ -157,6 +174,7 @@ class TaskIconsPanel(wx.Panel):
 		self.task = None
 		self.overdue = False
 		self.active_only = False
+		configure()
 		self.Bind(wx.EVT_PAINT, self._on_paint)
 
 	def _on_paint(self, _evt):

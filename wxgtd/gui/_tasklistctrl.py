@@ -43,18 +43,10 @@ class _ListItemRenderer(object):
 	| priority  | status, goal, project |      | alarm, repeat |
 	+-----------+-----------------------+------+---------------+
 	"""
-	_line_height = None
-	_font_task = None
-	_font_info = None
-	_info_offset = None
 
 	def __init__(self, _parent, task, overdue=False):
 		self._task = task
 		self._overdue = overdue
-		if not self._font_task:
-			self._font_task = wx.Font(10, wx.NORMAL, wx.NORMAL, wx.BOLD, False)
-		if not self._font_info:
-			self._font_info = wx.Font(8, wx.NORMAL, wx.NORMAL, wx.NORMAL, False)
 
 	def DrawSubItem(self, dc, rect, _line, _highlighted, _enabled):
 		canvas = wx.EmptyBitmap(rect.width, rect.height)
@@ -65,18 +57,7 @@ class _ListItemRenderer(object):
 		dc.Blit(rect.x + 3, rect.y, rect.width - 6, rect.height, mdc, 0, 0)
 
 	def GetLineHeight(self):
-		if self._line_height:
-			return self._line_height
-		dc = wx.MemoryDC()
-		dc.SelectObject(wx.EmptyBitmap(1, 1))
-		dc.SetFont(self._font_task)
-		dummy, ytext1 = dc.GetTextExtent("Agw")
-		dc.SetFont(self._font_info)
-		self._info_offset = ytext1 + 10
-		dummy, ytext2 = dc.GetTextExtent("Agw")
-		dc.SelectObject(wx.NullBitmap)
-		self._line_height = ytext1 + ytext2 + 10
-		return self._line_height
+		return infobox.SETTINGS['line_height']
 
 	def GetSubItemWidth(self):
 		return 400
@@ -116,10 +97,10 @@ class _ListItemRendererIcons(object):
 		dc.Blit(rect.x + 3, rect.y, rect.width - 6, rect.height, mdc, 0, 0)
 
 	def GetLineHeight(self):
-		return 34
+		return infobox.SETTINGS['line_height']
 
 	def GetSubItemWidth(self):
-		return 50
+		return 72
 
 
 class TaskListControl(ULC.UltimateListCtrl, listmix.ColumnSorterMixin):
@@ -127,6 +108,8 @@ class TaskListControl(ULC.UltimateListCtrl, listmix.ColumnSorterMixin):
 
 	def __init__(self, parent, wid=wx.ID_ANY, pos=wx.DefaultPosition,
 				size=wx.DefaultSize, style=0, agwStyle=0):
+		# configure infobox
+		infobox.configure()
 		agwStyle = agwStyle | wx.LC_REPORT | wx.BORDER_SUNKEN | wx.LC_HRULES \
 				| wx.LC_SINGLE_SEL | ULC.ULC_HAS_VARIABLE_ROW_HEIGHT
 		ULC.UltimateListCtrl.__init__(self, parent, wid, pos, size, style,
