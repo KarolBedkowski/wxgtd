@@ -27,12 +27,12 @@ _LOG = logging.getLogger(__name__)
 def draw_info(mdc, task, overdue):
 	font_task = wx.Font(10, wx.NORMAL, wx.NORMAL, wx.BOLD, False)
 	font_info = wx.Font(8, wx.NORMAL, wx.NORMAL, wx.NORMAL, False)
-	inf_y_offset = mdc.GetTextExtent("Agw")[1] + 10
 
 	mdc.SetTextForeground(wx.RED if overdue else wx.BLACK)
 	mdc.SetFont(font_task)
 	mdc.DrawText(task.title, 0, 5)
 	mdc.SetFont(font_info)
+	inf_y_offset = mdc.GetTextExtent("Agw")[1] + 10
 	inf_x_offset = 0
 	if task.status:
 		mdc.DrawBitmap(iconprovider.get_image('status_small'), inf_x_offset,
@@ -73,3 +73,42 @@ def draw_info(mdc, task, overdue):
 		tags = ",".join(tasktag.tag.title for tasktag in task.tags)
 		mdc.DrawText(tags, inf_x_offset, inf_y_offset)
 		inf_x_offset += mdc.GetTextExtent(tags)[0] + 10
+
+
+_TASK_TYPE_ICONS = {enums.TYPE_TASK: "",
+		enums.TYPE_PROJECT: "project_small",
+		enums.TYPE_CHECKLIST: "checklist_small",
+		enums.TYPE_CHECKLIST_ITEM: "checklistitem_small",
+		enums.TYPE_NOTE: "note_small",
+		enums.TYPE_CALL: "call_small",
+		enums.TYPE_EMAIL: "mail_small",
+		enums.TYPE_SMS: "sms_small",
+		enums.TYPE_RETURN_CALL: "returncall_small"}
+
+
+def draw_icons(mdc, task, overdue, active_only):
+	font = wx.Font(10, wx.NORMAL, wx.NORMAL, wx.NORMAL, False)
+	mdc.SetFont(font)
+	inf_y_offset = mdc.GetTextExtent("Agw")[1] + 10
+	if task.starred:
+		mdc.DrawBitmap(iconprovider.get_image('starred_small'), 0, 7, False)
+		child_count = task.active_child_count if active_only else \
+				task.child_count
+	icon = _TASK_TYPE_ICONS.get(task.type)
+	if icon:
+		mdc.DrawBitmap(iconprovider.get_image(icon), 18, 7, False)
+	child_count = task.active_child_count if active_only else \
+			task.child_count
+	if child_count > 0:
+		info = ""
+		overdue = task.child_overdue
+		if overdue > 0:
+			info += " %d / " % overdue
+		info += " %d " % child_count
+		mdc.DrawText(info, 36, 7)
+	if task.alarm:
+		mdc.DrawBitmap(iconprovider.get_image('alarm_small'), 0, inf_y_offset,
+				False)
+	if task.repeat_pattern and task.repeat_pattern != 'Norepeat':
+		mdc.DrawBitmap(iconprovider.get_image('repeat_small'), 18, inf_y_offset,
+				False)
