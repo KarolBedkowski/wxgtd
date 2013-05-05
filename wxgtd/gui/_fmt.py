@@ -11,6 +11,7 @@ __author__ = "Karol Będkowski"
 __copyright__ = "Copyright (c) Karol Będkowski, 2010-2013"
 __version__ = "2013-04-27"
 
+import sys
 import time
 import logging
 import datetime
@@ -18,6 +19,42 @@ import datetime
 from wxgtd.model import enums
 
 _LOG = logging.getLogger(__name__)
+
+if sys.platform == 'win32':
+	#  win32 don't support unicode fonts
+	_TASK_TYPE_ICONS = {enums.TYPE_TASK: "",
+			enums.TYPE_PROJECT: "P",
+			enums.TYPE_CHECKLIST: "C",
+			enums.TYPE_CHECKLIST_ITEM: "c",
+			enums.TYPE_NOTE: "?",
+			enums.TYPE_CALL: "C",
+			enums.TYPE_EMAIL: "@",
+			enums.TYPE_SMS: "S",
+			enums.TYPE_RETURN_CALL: "R"}
+	_REPEAT_CHAR = '×'
+	_ALARM_CHAR = '! '
+	_PARENT_CHAR = "^"
+	_GOAL_CHAR = "*"
+	_FOLDER_CHAR = "/"
+	_TAG_CHAR = "#"
+	_STARRED_CHAR = "* "
+else:
+	_TASK_TYPE_ICONS = {enums.TYPE_TASK: "",
+			enums.TYPE_PROJECT: "⛁",
+			enums.TYPE_CHECKLIST: "☑",
+			enums.TYPE_CHECKLIST_ITEM: "☑",
+			enums.TYPE_NOTE: "⍰",
+			enums.TYPE_CALL: "☎",
+			enums.TYPE_EMAIL: "✉",
+			enums.TYPE_SMS: "✍",
+			enums.TYPE_RETURN_CALL: "☏"}
+	_REPEAT_CHAR = '↻'  # ⥁
+	_ALARM_CHAR = '⌚ '
+	_PARENT_CHAR = "⛁"
+	_GOAL_CHAR = "◎"
+	_FOLDER_CHAR = "▫"
+	_TAG_CHAR = "☘"
+	_STARRED_CHAR = "★ "
 
 
 def format_timestamp(timestamp, show_time=True):
@@ -48,28 +85,17 @@ def format_task_info(task):
 	if task.context:
 		info.append(task.context.title)
 	if task.parent:
-		info.append("⛁" + task.parent.title)
+		info.append(_PARENT_CHAR + task.parent.title)
 	if task.goal:
-		info.append("◎" + task.goal.title)
+		info.append(_GOAL_CHAR + task.goal.title)
 	if task.folder:
-		info.append("▫" + task.folder.title)
+		info.append(_FOLDER_CHAR + task.folder.title)
 	if task.tags:
-		info.append("☘" + ",".join(tasktag.tag.title for tasktag in
+		info.append(_TAG_CHAR + ",".join(tasktag.tag.title for tasktag in
 			task.tags))
 	if info:
 		info = '  '.join(info)
 	return info or None
-
-
-_TASK_TYPE_ICONS = {enums.TYPE_TASK: "",
-		enums.TYPE_PROJECT: "⛁",
-		enums.TYPE_CHECKLIST: "☑",
-		enums.TYPE_CHECKLIST_ITEM: "☑",
-		enums.TYPE_NOTE: "⍰",
-		enums.TYPE_CALL: "☎",
-		enums.TYPE_EMAIL: "✉",
-		enums.TYPE_SMS: "✍",
-		enums.TYPE_RETURN_CALL: "☏"}
 
 
 def format_task_info_icons(task, active_only):
@@ -81,7 +107,7 @@ def format_task_info_icons(task, active_only):
 	"""
 	info = ""
 	if task.starred:
-		info += "★ "
+		info += _STARRED_CHAR
 	info += _TASK_TYPE_ICONS.get(task.type, "")
 	task_is_overdue = False
 	child_count = task.active_child_count if active_only else \
@@ -96,7 +122,7 @@ def format_task_info_icons(task, active_only):
 		info += " %d " % child_count
 	info += '\n'
 	if task.alarm:
-		info += '⌚ '
+		info += _ALARM_CHAR
 	if task.repeat_pattern and task.repeat_pattern != 'Norepeat':
-		info += '↻'  # ⥁
+		info += _REPEAT_CHAR
 	return info, task_is_overdue

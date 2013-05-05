@@ -14,11 +14,19 @@ __version__ = '2013-04-21'
 
 import os
 import logging
-import cjson
 import zipfile
 import time
 import datetime
 import gettext
+try:
+	import cjson
+	json_decoder = cjson.decode
+	json_encoder = cjson.encode
+except ImportError:
+	import json
+	json_decoder = json.loads
+	json_encoder = json.dumps
+
 
 from wxgtd.model import objects
 from wxgtd.model import logic
@@ -221,7 +229,7 @@ def load_json(strdata, update_func):
 		true if success.
 	"""
 	update_func(2, _("Decoding.."))
-	data = cjson.decode(strdata.decode('UTF-8'))
+	data = json_decoder(strdata.decode('UTF-8'))
 	session = objects.Session()
 
 	update_func(5, _("Checking..."))
