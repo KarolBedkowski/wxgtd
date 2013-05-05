@@ -1,2 +1,2 @@
 #!/bin/sh
-python -OO /usr/share/wxgtd/src/wxgtd.pyw $*
+python -OO /usr/share/wxgtd/wxgtd.pyw $*
