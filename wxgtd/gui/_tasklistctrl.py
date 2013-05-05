@@ -23,6 +23,7 @@ import wx.lib.mixins.listctrl as listmix
 
 from wxgtd.model import enums
 from wxgtd.gui import _fmt as fmt
+from wxgtd.gui import _infobox as infobox
 from wxgtd.wxtools import iconprovider
 
 _ = gettext.gettext
@@ -70,14 +71,8 @@ class _ListItemRenderer(object):
 #			mdc.SetBackground(wx.Brush(wx.SystemSettings_GetColour(
 #					wx.SYS_COLOUR_WINDOW)))
 		mdc.Clear()
+		infobox.draw_info(mdc, task, self._overdue)
 
-		mdc.SetTextForeground(wx.RED if self._overdue else wx.BLACK)
-		mdc.SetFont(self._font_task)
-		mdc.DrawText(task.title, 0, 5)
-		mdc.SetFont(self._font_info)
-		info = fmt.format_task_info(task)
-		if info:
-			mdc.DrawText(info, 0, self._info_offset)
 		dc.Blit(rect.x + 3, rect.y, rect.width - 6, rect.height, mdc, 0, 0)
 
 	def GetLineHeight(self):
