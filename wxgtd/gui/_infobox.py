@@ -25,6 +25,13 @@ _LOG = logging.getLogger(__name__)
 
 
 def draw_info(mdc, task, overdue):
+	""" Draw information about task on given DC.
+
+	Args:
+		mdc: DC canvas
+		task: task to render
+		overdue: is task overdue
+	"""
 	font_task = wx.Font(10, wx.NORMAL, wx.NORMAL, wx.BOLD, False)
 	font_info = wx.Font(8, wx.NORMAL, wx.NORMAL, wx.NORMAL, False)
 
@@ -87,6 +94,14 @@ _TASK_TYPE_ICONS = {enums.TYPE_TASK: "",
 
 
 def draw_icons(mdc, task, overdue, active_only):
+	""" Draw information icons about task on given DC.
+
+	Args:
+		mdc: DC canvas
+		task: task to render
+		overdue: is task overdue
+		active_only: showing information only active subtask.
+	"""
 	font = wx.Font(8, wx.NORMAL, wx.NORMAL, wx.NORMAL, False)
 	mdc.SetFont(font)
 	inf_y_offset = mdc.GetTextExtent("Agw")[1] + 10
@@ -115,6 +130,8 @@ def draw_icons(mdc, task, overdue, active_only):
 
 
 class TaskInfoPanel(wx.Panel):
+	""" Panel with information for given task. """
+
 	def __init__(self, *args, **kwargs):
 		wx.Panel.__init__(self, *args, **kwargs)
 		self.task = None
@@ -133,6 +150,8 @@ class TaskInfoPanel(wx.Panel):
 
 
 class TaskIconsPanel(wx.Panel):
+	""" Panel with status icons for given task. """
+
 	def __init__(self, *args, **kwargs):
 		wx.Panel.__init__(self, *args, **kwargs)
 		self.task = None
