@@ -52,12 +52,23 @@ def draw_info(mdc, task, overdue):
 		task: task to render
 		overdue: is task overdue
 	"""
+	main_icon_y_offset = (SETTINGS['line_height'] - 32) / 2
+	if task.type == enums.TYPE_PROJECT:
+		mdc.DrawBitmap(iconprovider.get_image('project_big'), 0,
+				main_icon_y_offset, False)
+	elif task.type == enums.TYPE_CHECKLIST:
+		mdc.DrawBitmap(iconprovider.get_image('checklist_big'), 0,
+				main_icon_y_offset, False)
+	elif task.type == enums.TYPE_CHECKLIST_ITEM:
+		mdc.DrawBitmap(iconprovider.get_image('checklistitem_big'), 0,
+				main_icon_y_offset, False)
+
 	mdc.SetTextForeground(wx.RED if overdue else wx.BLACK)
 	mdc.SetFont(SETTINGS['font_task'])
-	mdc.DrawText(task.title, 0, 5)
+	mdc.DrawText(task.title, 35, 5)
 	mdc.SetFont(SETTINGS['font_info'])
 	inf_y_offset = mdc.GetTextExtent("Agw")[1] + 10
-	inf_x_offset = 0
+	inf_x_offset = 35
 	if task.status:
 		mdc.DrawBitmap(iconprovider.get_image('status_small'), inf_x_offset,
 				inf_y_offset, False)
@@ -125,9 +136,9 @@ def draw_icons(mdc, task, overdue, active_only):
 		mdc.DrawBitmap(iconprovider.get_image('starred_small'), 0, 7, False)
 		child_count = task.active_child_count if active_only else \
 				task.child_count
-	icon = _TASK_TYPE_ICONS.get(task.type)
-	if icon:
-		mdc.DrawBitmap(iconprovider.get_image(icon), 16, 7, False)
+	#icon = _TASK_TYPE_ICONS.get(task.type)
+	#if icon:
+		#mdc.DrawBitmap(iconprovider.get_image(icon), 16, 7, False)
 	child_count = task.active_child_count if active_only else \
 			task.child_count
 	if child_count > 0:
@@ -136,12 +147,15 @@ def draw_icons(mdc, task, overdue, active_only):
 		if overdue > 0:
 			info += "%d / " % overdue
 		info += "%d" % child_count
-		mdc.DrawText(info, 32, 7)
+		mdc.DrawText(info, 16, 7)
 	if task.alarm:
 		mdc.DrawBitmap(iconprovider.get_image('alarm_small'), 0, inf_y_offset,
 				False)
 	if task.repeat_pattern and task.repeat_pattern != 'Norepeat':
 		mdc.DrawBitmap(iconprovider.get_image('repeat_small'), 16, inf_y_offset,
+				False)
+	if task.note:
+		mdc.DrawBitmap(iconprovider.get_image('note_small'), 32, inf_y_offset,
 				False)
 
 
