@@ -7,7 +7,7 @@
 :Status: alpha (working, bugs)
 :Tags: gtd, tasks management
 
-Desktop application compatible with `DGT GTD`_.
+Desktop application for task management compatible with `DGT GTD`_.
 Support synchronisation data via sync file by Dropbox.
 
 .. _`DGT GTD`: http://www.dgtale.ch/
