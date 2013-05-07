@@ -1,8 +1,13 @@
+wxgtd 0.2.0 2013-05-07
+
+	* gui: icons
+	* win32 support
+	* support 'Last day of every month' repeat pattern
+
 wxgtd 0.1.0 2013-04-30
 
-* first working version
-
+	* first working version
 
 wxgtd 0.0.1 2013-03-02
 
-+ start
+	* start
