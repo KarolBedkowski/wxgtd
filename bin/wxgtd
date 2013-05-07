@@ -1,2 +1,0 @@
-#!/bin/sh
-python -OO /usr/share/wxgtd/wxgtd.pyw $*
