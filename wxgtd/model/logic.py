@@ -181,6 +181,9 @@ def _move_date_repeat(date, repeat_pattern):
 		if weekday == 6:
 			return date + relativedelta(days=6)
 		date += relativedelta(days=(5 - weekday))
+	elif repeat_pattern == 'Last day of every month':
+		date = date + relativedelta(days=1) + relativedelta(months=1)
+		return date.replace(day=1) + relativedelta(days=-1)
 	elif repeat_pattern.startswith("Every "):
 		m_repeat_xt = RE_REPEAT_XT.match(repeat_pattern.lower())
 		# every X T

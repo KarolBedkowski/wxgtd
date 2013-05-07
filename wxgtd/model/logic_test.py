@@ -50,7 +50,6 @@ class _FTask(object):
 		return True
 
 
-
 class TestLogicUpdateTaskAlarm(TestCase):
 	def test_01_empty(self):
 		obj = _FTask(None, None, None)
@@ -467,6 +466,17 @@ class TestRepeatTask(TestCase):
 		obj.repeat_pattern = 'The first Sun every 2 months'
 		obj2 = logic.repeat_task(obj, False)
 		self.assertEqual(obj2.start_date, datetime(2010, 3, 7, 3, 4, 5))
+
+	def test_17_last_day_of_month_comp(self):
+		obj = _FTask(None, datetime(2000, 6, 15, 3, 4, 5), None)
+		obj.repeat_pattern = 'Last day of every month'
+		obj.repeat_from = 1  # completed
+		obj.completed = datetime(2010, 6, 15, 3, 4, 5)
+		obj2 = logic.repeat_task(obj, False)
+		self.assertEqual(obj2.start_date, datetime(2010, 6, 30, 3, 4, 5))
+		obj.completed = datetime(2010, 6, 30, 3, 4, 5)
+		obj2 = logic.repeat_task(obj, False)
+		self.assertEqual(obj2.start_date, datetime(2010, 7, 31, 3, 4, 5))
 
 
 class TestRealExamples(TestCase):

@@ -122,6 +122,7 @@ REPEAT_PATTERN_LIST = [("Norepeat", _("Norepeat")),
 	("Quarterly", _("Quarterly")),
 	("Semiannually", _("Semiannually")),
 	("Yearly", _("Yearly")),
+	('Last day of every month', _('Last day of every month')),
 	("WITHPARENT", _("With parrent"))]
 
 REPEAT_PATTERN = dict(REPEAT_PATTERN_LIST)
