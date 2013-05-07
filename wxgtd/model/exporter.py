@@ -14,10 +14,18 @@ __version__ = '2013-04-21'
 
 import os
 import logging
-import cjson
 import zipfile
 import datetime
 import gettext
+try:
+	import cjson
+	json_decoder = cjson.decode
+	json_encoder = cjson.encode
+except ImportError:
+	import json
+	json_decoder = json.loads
+	json_encoder = json.dumps
+
 
 from wxgtd.model import objects
 
@@ -324,7 +332,7 @@ def dump_database_to_json(update_func):
 	session.flush()
 	update_func(80, _("Saving..."))
 
-	return cjson.encode(res)
+	return json_encoder(res)
 
 
 def _check_existing_synclock(lock_filename, my_device_id):
@@ -341,7 +349,7 @@ def _check_existing_synclock(lock_filename, my_device_id):
 		return True
 	data = None
 	with open(lock_filename, 'r') as lock_file:
-		data = cjson.decode(lock_file.read().decode('UTF-8'))
+		data = json_decoder(lock_file.read().decode('UTF-8'))
 	if data:
 		sync_device = data.get('deviceId')
 		if sync_device != my_device_id:
@@ -375,7 +383,7 @@ def create_sync_lock(sync_filename):
 		return False
 	_LOG.debug('create_sync_lock: writing synclog: %r', lock_filename)
 	with open(lock_filename, 'w') as ifile:
-		ifile.write(cjson.encode(synclog))
+		ifile.write(json_encoder(synclog))
 	return True
 
 

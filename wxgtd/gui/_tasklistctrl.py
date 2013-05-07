@@ -23,6 +23,7 @@ import wx.lib.mixins.listctrl as listmix
 
 from wxgtd.model import enums
 from wxgtd.gui import _fmt as fmt
+from wxgtd.gui import _infobox as infobox
 from wxgtd.wxtools import iconprovider
 
 _ = gettext.gettext
@@ -30,7 +31,7 @@ _LOG = logging.getLogger(__name__)
 
 
 class _ListItemRenderer(object):
-	""" Renderer for one / first row of TaskListControl.
+	""" Renderer for secound col of TaskListControl.
 
 	Args:
 		parent: parent windows (TaskListControl)
@@ -42,14 +43,46 @@ class _ListItemRenderer(object):
 	| priority  | status, goal, project |      | alarm, repeat |
 	+-----------+-----------------------+------+---------------+
 	"""
-	_line_height = None
-	_font_task = None
-	_font_info = None
-	_info_offset = None
 
 	def __init__(self, _parent, task, overdue=False):
 		self._task = task
 		self._overdue = overdue
+
+	def DrawSubItem(self, dc, rect, _line, _highlighted, _enabled):
+		canvas = wx.EmptyBitmap(rect.width, rect.height)
+		mdc = wx.MemoryDC()
+		mdc.SelectObject(canvas)
+		mdc.Clear()
+		infobox.draw_info(mdc, self._task, self._overdue)
+		dc.Blit(rect.x + 3, rect.y, rect.width - 6, rect.height, mdc, 0, 0)
+
+	def GetLineHeight(self):
+		return infobox.SETTINGS['line_height']
+
+	def GetSubItemWidth(self):
+		return 400
+
+
+class _ListItemRendererIcons(object):
+	""" Renderer for one forth column.
+
+	Args:
+		parent: parent windows (TaskListControl)
+		task: task to disiplay
+		overdue: task or any child of it are overdue.
+
+	+-----------+-----------------------+------+---------------+
+	| completed | title                 | due  | star, type    |
+	| priority  | status, goal, project |      | alarm, repeat |
+	+-----------+-----------------------+------+---------------+
+	"""
+	_font_task = None
+	_font_info = None
+
+	def __init__(self, _parent, task, overdue=False, active_only=False):
+		self._task = task
+		self._overdue = overdue
+		self._active_only = active_only
 		if not self._font_task:
 			self._font_task = wx.Font(10, wx.NORMAL, wx.NORMAL, wx.BOLD, False)
 		if not self._font_info:
@@ -59,43 +92,15 @@ class _ListItemRenderer(object):
 		canvas = wx.EmptyBitmap(rect.width, rect.height)
 		mdc = wx.MemoryDC()
 		mdc.SelectObject(canvas)
-
-		task = self._task
-
-#		if highlighted:
-#			mdc.SetBackground(wx.Brush(wx.SystemSettings_GetColour(
-#					wx.SYS_COLOUR_HIGHLIGHT)))
-#			mdc.SetTextForeground(wx.WHITE)
-#		else:
-#			mdc.SetBackground(wx.Brush(wx.SystemSettings_GetColour(
-#					wx.SYS_COLOUR_WINDOW)))
 		mdc.Clear()
-
-		mdc.SetTextForeground(wx.RED if self._overdue else wx.BLACK)
-		mdc.SetFont(self._font_task)
-		mdc.DrawText(task.title, 0, 5)
-		mdc.SetFont(self._font_info)
-		info = fmt.format_task_info(task)
-		if info:
-			mdc.DrawText(info, 0, self._info_offset)
+		infobox.draw_icons(mdc, self._task, self._overdue, self._active_only)
 		dc.Blit(rect.x + 3, rect.y, rect.width - 6, rect.height, mdc, 0, 0)
 
 	def GetLineHeight(self):
-		if self._line_height:
-			return self._line_height
-		dc = wx.MemoryDC()
-		dc.SelectObject(wx.EmptyBitmap(1, 1))
-		dc.SetFont(self._font_task)
-		dummy, ytext1 = dc.GetTextExtent("Agw")
-		dc.SetFont(self._font_info)
-		self._info_offset = ytext1 + 10
-		dummy, ytext2 = dc.GetTextExtent("Agw")
-		dc.SelectObject(wx.NullBitmap)
-		self._line_height = ytext1 + ytext2 + 10
-		return self._line_height
+		return infobox.SETTINGS['line_height']
 
 	def GetSubItemWidth(self):
-		return 400
+		return 72
 
 
 class TaskListControl(ULC.UltimateListCtrl, listmix.ColumnSorterMixin):
@@ -103,6 +108,8 @@ class TaskListControl(ULC.UltimateListCtrl, listmix.ColumnSorterMixin):
 
 	def __init__(self, parent, wid=wx.ID_ANY, pos=wx.DefaultPosition,
 				size=wx.DefaultSize, style=0, agwStyle=0):
+		# configure infobox
+		infobox.configure()
 		agwStyle = agwStyle | wx.LC_REPORT | wx.BORDER_SUNKEN | wx.LC_HRULES \
 				| wx.LC_SINGLE_SEL | ULC.ULC_HAS_VARIABLE_ROW_HEIGHT
 		ULC.UltimateListCtrl.__init__(self, parent, wid, pos, size, style,
@@ -162,13 +169,13 @@ class TaskListControl(ULC.UltimateListCtrl, listmix.ColumnSorterMixin):
 				3: self._icons.get_image_index('prio3')}
 		now = datetime.datetime.now()
 		for task in tasks:
-			info, task_is_overdue = fmt.format_task_info_icons(task,
-					active_only)
-			if info is None and task_is_overdue is None:
+			child_count = task.active_child_count if active_only else \
+					task.child_count
+			if active_only and child_count == 0 and task.completed:
 				continue
-			task_is_overdue = task_is_overdue or (task.due_date and
-					task.due_date < now)
-			task_is_overdue = task_is_overdue and not task.completed
+			task_is_overdue = ((task.due_date and task.due_date < now and
+						not task.completed) or
+						(child_count > 0 and task.child_overdue))
 			icon = icon_completed if task.completed else prio_icon[task.priority]
 			index = self.InsertImageStringItem(sys.maxint, "", icon)
 			self.SetStringItem(index, 1, "")
@@ -179,7 +186,8 @@ class TaskListControl(ULC.UltimateListCtrl, listmix.ColumnSorterMixin):
 			else:
 				self.SetStringItem(index, 2, fmt.format_timestamp(task.due_date,
 						task.due_time_set).replace(' ', '\n'))
-			self.SetStringItem(index, 3, info)
+			self.SetItemCustomRenderer(index, 3, _ListItemRendererIcons(self,
+				task, task_is_overdue, active_only))
 			self.SetItemData(index, index)
 			self._items[index] = (task.uuid, task.type)
 			self.itemDataMap[index] = tuple(_get_sort_info_for_task(task))

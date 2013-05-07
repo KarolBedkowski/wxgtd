@@ -35,6 +35,7 @@ from wxgtd.model import enums
 from wxgtd.model import logic
 from wxgtd.gui import dlg_about
 from wxgtd.gui import _fmt as fmt
+from wxgtd.gui import _infobox as infobox
 from wxgtd.gui._filtertreectrl import FilterTreeCtrl
 from wxgtd.gui._tasklistctrl import TaskListControl
 from wxgtd.gui.dlg_task import DlgTask
@@ -102,6 +103,16 @@ class FrameMain:
 		self._items_list_ctrl = TaskListControl(tasklist_panel)
 		box.Add(self._items_list_ctrl, 1, wx.EXPAND)
 		tasklist_panel.SetSizer(box)
+		ppinfo = self['panel_parent_info']
+		self._panel_parent_info = infobox.TaskInfoPanel(ppinfo, -1)
+		box = wx.BoxSizer(wx.HORIZONTAL)
+		box.Add(self._panel_parent_info, 1, wx.EXPAND)
+		ppinfo.SetSizer(box)
+		ppicons = self['panel_parent_icons']
+		self._panel_parent_icons = infobox.TaskIconsPanel(ppicons, -1)
+		box = wx.BoxSizer(wx.HORIZONTAL)
+		box.Add(self._panel_parent_icons, 1, wx.EXPAND)
+		ppicons.SetSizer(box)
 
 	def _create_bindings(self):
 		wnd = self.wnd
@@ -240,6 +251,7 @@ class FrameMain:
 	def _on_menu_file_load(self, _evt):
 		appconfig = AppConfig()
 		dlg = wx.FileDialog(self.wnd,
+				_("Please select sync file."),
 				defaultDir=appconfig.get('files', 'last_dir', ''),
 				defaultFile=appconfig.get('files', 'last_file', 'GTD_SYNC.zip'),
 				style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST)
@@ -255,6 +267,7 @@ class FrameMain:
 	def _on_menu_file_save(self, _evt):
 		appconfig = AppConfig()
 		dlg = wx.FileDialog(self.wnd,
+				_("Please select target sync file."),
 				defaultDir=appconfig.get('files', 'last_dir', ''),
 				defaultFile=appconfig.get('files', 'last_file', 'GTD_SYNC.zip'),
 				style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT)
@@ -272,6 +285,7 @@ class FrameMain:
 		last_sync_file = appconfig.get('files', 'last_sync_file')
 		if not last_sync_file:
 			dlg = wx.FileDialog(self.wnd,
+					_("Please select sync file."),
 					defaultDir=appconfig.get('files', 'last_dir', ''),
 					defaultFile=appconfig.get('files', 'last_file', 'GTD_SYNC.zip'),
 					style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST)
@@ -455,6 +469,10 @@ class FrameMain:
 				params['types'] = [enums.TYPE_CHECKLIST, enums.TYPE_CHECKLIST_ITEM]
 			else:
 				params['types'] = [enums.TYPE_CHECKLIST]
+		elif group_id == 7:  # future alarms
+			params['active_alarm'] = True
+			params['finished'] = (None if self._btn_show_finished.GetValue()
+					else False)
 		_LOG.debug("FrameMain._refresh_list; params=%r", params)
 		wx.SetCursor(wx.HOURGLASS_CURSOR)
 		tasks = OBJ.Task.select_by_filters(params, session=self._session)
@@ -513,23 +531,25 @@ class FrameMain:
 			dlg.run()
 
 	def _show_parent_info(self, active_only):
+		panel_parent_icons = self._panel_parent_icons
+		panel_parent_info = self._panel_parent_info
 		if not self._items_path:
-			self['l_parent_title'].SetLabel('')
-			self['l_parent_info'].SetLabel('')
-			self['l_parent_due'].SetLabel('')
-			self['l_parent_tags'].SetLabel('')
-			self.wnd.FindWindowById(wx.ID_UP).Enable(False)
 			self['btn_parent_edit'].Enable(False)
-			return
-		self['btn_parent_edit'].Enable(True)
-		self.wnd.FindWindowById(wx.ID_UP).Enable(True)
-		parent = self._items_path[-1]
-		self['l_parent_title'].SetLabel(parent.title or '')
-		self['l_parent_info'].SetLabel(fmt.format_task_info(parent) or '')
-		self['l_parent_due'].SetLabel(fmt.format_timestamp(parent.due_date,
-				parent.due_time_set).replace(' ', '\n'))
-		self['l_parent_tags'].SetLabel(fmt.format_task_info_icons(parent,
-				active_only)[0])
+			self.wnd.FindWindowById(wx.ID_UP).Enable(False)
+			panel_parent_info.task = panel_parent_icons.task = None
+			self['l_parent_due'].SetLabel("")
+		else:
+			self['btn_parent_edit'].Enable(True)
+			self.wnd.FindWindowById(wx.ID_UP).Enable(True)
+			parent = self._items_path[-1]
+			panel_parent_info.task = panel_parent_icons.task = parent
+			self['l_parent_due'].SetLabel(fmt.format_timestamp(parent.due_date,
+	-				parent.due_time_set).replace(' ', '\n'))
+		panel_parent_icons.active_only = active_only
+		panel_parent_info.Refresh()
+		panel_parent_info.Update()
+		panel_parent_icons.Refresh()
+		panel_parent_icons.Update()
 		self['panel_parent'].GetSizer().Layout()
 
 

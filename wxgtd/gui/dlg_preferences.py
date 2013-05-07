@@ -13,6 +13,7 @@ __version__ = "2013-04-28"
 
 import os
 import logging
+import gettext
 
 import wx
 
@@ -23,6 +24,7 @@ from wxgtd.lib.appconfig import AppConfig
 from ._base_dialog import BaseDialog
 
 _LOG = logging.getLogger(__name__)
+_ = gettext.gettext
 
 
 class AppConfigWrapper(object):
@@ -118,6 +120,7 @@ class DlgPreferences(BaseDialog):
 		if not last_file:
 			last_file = os.path.expanduser('~/')
 		dlg = wx.FileDialog(self._wnd,
+				_("Please select sync file."),
 				defaultDir=os.path.dirname(last_file),
 				defaultFile=last_file,
 				style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST)

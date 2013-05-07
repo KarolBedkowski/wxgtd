@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python -OO
 # -*- coding: utf-8 -*-
 """ Startup application in normal (GUI) mode.
 
