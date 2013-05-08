@@ -30,6 +30,10 @@ _ = gettext.gettext
 _LOG = logging.getLogger(__name__)
 
 
+BUTTON_SNOOZE = 1
+BUTTON_DISMISS = 2
+
+
 class _ListItemRenderer(object):
 	""" Renderer for secound col of TaskListControl.
 
@@ -107,7 +111,7 @@ class TaskListControl(ULC.UltimateListCtrl, listmix.ColumnSorterMixin):
 	""" TaskList Control based on wxListCtrl. """
 
 	def __init__(self, parent, wid=wx.ID_ANY, pos=wx.DefaultPosition,
-				size=wx.DefaultSize, style=0, agwStyle=0):
+				size=wx.DefaultSize, style=0, agwStyle=0, buttons=0):
 		# configure infobox
 		infobox.configure()
 		agwStyle = agwStyle | wx.LC_REPORT | wx.BORDER_SUNKEN | wx.LC_HRULES \
@@ -119,6 +123,7 @@ class TaskListControl(ULC.UltimateListCtrl, listmix.ColumnSorterMixin):
 		icon_prov.load_icons(['task_done', 'prio-1', 'prio0', 'prio1', 'prio2',
 				'prio3', 'sm_up', 'sm_down'])
 		self.SetImageList(icon_prov.image_list, wx.IMAGE_LIST_SMALL)
+		self._buttons = buttons
 		self._setup_columns()
 		self._items = {}
 		self.itemDataMap = {}  # for sorting
@@ -189,6 +194,18 @@ class TaskListControl(ULC.UltimateListCtrl, listmix.ColumnSorterMixin):
 			self.SetItemCustomRenderer(index, 3, _ListItemRendererIcons(self,
 				task, task_is_overdue, active_only))
 			self.SetItemData(index, index)
+			col = 4
+			if self._buttons & BUTTON_DISMISS:
+				item = self.GetItem(index, col)
+				btn = wx.Button(self, -1, _("Dismiss"))
+				item.SetWindow(btn)
+				self.SetItem(item)
+				col += 1
+			if self._buttons & BUTTON_SNOOZE:
+				item = self.GetItem(index, col)
+				btn = wx.Button(self, -1, _("Snooze"))
+				item.SetWindow(btn)
+				self.SetItem(item)
 			self._items[index] = (task.uuid, task.type)
 			self.itemDataMap[index] = tuple(_get_sort_info_for_task(task))
 			if task_is_overdue:
@@ -229,6 +246,16 @@ class TaskListControl(ULC.UltimateListCtrl, listmix.ColumnSorterMixin):
 		self.SetColumnWidth(1, 500)
 		self.SetColumnWidth(2, 100)
 		self.SetColumnWidth(3, 70)
+
+		col = 4
+		if self._buttons & BUTTON_DISMISS:
+			self.InsertColumnInfo(col, ULC.UltimateListItem())
+			self.SetColumnWidth(col, 100)
+			col += 1
+		if self._buttons & BUTTON_SNOOZE:
+			self.InsertColumnInfo(col, ULC.UltimateListItem())
+			self.SetColumnWidth(col, 100)
+			col += 1
 
 	# used by the ColumnSorterMixin
 	def GetListCtrl(self):
