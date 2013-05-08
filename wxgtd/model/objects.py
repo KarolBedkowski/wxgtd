@@ -269,6 +269,34 @@ class Task(BaseModelMixin, Base):
 		""" Get all checklists from database. """
 		return Session().query(cls).filter_by(type=enums.TYPE_CHECKLIST).all()
 
+	@classmethod
+	def select_remainders(cls, since=None, session=None):
+		""" Get all not completed task with alarms from since (if given) to now.
+
+		Args:
+			since: optional datetime - minimal alarm time
+			session: optional sqlalchemy session
+		Returns:
+			list of tasks with alarms
+		"""
+		session = session or Session()
+		query = session.query(cls)
+		# with reminders in past
+		now = datetime.datetime.now()
+		query = query.filter(Task.alarm <= now)
+		# if "since" is set - use it as minimal alarm
+		if since:
+			query = query.filter(Task.alarm > since)
+		# if "since" is set - use it as minimal alarm
+		# not completed
+		query = query.filter(Task.completed.is_(None))
+		query = query.options(orm.joinedload(Task.context)) \
+				.options(orm.joinedload(Task.folder)) \
+				.options(orm.joinedload(Task.goal)) \
+				.options(orm.subqueryload(Task.tags)) \
+				.order_by(Task.title)
+		return query.all()
+
 	@property
 	def child_count(self):
 		"""  Count subtask. """
