@@ -18,6 +18,7 @@ import logging
 import datetime
 
 import wx
+import wx.lib.newevent
 from wx.lib.agw import ultimatelistctrl as ULC
 import wx.lib.mixins.listctrl as listmix
 
@@ -32,6 +33,9 @@ _LOG = logging.getLogger(__name__)
 
 BUTTON_SNOOZE = 1
 BUTTON_DISMISS = 2
+
+_ListBtnDismissEvent, EVT_LIST_BTN_DISMISS = wx.lib.newevent.NewEvent()
+_ListBtnSnoozeEvent, EVT_LIST_BTN_SNOOZE = wx.lib.newevent.NewEvent()
 
 
 class _ListItemRenderer(object):
@@ -165,6 +169,7 @@ class TaskListControl(ULC.UltimateListCtrl, listmix.ColumnSorterMixin):
 			current_sort_state = (2, 1)
 		self._items.clear()
 		self.itemDataMap.clear()
+		self._mainWin.HideWindows()  # workaround for some bug in ULC
 		self.DeleteAllItems()
 		icon_completed = self._icons.get_image_index('task_done')
 		prio_icon = {-1: self._icons.get_image_index('prio-1'),
@@ -173,6 +178,7 @@ class TaskListControl(ULC.UltimateListCtrl, listmix.ColumnSorterMixin):
 				2: self._icons.get_image_index('prio2'),
 				3: self._icons.get_image_index('prio3')}
 		now = datetime.datetime.now()
+		index = -1
 		for task in tasks:
 			child_count = task.active_child_count if active_only else \
 					task.child_count
@@ -198,19 +204,27 @@ class TaskListControl(ULC.UltimateListCtrl, listmix.ColumnSorterMixin):
 			if self._buttons & BUTTON_DISMISS:
 				item = self.GetItem(index, col)
 				btn = wx.Button(self, -1, _("Dismiss"))
+				btn.task = task.uuid
 				item.SetWindow(btn)
 				self.SetItem(item)
 				col += 1
+				self.Bind(wx.EVT_BUTTON, self._on_list_btn_dismiss_click,
+						btn)
 			if self._buttons & BUTTON_SNOOZE:
 				item = self.GetItem(index, col)
 				btn = wx.Button(self, -1, _("Snooze"))
+				btn.task = task.uuid
 				item.SetWindow(btn)
 				self.SetItem(item)
+				self.Bind(wx.EVT_BUTTON, self._on_list_btn_snooze_click,
+						btn)
 			self._items[index] = (task.uuid, task.type)
 			self.itemDataMap[index] = tuple(_get_sort_info_for_task(task))
 			if task_is_overdue:
 				self.SetItemTextColour(index, wx.RED)
-		self.SortListItems(*current_sort_state)
+		self._mainWin.ResetCurrent()
+		if index > 0:
+			self.SortListItems(*current_sort_state)
 		self.Thaw()
 		self.Update()
 
@@ -264,6 +278,14 @@ class TaskListControl(ULC.UltimateListCtrl, listmix.ColumnSorterMixin):
 	# Used by the ColumnSorterMixin
 	def GetSortImages(self):
 		return (self._icon_sm_down, self._icon_sm_up)
+
+	def _on_list_btn_dismiss_click(self, evt):
+		wx.PostEvent(self, _ListBtnDismissEvent(
+				task=evt.GetEventObject().task))
+
+	def _on_list_btn_snooze_click(self, evt):
+		wx.PostEvent(self, _ListBtnSnoozeEvent(
+				task=evt.GetEventObject().task))
 
 
 def _get_sort_info_for_task(task):
