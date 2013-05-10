@@ -27,6 +27,30 @@ _LOG = logging.getLogger(__name__)
 _ = gettext.gettext
 
 
+def alarm_pattern_to_time(pattern):
+	""" Find time offset according to given alarm|snooze pattern.
+
+	Args:
+		pattern: remind or snoze pattern (see: enums.SNOOZE_PATTERNS,
+			enums.REMIND_PATTERNS)
+	Return:
+		Time offset as datetime.timedelta or None if wrong pattern.
+	"""
+	_LOG.debug('alarm_pattern_to_time: pattern=%r', pattern)
+	num, period = pattern.split(' ')
+	num = float(num)
+	if period in ('day', 'days'):
+		offset = datetime.timedelta(days=-num)
+	elif period in ('hour', 'hours'):
+		offset = datetime.timedelta(hours=-num)
+	elif period in ('minute', 'minutes'):
+		offset = datetime.timedelta(minutes=-num)
+	else:
+		_LOG.warn('alarm_pattern: invalid pattern = %r', pattern)
+		return None
+	return offset
+
+
 def update_task_alarm(task):
 	""" Update Task alarm field according to values other fields.
 
@@ -42,26 +66,14 @@ def update_task_alarm(task):
 	"""
 	_LOG.debug('update_task_alarm: %r', task)
 	alarm_pattern = task.alarm_pattern
-	_LOG.debug('update_task_alarm: alarm=%r, pattern=%r', task.alarm,
-			alarm_pattern)
 	if not alarm_pattern:
 		return
 	if alarm_pattern == 'due':
 		task.alarm = task.due_date
 		return
-	num, period = alarm_pattern.split(' ')
-	num = float(num)
-	if period in ('day', 'days'):
-		offset = datetime.timedelta(days=-num)
-	elif period in ('hour', 'hours'):
-		offset = datetime.timedelta(hours=-num)
-	elif period in ('minute', 'minutes'):
-		offset = datetime.timedelta(minutes=-num)
-	else:
-		_LOG.warn('update_task_alarm: invalid alarm_pattern = %r',
-				alarm_pattern)
-		return
-	task.alarm = task.due_date + offset
+	offset = alarm_pattern_to_time(alarm_pattern)
+	if offset:
+		task.alarm = task.due_date + offset
 	_LOG.debug('update_task_alarm result=%r', task.alarm)
 
 
