@@ -59,6 +59,7 @@ class DlgDateTime(BaseDialog):
 				'time': (timestamp if timeset else 0)}
 		self['cc_date'].SetValidator(ValidatorDate(self._values, 'date'))
 		self['tc_time'].SetValidator(ValidatorTime(self._values, 'time'))
+		self['tc_time'].BindSpinButton(self['sb_time'])
 		if timestamp:
 			self['rb_date'].SetValue(True)
 		self['cb_set_time'].SetValue(bool(timeset))
