@@ -36,6 +36,7 @@ from wxgtd.model import logic
 from wxgtd.gui import dlg_about
 from wxgtd.gui import _fmt as fmt
 from wxgtd.gui import _infobox as infobox
+from wxgtd.gui import message_boxes as mbox
 from wxgtd.gui._filtertreectrl import FilterTreeCtrl
 from wxgtd.gui._tasklistctrl import TaskListControl
 from wxgtd.gui.dlg_task import DlgTask
@@ -429,7 +430,8 @@ class FrameMain:
 
 	def _on_btn_reminders(self, _evt):
 		if not DlgReminders.check(self.wnd, self._session):
-			pass  # to tasks to show
+			mbox.message_box_info(self.wnd, _("No active alarms in this moment."),
+					_("Alarms"))
 
 	def _on_search(self, _evt):
 		self._refresh_list()
