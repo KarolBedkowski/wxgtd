@@ -440,8 +440,10 @@ class FrameMain:
 			self._refresh_list()
 
 	def _on_timer(self, _evt, force_show=False):
-		_LOG.debug('FrameMain._on_timer: check reminders')
-		DlgReminders.check(self.wnd, self._session)
+		appconfig = AppConfig()
+		if appconfig.get('notification', 'popup_alarms'):
+			_LOG.debug('FrameMain._on_timer: check reminders')
+			DlgReminders.check(self.wnd, self._session)
 
 	# logic
 
