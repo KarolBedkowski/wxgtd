@@ -40,7 +40,6 @@ class DlgReminders(BaseDialog):
 	Args:
 		parent: parent window
 	"""
-	_dismissed_tasks = set()
 
 	def __init__(self, parent, session):
 		BaseDialog.__init__(self, parent, 'dlg_reminders', save_pos=True)
@@ -54,8 +53,6 @@ class DlgReminders(BaseDialog):
 		# filter tasks
 		tasks_to_show = []
 		for task in tasks:
-			if task.uuid in cls._dismissed_tasks:
-				continue
 			if task.completed:
 				_LOG.warn('DlgReminders.check completed %r', task)
 				continue
@@ -106,9 +103,10 @@ class DlgReminders(BaseDialog):
 
 	def _on_task_btn_dismiss(self, evt):
 		task_uuid = evt.task
-		self._dismissed_tasks.add(task_uuid)
-		self._remove_task(task_uuid)
-		self._refresh()
+		task = OBJ.Task.get(self._session, uuid=task_uuid)
+		task.alarm = None
+		self._session.commit()
+		Publisher.sendMessage('task.update', data={'task_uuid': task.uuid})
 
 	def _on_task_btn_snooze(self, evt):
 		task_uuid = evt.task
@@ -152,6 +150,6 @@ class DlgReminders(BaseDialog):
 			self._remove_task(uuid)
 		elif args.topic == ('task', 'update'):
 			task = OBJ.Task.get(self._session, uuid=uuid)
-			if task.completed or task.alarm > datetime.now():
+			if task.completed or not task.alarm or task.alarm > datetime.now():
 				self._remove_task(uuid)
 		self._refresh()
