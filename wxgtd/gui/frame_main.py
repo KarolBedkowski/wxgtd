@@ -495,6 +495,7 @@ class FrameMain:
 					else False)
 		_LOG.debug("FrameMain._refresh_list; params=%r", params)
 		wx.SetCursor(wx.HOURGLASS_CURSOR)
+		self._session.expire_all()
 		tasks = OBJ.Task.select_by_filters(params, session=self._session)
 		items_list = self._items_list_ctrl
 		active_only = not self._btn_show_finished.GetValue()
