@@ -1,0 +1,67 @@
+# -*- coding: utf-8 -*-
+""" Task bar icon.
+
+Copyright (c) Karol Będkowski, 2013
+
+This file is part of wxGTD
+Licence: GPLv2+
+"""
+
+__author__ = "Karol Będkowski"
+__copyright__ = "Copyright (c) Karol Będkowski, 2013"
+__version__ = "2013-05-11"
+
+import gettext
+import logging
+
+import wx
+#try:
+	#from wx.lib.pubsub.pub import Publisher
+#except ImportError:
+	#from wx.lib.pubsub import Publisher
+
+from wxgtd.wxtools import iconprovider
+
+_ = gettext.gettext
+_LOG = logging.getLogger(__name__)
+
+
+class TaskBarIcon(wx.TaskBarIcon):
+	TBMENU_RESTORE = wx.NewId()
+	TBMENU_CLOSE = wx.NewId()
+
+	def __init__(self, parent_frame):
+		wx.TaskBarIcon.__init__(self)
+		self._frame = parent_frame
+		# icon
+		img = wx.ImageFromBitmap(iconprovider.get_image('wxgtd'))
+		if "wxMSW" in wx.PlatformInfo:
+			img = img.Scale(16, 16)
+		elif "wxGTK" in wx.PlatformInfo:
+			img = img.Scale(22, 22)
+		icon = wx.IconFromBitmap(img.ConvertToBitmap())
+		self.SetIcon(icon, _("wxGTD"))
+
+		self._create_bindings()
+
+	def CreatePopupMenu(self):
+		menu = wx.Menu()
+		menu.Append(self.TBMENU_RESTORE, _("Restore wxGTD"))
+		menu.Append(self.TBMENU_CLOSE,  _("Close wxGTD"))
+		return menu
+
+	def _create_bindings(self):
+		self.Bind(wx.EVT_TASKBAR_LEFT_UP, self._on_icon_activate)
+		self.Bind(wx.EVT_TASKBAR_LEFT_DCLICK, self._on_icon_activate)
+		self.Bind(wx.EVT_MENU, self._on_icon_activate, id=self.TBMENU_RESTORE)
+		self.Bind(wx.EVT_MENU, self._on_menu_app_close, id=self.TBMENU_CLOSE)
+
+	def _on_icon_activate(self, evt):
+		if self._frame.IsIconized():
+			self._frame.Iconize(False)
+		if not self._frame.IsShown():
+			self._frame.Show(True)
+		self._frame.Raise()
+
+	def _on_menu_app_close(self, evt):
+		wx.CallAfter(self._frame.Close)

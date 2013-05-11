@@ -39,6 +39,7 @@ from wxgtd.gui import _infobox as infobox
 from wxgtd.gui import message_boxes as mbox
 from wxgtd.gui._filtertreectrl import FilterTreeCtrl
 from wxgtd.gui._tasklistctrl import TaskListControl
+from wxgtd.gui._taskbaricon import TaskBarIcon
 from wxgtd.gui.dlg_task import DlgTask
 from wxgtd.gui.dlg_checklistitem import DlgChecklistitem
 from wxgtd.gui.dlg_preferences import DlgPreferences
@@ -84,6 +85,7 @@ class FrameMain:
 
 	def _setup_wnd(self):
 		self.wnd.SetIcon(iconprovider.get_icon('wxgtd'))
+		self._tbicon = TaskBarIcon(self.wnd)
 
 		if wx.Platform == '__WXMSW__':
 			# fix controls background
@@ -258,6 +260,7 @@ class FrameMain:
 		appconfig.set('main', 'show_finished', self._btn_show_finished.GetValue())
 		appconfig.set('main', 'show_subtask', self._btn_show_subtasks.GetValue())
 		appconfig.set('main', 'show_hide_until', self._btn_hide_until.GetValue())
+		self._tbicon.Destroy()
 		self.wnd.Destroy()
 
 	def _on_menu_file_load(self, _evt):
