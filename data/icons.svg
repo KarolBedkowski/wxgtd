@@ -18,6 +18,17 @@
    sodipodi:docname="icons.svg">
   <defs
      id="defs4">
+    <linearGradient
+       id="linearGradient4064">
+      <stop
+         id="stop4066"
+         offset="0"
+         style="stop-color:#ffff00;stop-opacity:1;" />
+      <stop
+         id="stop4068"
+         offset="1"
+         style="stop-color:#ff8e12;stop-opacity:1;" />
+    </linearGradient>
     <marker
        inkscape:stockid="TriangleOutM"
        orient="auto"
@@ -128,6 +139,17 @@
        fx="248.9427"
        fy="537.41443"
        r="309.96796" />
+    <radialGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient4064"
+       id="radialGradient4062"
+       cx="41.116802"
+       cy="152.90681"
+       fx="41.116802"
+       fy="152.90681"
+       r="2.3899357"
+       gradientTransform="matrix(1,0,0,1.0184187,0,-2.8163509)"
+       gradientUnits="userSpaceOnUse" />
   </defs>
   <sodipodi:namedview
      id="base"
@@ -136,9 +158,9 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.22745098"
      inkscape:pageshadow="2"
-     inkscape:zoom="5.3330368"
-     inkscape:cx="188.35972"
-     inkscape:cy="1029.5137"
+     inkscape:zoom="60.336424"
+     inkscape:cx="44.828236"
+     inkscape:cy="898.92247"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="false"
@@ -1661,7 +1683,7 @@
          y="153.20189">Starred</tspan></text>
     <path
        sodipodi:type="star"
-       style="fill:#ffff00;fill-opacity:1;stroke:#aa0000;stroke-width:0.15;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+       style="fill:url(#radialGradient4062);fill-opacity:1.0;stroke:#aa0000;stroke-width:0.15000000999999999;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
        id="path3235"
        sodipodi:sides="5"
        sodipodi:cx="40.951385"
@@ -1674,10 +1696,11 @@
        inkscape:rounded="0"
        inkscape:randomized="0"
        d="m 43.431738,153.07476 -1.578269,0.51334 -0.366784,1.67766 -0.97592,-1.34239 -1.708899,0.16959 0.975118,-1.34297 -0.689374,-1.57286 1.578576,0.51239 1.282842,-1.14167 4.96e-4,1.65965 z"
-       inkscape:transform-center-x="-0.28116435"
+       inkscape:transform-center-x="-0.32273073"
        inkscape:export-filename="/home/k/jp/wxgtd/data/starred_small.png"
        inkscape:export-xdpi="178"
-       inkscape:export-ydpi="178" />
+       inkscape:export-ydpi="178"
+       transform="matrix(1.1478335,0,0,1.1478335,-6.2438584,-22.679868)" />
     <rect
        inkscape:export-ydpi="178"
        inkscape:export-xdpi="178"
