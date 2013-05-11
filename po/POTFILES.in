@@ -21,7 +21,7 @@ wxgtd/gui/dlg_preferences.py
 wxgtd/gui/splash.py
 wxgtd/gui/dlg_goals.py
 wxgtd/gui/dlg_checklistitem.py
-wxgtd/gui/dlg_remaind_settings.py
+wxgtd/gui/dlg_remind_settings.py
 wxgtd/gui/dlg_select_tags.py
 wxgtd/gui/dlg_datetime.py
 wxgtd/gui/_dict_base_dlg.py

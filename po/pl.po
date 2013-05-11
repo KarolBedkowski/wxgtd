@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: wxgtd\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2013-04-30 22:28+0200\n"
-"PO-Revision-Date: 2013-04-30 22:29+0200\n"
+"PO-Revision-Date: 2013-05-11 13:19+0200\n"
 "Last-Translator: Karol Będkowski <karol.bedkowski@gmail.com>\n"
 "Language-Team: polski <>\n"
 "Language: pl\n"
@@ -1161,7 +1161,7 @@ msgid "Type:"
 msgstr "Typ:"
 
 #: ../data/wxgtd.xrc.h:58
-msgid "Remaind:"
+msgid "Remind:"
 msgstr "Przypomnienie:"
 
 #: ../data/wxgtd.xrc.h:59
@@ -1373,7 +1373,7 @@ msgid "Edit"
 msgstr "Edycja"
 
 #: ../data/wxgtd.xrc.h:116
-msgid "Remaind"
+msgid "Remind"
 msgstr "Przypomnij"
 
 #: ../data/wxgtd.xrc.h:117

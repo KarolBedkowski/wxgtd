@@ -32,7 +32,7 @@ from wxgtd.wxtools.validators import v_length as LVALID
 
 from ._base_dialog import BaseDialog
 from .dlg_datetime import DlgDateTime
-from .dlg_remaind_settings import DlgRemaindSettings
+from .dlg_remind_settings import DlgRemindSettings
 from .dlg_show_settings import DlgShowSettings
 from .dlg_repeat_settings import DlgRepeatSettings
 from .dlg_select_tags import DlgSelectTags
@@ -72,7 +72,7 @@ class DlgTask(BaseDialog):
 		self._wnd.Bind(wx.EVT_BUTTON, self._on_btn_delete, id=wx.ID_DELETE)
 		self['btn_del_note'].Bind(wx.EVT_BUTTON, self._on_btn_del_note)
 		self['btn_save_note'].Bind(wx.EVT_BUTTON, self._on_btn_save_note)
-		self['btn_remaind_set'].Bind(wx.EVT_BUTTON, self._on_btn_remiand_set)
+		self['btn_remind_set'].Bind(wx.EVT_BUTTON, self._on_btn_remiand_set)
 		self['btn_hide_until_set'].Bind(wx.EVT_BUTTON, self._on_btn_hide_until_set)
 		self['btn_repeat_set'].Bind(wx.EVT_BUTTON, self._on_btn_repeat_set)
 		self['btn_select_tags'].Bind(wx.EVT_BUTTON, self._on_btn_select_tags)
@@ -206,7 +206,7 @@ class DlgTask(BaseDialog):
 		alarm = None
 		if task.alarm:
 			alarm = time.mktime(task.alarm.timetuple())
-		dlg = DlgRemaindSettings(self._wnd, alarm, task.alarm_pattern)
+		dlg = DlgRemindSettings(self._wnd, alarm, task.alarm_pattern)
 		if dlg.run(True):
 			if dlg.alarm:
 				task.alarm = datetime.datetime.fromtimestamp(dlg.alarm)
@@ -288,7 +288,7 @@ class DlgTask(BaseDialog):
 				task.start_time_set))
 		self['l_tags'].SetLabel(", ".join(tag.tag.title for tag in task.tags) or '')
 		if task.alarm_pattern:
-			self['l_remind'].SetLabel(enums.REMAIND_PATTERNS[task.alarm_pattern])
+			self['l_remind'].SetLabel(enums.REMIND_PATTERNS[task.alarm_pattern])
 		elif task.alarm:
 			self['l_remind'].SetLabel(fmt.format_timestamp(task.alarm, True))
 		else:

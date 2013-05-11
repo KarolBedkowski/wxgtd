@@ -592,7 +592,6 @@ def _get_hotlist_settings(params):
 	params['starred'] = conf.get('hotlist', 'starred', False)
 	params['next_action'] = conf.get('hotlist', 'next_action', False)
 	params['started'] = conf.get('hotlist', 'started', False)
-	print params
 
 
 # additional strings to translate

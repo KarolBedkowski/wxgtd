@@ -450,7 +450,7 @@
                                                 <option>0</option>
                                                 <object class="wxStaticText" name="label_14" base="EditStaticText">
                                                     <attribute>1</attribute>
-                                                    <label>Remaind:</label>
+                                                    <label>Remind:</label>
                                                 </object>
                                             </object>
                                             <object class="sizeritem">
@@ -479,7 +479,7 @@
                                                     <object class="sizeritem">
                                                         <border>0</border>
                                                         <option>0</option>
-                                                        <object class="wxButton" name="btn_remaind_set" base="EditButton">
+                                                        <object class="wxButton" name="btn_remind_set" base="EditButton">
                                                             <label>Set</label>
                                                         </object>
                                                     </object>
@@ -1167,9 +1167,9 @@
             </object>
         </object>
     </object>
-    <object class="wxDialog" name="dlg_remaind_settings" base="EditDialog">
+    <object class="wxDialog" name="dlg_remind_settings" base="EditDialog">
         <style>wxDEFAULT_DIALOG_STYLE|wxFULL_REPAINT_ON_RESIZE|wxCLIP_CHILDREN</style>
-        <title>Remaind</title>
+        <title>Remind</title>
         <object class="wxBoxSizer" name="sizer_7" base="EditBoxSizer">
             <orient>wxVERTICAL</orient>
             <object class="sizeritem">
@@ -1183,7 +1183,7 @@
                         <option>0</option>
                         <object class="wxStaticText" name="label_22" base="EditStaticText">
                             <attribute>1</attribute>
-                            <label>Remaind</label>
+                            <label>Remind</label>
                             <font>
                                 <size>10</size>
                                 <family>default</family>

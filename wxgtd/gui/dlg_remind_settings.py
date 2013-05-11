@@ -23,7 +23,7 @@ from ._base_dialog import BaseDialog
 _LOG = logging.getLogger(__name__)
 
 
-class DlgRemaindSettings(BaseDialog):
+class DlgRemindSettings(BaseDialog):
 	""" Remind setting dialog.
 
 	Args:
@@ -35,7 +35,7 @@ class DlgRemaindSettings(BaseDialog):
 	def __init__(self, parent, alarm, alarm_pattern):
 		self._data = {'date': None, 'time': None, 'pattern': alarm_pattern,
 				'alarm': alarm}
-		BaseDialog.__init__(self, parent, 'dlg_remaind_settings', save_pos=False)
+		BaseDialog.__init__(self, parent, 'dlg_remind_settings', save_pos=False)
 		self._setup(alarm, alarm_pattern)
 
 	@property
@@ -54,14 +54,14 @@ class DlgRemaindSettings(BaseDialog):
 		self['tc_time'].SetValidator(ValidatorTime(self._data, 'time'))
 
 		c_before = self['c_before']
-		for rem_key, rem_name in enums.REMAIND_PATTERNS_LIST:
+		for rem_key, rem_name in enums.REMIND_PATTERNS_LIST:
 			c_before.Append(rem_name, rem_key)
 
 	def _create_bindings(self):
 		BaseDialog._create_bindings(self)
 
 	def _setup(self, alarm, alarm_pattern):
-		_LOG.debug("DlgRemaindSettings(%r)", (alarm, alarm_pattern))
+		_LOG.debug("DlgRemindSettings(%r)", (alarm, alarm_pattern))
 		self['rb_never'].SetValue(True)
 		if alarm:
 			self._data['date'] = self._data['time'] = alarm

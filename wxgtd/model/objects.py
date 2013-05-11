@@ -192,7 +192,7 @@ class Task(BaseModelMixin, Base):
 
 		Args:
 			params: dict with filter parameters (criteria)
-			sessoin: optional sqlalchemy session
+			session: optional sqlalchemy session
 
 		Returns:
 			list of task
