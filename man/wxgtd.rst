@@ -9,7 +9,7 @@ wxgtd
 :Author: Karol Będkowski
 :Date:   2013-05-07
 :Copyright: Copyright(c) Karol Będkowski, 2013
-:Version: 0.2.x
+:Version: 0.3.x
 :Manual section: 1
 :Manual group: wxGTD Manual Pages
 
