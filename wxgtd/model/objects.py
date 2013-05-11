@@ -270,7 +270,7 @@ class Task(BaseModelMixin, Base):
 		return Session().query(cls).filter_by(type=enums.TYPE_CHECKLIST).all()
 
 	@classmethod
-	def select_remainders(cls, since=None, session=None):
+	def select_reminders(cls, since=None, session=None):
 		""" Get all not completed task with alarms from since (if given) to now.
 
 		Args:
@@ -279,6 +279,7 @@ class Task(BaseModelMixin, Base):
 		Returns:
 			list of tasks with alarms
 		"""
+		_LOG.debug('Task.select_reminders(%r)', since)
 		session = session or Session()
 		query = session.query(cls)
 		# with reminders in past
@@ -294,7 +295,7 @@ class Task(BaseModelMixin, Base):
 				.options(orm.joinedload(Task.folder)) \
 				.options(orm.joinedload(Task.goal)) \
 				.options(orm.subqueryload(Task.tags)) \
-				.order_by(Task.title)
+				.order_by(Task.alarm)
 		return query.all()
 
 	@property
