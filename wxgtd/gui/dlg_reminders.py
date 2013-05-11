@@ -40,21 +40,40 @@ class DlgReminders(BaseDialog):
 	Args:
 		parent: parent window
 	"""
-
 	_dismissed_tasks = set()
-	_reminders = []
 
-	def __init__(self, parent):
+	def __init__(self, parent, session):
 		BaseDialog.__init__(self, parent, 'dlg_reminders', save_pos=True)
-		self._setup()
+		self._obj_key = 'dlg_reminders'
+		self._setup(session)
+		self._refresh()
 
-	def add_tasks(self, tasks):
+	@classmethod
+	def check(cls, parent_wnd, session):
+		tasks = OBJ.Task.select_reminders(None, session)
+		# filter tasks
+		tasks_to_show = []
 		for task in tasks:
-			if task in self._dismissed_tasks:
+			if task.uuid in cls._dismissed_tasks:
 				continue
-			if task not in self._reminders:
-				self._reminders.append(task)
-		wx.CallAfter(self._refresh)
+			if task.completed:
+				_LOG.warn('DlgReminders.check completed %r', task)
+				continue
+			tasks_to_show.append(task)
+		if tasks_to_show:
+			dlg = cls._windows.get('dlg_reminders')
+			if not dlg:
+				dlg = cls._windows['dlg_reminders'] = DlgReminders(parent_wnd,
+						session)
+			dlg.run()
+			dlg.load_tasks(tasks)
+			wx.CallAfter(dlg.wnd.Raise)
+		return len(tasks_to_show) > 0
+
+	def load_tasks(self, tasks):
+		_LOG.debug('DlgReminders.load_tasks(%r)', tasks)
+		self._reminders = tasks
+		self._refresh()
 
 	def _load_controls(self, wnd):
 		BaseDialog._load_controls(self, wnd)
@@ -78,8 +97,9 @@ class DlgReminders(BaseDialog):
 		Publisher.subscribe(self._on_tasks_update, ('task', 'update'))
 		Publisher.subscribe(self._on_tasks_update, ('task', 'delete'))
 
-	def _setup(self):
-		self._session = OBJ.Session()
+	def _setup(self, session):
+		self._reminders = []
+		self._session = session or OBJ.Session()
 
 	def _refresh(self):
 		self._task_list_ctrl.fill(self._reminders)
@@ -101,14 +121,16 @@ class DlgReminders(BaseDialog):
 			task = OBJ.Task.get(self._session, uuid=task_uuid)
 			task.alarm = datetime.now() + logic.alarm_pattern_to_time(pattern)
 			self._session.commit()
-			self._remove_task(task_uuid)
-			self._refresh()
 			Publisher.sendMessage('task.update', data={'task_uuid': task.uuid})
 		dlg.Destroy()
 
 	def _remove_task(self, task_uuid):
-		self._reminders = filter(lambda x: x.uuid != task_uuid,
-				self._reminders)
+		task_idx = [idx for idx, task in enumerate(self._reminders)
+				if task.uuid == task_uuid]
+		if task_idx:
+			del self._reminders[task_idx[0]]
+		if not self._reminders:
+			self.wnd.Close()
 
 	def _on_items_list_activated(self, evt):
 		task_uuid, task_type = self._task_list_ctrl.items[evt.GetData()]
@@ -124,11 +146,12 @@ class DlgReminders(BaseDialog):
 		dlg.run()
 
 	def _on_tasks_update(self, args):
+		_LOG.debug('DlgReminders._on_tasks_update(%r)', args)
 		uuid = args.data['task_uuid']
 		if args.topic == ('task', 'delete'):
 			self._remove_task(uuid)
 		elif args.topic == ('task', 'update'):
 			task = OBJ.Task.get(self._session, uuid=uuid)
-			if task.completed:
+			if task.completed or task.alarm > datetime.now():
 				self._remove_task(uuid)
 		self._refresh()

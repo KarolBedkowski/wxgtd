@@ -427,9 +427,8 @@ class FrameMain:
 			dlg.run()
 
 	def _on_btn_reminders(self, _evt):
-		dlg = DlgReminders.create("reminders", self.wnd)
-		dlg.run()
-		self._on_timer(None)
+		if not DlgReminders.check(self.wnd, self._session):
+			pass  # to tasks to show
 
 	def _on_search(self, _evt):
 		self._refresh_list()
@@ -439,17 +438,9 @@ class FrameMain:
 			self._searchbox.SetValue('')
 			self._refresh_list()
 
-	def _on_timer(self, _evt):
-		_LOG.debug('FrameMain._on_timer: check remainders')
-		# get reminders
-		now = datetime.datetime.now()
-		tasks = OBJ.Task.select_remainders(self._last_reminders_check,
-				self._session)
-		if tasks:
-			dlg = DlgReminders.create("reminders", self.wnd)
-			dlg.add_tasks(tasks)
-			dlg.run()
-		self._last_reminders_check = now
+	def _on_timer(self, _evt, force_show=False):
+		_LOG.debug('FrameMain._on_timer: check reminders')
+		DlgReminders.check(self.wnd, self._session)
 
 	# logic
 
