@@ -93,6 +93,12 @@ class DlgPreferences(BaseDialog):
 				'task/inerit_folder'))
 		self['cb_tasks_inh_tags'].SetValidator(Validator(config,
 				'task/inerit_tags'))
+		# notification
+		self['cb_notif_popup_reminds'].SetValidator(Validator(config,
+				'notification/popup_alarms'))
+		# gui
+		self['cb_gui_hide_on_start'].SetValidator(Validator(config,
+				'gui/hide_on_start'))
 
 	def _create_bindings(self):
 		BaseDialog._create_bindings(self)

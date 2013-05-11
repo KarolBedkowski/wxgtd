@@ -28,3 +28,4 @@ wxgtd.egg-info
 tags
 info/
 docs/
+man/*.1

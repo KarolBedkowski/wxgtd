@@ -76,7 +76,7 @@ HIDE_PATTERNS_LIST = [
 HIDE_PATTERNS = dict(HIDE_PATTERNS_LIST)
 
 
-REMAIND_PATTERNS_LIST = [
+REMIND_PATTERNS_LIST = [
 		('due', _("When task is due")),
 		("1 minute", ngettext("%d minute", "%d minutes", 1) % 1),
 		("5 minutes", ngettext("%d minute", "%d minutes", 5) % 5),
@@ -103,7 +103,9 @@ REMAIND_PATTERNS_LIST = [
 		("14 days", ngettext("%d day", "%d days", 14) % 14),
 		("30 days", ngettext("%d day", "%d days", 30) % 30)]
 
-REMAIND_PATTERNS = dict(REMAIND_PATTERNS_LIST)
+REMIND_PATTERNS = dict(REMIND_PATTERNS_LIST)
+
+SNOOZE_PATTERNS = REMIND_PATTERNS_LIST[1:]
 
 PRIORITIES = {3: _("TOP"),
 		2: _("High"),

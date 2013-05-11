@@ -30,7 +30,7 @@ class DlgRepeatSettings(BaseDialog):
 
 	Args:
 		parent: parent windows
-		pattern: repeat pattern (enums.REMAIND_PATTERNS)
+		pattern: repeat pattern (enums.REMIND_PATTERNS)
 		repeat_from: true = repeat for complete; false = from due.
 	"""
 
@@ -82,7 +82,7 @@ class DlgRepeatSettings(BaseDialog):
 		BaseDialog._create_bindings(self)
 
 	def _setup(self, pattern, repeat_from):
-		_LOG.debug("DlgRemaindSettings(%r)", (pattern, repeat_from))
+		_LOG.debug("DlgRemindSettings(%r)", (pattern, repeat_from))
 		self['rb_never'].SetValue(True)
 		self['rb_completion'].SetValue(bool(repeat_from))
 		if pattern:

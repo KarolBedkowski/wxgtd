@@ -1,3 +1,10 @@
+wxgtd 0.3.0 2013-05-11
+
+	* gui: +reminds popup window, snooze / dismiss alarms
+	* gui: +tray icon
+	* gui: more/updated icons
+	* minor bugfixes
+
 wxgtd 0.2.0 2013-05-07
 
 	* gui: icons

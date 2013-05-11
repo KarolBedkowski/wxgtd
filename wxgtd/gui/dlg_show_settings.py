@@ -52,6 +52,7 @@ class DlgShowSettings(BaseDialog):
 
 		self['dp_date'].SetValidator(ValidatorDate(self._data, 'date'))
 		self['tc_time'].SetValidator(ValidatorTime(self._data, 'time'))
+		self['tc_time'].BindSpinButton(self['sb_time'])
 
 		c_pattern = self['c_pattern']
 		for rem_key, rem_name in enums.HIDE_PATTERNS_LIST:

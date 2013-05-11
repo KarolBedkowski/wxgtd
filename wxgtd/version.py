@@ -9,7 +9,7 @@ Licence: GPLv2+
 
 __author__ = "Karol Będkowski"
 __copyright__ = "Copyright (c) Karol Będkowski, 2013"
-__version__ = "2013-03-02"
+__version__ = "2013-05-11"
 
 import gettext
 
@@ -17,9 +17,9 @@ _ = gettext.gettext
 
 SHORTNAME = 'wxgtd'
 NAME = _("wxGTD")
-VERSION = '0.2.0'
-VERSION_INFO = (0, 2, 0, 'alpha', 1)
-RELEASE = '2013-05-07'
+VERSION = '0.3.0'
+VERSION_INFO = (0, 3, 0, 'alpha', 1)
+RELEASE = '2013-05-11'
 DESCRIPTION = _('''wxGTD''')
 DEVELOPERS = u'''Karol Będkowski'''
 TRANSLATORS = u'''Karol Będkowski'''
