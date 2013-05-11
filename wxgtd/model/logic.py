@@ -31,7 +31,7 @@ def alarm_pattern_to_time(pattern):
 	""" Find time offset according to given alarm|snooze pattern.
 
 	Args:
-		pattern: remind or snoze pattern (see: enums.SNOOZE_PATTERNS,
+		pattern: remind or snooze pattern (see: enums.SNOOZE_PATTERNS,
 			enums.REMIND_PATTERNS)
 	Return:
 		Time offset as datetime.timedelta or None if wrong pattern.
@@ -40,11 +40,11 @@ def alarm_pattern_to_time(pattern):
 	num, period = pattern.split(' ')
 	num = float(num)
 	if period in ('day', 'days'):
-		offset = datetime.timedelta(days=-num)
+		offset = datetime.timedelta(days=num)
 	elif period in ('hour', 'hours'):
-		offset = datetime.timedelta(hours=-num)
+		offset = datetime.timedelta(hours=num)
 	elif period in ('minute', 'minutes'):
-		offset = datetime.timedelta(minutes=-num)
+		offset = datetime.timedelta(minutes=num)
 	else:
 		_LOG.warn('alarm_pattern: invalid pattern = %r', pattern)
 		return None
@@ -73,7 +73,7 @@ def update_task_alarm(task):
 		return
 	offset = alarm_pattern_to_time(alarm_pattern)
 	if offset:
-		task.alarm = task.due_date + offset
+		task.alarm = task.due_date - offset
 	_LOG.debug('update_task_alarm result=%r', task.alarm)
 
 
