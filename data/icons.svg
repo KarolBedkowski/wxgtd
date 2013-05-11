@@ -136,9 +136,9 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.22745098"
      inkscape:pageshadow="2"
-     inkscape:zoom="45.254833"
-     inkscape:cx="42.28806"
-     inkscape:cy="927.73528"
+     inkscape:zoom="5.3330368"
+     inkscape:cx="188.35972"
+     inkscape:cy="1029.5137"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="false"
@@ -1759,5 +1759,172 @@
          x="99.750008"
          id="tspan3336"
          sodipodi:role="line">Checklist item</tspan></text>
+    <rect
+       inkscape:export-ydpi="178"
+       inkscape:export-xdpi="178"
+       inkscape:export-filename="/home/k/jp/wxgtd/data/mail_big.png"
+       style="fill:#ffffff;fill-opacity:1;stroke:none"
+       id="rect3280"
+       width="16"
+       height="15.961843"
+       x="109.19449"
+       y="19.043282" />
+    <rect
+       inkscape:export-ydpi="178"
+       inkscape:export-xdpi="178"
+       inkscape:export-filename="/home/k/jp/wxgtd/data/sms_big.png"
+       y="20.322311"
+       x="160.44449"
+       height="15.961843"
+       width="16"
+       id="rect3282"
+       style="fill:#ffffff;fill-opacity:1;stroke:none" />
+    <rect
+       inkscape:export-ydpi="178"
+       inkscape:export-xdpi="178"
+       inkscape:export-filename="/home/k/jp/wxgtd/data/call_big.png"
+       y="1.0622026"
+       x="139.06949"
+       height="15.961843"
+       width="16"
+       id="rect3284"
+       style="fill:#ffffff;fill-opacity:1;stroke:none" />
+    <text
+       inkscape:export-ydpi="178"
+       inkscape:export-xdpi="178"
+       inkscape:export-filename="/home/k/jp/wxgtd/data/call_big.png"
+       sodipodi:linespacing="125%"
+       id="text3286"
+       y="13.378571"
+       x="139.86194"
+       style="font-size:11.61277199px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#0000ff;fill-opacity:1;stroke:none;font-family:Sans"
+       xml:space="preserve"><tspan
+         style="font-size:11.8941679px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;fill:#0000ff;stroke:none;font-family:Sans;-inkscape-font-specification:Sans"
+         y="13.378571"
+         x="139.86194"
+         id="tspan3288"
+         sodipodi:role="line">☎</tspan></text>
+    <text
+       inkscape:export-ydpi="178"
+       inkscape:export-xdpi="178"
+       inkscape:export-filename="/home/k/jp/wxgtd/data/mail_big.png"
+       sodipodi:linespacing="125%"
+       id="text3290"
+       y="32.326885"
+       x="111.09978"
+       style="font-size:19.88347244px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#aa4400;fill-opacity:1;stroke:none;font-family:Sans"
+       xml:space="preserve"><tspan
+         style="font-size:14.54771805px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;fill:#aa4400;font-family:Sans;-inkscape-font-specification:Sans"
+         y="32.326885"
+         x="111.09978"
+         id="tspan3292"
+         sodipodi:role="line">✉</tspan></text>
+    <text
+       inkscape:export-ydpi="178"
+       inkscape:export-xdpi="178"
+       inkscape:export-filename="/home/k/jp/wxgtd/data/sms_big.png"
+       sodipodi:linespacing="125%"
+       id="text3294"
+       y="33.882889"
+       x="162.40619"
+       style="font-size:14.67832756px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#008000;fill-opacity:1;stroke:none;font-family:Sans"
+       xml:space="preserve"><tspan
+         y="33.882889"
+         x="162.40619"
+         id="tspan3296"
+         sodipodi:role="line">✍</tspan></text>
+    <rect
+       inkscape:export-ydpi="178"
+       inkscape:export-xdpi="178"
+       inkscape:export-filename="/home/k/jp/wxgtd/data/returncall_bigl.png"
+       style="fill:#ffffff;fill-opacity:1;stroke:none"
+       id="rect3298"
+       width="16"
+       height="15.961843"
+       x="185.19449"
+       y="1.1995317" />
+    <g
+       id="g3257"
+       transform="matrix(0.83035234,0,0,0.83035234,32.764074,1.6446354)"
+       inkscape:export-filename="/home/k/jp/wxgtd/data/returncall_bigl.png"
+       inkscape:export-xdpi="178"
+       inkscape:export-ydpi="178">
+      <text
+         xml:space="preserve"
+         style="font-size:11.38710499px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#0000ff;fill-opacity:1;stroke:none;font-family:Sans;-inkscape-font-specification:Sans"
+         x="196.68466"
+         y="10.809877"
+         id="text3300"
+         sodipodi:linespacing="125%"
+         transform="scale(0.94296247,1.0604876)"
+         inkscape:export-filename="/home/k/jp/wxgtd/data/returncall_bigl.png"
+         inkscape:export-xdpi="178"
+         inkscape:export-ydpi="178"><tspan
+           sodipodi:role="line"
+           id="tspan3302"
+           x="196.68466"
+           y="10.809877">☏</tspan></text>
+      <g
+         id="g3304"
+         transform="matrix(2.7170293,0,0,2.7170293,-71.419772,-111.55121)"
+         inkscape:export-filename="/home/k/jp/wxgtd/data/returncall_bigl.png"
+         inkscape:export-xdpi="178"
+         inkscape:export-ydpi="178">
+        <path
+           style="font-size:medium;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-indent:0;text-align:start;text-decoration:none;line-height:normal;letter-spacing:normal;word-spacing:normal;text-transform:none;direction:ltr;block-progression:tb;writing-mode:lr-tb;text-anchor:start;baseline-shift:baseline;color:#000000;fill:#ff0000;fill-opacity:1;stroke:none;stroke-width:0.30000001;marker:none;visibility:visible;display:inline;overflow:visible;enable-background:accumulate;font-family:Sans;-inkscape-font-specification:Sans"
+           d="m 99.59375,42.78125 c 0.009,1.029708 0.01423,1.757164 -0.0625,2.28125 -0.07673,0.524086 -0.207563,0.824347 -0.4375,1 -0.229937,0.175653 -0.600869,0.255374 -1.15625,0.28125 -0.555381,0.02588 -1.283293,0 -2.25,0 l 0,0.28125 c 0.96144,0 1.673543,0.02686 2.25,0 0.576457,-0.02686 1.000413,-0.105341 1.3125,-0.34375 0.312087,-0.238409 0.480525,-0.596352 0.5625,-1.15625 0.08197,-0.559898 0.102821,-1.310958 0.09375,-2.34375 l -0.3125,0 z"
+           id="path3306"
+           inkscape:connector-curvature="0" />
+        <path
+           d="m 97.241225,47.213209 -1.966658,-0.72319 1.966658,-0.723189 c -0.31419,0.426971 -0.312379,1.011141 0,1.446379 z"
+           style="fill:#ff0000;fill-rule:evenodd;stroke-width:0.625;stroke-linejoin:round"
+           id="path3308"
+           inkscape:connector-curvature="0" />
+      </g>
+    </g>
+    <text
+       sodipodi:linespacing="125%"
+       id="text3310"
+       y="9.5496349"
+       x="157.75"
+       style="font-size:4px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans;-inkscape-font-specification:Sans"
+       xml:space="preserve"><tspan
+         y="9.5496349"
+         x="157.75"
+         id="tspan3312"
+         sodipodi:role="line">Call</tspan></text>
+    <text
+       sodipodi:linespacing="125%"
+       id="text3314"
+       y="30.862135"
+       x="133.5625"
+       style="font-size:4px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans;-inkscape-font-specification:Sans"
+       xml:space="preserve"><tspan
+         y="30.862135"
+         x="133.5625"
+         id="tspan3316"
+         sodipodi:role="line">Mail</tspan></text>
+    <text
+       sodipodi:linespacing="125%"
+       id="text3318"
+       y="29.862135"
+       x="181.875"
+       style="font-size:4px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans;-inkscape-font-specification:Sans"
+       xml:space="preserve"><tspan
+         y="29.862135"
+         x="181.875"
+         id="tspan3320"
+         sodipodi:role="line">SMS</tspan></text>
+    <text
+       sodipodi:linespacing="125%"
+       id="text3322"
+       y="10.112135"
+       x="204.25"
+       style="font-size:4px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans;-inkscape-font-specification:Sans"
+       xml:space="preserve"><tspan
+         y="10.112135"
+         x="204.25"
+         id="tspan3324"
+         sodipodi:role="line">Return call</tspan></text>
   </g>
 </svg>

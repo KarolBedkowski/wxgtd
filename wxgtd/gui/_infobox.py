@@ -44,6 +44,15 @@ def configure():
 	SETTINGS['line_height'] = ytext1 + ytext2 + 10
 
 
+_TYPE_ICON_NAMES = {enums.TYPE_PROJECT: 'project_big',
+		enums.TYPE_CHECKLIST: 'checklist_big',
+		enums.TYPE_CHECKLIST_ITEM: 'checklistitem_big',
+		enums.TYPE_CALL: 'call_big',
+		enums.TYPE_EMAIL: 'mail_big',
+		enums.TYPE_SMS: 'sms_big',
+		enums.TYPE_RETURN_CALL: 'returncall_big'}
+
+
 def draw_info(mdc, task, overdue):
 	""" Draw information about task on given DC.
 
@@ -53,16 +62,10 @@ def draw_info(mdc, task, overdue):
 		overdue: is task overdue
 	"""
 	main_icon_y_offset = (SETTINGS['line_height'] - 32) / 2
-	if task.type == enums.TYPE_PROJECT:
-		mdc.DrawBitmap(iconprovider.get_image('project_big'), 0,
-				main_icon_y_offset, False)
-	elif task.type == enums.TYPE_CHECKLIST:
-		mdc.DrawBitmap(iconprovider.get_image('checklist_big'), 0,
-				main_icon_y_offset, False)
-	elif task.type == enums.TYPE_CHECKLIST_ITEM:
-		mdc.DrawBitmap(iconprovider.get_image('checklistitem_big'), 0,
-				main_icon_y_offset, False)
-
+	icon_name = _TYPE_ICON_NAMES.get(task.type)
+	if icon_name:
+		mdc.DrawBitmap(iconprovider.get_image(icon_name), 0, main_icon_y_offset,
+				False)
 	mdc.SetTextForeground(wx.RED if overdue else wx.BLACK)
 	mdc.SetFont(SETTINGS['font_task'])
 	mdc.DrawText(task.title, 35, 5)
