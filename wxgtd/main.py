@@ -75,7 +75,6 @@ def run():
 	# parse options
 	options = _parse_opt()
 
-
 	# app config
 	from wxgtd.lib import appconfig
 
@@ -155,7 +154,8 @@ def run():
 	# show main window
 	main_frame = FrameMain()
 	app.SetTopWindow(main_frame.wnd)
-	main_frame.wnd.Show()
+	if not config.get('gui', 'hide_on_start'):
+		main_frame.wnd.Show()
 
 	# optionally show inspection tool
 	if options.wx_inspection:
