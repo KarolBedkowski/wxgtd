@@ -11,8 +11,6 @@ __author__ = "Karol Będkowski"
 __copyright__ = "Copyright (c) Karol Będkowski, 2010-2013"
 __version__ = "2013-04-27"
 
-import weakref
-
 import wx
 from wx import xrc
 
@@ -33,7 +31,7 @@ class BaseDialog:
 	"""
 
 	# dict holding opened dialogs
-	_windows = weakref.WeakValueDictionary()
+	_windows = {}
 
 	def __init__(self, parent, dialog_name='dialog', resource='wxgtd.xrc',
 			icon=None, save_pos=True):

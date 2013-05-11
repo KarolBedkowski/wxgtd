@@ -18,6 +18,7 @@ import logging
 import datetime
 
 import wx
+import wx.lib.newevent
 from wx.lib.agw import ultimatelistctrl as ULC
 import wx.lib.mixins.listctrl as listmix
 
@@ -28,6 +29,13 @@ from wxgtd.wxtools import iconprovider
 
 _ = gettext.gettext
 _LOG = logging.getLogger(__name__)
+
+
+BUTTON_SNOOZE = 1
+BUTTON_DISMISS = 2
+
+_ListBtnDismissEvent, EVT_LIST_BTN_DISMISS = wx.lib.newevent.NewEvent()
+_ListBtnSnoozeEvent, EVT_LIST_BTN_SNOOZE = wx.lib.newevent.NewEvent()
 
 
 class _ListItemRenderer(object):
@@ -107,7 +115,7 @@ class TaskListControl(ULC.UltimateListCtrl, listmix.ColumnSorterMixin):
 	""" TaskList Control based on wxListCtrl. """
 
 	def __init__(self, parent, wid=wx.ID_ANY, pos=wx.DefaultPosition,
-				size=wx.DefaultSize, style=0, agwStyle=0):
+				size=wx.DefaultSize, style=0, agwStyle=0, buttons=0):
 		# configure infobox
 		infobox.configure()
 		agwStyle = agwStyle | wx.LC_REPORT | wx.BORDER_SUNKEN | wx.LC_HRULES \
@@ -119,6 +127,7 @@ class TaskListControl(ULC.UltimateListCtrl, listmix.ColumnSorterMixin):
 		icon_prov.load_icons(['task_done', 'prio-1', 'prio0', 'prio1', 'prio2',
 				'prio3', 'sm_up', 'sm_down'])
 		self.SetImageList(icon_prov.image_list, wx.IMAGE_LIST_SMALL)
+		self._buttons = buttons
 		self._setup_columns()
 		self._items = {}
 		self.itemDataMap = {}  # for sorting
@@ -160,6 +169,7 @@ class TaskListControl(ULC.UltimateListCtrl, listmix.ColumnSorterMixin):
 			current_sort_state = (2, 1)
 		self._items.clear()
 		self.itemDataMap.clear()
+		self._mainWin.HideWindows()  # workaround for some bug in ULC
 		self.DeleteAllItems()
 		icon_completed = self._icons.get_image_index('task_done')
 		prio_icon = {-1: self._icons.get_image_index('prio-1'),
@@ -168,6 +178,7 @@ class TaskListControl(ULC.UltimateListCtrl, listmix.ColumnSorterMixin):
 				2: self._icons.get_image_index('prio2'),
 				3: self._icons.get_image_index('prio3')}
 		now = datetime.datetime.now()
+		index = -1
 		for task in tasks:
 			child_count = task.active_child_count if active_only else \
 					task.child_count
@@ -189,11 +200,31 @@ class TaskListControl(ULC.UltimateListCtrl, listmix.ColumnSorterMixin):
 			self.SetItemCustomRenderer(index, 3, _ListItemRendererIcons(self,
 				task, task_is_overdue, active_only))
 			self.SetItemData(index, index)
+			col = 4
+			if self._buttons & BUTTON_DISMISS:
+				item = self.GetItem(index, col)
+				btn = wx.Button(self, -1, _("Dismiss"))
+				btn.task = task.uuid
+				item.SetWindow(btn)
+				self.SetItem(item)
+				col += 1
+				self.Bind(wx.EVT_BUTTON, self._on_list_btn_dismiss_click,
+						btn)
+			if self._buttons & BUTTON_SNOOZE:
+				item = self.GetItem(index, col)
+				btn = wx.Button(self, -1, _("Snooze"))
+				btn.task = task.uuid
+				item.SetWindow(btn)
+				self.SetItem(item)
+				self.Bind(wx.EVT_BUTTON, self._on_list_btn_snooze_click,
+						btn)
 			self._items[index] = (task.uuid, task.type)
 			self.itemDataMap[index] = tuple(_get_sort_info_for_task(task))
 			if task_is_overdue:
 				self.SetItemTextColour(index, wx.RED)
-		self.SortListItems(*current_sort_state)
+		self._mainWin.ResetCurrent()
+		if index > 0:
+			self.SortListItems(*current_sort_state)
 		self.Thaw()
 		self.Update()
 
@@ -230,6 +261,16 @@ class TaskListControl(ULC.UltimateListCtrl, listmix.ColumnSorterMixin):
 		self.SetColumnWidth(2, 100)
 		self.SetColumnWidth(3, 70)
 
+		col = 4
+		if self._buttons & BUTTON_DISMISS:
+			self.InsertColumnInfo(col, ULC.UltimateListItem())
+			self.SetColumnWidth(col, 100)
+			col += 1
+		if self._buttons & BUTTON_SNOOZE:
+			self.InsertColumnInfo(col, ULC.UltimateListItem())
+			self.SetColumnWidth(col, 100)
+			col += 1
+
 	# used by the ColumnSorterMixin
 	def GetListCtrl(self):
 		return self
@@ -237,6 +278,14 @@ class TaskListControl(ULC.UltimateListCtrl, listmix.ColumnSorterMixin):
 	# Used by the ColumnSorterMixin
 	def GetSortImages(self):
 		return (self._icon_sm_down, self._icon_sm_up)
+
+	def _on_list_btn_dismiss_click(self, evt):
+		wx.PostEvent(self, _ListBtnDismissEvent(
+				task=evt.GetEventObject().task))
+
+	def _on_list_btn_snooze_click(self, evt):
+		wx.PostEvent(self, _ListBtnSnoozeEvent(
+				task=evt.GetEventObject().task))
 
 
 def _get_sort_info_for_task(task):

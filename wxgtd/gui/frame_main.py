@@ -45,6 +45,7 @@ from wxgtd.gui.dlg_sync_progress import DlgSyncProggress
 from wxgtd.gui.dlg_tags import DlgTags
 from wxgtd.gui.dlg_goals import DlgGoals
 from wxgtd.gui.dlg_folders import DlgFolders
+from wxgtd.gui.dlg_reminders import DlgReminders
 
 _ = gettext.gettext
 _LOG = logging.getLogger(__name__)
@@ -71,11 +72,14 @@ class FrameMain:
 	def _setup(self):
 		self._session = OBJ.Session()
 		self._items_path = []
+		self._last_reminders_check = None
 		self._filter_tree_ctrl.RefreshItems()
 		wx.CallAfter(self._refresh_list)
 		appconfig = AppConfig()
 		if appconfig.get('sync', 'sync_on_startup'):
 			wx.CallAfter(self._autosync)
+		self._reminders_timer = wx.Timer(self.wnd)
+		self._reminders_timer.Start(30 * 1000)  # 30 sec
 
 	def _setup_wnd(self):
 		self.wnd.SetIcon(iconprovider.get_icon('wxgtd'))
@@ -145,6 +149,7 @@ class FrameMain:
 				self._on_items_list_activated)
 		wnd.Bind(wx.EVT_BUTTON, self._on_btn_path_back, id=wx.ID_UP)
 		self['btn_parent_edit'].Bind(wx.EVT_BUTTON, self._on_btn_edit_parent)
+		wnd.Bind(wx.EVT_TIMER, self._on_timer)
 
 		Publisher.subscribe(self._on_tasks_update, ('task', 'update'))
 		Publisher.subscribe(self._on_tasks_update, ('task', 'delete'))
@@ -223,6 +228,12 @@ class FrameMain:
 		self.wnd.Bind(wx.EVT_SEARCHCTRL_CANCEL_BTN, self._on_search_cancel,
 				self._searchbox)
 		self.wnd.Bind(wx.EVT_TEXT_ENTER, self._on_search, self._searchbox)
+
+		toolbar.AddSeparator()
+
+		tbi = toolbar.AddLabelTool(-1, _('Reminders'),
+				iconprovider.get_image('reminders'))
+		self.wnd.Bind(wx.EVT_TOOL, self._on_btn_reminders, id=tbi.GetId())
 
 		toolbar.Realize()
 
@@ -405,6 +416,7 @@ class FrameMain:
 		else:
 			task.task_completed = False
 		session.commit()
+		Publisher.sendMessage('task.update', data={'task_uuid': self._task.uuid})
 		self._refresh_list()
 
 	def _on_btn_edit_parent(self, _evt):
@@ -415,6 +427,10 @@ class FrameMain:
 			dlg = DlgTask.create(task_uuid, self.wnd, task_uuid)
 			dlg.run()
 
+	def _on_btn_reminders(self, _evt):
+		if not DlgReminders.check(self.wnd, self._session):
+			pass  # to tasks to show
+
 	def _on_search(self, _evt):
 		self._refresh_list()
 
@@ -422,6 +438,10 @@ class FrameMain:
 		if self._searchbox.GetValue():
 			self._searchbox.SetValue('')
 			self._refresh_list()
+
+	def _on_timer(self, _evt, force_show=False):
+		_LOG.debug('FrameMain._on_timer: check reminders')
+		DlgReminders.check(self.wnd, self._session)
 
 	# logic
 
@@ -475,6 +495,7 @@ class FrameMain:
 					else False)
 		_LOG.debug("FrameMain._refresh_list; params=%r", params)
 		wx.SetCursor(wx.HOURGLASS_CURSOR)
+		self._session.expire_all()
 		tasks = OBJ.Task.select_by_filters(params, session=self._session)
 		items_list = self._items_list_ctrl
 		active_only = not self._btn_show_finished.GetValue()
