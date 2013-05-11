@@ -416,6 +416,7 @@ class FrameMain:
 		else:
 			task.task_completed = False
 		session.commit()
+		Publisher.sendMessage('task.update', data={'task_uuid': self._task.uuid})
 		self._refresh_list()
 
 	def _on_btn_edit_parent(self, _evt):
