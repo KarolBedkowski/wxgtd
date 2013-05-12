@@ -213,9 +213,10 @@ class DlgTask(BaseDialog):
 			if dlg.alarm:
 				task.alarm = DTU.datetime_local2utc(
 						datetime.datetime.fromtimestamp(dlg.alarm))
+				task.alarm_pattern = None
 			else:
 				task.alarm = None
-			task.alarm_pattern = dlg.alarm_pattern
+				task.alarm_pattern = dlg.alarm_pattern
 			logic.update_task_alarm(task)
 			self._refresh_static_texts()
 
@@ -299,7 +300,7 @@ class DlgTask(BaseDialog):
 			self['l_remind'].SetLabel(fmt.format_timestamp(task.alarm, True))
 		else:
 			self['l_remind'].SetLabel('')
-		if task.hide_pattern:
+		if task.hide_pattern and task.hide_pattern != 'given date':
 			self['l_hide_until'].SetLabel(enums.HIDE_PATTERNS[task.hide_pattern])
 		elif task.hide_until:
 			self['l_hide_until'].SetLabel(fmt.format_timestamp(task.hide_until,
