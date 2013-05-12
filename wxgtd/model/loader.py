@@ -15,9 +15,8 @@ __version__ = '2013-04-21'
 import os
 import logging
 import zipfile
-import time
-import datetime
 import gettext
+from dateutil import parser, tz
 try:
 	import cjson
 	json_decoder = cjson.decode
@@ -78,6 +77,7 @@ def _create_or_update(session, cls, datadict):
 	obj = session.query(cls).filter_by(uuid=uuid).first()
 	if obj:
 		modified = datadict.get('modified')
+		print modified, obj.modified
 		if not modified or modified > obj.modified:
 			# load only modified objs
 			obj.load_from_dict(datadict)
@@ -117,7 +117,7 @@ def _replace_ids(objdict, cache, key_id, key_uuid=None):
 	return res
 
 
-def str2timestamp(string):
+def str2datetime_utc(string):
 	""" Convert string like '2013-03-22T21:27:46.461Z' into timestamp.
 
 	Args:
@@ -128,9 +128,13 @@ def str2timestamp(string):
 	"""
 	if string and len(string) > 18:
 		try:
-			return time.mktime(time.strptime(string[:19], "%Y-%m-%dT%H:%M:%S"))
+			value = parser.parse(string)
+			# convert to UTC
+			value = value.astimezone(tz.tzutc())
+			# remove timezone
+			return value.replace(tzinfo=None)
 		except ValueError:
-			_LOG.exception("str2timestamp %r", string)
+			_LOG.exception("str2datetime_utc %r", string)
 	return None
 
 
@@ -148,7 +152,7 @@ def _convert_timestamps(dictobj, *fields):
 		if value is None:
 			return
 		elif value:
-			value = datetime.datetime.fromtimestamp(str2timestamp(value))
+			value = str2datetime_utc(value)
 		dictobj[field] = value or None
 
 	for field in ('created', 'modified', 'deleted'):
@@ -203,12 +207,12 @@ def _check_synclog(data, session):
 	c_last_sync = session.query(objects.Conf).filter_by(key='last_sync').first()
 	if c_last_sync is None:
 		return True
-	last_sync = str2timestamp(c_last_sync.val)
+	last_sync = str2datetime_utc(c_last_sync.val)
 	device_id = session.query(objects.Conf).filter_by(key='deviceId').first().val
 
 	synclog = data.get('syncLog')[0]
 	file_sync_time_str = synclog.get('syncTime')
-	file_sync_time = str2timestamp(file_sync_time_str)
+	file_sync_time = str2datetime_utc(file_sync_time_str)
 	sync_device = synclog.get('deviceId')
 
 	if last_sync >= file_sync_time and device_id == sync_device:
@@ -422,7 +426,7 @@ def load_json(strdata, update_func):
 	update_func(72, _("Cleanup"))
 	# pokasowanie staroci
 	synclog = data.get('syncLog')[0]
-	file_sync_time = str2timestamp(synclog.get('syncTime'))
+	file_sync_time = str2datetime_utc(synclog.get('syncTime'))
 	_delete_missing(objects.Task, tasks_cache, file_sync_time)
 	_delete_missing(objects.Folder, folders_cache, file_sync_time)
 	_delete_missing(objects.Context, contexts_cache, file_sync_time)
