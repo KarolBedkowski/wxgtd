@@ -107,8 +107,9 @@ class Task(BaseModelMixin, Base):
 
 	uuid = Column(String(36), primary_key=True, default=generate_uuid)
 	parent_uuid = Column(String(36), ForeignKey('tasks.uuid'))
-	created = Column(DateTime, default=datetime.datetime.now)
-	modified = Column(DateTime, onupdate=datetime.datetime.now)
+	created = Column(DateTime, default=datetime.datetime.utcnow)
+	modified = Column(DateTime, default=datetime.datetime.utcnow,
+			onupdate=datetime.datetime.utcnow)
 	completed = Column(DateTime)
 	deleted = Column(DateTime)
 	ordinal = Column(Integer, default=0)
@@ -160,7 +161,7 @@ class Task(BaseModelMixin, Base):
 
 	def _set_task_completed(self, value):
 		if value:
-			self.completed = datetime.datetime.now()
+			self.completed = datetime.datetime.utcnow()
 		else:
 			self.completed = None
 
@@ -180,7 +181,7 @@ class Task(BaseModelMixin, Base):
 	@property
 	def child_overdue(self):
 		""" Count of not-complete subtask with due date in past. """
-		now = datetime.datetime.now()
+		now = datetime.datetime.utcnow()
 		return orm.object_session(self).scalar(select([func.count(Task.uuid)])
 				.where(and_(Task.parent_uuid == self.uuid,
 						Task.due_date.isnot(None), Task.due_date < now,
@@ -209,7 +210,7 @@ class Task(BaseModelMixin, Base):
 			search_str = '%%' + search_str + "%%"
 			query = query.filter(or_(Task.title.like(search_str),
 					Task.note.like(search_str)))
-		now = datetime.datetime.now()
+		now = datetime.datetime.utcnow()
 		if params.get('tags'):
 			# filter by tags
 			query = query.filter(Task.tags.any(TaskTag.task_uuid.in_(params['tags'])))
@@ -283,7 +284,7 @@ class Task(BaseModelMixin, Base):
 		session = session or Session()
 		query = session.query(cls)
 		# with reminders in past
-		now = datetime.datetime.now()
+		now = datetime.datetime.utcnow()
 		query = query.filter(Task.alarm <= now)
 		# if "since" is set - use it as minimal alarm
 		if since:
@@ -350,8 +351,9 @@ class Folder(BaseModelMixin, Base):
 
 	uuid = Column(String(36), primary_key=True, default=generate_uuid)
 	parent_uuid = Column(String(36), ForeignKey("folders.uuid"))
-	created = Column(DateTime, default=datetime.datetime.now)
-	modified = Column(DateTime, onupdate=datetime.datetime.now)
+	created = Column(DateTime, default=datetime.datetime.utcnow)
+	modified = Column(DateTime, default=datetime.datetime.utcnow,
+			onupdate=datetime.datetime.utcnow)
 	deleted = Column(DateTime)
 	ordinal = Column(Integer, default=0)
 	title = Column(String)
@@ -373,8 +375,9 @@ class Context(BaseModelMixin, Base):
 	__tablename__ = "contexts"
 	uuid = Column(String(36), primary_key=True, default=generate_uuid)
 	parent_uuid = Column(String(36), ForeignKey("contexts.uuid"))
-	created = Column(DateTime, default=datetime.datetime.now)
-	modified = Column(DateTime, onupdate=datetime.datetime.now)
+	created = Column(DateTime, default=datetime.datetime.utcnow)
+	modified = Column(DateTime, default=datetime.datetime.utcnow,
+			onupdate=datetime.datetime.utcnow)
 	deleted = Column(DateTime)
 	ordinal = Column(Integer, default=0)
 	title = Column(String)
@@ -391,8 +394,9 @@ class Tasknote(BaseModelMixin, Base):
 	__tablename__ = "tasknotes"
 	uuid = Column(String(36), primary_key=True, default=generate_uuid)
 	task_uuid = Column(String(36), ForeignKey("tasks.uuid"))
-	created = Column(DateTime, default=datetime.datetime.now)
-	modified = Column(DateTime, onupdate=datetime.datetime.now)
+	created = Column(DateTime, default=datetime.datetime.utcnow)
+	modified = Column(DateTime, default=datetime.datetime.utcnow,
+			onupdate=datetime.datetime.utcnow)
 	ordinal = Column(Integer, default=0)
 	title = Column(String)
 	bg_color = Column(String, default="FFEFFF00")
@@ -404,8 +408,9 @@ class Goal(BaseModelMixin, Base):
 	__tablename__ = "goals"
 	uuid = Column(String(36), primary_key=True, default=generate_uuid)
 	parent_uuid = Column(String(36), ForeignKey("goals.uuid"))
-	created = Column(DateTime, default=datetime.datetime.now)
-	modified = Column(DateTime, onupdate=datetime.datetime.now)
+	created = Column(DateTime, default=datetime.datetime.utcnow)
+	modified = Column(DateTime, default=datetime.datetime.utcnow,
+			onupdate=datetime.datetime.utcnow)
 	deleted = Column(DateTime)
 	ordinal = Column(Integer, default=0)
 	title = Column(String)
@@ -432,8 +437,9 @@ class Tag(BaseModelMixin, Base):
 	__tablename__ = 'tags'
 	uuid = Column(String(36), primary_key=True, default=generate_uuid)
 	parent_uuid = Column(String(36), ForeignKey("tags.uuid"))
-	created = Column(DateTime, default=datetime.datetime.now)
-	modified = Column(DateTime, onupdate=datetime.datetime.now)
+	created = Column(DateTime, default=datetime.datetime.utcnow)
+	modified = Column(DateTime, default=datetime.datetime.utcnow,
+			onupdate=datetime.datetime.utcnow)
 	deleted = Column(DateTime)
 	ordinal = Column(Integer, default=0)
 	title = Column(String)
@@ -450,8 +456,9 @@ class TaskTag(BaseModelMixin, Base):
 	__tablename__ = "task_tags"
 	task_uuid = Column(String(50), ForeignKey("tasks.uuid"), primary_key=True)
 	tag_uuid = Column(String(50), ForeignKey("tags.uuid"), primary_key=True)
-	created = Column(DateTime, default=datetime.datetime.now)
-	modified = Column(DateTime, onupdate=datetime.datetime.now)
+	created = Column(DateTime, default=datetime.datetime.utcnow)
+	modified = Column(DateTime, default=datetime.datetime.utcnow,
+			onupdate=datetime.datetime.utcnow)
 
 	tag = orm.relationship("Tag", cascade="all", lazy="joined")
 
