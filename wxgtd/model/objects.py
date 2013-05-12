@@ -65,9 +65,9 @@ class BaseModelMixin(object):
 		return newobj
 
 	@classmethod
-	def selecy_by_modified_is_less(cls, timestamp):
+	def selecy_by_modified_is_less(cls, timestamp, session=None):
 		""" Find object with modified date less than given. """
-		session = Session()
+		session = session or Session()
 		return session.query(cls).filter(cls.modified < timestamp).all()
 
 	@classmethod

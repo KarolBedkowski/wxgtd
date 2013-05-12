@@ -161,7 +161,7 @@ def _convert_timestamps(dictobj, *fields):
 		convert(field)
 
 
-def _delete_missing(objcls, ids, last_sync):
+def _delete_missing(objcls, ids, last_sync, session):
 	""" Delete old object given class.
 
 	Deleted are objects given class, thats uuids not found in list ``ids``
@@ -172,14 +172,14 @@ def _delete_missing(objcls, ids, last_sync):
 		ids: list of uuid to keep
 		last_sync: items with modification older that this date will be deleted.
 	"""
-	objs = objcls.selecy_by_modified_is_less(last_sync)
+	objs = objcls.selecy_by_modified_is_less(last_sync, session=session)
 	to_delete = []
 	for obj in objs:
 		if obj.uuid not in ids:
 			to_delete.append(obj)
 	for obj in to_delete:
 		_LOG.info("_delete_missing %r", obj)
-		obj.delete()
+		session.delete(obj)
 
 
 def _build_id_uuid_map(objects_list):
@@ -425,12 +425,13 @@ def load_json(strdata, update_func):
 	_LOG.info("load_json: czyszczenie")
 	update_func(72, _("Cleanup"))
 	# pokasowanie staroci
-	synclog = data.get('syncLog')[0]
-	file_sync_time = str2datetime_utc(synclog.get('syncTime'))
-	_delete_missing(objects.Task, tasks_cache, file_sync_time)
-	_delete_missing(objects.Folder, folders_cache, file_sync_time)
-	_delete_missing(objects.Context, contexts_cache, file_sync_time)
-	_delete_missing(objects.Tasknote, tasknotes_cache, file_sync_time)
+	# TOOD: do naprawienia
+#	synclog = data.get('syncLog')[0]
+#	file_sync_time = str2datetime_utc(synclog.get('syncTime'))
+#	_delete_missing(objects.Task, tasks_cache, file_sync_time, session)
+#	_delete_missing(objects.Folder, folders_cache, file_sync_time, session)
+#	_delete_missing(objects.Context, contexts_cache, file_sync_time, session)
+#	_delete_missing(objects.Tasknote, tasknotes_cache, file_sync_time, session)
 	update_func(78, _("Cleanup done"))
 
 	# load synclog
