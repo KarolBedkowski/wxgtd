@@ -320,7 +320,7 @@ def load_json(strdata, update_func):
 			logic.update_task_alarm(task)
 		else:
 			_LOG.debug('skip %r', alarm)
-	update_func(46, _("Loaded %d alarms") % len(alarms))
+	update_func(46, _("Loaded %d alarms") % len(alarms or []))
 	if alarms:
 		del data['alarm']
 
@@ -340,7 +340,7 @@ def load_json(strdata, update_func):
 			task.folder_uuid = folder_uuid
 		else:
 			_LOG.debug('skip %r', task_folder)
-	update_func(51, _("Loaded %d task folders") % len(task_folders))
+	update_func(51, _("Loaded %d task folders") % len(task_folders or []))
 	if task_folders:
 		del data['task_folder']
 
@@ -360,7 +360,7 @@ def load_json(strdata, update_func):
 			task.context_uuid = context_uuid
 		else:
 			_LOG.debug('skip %r', task_context)
-	update_func(56, _("Loaded %d tasks contexts") % len(task_contexts))
+	update_func(56, _("Loaded %d tasks contexts") % len(task_contexts or []))
 	if task_contexts:
 		del data['task_context']
 
@@ -380,7 +380,7 @@ def load_json(strdata, update_func):
 			task.goal_uuid = goal_uuid
 		else:
 			_LOG.debug('skip %r', task_goal)
-	update_func(61, _("Loaded %d task goals") % len(task_goals))
+	update_func(61, _("Loaded %d task goals") % len(task_goals or []))
 	if task_goals:
 		del data['task_goal']
 
@@ -395,7 +395,7 @@ def load_json(strdata, update_func):
 		_create_or_update(session, objects.Tag, tag)
 	if tags:
 		del data['tag']
-	update_func(66, _("Loaded %d tags") % len(tags))
+	update_func(66, _("Loaded %d tags") % len(tags or []))
 
 	_LOG.info("load_json: task_tag")
 	update_func(67, _("Loading task tags"))
@@ -414,7 +414,7 @@ def load_json(strdata, update_func):
 			obj = objects.TaskTag(task_uuid=task_uuid, tag_uuid=tag_uuid)
 			obj.load_from_dict(task_tag)
 			session.add(obj)
-	update_func(71, _("Loaded %d task tags") % len(task_tags))
+	update_func(71, _("Loaded %d task tags") % len(task_tags or []))
 	if task_tags:
 		del data['task_tag']
 
