@@ -60,6 +60,9 @@ class DlgShowSettings(BaseDialog):
 
 	def _create_bindings(self):
 		BaseDialog._create_bindings(self)
+		self['dp_date'].Bind(wx.EVT_DATE_CHANGED, self._on_dp_changed)
+		self['tc_time'].Bind(wx.lib.masked.EVT_TIMEUPDATE, self._on_time_ctrl)
+		self['c_pattern'].Bind(wx.EVT_CHOICE, self._on_choice_pattern)
 
 	def _setup(self, date, pattern):
 		_LOG.debug("DlgShowSettings(%r)", (date, pattern))
@@ -93,3 +96,12 @@ class DlgShowSettings(BaseDialog):
 			self._data['pattern'] = c_pattern.GetClientData(
 					c_pattern.GetSelection())
 		BaseDialog._on_ok(self, evt)
+
+	def _on_dp_changed(self, _evt):
+		self['rb_datetime'].SetValue(True)
+
+	def _on_time_ctrl(self, _evt):
+		self['rb_datetime'].SetValue(True)
+
+	def _on_choice_pattern(self, _evt):
+		self['rb_before'].SetValue(True)

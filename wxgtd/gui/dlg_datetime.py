@@ -14,6 +14,7 @@ __version__ = "2013-04-28"
 import logging
 
 import wx
+import wx.calendar
 
 from wxgtd.wxtools.validators import ValidatorDate, ValidatorTime
 
@@ -52,6 +53,11 @@ class DlgDateTime(BaseDialog):
 
 	def _create_bindings(self):
 		BaseDialog._create_bindings(self)
+		self['cc_date'].Bind(wx.calendar.EVT_CALENDAR, self._on_calendar)
+		self['cc_date'].Bind(wx.calendar.EVT_CALENDAR_SEL_CHANGED,
+				self._on_calendar)
+		self['tc_time'].Bind(wx.lib.masked.EVT_TIMEUPDATE, self._on_time_ctrl)
+		self['cb_set_time'].Bind(wx.EVT_CHECKBOX, self._on_cb_set_time)
 
 	def _setup(self, timestamp, timeset):
 		_LOG.debug("DlgDateTime(%r)", timestamp)
@@ -80,3 +86,13 @@ class DlgDateTime(BaseDialog):
 		if self._timeset:
 			self._timestamp += int(self._values['time'])
 		BaseDialog._on_ok(self, evt)
+
+	def _on_calendar(self, _evt):
+		self['rb_date'].SetValue(True)
+
+	def _on_time_ctrl(self, _evt):
+		self['rb_date'].SetValue(True)
+		self['cb_set_time'].SetValue(True)
+
+	def _on_cb_set_time(self, _evt):
+		self['rb_date'].SetValue(True)
