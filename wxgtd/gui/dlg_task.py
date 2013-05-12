@@ -16,7 +16,6 @@ __version__ = "2010-11-25"
 import logging
 import datetime
 import gettext
-import time
 
 import wx
 try:
@@ -206,13 +205,11 @@ class DlgTask(BaseDialog):
 		task = self._task
 		alarm = None
 		if task.alarm:
-			task_alarm = DTU.datetime_utc2local(task.alarm)
-			alarm = time.mktime(task_alarm.timetuple())
+			alarm = DTU.datetime2timestamp(task.alarm)
 		dlg = DlgRemindSettings(self._wnd, alarm, task.alarm_pattern)
 		if dlg.run(True):
 			if dlg.alarm:
-				task.alarm = DTU.datetime_local2utc(
-						datetime.datetime.fromtimestamp(dlg.alarm))
+				task.alarm = DTU.timestamp2datetime(dlg.alarm)
 				task.alarm_pattern = None
 			else:
 				task.alarm = None
@@ -224,14 +221,11 @@ class DlgTask(BaseDialog):
 		task = self._task
 		date_time = None
 		if task.hide_until:
-			task_hide_until = DTU.datetime_utc2local(task.hide_until)
-			date_time = time.mktime(task_hide_until.timetuple())
+			date_time = DTU.datetime2timestamp(task.hide_until)
 		dlg = DlgShowSettings(self._wnd, date_time, task.hide_pattern)
 		if dlg.run(True):
 			if dlg.datetime:
-				task.hide_until = DTU.datetime_local2utc(
-						datetime.datetime.fromtimestamp(dlg.datetime))
-				task.hide_pattern = 'given date'
+				task.hide_until = DTU.timestamp2datetime(dlg.datetime)
 			else:
 				task.hide_until = None
 			task.hide_pattern = dlg.pattern
@@ -324,15 +318,13 @@ class DlgTask(BaseDialog):
 		""" Wyśweitlenie dlg wyboru daty dla danego atrybutu """
 		value = getattr(self._task, attr_date)
 		if value:
-			value = DTU.datetime_utc2local(value)
-			value = time.mktime(value.timetuple())
+			value = DTU.datetime2timestamp(value)
 		dlg = DlgDateTime(self._wnd, value,
 				getattr(self._task, attr_time_set))
 		if dlg.run(True):
 			date = None
 			if dlg.timestamp:
-				date = datetime.datetime.fromtimestamp(dlg.timestamp)
-				date = DTU.datetime_local2utc(date)
+				date = DTU.timestamp2datetime(dlg.timestamp)
 			setattr(self._task, attr_date, date)
 			setattr(self._task, attr_time_set, dlg.is_time_set)
 			self._refresh_static_texts()
