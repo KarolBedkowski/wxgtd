@@ -117,7 +117,7 @@ class DlgReminders(BaseDialog):
 		if dlg.ShowModal() == wx.ID_OK:
 			pattern = enums.SNOOZE_PATTERNS[dlg.GetSelection()][0]
 			task = OBJ.Task.get(self._session, uuid=task_uuid)
-			task.alarm = datetime.now() + logic.alarm_pattern_to_time(pattern)
+			task.alarm = datetime.utcnow() + logic.alarm_pattern_to_time(pattern)
 			self._session.commit()
 			Publisher.sendMessage('task.update', data={'task_uuid': task.uuid})
 		dlg.Destroy()
@@ -150,6 +150,6 @@ class DlgReminders(BaseDialog):
 			self._remove_task(uuid)
 		elif args.topic == ('task', 'update'):
 			task = OBJ.Task.get(self._session, uuid=uuid)
-			if task.completed or not task.alarm or task.alarm > datetime.now():
+			if task.completed or not task.alarm or task.alarm > datetime.utcnow():
 				self._remove_task(uuid)
 		self._refresh()

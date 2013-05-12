@@ -273,7 +273,7 @@ class DlgTask(BaseDialog):
 			value = self['tc_notes_note'].GetValue()
 			if value and value != cnote.title:
 				cnote.title = value
-				cnote.modified = datetime.datetime.now()
+				cnote.modified = datetime.datetime.utcnow()
 				if not cnote.created:
 					cnote.created = cnote.modified
 					self._task.notes.append(cnote)
