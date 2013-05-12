@@ -433,25 +433,18 @@ def load_json(strdata, update_func):
 	_delete_missing(objects.Tasknote, tasknotes_cache, file_sync_time)
 	update_func(78, _("Cleanup done"))
 
-	c_last_sync = session.query(objects.Conf).filter_by(key='last_sync').first()
-	if c_last_sync is None:
-		c_last_sync = objects.Conf(key='last_sync')
-		session.add(c_last_sync)
-	c_last_sync.val = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
-
 	# load synclog
 	_LOG.info("load_json: synclog")
 	update_func(79, _("Loading synclog"))
 	for sync_log in data.get('syncLog'):
 		_convert_timestamps(sync_log, 'prevSyncTime', 'syncTime')
-		slog_itm = objects.SyncLog.get(session, sync_time=sync_log['syncTime'],
-				device_id=sync_log['deviceId'])
-		if slog_itm:
-			continue
-		slog_item = objects.SyncLog()
-		slog_item.device_id = sync_log['deviceId']
+		slog_item = objects.SyncLog.get(session, device_id=sync_log['deviceId'])
+		if slog_item:
+			slog_item.prev_sync_time = slog_item.sync_time
+		else:
+			slog_item = objects.SyncLog()
+			slog_item.device_id = sync_log['deviceId']
 		slog_item.sync_time = sync_log['syncTime']
-		slog_item.prev_sync_time = sync_log['prevSyncTime']
 		session.add(slog_item)
 	if sync_log:
 		del data['syncLog']
