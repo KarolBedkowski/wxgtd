@@ -119,7 +119,7 @@ def dump_database_to_json(update_func):
 						else 0,
 				'uuid': obj.uuid,
 				'created': fmt_date(obj.created),
-				'modified': fmt_date(obj.modified),
+				'modified': fmt_date(obj.modified or obj.created),
 				'deleted': fmt_date(obj.deleted),
 				'ordinal': obj.ordinal or 0,
 				'title': obj.title or '',
@@ -142,7 +142,7 @@ def dump_database_to_json(update_func):
 						else 0,
 				'uuid': obj.uuid,
 				'created': fmt_date(obj.created),
-				'modified': fmt_date(obj.modified),
+				'modified': fmt_date(obj.modified or obj.created),
 				'deleted': fmt_date(obj.deleted),
 				'ordinal': obj.ordinal or 0,
 				'title': obj.title or '',
@@ -165,7 +165,7 @@ def dump_database_to_json(update_func):
 						else 0,
 				'uuid': obj.uuid,
 				'created': fmt_date(obj.created),
-				'modified': fmt_date(obj.modified),
+				'modified': fmt_date(obj.modified or obj.created),
 				'deleted': fmt_date(obj.deleted),
 				'ordinal': obj.ordinal or 0,
 				'title': obj.title or '',
@@ -194,7 +194,7 @@ def dump_database_to_json(update_func):
 						else 0,
 				'uuid': task.uuid,
 				'created': fmt_date(task.created),
-				'modified': fmt_date(task.modified),
+				'modified': fmt_date(task.modified or task.created),
 				'completed': fmt_date(task.completed),
 				'deleted': fmt_date(task.deleted),
 				'ordinal': obj.ordinal or 0,
@@ -228,7 +228,7 @@ def dump_database_to_json(update_func):
 					'task_id': tasks_cache[task.uuid],
 					'uuid': objects.generate_uuid(),
 					'created': fmt_date(task.created),
-					'modified': fmt_date(task.modified),
+					'modified': fmt_date(task.modified or task.created),
 					'alarm': fmt_date(task.alarm),
 					'reminder': 0,
 					'active': 1,
@@ -239,19 +239,19 @@ def dump_database_to_json(update_func):
 			tfolder = {'task_id': tasks_cache[task.uuid],
 					'folder_id': folders_cache[task.folder_uuid],
 					'created': fmt_date(task.created),
-					'modified': fmt_date(task.modified)}
+					'modified': fmt_date(task.modified or task.created)}
 			task_folders.append(tfolder)
 		if task.context_uuid:
 			tcontext = {'task_id': tasks_cache[task.uuid],
 					'context_id': contexts_cache[task.context_uuid],
 					'created': fmt_date(task.created),
-					'modified': fmt_date(task.modified)}
+					'modified': fmt_date(task.modified or task.created)}
 			task_contexts.append(tcontext)
 		if task.goal_uuid:
 			tgoal = {'task_id': tasks_cache[task.uuid],
 					'goal_id': goals_cache[task.goal_uuid],
 					'created': fmt_date(task.created),
-					'modified': fmt_date(task.modified)}
+					'modified': fmt_date(task.modified or task.created)}
 			task_goals.append(tgoal)
 	if tasks:
 		res['task'] = tasks
@@ -276,7 +276,7 @@ def dump_database_to_json(update_func):
 						else 0,
 				'uuid': obj.uuid,
 				'created': fmt_date(obj.created),
-				'modified': fmt_date(obj.modified),
+				'modified': fmt_date(obj.modified or obj.created),
 				'deleted': fmt_date(obj.deleted),
 				'ordinal': obj.ordinal or 0,
 				'title': obj.title or '',
@@ -298,7 +298,7 @@ def dump_database_to_json(update_func):
 				'task_id': tasks_cache[obj.task_uuid],
 				'uuid': obj.uuid,
 				'created': fmt_date(obj.created),
-				'modified': fmt_date(obj.modified),
+				'modified': fmt_date(obj.modified or obj.created),
 				'ordinal': obj.ordinal or 0,
 				'title': obj.title or '',
 				'bg_color': obj.bg_color or "FFEFFF00",
@@ -314,7 +314,7 @@ def dump_database_to_json(update_func):
 		ttag = {'task_id': tasks_cache[obj.task_uuid],
 				'tag_id': tags_cache[obj.tag_uuid],
 				'created': fmt_date(obj.created),
-				'modified': fmt_date(obj.modified)}
+				'modified': fmt_date(obj.modified or obj.created)}
 		tasktags.append(ttag)
 	if tasktags:
 		res['task_tag'] = tasktags
