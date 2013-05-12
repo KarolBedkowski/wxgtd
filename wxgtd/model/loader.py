@@ -435,7 +435,24 @@ def load_json(strdata, update_func):
 		session.add(c_last_sync)
 	c_last_sync.val = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
 
-	update_func(80, _("Commiting..."))
+	# load synclog
+	_LOG.info("load_json: synclog")
+	update_func(79, _("Loading synclog"))
+	for sync_log in data.get('syncLog'):
+		_convert_timestamps(sync_log, 'prevSyncTime', 'syncTime')
+		slog_itm = objects.SyncLog.get(session, sync_time=sync_log['syncTime'],
+				device_id=sync_log['deviceId'])
+		if slog_itm:
+			continue
+		slog_item = objects.SyncLog()
+		slog_item.device_id = sync_log['deviceId']
+		slog_item.sync_time = sync_log['syncTime']
+		slog_item.prev_sync_time = sync_log['prevSyncTime']
+		session.add(slog_item)
+	if sync_log:
+		del data['syncLog']
+
+	update_func(90, _("Commiting..."))
 	session.commit()
 	update_func(100, _("Load completed"))
 
