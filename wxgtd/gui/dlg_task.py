@@ -27,6 +27,7 @@ except ImportError:
 from wxgtd.model import objects as OBJ
 from wxgtd.model import enums
 from wxgtd.model import logic
+from wxgtd.lib import datetimeutils as DTU
 from wxgtd.wxtools.validators import Validator, ValidatorDv
 from wxgtd.wxtools.validators import v_length as LVALID
 
@@ -103,8 +104,8 @@ class DlgTask(BaseDialog):
 			duration = duration % 1440
 			self._data['duration_h'] = int(duration / 60)
 			self._data['duration_m'] = duration % 60
-		self._data['due_time'] = self._data['due_date'] = task.due_date
-		self._data['start_time'] = self._data['start_date'] = task.start_date
+		#self._data['due_time'] = self._data['due_date'] = task.due_date
+		#self._data['start_time'] = self._data['start_date'] = task.start_date
 		self['tc_title'].SetValidator(Validator(task, 'title',
 				validators=LVALID.NotEmptyValidator(), field='title'))
 		self['tc_note'].SetValidator(Validator(task, 'note',))
@@ -205,11 +206,13 @@ class DlgTask(BaseDialog):
 		task = self._task
 		alarm = None
 		if task.alarm:
-			alarm = time.mktime(task.alarm.timetuple())
+			task_alarm = DTU.datetime_utc2local(task.alarm)
+			alarm = time.mktime(task_alarm.timetuple())
 		dlg = DlgRemindSettings(self._wnd, alarm, task.alarm_pattern)
 		if dlg.run(True):
 			if dlg.alarm:
-				task.alarm = datetime.datetime.fromtimestamp(dlg.alarm)
+				task.alarm = DTU.datetime_local2utc(
+						datetime.datetime.fromtimestamp(dlg.alarm))
 			else:
 				task.alarm = None
 			task.alarm_pattern = dlg.alarm_pattern
@@ -220,11 +223,14 @@ class DlgTask(BaseDialog):
 		task = self._task
 		date_time = None
 		if task.hide_until:
-			date_time = time.mktime(task.hide_until.timetuple())
+			task_hide_until = DTU.datetime_utc2local(task.hide_until)
+			date_time = time.mktime(task_hide_until.timetuple())
 		dlg = DlgShowSettings(self._wnd, date_time, task.hide_pattern)
 		if dlg.run(True):
 			if dlg.datetime:
-				task.hide_until = datetime.datetime.fromtimestamp(dlg.datetime)
+				task.hide_until = DTU.datetime_local2utc(
+						datetime.datetime.fromtimestamp(dlg.datetime))
+				task.hide_pattern = 'given date'
 			else:
 				task.hide_until = None
 			task.hide_pattern = dlg.pattern
@@ -317,6 +323,7 @@ class DlgTask(BaseDialog):
 		""" Wyśweitlenie dlg wyboru daty dla danego atrybutu """
 		value = getattr(self._task, attr_date)
 		if value:
+			value = DTU.datetime_utc2local(value)
 			value = time.mktime(value.timetuple())
 		dlg = DlgDateTime(self._wnd, value,
 				getattr(self._task, attr_time_set))
@@ -324,6 +331,7 @@ class DlgTask(BaseDialog):
 			date = None
 			if dlg.timestamp:
 				date = datetime.datetime.fromtimestamp(dlg.timestamp)
+				date = DTU.datetime_local2utc(date)
 			setattr(self._task, attr_date, date)
 			setattr(self._task, attr_time_set, dlg.is_time_set)
 			self._refresh_static_texts()
