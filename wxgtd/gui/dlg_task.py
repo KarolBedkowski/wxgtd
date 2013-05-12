@@ -116,8 +116,8 @@ class DlgTask(BaseDialog):
 		# parent == projekt/lista
 		self['cb_project'].SetValidator(ValidatorDv(task,
 				'parent_uuid'))
-		self['l_created'].SetLabel(str(task.created))
-		self['l_modified'].SetLabel(str(task.modified))
+		self['l_created'].SetLabel(fmt.format_timestamp(task.created, True))
+		self['l_modified'].SetLabel(fmt.format_timestamp(task.modified, True))
 		self['cb_completed'].SetValidator(Validator(task, 'task_completed'))
 		self['cb_starred'].SetValidator(Validator(task, 'starred'))
 		self['sl_priority'].SetValidator(Validator(task, 'priority'))
