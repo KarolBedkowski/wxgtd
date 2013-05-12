@@ -80,6 +80,19 @@ class DlgRepeatSettings(BaseDialog):
 
 	def _create_bindings(self):
 		BaseDialog._create_bindings(self)
+		self['c_every'].Bind(wx.EVT_CHOICE, self._on_cb_every_pattern)
+		self['sc_everyxt_num'].Bind(wx.EVT_SPINCTRL, self._on_every_xt_sc)
+		self['c_everyxt_period'].Bind(wx.EVT_CHOICE, self._on_every_xt_period)
+		self['cb_mon'].Bind(wx.EVT_CHECKBOX, self._on_every_w_day)
+		self['cb_tue'].Bind(wx.EVT_CHECKBOX, self._on_every_w_day)
+		self['cb_wed'].Bind(wx.EVT_CHECKBOX, self._on_every_w_day)
+		self['cb_thu'].Bind(wx.EVT_CHECKBOX, self._on_every_w_day)
+		self['cb_fri'].Bind(wx.EVT_CHECKBOX, self._on_every_w_day)
+		self['cb_sat'].Bind(wx.EVT_CHECKBOX, self._on_every_w_day)
+		self['cb_sun'].Bind(wx.EVT_CHECKBOX, self._on_every_w_day)
+		self['cb_xdm_num_wday'].Bind(wx.EVT_CHOICE, self._on_xdm_num_wdays)
+		self['c_xdm_weekday'].Bind(wx.EVT_CHOICE, self._on_xdm_weekday)
+		self['sc_xdm_months'].Bind(wx.EVT_SPINCTRL, self._on_xdm_months)
 
 	def _setup(self, pattern, repeat_from):
 		_LOG.debug("DlgRemindSettings(%r)", (pattern, repeat_from))
@@ -147,6 +160,27 @@ class DlgRepeatSettings(BaseDialog):
 		else:
 			self._data['pattern'] = _get_choice_selected(self['c_every'])
 		BaseDialog._on_ok(self, evt)
+
+	def _on_cb_every_pattern(self, _evt):
+		self['rb_every'].SetValue(True)
+
+	def _on_every_xt_sc(self, _evt):
+		self['rb_everyxt'].SetValue(True)
+
+	def _on_every_xt_period(self, _evt):
+		self['rb_everyxt'].SetValue(True)
+
+	def _on_every_w_day(self, _evt):
+		self['rb_everyw'].SetValue(True)
+
+	def _on_xdm_num_wdays(self, _evt):
+		self['rb_xdm'].SetValue(True)
+
+	def _on_xdm_weekday(self, _evt):
+		self['rb_xdm'].SetValue(True)
+
+	def _on_xdm_months(self, _evt):
+		self['rb_xdm'].SetValue(True)
 
 
 def _choice_select_by_data(control, value):
