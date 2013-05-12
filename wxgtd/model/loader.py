@@ -15,9 +15,8 @@ __version__ = '2013-04-21'
 import os
 import logging
 import zipfile
-import time
-import datetime
 import gettext
+from dateutil import parser, tz
 try:
 	import cjson
 	json_decoder = cjson.decode
@@ -78,6 +77,7 @@ def _create_or_update(session, cls, datadict):
 	obj = session.query(cls).filter_by(uuid=uuid).first()
 	if obj:
 		modified = datadict.get('modified')
+		print modified, obj.modified
 		if not modified or modified > obj.modified:
 			# load only modified objs
 			obj.load_from_dict(datadict)
@@ -117,7 +117,7 @@ def _replace_ids(objdict, cache, key_id, key_uuid=None):
 	return res
 
 
-def str2timestamp(string):
+def str2datetime_utc(string):
 	""" Convert string like '2013-03-22T21:27:46.461Z' into timestamp.
 
 	Args:
@@ -128,9 +128,13 @@ def str2timestamp(string):
 	"""
 	if string and len(string) > 18:
 		try:
-			return time.mktime(time.strptime(string[:19], "%Y-%m-%dT%H:%M:%S"))
+			value = parser.parse(string)
+			# convert to UTC
+			value = value.astimezone(tz.tzutc())
+			# remove timezone
+			return value.replace(tzinfo=None)
 		except ValueError:
-			_LOG.exception("str2timestamp %r", string)
+			_LOG.exception("str2datetime_utc %r", string)
 	return None
 
 
@@ -148,7 +152,7 @@ def _convert_timestamps(dictobj, *fields):
 		if value is None:
 			return
 		elif value:
-			value = datetime.datetime.fromtimestamp(str2timestamp(value))
+			value = str2datetime_utc(value)
 		dictobj[field] = value or None
 
 	for field in ('created', 'modified', 'deleted'):
@@ -157,7 +161,7 @@ def _convert_timestamps(dictobj, *fields):
 		convert(field)
 
 
-def _delete_missing(objcls, ids, last_sync):
+def _delete_missing(objcls, ids, last_sync, session):
 	""" Delete old object given class.
 
 	Deleted are objects given class, thats uuids not found in list ``ids``
@@ -168,14 +172,14 @@ def _delete_missing(objcls, ids, last_sync):
 		ids: list of uuid to keep
 		last_sync: items with modification older that this date will be deleted.
 	"""
-	objs = objcls.selecy_by_modified_is_less(last_sync)
+	objs = objcls.selecy_by_modified_is_less(last_sync, session=session)
 	to_delete = []
 	for obj in objs:
 		if obj.uuid not in ids:
 			to_delete.append(obj)
 	for obj in to_delete:
 		_LOG.info("_delete_missing %r", obj)
-		obj.delete()
+		session.delete(obj)
 
 
 def _build_id_uuid_map(objects_list):
@@ -203,12 +207,12 @@ def _check_synclog(data, session):
 	c_last_sync = session.query(objects.Conf).filter_by(key='last_sync').first()
 	if c_last_sync is None:
 		return True
-	last_sync = str2timestamp(c_last_sync.val)
+	last_sync = str2datetime_utc(c_last_sync.val)
 	device_id = session.query(objects.Conf).filter_by(key='deviceId').first().val
 
 	synclog = data.get('syncLog')[0]
 	file_sync_time_str = synclog.get('syncTime')
-	file_sync_time = str2timestamp(file_sync_time_str)
+	file_sync_time = str2datetime_utc(file_sync_time_str)
 	sync_device = synclog.get('deviceId')
 
 	if last_sync >= file_sync_time and device_id == sync_device:
@@ -320,7 +324,7 @@ def load_json(strdata, update_func):
 			logic.update_task_alarm(task)
 		else:
 			_LOG.debug('skip %r', alarm)
-	update_func(46, _("Loaded %d alarms") % len(alarms))
+	update_func(46, _("Loaded %d alarms") % len(alarms or []))
 	if alarms:
 		del data['alarm']
 
@@ -340,7 +344,7 @@ def load_json(strdata, update_func):
 			task.folder_uuid = folder_uuid
 		else:
 			_LOG.debug('skip %r', task_folder)
-	update_func(51, _("Loaded %d task folders") % len(task_folders))
+	update_func(51, _("Loaded %d task folders") % len(task_folders or []))
 	if task_folders:
 		del data['task_folder']
 
@@ -360,7 +364,7 @@ def load_json(strdata, update_func):
 			task.context_uuid = context_uuid
 		else:
 			_LOG.debug('skip %r', task_context)
-	update_func(56, _("Loaded %d tasks contexts") % len(task_contexts))
+	update_func(56, _("Loaded %d tasks contexts") % len(task_contexts or []))
 	if task_contexts:
 		del data['task_context']
 
@@ -380,7 +384,7 @@ def load_json(strdata, update_func):
 			task.goal_uuid = goal_uuid
 		else:
 			_LOG.debug('skip %r', task_goal)
-	update_func(61, _("Loaded %d task goals") % len(task_goals))
+	update_func(61, _("Loaded %d task goals") % len(task_goals or []))
 	if task_goals:
 		del data['task_goal']
 
@@ -395,7 +399,7 @@ def load_json(strdata, update_func):
 		_create_or_update(session, objects.Tag, tag)
 	if tags:
 		del data['tag']
-	update_func(66, _("Loaded %d tags") % len(tags))
+	update_func(66, _("Loaded %d tags") % len(tags or []))
 
 	_LOG.info("load_json: task_tag")
 	update_func(67, _("Loading task tags"))
@@ -414,28 +418,39 @@ def load_json(strdata, update_func):
 			obj = objects.TaskTag(task_uuid=task_uuid, tag_uuid=tag_uuid)
 			obj.load_from_dict(task_tag)
 			session.add(obj)
-	update_func(71, _("Loaded %d task tags") % len(task_tags))
+	update_func(71, _("Loaded %d task tags") % len(task_tags or []))
 	if task_tags:
 		del data['task_tag']
 
 	_LOG.info("load_json: czyszczenie")
 	update_func(72, _("Cleanup"))
 	# pokasowanie staroci
-	synclog = data.get('syncLog')[0]
-	file_sync_time = str2timestamp(synclog.get('syncTime'))
-	_delete_missing(objects.Task, tasks_cache, file_sync_time)
-	_delete_missing(objects.Folder, folders_cache, file_sync_time)
-	_delete_missing(objects.Context, contexts_cache, file_sync_time)
-	_delete_missing(objects.Tasknote, tasknotes_cache, file_sync_time)
+	# TOOD: do naprawienia
+#	synclog = data.get('syncLog')[0]
+#	file_sync_time = str2datetime_utc(synclog.get('syncTime'))
+#	_delete_missing(objects.Task, tasks_cache, file_sync_time, session)
+#	_delete_missing(objects.Folder, folders_cache, file_sync_time, session)
+#	_delete_missing(objects.Context, contexts_cache, file_sync_time, session)
+#	_delete_missing(objects.Tasknote, tasknotes_cache, file_sync_time, session)
 	update_func(78, _("Cleanup done"))
 
-	c_last_sync = session.query(objects.Conf).filter_by(key='last_sync').first()
-	if c_last_sync is None:
-		c_last_sync = objects.Conf(key='last_sync')
-		session.add(c_last_sync)
-	c_last_sync.val = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
+	# load synclog
+	_LOG.info("load_json: synclog")
+	update_func(79, _("Loading synclog"))
+	for sync_log in data.get('syncLog'):
+		_convert_timestamps(sync_log, 'prevSyncTime', 'syncTime')
+		slog_item = objects.SyncLog.get(session, device_id=sync_log['deviceId'])
+		if slog_item:
+			slog_item.prev_sync_time = slog_item.sync_time
+		else:
+			slog_item = objects.SyncLog()
+			slog_item.device_id = sync_log['deviceId']
+		slog_item.sync_time = sync_log['syncTime']
+		session.add(slog_item)
+	if sync_log:
+		del data['syncLog']
 
-	update_func(80, _("Commiting..."))
+	update_func(90, _("Commiting..."))
 	session.commit()
 	update_func(100, _("Load completed"))
 

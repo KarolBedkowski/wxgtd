@@ -86,7 +86,7 @@ class DlgShowSettings(BaseDialog):
 			self._data['pattern'] = self._data['datetime'] = None
 		elif self['rb_datetime'].GetValue():
 			self._data['datetime'] = self._data['date'] + self._data['time']
-			self._data['pattern'] = None
+			self._data['pattern'] = 'given date'
 		else:
 			self._data['datetime'] = None
 			c_pattern = self['c_pattern']

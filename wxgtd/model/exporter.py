@@ -108,6 +108,14 @@ def dump_database_to_json(update_func):
 
 	session = objects.Session()
 
+	device_id = session.query(objects.Conf).filter_by(key='deviceId').first().val
+	c_last_sync = session.query(objects.Conf).filter_by(key='last_sync').first()
+	if c_last_sync is None:
+		c_last_sync = objects.Conf(key='last_sync')
+		session.add(c_last_sync)
+	c_last_sync.val = fmt_date(datetime.datetime.utcnow())
+	session.commit()
+
 	# folders
 	_LOG.info("dump_database_to_json: folders")
 	update_func(1, _("Saving folders"))
@@ -322,14 +330,26 @@ def dump_database_to_json(update_func):
 
 	update_func(85, _("Sync log"))
 	# synclog
-	device_id = session.query(objects.Conf).filter_by(key='deviceId').first()
-	synclog = {
-			'deviceId': device_id.val,
-			"prevSyncTime": "",
-			"syncTime": fmt_date(datetime.datetime.now())}
-	res['syncLog'] = [synclog]
 
-	session.flush()
+	sync_logs = []
+	slog_item = objects.SyncLog.get(session, device_id=device_id)
+	if slog_item:
+		slog_item.prev_sync_time = slog_item.sync_time
+	else:
+		slog_item = objects.SyncLog()
+		slog_item.device_id = device_id
+	slog_item.sync_time = datetime.datetime.utcnow()
+	session.add(slog_item)
+
+	for sync_log in session.query(objects.SyncLog).order_by(
+			objects.SyncLog.sync_time):
+		sync_logs.append({
+			'deviceId': sync_log.device_id,
+			"prevSyncTime": fmt_date(sync_log.prev_sync_time),
+			"syncTime": fmt_date(sync_log.sync_time)})
+	res['syncLog'] = sync_logs
+
+	session.commit()
 	update_func(80, _("Saving..."))
 
 	return json_encoder(res)
@@ -374,7 +394,7 @@ def create_sync_lock(sync_filename):
 	device_id = session.query(objects.Conf).filter_by(key='deviceId').first()
 	synclog = {
 			'deviceId': device_id.val,
-			"startTime": fmt_date(datetime.datetime.now())}
+			"startTime": fmt_date(datetime.datetime.utcnow())}
 	session.flush()
 
 	lock_filename = os.path.join(os.path.dirname(sync_filename),

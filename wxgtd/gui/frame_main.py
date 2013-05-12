@@ -589,7 +589,7 @@ def _update_color(wnd, bgcolor):
 
 
 def _get_hotlist_settings(params):
-	now = datetime.datetime.now()
+	now = datetime.datetime.utcnow()
 	conf = AppConfig()
 	params['filter_operator'] = 'or' if conf.get('hotlist', 'cond', True) \
 			else 'and'

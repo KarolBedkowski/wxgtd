@@ -15,11 +15,13 @@ import time
 import logging
 import datetime
 
+from wxgtd.lib import datetimeutils as DTU
+
 
 _LOG = logging.getLogger(__name__)
 
 
-def format_timestamp(timestamp, show_time=True):
+def format_timestamp(timestamp, show_time=True, datetime_in_utc=True):
 	""" Format date time object.
 
 	Args:
@@ -31,6 +33,8 @@ def format_timestamp(timestamp, show_time=True):
 	if isinstance(timestamp, (str, unicode)):
 		return timestamp
 	if isinstance(timestamp, datetime.datetime):
+		if datetime_in_utc:
+			timestamp = DTU.datetime_utc2local(timestamp)
 		if show_time:
 			return timestamp.strftime("%x %X")
 		return timestamp.strftime("%x")
