@@ -16,7 +16,6 @@ __version__ = "2010-11-25"
 import logging
 import datetime
 import gettext
-import time
 
 import wx
 try:
@@ -27,6 +26,7 @@ except ImportError:
 from wxgtd.model import objects as OBJ
 from wxgtd.model import enums
 from wxgtd.model import logic
+from wxgtd.lib import datetimeutils as DTU
 from wxgtd.wxtools.validators import Validator, ValidatorDv
 from wxgtd.wxtools.validators import v_length as LVALID
 
@@ -103,8 +103,8 @@ class DlgTask(BaseDialog):
 			duration = duration % 1440
 			self._data['duration_h'] = int(duration / 60)
 			self._data['duration_m'] = duration % 60
-		self._data['due_time'] = self._data['due_date'] = task.due_date
-		self._data['start_time'] = self._data['start_date'] = task.start_date
+		#self._data['due_time'] = self._data['due_date'] = task.due_date
+		#self._data['start_time'] = self._data['start_date'] = task.start_date
 		self['tc_title'].SetValidator(Validator(task, 'title',
 				validators=LVALID.NotEmptyValidator(), field='title'))
 		self['tc_note'].SetValidator(Validator(task, 'note',))
@@ -116,8 +116,8 @@ class DlgTask(BaseDialog):
 		# parent == projekt/lista
 		self['cb_project'].SetValidator(ValidatorDv(task,
 				'parent_uuid'))
-		self['l_created'].SetLabel(str(task.created))
-		self['l_modified'].SetLabel(str(task.modified))
+		self['l_created'].SetLabel(fmt.format_timestamp(task.created, True))
+		self['l_modified'].SetLabel(fmt.format_timestamp(task.modified, True))
 		self['cb_completed'].SetValidator(Validator(task, 'task_completed'))
 		self['cb_starred'].SetValidator(Validator(task, 'starred'))
 		self['sl_priority'].SetValidator(Validator(task, 'priority'))
@@ -205,14 +205,15 @@ class DlgTask(BaseDialog):
 		task = self._task
 		alarm = None
 		if task.alarm:
-			alarm = time.mktime(task.alarm.timetuple())
+			alarm = DTU.datetime2timestamp(task.alarm)
 		dlg = DlgRemindSettings(self._wnd, alarm, task.alarm_pattern)
 		if dlg.run(True):
 			if dlg.alarm:
-				task.alarm = datetime.datetime.fromtimestamp(dlg.alarm)
+				task.alarm = DTU.timestamp2datetime(dlg.alarm)
+				task.alarm_pattern = None
 			else:
 				task.alarm = None
-			task.alarm_pattern = dlg.alarm_pattern
+				task.alarm_pattern = dlg.alarm_pattern
 			logic.update_task_alarm(task)
 			self._refresh_static_texts()
 
@@ -220,11 +221,11 @@ class DlgTask(BaseDialog):
 		task = self._task
 		date_time = None
 		if task.hide_until:
-			date_time = time.mktime(task.hide_until.timetuple())
+			date_time = DTU.datetime2timestamp(task.hide_until)
 		dlg = DlgShowSettings(self._wnd, date_time, task.hide_pattern)
 		if dlg.run(True):
 			if dlg.datetime:
-				task.hide_until = datetime.datetime.fromtimestamp(dlg.datetime)
+				task.hide_until = DTU.timestamp2datetime(dlg.datetime)
 			else:
 				task.hide_until = None
 			task.hide_pattern = dlg.pattern
@@ -273,7 +274,7 @@ class DlgTask(BaseDialog):
 			value = self['tc_notes_note'].GetValue()
 			if value and value != cnote.title:
 				cnote.title = value
-				cnote.modified = datetime.datetime.now()
+				cnote.modified = datetime.datetime.utcnow()
 				if not cnote.created:
 					cnote.created = cnote.modified
 					self._task.notes.append(cnote)
@@ -293,7 +294,7 @@ class DlgTask(BaseDialog):
 			self['l_remind'].SetLabel(fmt.format_timestamp(task.alarm, True))
 		else:
 			self['l_remind'].SetLabel('')
-		if task.hide_pattern:
+		if task.hide_pattern and task.hide_pattern != 'given date':
 			self['l_hide_until'].SetLabel(enums.HIDE_PATTERNS[task.hide_pattern])
 		elif task.hide_until:
 			self['l_hide_until'].SetLabel(fmt.format_timestamp(task.hide_until,
@@ -317,13 +318,13 @@ class DlgTask(BaseDialog):
 		""" Wyśweitlenie dlg wyboru daty dla danego atrybutu """
 		value = getattr(self._task, attr_date)
 		if value:
-			value = time.mktime(value.timetuple())
+			value = DTU.datetime2timestamp(value)
 		dlg = DlgDateTime(self._wnd, value,
 				getattr(self._task, attr_time_set))
 		if dlg.run(True):
 			date = None
 			if dlg.timestamp:
-				date = datetime.datetime.fromtimestamp(dlg.timestamp)
+				date = DTU.timestamp2datetime(dlg.timestamp)
 			setattr(self._task, attr_date, date)
 			setattr(self._task, attr_time_set, dlg.is_time_set)
 			self._refresh_static_texts()

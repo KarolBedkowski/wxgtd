@@ -177,7 +177,7 @@ class TaskListControl(ULC.UltimateListCtrl, listmix.ColumnSorterMixin):
 				1: self._icons.get_image_index('prio1'),
 				2: self._icons.get_image_index('prio2'),
 				3: self._icons.get_image_index('prio3')}
-		now = datetime.datetime.now()
+		now = datetime.datetime.utcnow()
 		index = -1
 		for task in tasks:
 			child_count = task.active_child_count if active_only else \

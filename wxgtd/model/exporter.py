@@ -108,6 +108,14 @@ def dump_database_to_json(update_func):
 
 	session = objects.Session()
 
+	device_id = session.query(objects.Conf).filter_by(key='deviceId').first().val
+	c_last_sync = session.query(objects.Conf).filter_by(key='last_sync').first()
+	if c_last_sync is None:
+		c_last_sync = objects.Conf(key='last_sync')
+		session.add(c_last_sync)
+	c_last_sync.val = fmt_date(datetime.datetime.utcnow())
+	session.commit()
+
 	# folders
 	_LOG.info("dump_database_to_json: folders")
 	update_func(1, _("Saving folders"))
@@ -119,7 +127,7 @@ def dump_database_to_json(update_func):
 						else 0,
 				'uuid': obj.uuid,
 				'created': fmt_date(obj.created),
-				'modified': fmt_date(obj.modified),
+				'modified': fmt_date(obj.modified or obj.created),
 				'deleted': fmt_date(obj.deleted),
 				'ordinal': obj.ordinal or 0,
 				'title': obj.title or '',
@@ -142,7 +150,7 @@ def dump_database_to_json(update_func):
 						else 0,
 				'uuid': obj.uuid,
 				'created': fmt_date(obj.created),
-				'modified': fmt_date(obj.modified),
+				'modified': fmt_date(obj.modified or obj.created),
 				'deleted': fmt_date(obj.deleted),
 				'ordinal': obj.ordinal or 0,
 				'title': obj.title or '',
@@ -165,7 +173,7 @@ def dump_database_to_json(update_func):
 						else 0,
 				'uuid': obj.uuid,
 				'created': fmt_date(obj.created),
-				'modified': fmt_date(obj.modified),
+				'modified': fmt_date(obj.modified or obj.created),
 				'deleted': fmt_date(obj.deleted),
 				'ordinal': obj.ordinal or 0,
 				'title': obj.title or '',
@@ -194,7 +202,7 @@ def dump_database_to_json(update_func):
 						else 0,
 				'uuid': task.uuid,
 				'created': fmt_date(task.created),
-				'modified': fmt_date(task.modified),
+				'modified': fmt_date(task.modified or task.created),
 				'completed': fmt_date(task.completed),
 				'deleted': fmt_date(task.deleted),
 				'ordinal': obj.ordinal or 0,
@@ -228,7 +236,7 @@ def dump_database_to_json(update_func):
 					'task_id': tasks_cache[task.uuid],
 					'uuid': objects.generate_uuid(),
 					'created': fmt_date(task.created),
-					'modified': fmt_date(task.modified),
+					'modified': fmt_date(task.modified or task.created),
 					'alarm': fmt_date(task.alarm),
 					'reminder': 0,
 					'active': 1,
@@ -239,19 +247,19 @@ def dump_database_to_json(update_func):
 			tfolder = {'task_id': tasks_cache[task.uuid],
 					'folder_id': folders_cache[task.folder_uuid],
 					'created': fmt_date(task.created),
-					'modified': fmt_date(task.modified)}
+					'modified': fmt_date(task.modified or task.created)}
 			task_folders.append(tfolder)
 		if task.context_uuid:
 			tcontext = {'task_id': tasks_cache[task.uuid],
 					'context_id': contexts_cache[task.context_uuid],
 					'created': fmt_date(task.created),
-					'modified': fmt_date(task.modified)}
+					'modified': fmt_date(task.modified or task.created)}
 			task_contexts.append(tcontext)
 		if task.goal_uuid:
 			tgoal = {'task_id': tasks_cache[task.uuid],
 					'goal_id': goals_cache[task.goal_uuid],
 					'created': fmt_date(task.created),
-					'modified': fmt_date(task.modified)}
+					'modified': fmt_date(task.modified or task.created)}
 			task_goals.append(tgoal)
 	if tasks:
 		res['task'] = tasks
@@ -276,7 +284,7 @@ def dump_database_to_json(update_func):
 						else 0,
 				'uuid': obj.uuid,
 				'created': fmt_date(obj.created),
-				'modified': fmt_date(obj.modified),
+				'modified': fmt_date(obj.modified or obj.created),
 				'deleted': fmt_date(obj.deleted),
 				'ordinal': obj.ordinal or 0,
 				'title': obj.title or '',
@@ -298,7 +306,7 @@ def dump_database_to_json(update_func):
 				'task_id': tasks_cache[obj.task_uuid],
 				'uuid': obj.uuid,
 				'created': fmt_date(obj.created),
-				'modified': fmt_date(obj.modified),
+				'modified': fmt_date(obj.modified or obj.created),
 				'ordinal': obj.ordinal or 0,
 				'title': obj.title or '',
 				'bg_color': obj.bg_color or "FFEFFF00",
@@ -314,7 +322,7 @@ def dump_database_to_json(update_func):
 		ttag = {'task_id': tasks_cache[obj.task_uuid],
 				'tag_id': tags_cache[obj.tag_uuid],
 				'created': fmt_date(obj.created),
-				'modified': fmt_date(obj.modified)}
+				'modified': fmt_date(obj.modified or obj.created)}
 		tasktags.append(ttag)
 	if tasktags:
 		res['task_tag'] = tasktags
@@ -322,14 +330,26 @@ def dump_database_to_json(update_func):
 
 	update_func(85, _("Sync log"))
 	# synclog
-	device_id = session.query(objects.Conf).filter_by(key='deviceId').first()
-	synclog = {
-			'deviceId': device_id.val,
-			"prevSyncTime": "",
-			"syncTime": fmt_date(datetime.datetime.now())}
-	res['syncLog'] = [synclog]
 
-	session.flush()
+	sync_logs = []
+	slog_item = objects.SyncLog.get(session, device_id=device_id)
+	if slog_item:
+		slog_item.prev_sync_time = slog_item.sync_time
+	else:
+		slog_item = objects.SyncLog()
+		slog_item.device_id = device_id
+	slog_item.sync_time = datetime.datetime.utcnow()
+	session.add(slog_item)
+
+	for sync_log in session.query(objects.SyncLog).order_by(
+			objects.SyncLog.sync_time):
+		sync_logs.append({
+			'deviceId': sync_log.device_id,
+			"prevSyncTime": fmt_date(sync_log.prev_sync_time),
+			"syncTime": fmt_date(sync_log.sync_time)})
+	res['syncLog'] = sync_logs
+
+	session.commit()
 	update_func(80, _("Saving..."))
 
 	return json_encoder(res)
@@ -374,7 +394,7 @@ def create_sync_lock(sync_filename):
 	device_id = session.query(objects.Conf).filter_by(key='deviceId').first()
 	synclog = {
 			'deviceId': device_id.val,
-			"startTime": fmt_date(datetime.datetime.now())}
+			"startTime": fmt_date(datetime.datetime.utcnow())}
 	session.flush()
 
 	lock_filename = os.path.join(os.path.dirname(sync_filename),
