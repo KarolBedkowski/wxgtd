@@ -60,6 +60,9 @@ class DlgRemindSettings(BaseDialog):
 
 	def _create_bindings(self):
 		BaseDialog._create_bindings(self)
+		self['dp_date'].Bind(wx.EVT_DATE_CHANGED, self._on_dp_changed)
+		self['tc_time'].Bind(wx.lib.masked.EVT_TIMEUPDATE, self._on_time_ctrl)
+		self['c_before'].Bind(wx.EVT_CHOICE, self._on_choice_before)
 
 	def _setup(self, alarm, alarm_pattern):
 		_LOG.debug("DlgRemindSettings(%r)", (alarm, alarm_pattern))
@@ -93,3 +96,12 @@ class DlgRemindSettings(BaseDialog):
 			self._data['alarm_pattern'] = c_before.GetClientData(
 					c_before.GetSelection())
 		BaseDialog._on_ok(self, evt)
+
+	def _on_dp_changed(self, _evt):
+		self['rb_datetime'].SetValue(True)
+
+	def _on_time_ctrl(self, _evt):
+		self['rb_datetime'].SetValue(True)
+
+	def _on_choice_before(self, _evt):
+		self['rb_before'].SetValue(True)
