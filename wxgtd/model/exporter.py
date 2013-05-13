@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+# pylint: disable=W0141
 """ Function for duping content of database into file.
 
 Copyright (c) Karol Będkowski, 2013
@@ -19,12 +20,12 @@ import datetime
 import gettext
 try:
 	import cjson
-	json_decoder = cjson.decode
-	json_encoder = cjson.encode
+	_JSON_DECODER = cjson.decode
+	_JSON_ENCODER = cjson.encode
 except ImportError:
 	import json
-	json_decoder = json.loads
-	json_encoder = json.dumps
+	_JSON_DECODER = json.loads
+	_JSON_ENCODER = json.dumps
 
 
 from wxgtd.model import objects
@@ -104,24 +105,27 @@ def dump_database_to_json(update_func):
 	Returns:
 		Data encoded in json format.
 	"""
+	# TODO: refactor; pylint: disable=R0914, R0912, R0915
 	res = {'version': 2}
 
 	session = objects.Session()
 
+	# pylint: disable=E1101
 	device_id = session.query(objects.Conf).filter_by(key='deviceId').first().val
 	c_last_sync = session.query(objects.Conf).filter_by(key='last_sync').first()
+	# pylint: enable=E1101
 	if c_last_sync is None:
 		c_last_sync = objects.Conf(key='last_sync')
-		session.add(c_last_sync)
+		session.add(c_last_sync)  # pylint: disable=E1101
 	c_last_sync.val = fmt_date(datetime.datetime.utcnow())
-	session.commit()
+	session.commit()  # pylint: disable=E1101
 
 	# folders
 	_LOG.info("dump_database_to_json: folders")
 	update_func(1, _("Saving folders"))
 	folders_cache = _build_uuid_map(session, objects.Folder)
 	folders = []
-	for obj in session.query(objects.Folder):
+	for obj in session.query(objects.Folder):  # pylint: disable=E1101
 		folder = {'_id': folders_cache[obj.uuid],
 				'parent_id': folders_cache[obj.parent_uuid] if obj.parent_uuid
 						else 0,
@@ -144,7 +148,7 @@ def dump_database_to_json(update_func):
 	update_func(6, _("Saving contexts"))
 	contexts_cache = _build_uuid_map(session, objects.Context)
 	contexts = []
-	for obj in session.query(objects.Context):
+	for obj in session.query(objects.Context):  # pylint: disable=E1101
 		folder = {'_id': contexts_cache[obj.uuid],
 				'parent_id': contexts_cache[obj.parent_uuid] if obj.parent_uuid
 						else 0,
@@ -167,7 +171,7 @@ def dump_database_to_json(update_func):
 	update_func(11, _("Saving goals"))
 	goals_cache = _build_uuid_map(session, objects.Goal)
 	goals = []
-	for obj in session.query(objects.Goal):
+	for obj in session.query(objects.Goal):  # pylint: disable=E1101
 		folder = {'_id': goals_cache[obj.uuid],
 				'parent_id': goals_cache[obj.parent_uuid] if obj.parent_uuid
 						else 0,
@@ -196,7 +200,7 @@ def dump_database_to_json(update_func):
 	task_contexts = []
 	task_goals = []
 	alarm_idx = 0
-	for task in session.query(objects.Task):
+	for task in session.query(objects.Task):  # pylint: disable=E1101
 		taskd = {'_id': tasks_cache[task.uuid],
 				'parent_id': tasks_cache[task.parent_uuid] if task.parent_uuid
 						else 0,
@@ -278,7 +282,7 @@ def dump_database_to_json(update_func):
 	_LOG.info("dump_database_to_json: tags")
 	tags_cache = _build_uuid_map(session, objects.Tag)
 	tags = []
-	for obj in session.query(objects.Tag):
+	for obj in session.query(objects.Tag):  # pylint: disable=E1101
 		folder = {'_id': tags_cache[obj.uuid],
 				'parent_id': tags_cache[obj.parent_uuid] if obj.parent_uuid
 						else 0,
@@ -301,7 +305,7 @@ def dump_database_to_json(update_func):
 	_LOG.info("dump_database_to_json: tasknotes")
 	tasknotes_cache = _build_uuid_map(session, objects.Tasknote)
 	tasknotes = []
-	for obj in session.query(objects.Tasknote):
+	for obj in session.query(objects.Tasknote):  # pylint: disable=E1101
 		folder = {'_id': tasknotes_cache[obj.uuid],
 				'task_id': tasks_cache[obj.task_uuid],
 				'uuid': obj.uuid,
@@ -318,7 +322,7 @@ def dump_database_to_json(update_func):
 
 	update_func(80, _("Saving task tags"))
 	tasktags = []
-	for obj in session.query(objects.TaskTag):
+	for obj in session.query(objects.TaskTag):  # pylint: disable=E1101
 		ttag = {'task_id': tasks_cache[obj.task_uuid],
 				'tag_id': tags_cache[obj.tag_uuid],
 				'created': fmt_date(obj.created),
@@ -339,20 +343,20 @@ def dump_database_to_json(update_func):
 		slog_item = objects.SyncLog()
 		slog_item.device_id = device_id
 	slog_item.sync_time = datetime.datetime.utcnow()
-	session.add(slog_item)
+	session.add(slog_item)  # pylint: disable=E1101
 
-	for sync_log in session.query(objects.SyncLog).order_by(
-			objects.SyncLog.sync_time):
+	for sync_log in session.query(  # pylint: disable=E1101
+			objects.SyncLog).order_by(objects.SyncLog.sync_time):
 		sync_logs.append({
 			'deviceId': sync_log.device_id,
 			"prevSyncTime": fmt_date(sync_log.prev_sync_time),
 			"syncTime": fmt_date(sync_log.sync_time)})
 	res['syncLog'] = sync_logs
 
-	session.commit()
+	session.commit()  # pylint: disable=E1101
 	update_func(80, _("Saving..."))
 
-	return json_encoder(res)
+	return _JSON_ENCODER(res)
 
 
 def _check_existing_synclock(lock_filename, my_device_id):
@@ -369,7 +373,7 @@ def _check_existing_synclock(lock_filename, my_device_id):
 		return True
 	data = None
 	with open(lock_filename, 'r') as lock_file:
-		data = json_decoder(lock_file.read().decode('UTF-8'))
+		data = _JSON_DECODER(lock_file.read().decode('UTF-8'))
 	if data:
 		sync_device = data.get('deviceId')
 		if sync_device != my_device_id:
@@ -391,11 +395,11 @@ def create_sync_lock(sync_filename):
 		False, if directory is locked.
 	"""
 	session = objects.Session()
-	device_id = session.query(objects.Conf).filter_by(key='deviceId').first()
-	synclog = {
-			'deviceId': device_id.val,
+	device_id = session.query(objects.Conf).filter_by(  # pylint: disable=E1101
+			key='deviceId').first()
+	synclog = {'deviceId': device_id.val,
 			"startTime": fmt_date(datetime.datetime.utcnow())}
-	session.flush()
+	session.flush()  # pylint: disable=E1101
 
 	lock_filename = os.path.join(os.path.dirname(sync_filename),
 			'sync.locked')
@@ -403,7 +407,7 @@ def create_sync_lock(sync_filename):
 		return False
 	_LOG.debug('create_sync_lock: writing synclog: %r', lock_filename)
 	with open(lock_filename, 'w') as ifile:
-		ifile.write(json_encoder(synclog))
+		ifile.write(_JSON_ENCODER(synclog))
 	return True
 
 

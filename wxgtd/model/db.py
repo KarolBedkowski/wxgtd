@@ -26,7 +26,7 @@ _LOG = logging.getLogger(__name__)
 
 
 @sqlalchemy.event.listens_for(Engine, "connect")
-def _set_sqlite_pragma(dbapi_connection, connection_record):
+def _set_sqlite_pragma(dbapi_connection, _connection_record):
 	cursor = dbapi_connection.cursor()
 	cursor.execute("PRAGMA foreign_keys=ON")
 	cursor.close()
@@ -50,18 +50,19 @@ def connect(filename, debug=False, *args, **kwargs):
 	for schema in sqls.SCHEMA_DEF:
 		for sql in schema:
 			engine.execute(sql)
-	objects.Session.configure(bind=engine)
+	objects.Session.configure(bind=engine)  # pylint: disable=E1120
 	objects.Base.metadata.create_all(engine)
 	# bootstrap
 	session = objects.Session()
 	# 1. deviceId
-	conf = session.query(objects.Conf).filter_by(key='deviceId').first()
+	conf = session.query(  # pylint: disable=E1101
+			objects.Conf).filter_by(key='deviceId').first()
 	if conf is None:
 		conf = objects.Conf(key='deviceId')
 		conf.val = objects.generate_uuid()
-		session.add(conf)
+		session.add(conf)  # pylint: disable=E1101
 		_LOG.info('DB bootstrap: create deviceId=%r', conf.val)
-		session.commit()
+		session.commit()  # pylint: disable=E1101
 	# 2. cleanup
 	engine.execute("delete from task_tags "
 			"where task_uuid not in (select uuid from tasks)"

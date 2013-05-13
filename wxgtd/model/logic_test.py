@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-
+# pylint: disable=R0902, R0903, C0103
 """ Tests for logic module.
 """
 
@@ -104,7 +104,7 @@ class TestLogicUpdateTaskHide(TestCase):
 
 	def test_02_given_date(self):
 		obj = _FTask(None, None, None)
-		self.hide_until = datetime.now()
+		obj.hide_until = datetime.now()
 		obj.hide_pattern = None
 		logic.update_task_hide(obj)
 		self.assertEqual(obj.hide_until, None)

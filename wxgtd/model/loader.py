@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+# pylint: disable=W0141
 """ Load data from GTD sync file format.
 
 Copyright (c) Karol Będkowski, 2006-2013
@@ -19,12 +20,12 @@ import gettext
 import datetime
 try:
 	import cjson
-	json_decoder = cjson.decode
-	json_encoder = cjson.encode
+	_JSON_DECODER = cjson.decode
+	_JSON_ENCODER = cjson.encode
 except ImportError:
 	import json
-	json_decoder = json.loads
-	json_encoder = json.dumps
+	_JSON_DECODER = json.loads
+	_JSON_ENCODER = json.dumps
 
 from dateutil import parser, tz
 
@@ -261,8 +262,9 @@ def load_json(strdata, update_func):
 	Returns:
 		true if success.
 	"""
+	# pylint: disable=R0914, R0915, R0912
 	update_func(2, _("Decoding.."))
-	data = json_decoder(strdata.decode('UTF-8'))
+	data = _JSON_DECODER(strdata.decode('UTF-8'))
 	session = objects.Session()
 
 	update_func(5, _("Checking..."))
@@ -347,7 +349,8 @@ def load_json(strdata, update_func):
 			_LOG.error('load alarm error %r; %r; %r', alarm, task_uuid)
 			continue
 		_convert_timestamps(alarm, 'alarm')
-		task = session.query(objects.Task).filter_by(uuid=task_uuid).first()
+		task = session.query(  # pylint: disable=E1101
+				objects.Task).filter_by(uuid=task_uuid).first()
 		if task.modified <= alarm['modified']:
 			task.alarm = alarm['alarm']
 			logic.update_task_alarm(task)
@@ -368,7 +371,8 @@ def load_json(strdata, update_func):
 					task_uuid, folder_uuid)
 			continue
 		_convert_timestamps(task_folder)
-		task = session.query(objects.Task).filter_by(uuid=task_uuid).first()
+		task = session.query(  # pylint: disable=E1101
+				objects.Task).filter_by(uuid=task_uuid).first()
 		if task.modified <= task_folder['modified']:
 			task.folder_uuid = folder_uuid
 		else:
@@ -388,7 +392,8 @@ def load_json(strdata, update_func):
 					task_uuid, context_uuid)
 			continue
 		_convert_timestamps(task_context)
-		task = session.query(objects.Task).filter_by(uuid=task_uuid).first()
+		task = session.query(  # pylint: disable=E1101
+				objects.Task).filter_by(uuid=task_uuid).first()
 		if task.modified <= task_context['modified']:
 			task.context_uuid = context_uuid
 		else:
@@ -408,7 +413,8 @@ def load_json(strdata, update_func):
 					task_uuid, goal_uuid)
 			continue
 		_convert_timestamps(task_goal)
-		task = session.query(objects.Task).filter_by(uuid=task_uuid).first()
+		task = session.query(  # pylint: disable=E1101
+				objects.Task).filter_by(uuid=task_uuid).first()
 		if task.modified <= task_goal['modified']:
 			task.goal_uuid = goal_uuid
 		else:
@@ -437,7 +443,8 @@ def load_json(strdata, update_func):
 		task_uuid = _replace_ids(task_tag, tasks_cache, 'task_id')
 		tag_uuid = _replace_ids(task_tag, tags_cache, 'tag_id')
 		_convert_timestamps(task_tag)
-		obj = session.query(objects.TaskTag).filter_by(task_uuid=task_uuid,
+		obj = session.query(  # pylint: disable=E1101
+				objects.TaskTag).filter_by(task_uuid=task_uuid,
 				tag_uuid=tag_uuid).first()
 		if obj:
 			modified = task_tag.get('modified')
@@ -446,7 +453,7 @@ def load_json(strdata, update_func):
 		else:
 			obj = objects.TaskTag(task_uuid=task_uuid, tag_uuid=tag_uuid)
 			obj.load_from_dict(task_tag)
-			session.add(obj)
+			session.add(obj)  # pylint: disable=E1101
 	update_func(71, _("Loaded %d task tags") % len(task_tags or []))
 	if task_tags:
 		del data['task_tag']
@@ -464,11 +471,11 @@ def load_json(strdata, update_func):
 			slog_item = objects.SyncLog()
 			slog_item.device_id = sync_log['deviceId']
 		slog_item.sync_time = sync_log['syncTime']
-		session.add(slog_item)
+		session.add(slog_item)  # pylint: disable=E1101
 		if slog_item.sync_time > last_sync_time:
 			last_sync_time = slog_item.sync_time
 			last_prev_sync_time = slog_item.prev_sync_time
-	if sync_log:
+	if 'syncLog' in data:
 		del data['syncLog']
 
 	_LOG.info("load_json: czyszczenie")
@@ -489,7 +496,7 @@ def load_json(strdata, update_func):
 	update_func(89, _("Removed task notes: %d") % deleted_notes)
 
 	update_func(90, _("Committing..."))
-	session.commit()
+	session.commit()  # pylint: disable=E1101
 	update_func(100, _("Load completed"))
 
 	if data:

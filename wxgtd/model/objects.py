@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+# pylint: disable=W0105
 
 """ SqlAlchemy objects definition.
 
@@ -29,8 +30,8 @@ _LOG = logging.getLogger(__name__)
 _ = gettext.gettext
 
 # SQLAlchemy
-Base = declarative_base()
-Session = orm.sessionmaker()
+Base = declarative_base()  # pylint: disable=C0103
+Session = orm.sessionmaker  # pylint: disable=C0103
 
 
 def generate_uuid():
@@ -74,7 +75,7 @@ class BaseModelMixin(object):
 	def all(cls):
 		""" Return all objects this class. """
 		session = Session()
-		return session.query(cls).all()
+		return session.query(cls).all()  # pylint: disable=E1101
 
 	@classmethod
 	def get(cls, session=None, **kwargs):
@@ -103,6 +104,8 @@ class BaseModelMixin(object):
 class Task(BaseModelMixin, Base):
 	""" Task.
 	"""
+	# pylint: disable=R0902
+
 	__tablename__ = "tasks"
 
 	uuid = Column(String(36), primary_key=True, default=generate_uuid)
@@ -202,6 +205,7 @@ class Task(BaseModelMixin, Base):
 		Returns:
 			list of task
 		"""
+		# pylint: disable=R0912
 		session = session or Session()
 		query = session.query(cls)
 		query = _append_filter_list(query, Task.context_uuid, params.get('contexts'))
@@ -216,7 +220,7 @@ class Task(BaseModelMixin, Base):
 					Task.note.like(search_str)))
 		now = datetime.datetime.utcnow()
 		if params.get('tags'):
-			# filter by tags
+			# filter by tags; pylint: disable=E1101
 			query = query.filter(Task.tags.any(TaskTag.task_uuid.in_(params['tags'])))
 		if params.get('hide_until'):
 			# hide task with hide_until value in future
@@ -237,9 +241,9 @@ class Task(BaseModelMixin, Base):
 		if opt:
 			# use "or" or "and" operator for hotlist params
 			if params.get('filter_operator', 'and') == 'or':
-				query = query.filter(or_(*opt))
+				query = query.filter(or_(*opt))  # pylint: disable=W0142
 			else:
-				query = query.filter(*opt)
+				query = query.filter(*opt)  # pylint: disable=W0142
 		finished = params.get('finished')  # filter by completed value
 		if finished is not None:
 			if finished:  # only finished
@@ -267,11 +271,13 @@ class Task(BaseModelMixin, Base):
 	@classmethod
 	def all_projects(cls):
 		""" Get all projects from database. """
+		# pylint: disable=E1101
 		return Session().query(cls).filter_by(type=enums.TYPE_PROJECT).all()
 
 	@classmethod
 	def all_checklists(cls):
 		""" Get all checklists from database. """
+		# pylint: disable=E1101
 		return Session().query(cls).filter_by(type=enums.TYPE_CHECKLIST).all()
 
 	@classmethod
@@ -434,7 +440,10 @@ class Goal(BaseModelMixin, Base):
 
 class Conf(Base):
 	""" Internal configuration table  / object. """
+	# pylint: disable=W0232, R0903
+
 	__tablename__ = 'wxgtd'
+
 	key = Column(String(50), primary_key=True)
 	val = Column(String)
 

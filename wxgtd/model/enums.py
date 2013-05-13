@@ -16,7 +16,7 @@ __version__ = "2013-04-26"
 import gettext
 
 _ = gettext.gettext
-ngettext = gettext.ngettext
+ngettext = gettext.ngettext  # pylint: disable=C0103
 
 
 STATUSES = {0: _("No Status"),  # no status
@@ -128,10 +128,6 @@ REPEAT_PATTERN_LIST = [("Norepeat", _("Norepeat")),
 	("WITHPARENT", _("With parrent"))]
 
 REPEAT_PATTERN = dict(REPEAT_PATTERN_LIST)
-
-"""
-"The fourth Thu every 10 months"
-"""
 
 GOAL_TIME_TERM = {0: _("Lifelong"),
 		1: _("Long Term"),
