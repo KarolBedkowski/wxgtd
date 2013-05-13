@@ -16,7 +16,7 @@ import os
 import logging
 import zipfile
 import gettext
-from dateutil import parser, tz
+import datetime
 try:
 	import cjson
 	json_decoder = cjson.decode
@@ -26,6 +26,7 @@ except ImportError:
 	json_decoder = json.loads
 	json_encoder = json.dumps
 
+from dateutil import parser, tz
 
 from wxgtd.model import objects
 from wxgtd.model import logic
@@ -73,11 +74,11 @@ def _create_or_update(session, cls, datadict):
 	Returns:
 		Updated or created object.
 	"""
+	_LOG.debug('_create_or_update(%r, %r)', cls, datadict.get('_id', datadict))
 	uuid = datadict.pop('uuid')
 	obj = session.query(cls).filter_by(uuid=uuid).first()
 	if obj:
 		modified = datadict.get('modified')
-		print modified, obj.modified
 		if not modified or modified > obj.modified:
 			# load only modified objs
 			obj.load_from_dict(datadict)
@@ -102,18 +103,19 @@ def _replace_ids(objdict, cache, key_id, key_uuid=None):
 		Founded uuid or None.
 	"""
 	key = objdict.get(key_id)
+	key_uuid = key_uuid or (key_id[:-2] + 'uuid')
 	res = None
 	if key:
 		uuid = cache.get(key)
 		if uuid:
-			key_uuid = key_uuid or (key_id[:-2] + 'uuid')
-			objdict[key_uuid] = uuid
-			res = uuid
+			res = objdict[key_uuid] = uuid
 		else:
 			_LOG.warn('missing key in cache %r', repr((objdict, key_id,
 					key_uuid, key)))
 	elif key is None:
 		_LOG.warn('missing key %r', repr((objdict, key_id, key_uuid, key)))
+	else:
+		res = objdict[key_uuid] = None
 	return res
 
 
@@ -161,7 +163,7 @@ def _convert_timestamps(dictobj, *fields):
 		convert(field)
 
 
-def _delete_missing(objcls, ids, last_sync, session):
+def _delete_missing(objcls, cache, last_sync, session):
 	""" Delete old object given class.
 
 	Deleted are objects given class, thats uuids not found in list ``ids``
@@ -169,17 +171,21 @@ def _delete_missing(objcls, ids, last_sync, session):
 
 	Args:
 		objcls: object class for search / delete
-		ids: list of uuid to keep
+		cache: dict[id->uuid] loaded object to keep
 		last_sync: items with modification older that this date will be deleted.
 	"""
+	_LOG.info('_delete_missing(%r, %r)', objcls, last_sync)
+	uuids = set(cache.itervalues())
 	objs = objcls.selecy_by_modified_is_less(last_sync, session=session)
 	to_delete = []
 	for obj in objs:
-		if obj.uuid not in ids:
+		if obj.uuid not in uuids:
 			to_delete.append(obj)
+	_LOG.info('_delete_missing(%r) to_delete=%d', objcls, len(to_delete))
 	for obj in to_delete:
-		_LOG.info("_delete_missing %r", obj)
+		_LOG.debug("_delete_missing %r", obj)
 		session.delete(obj)
+	return len(to_delete)
 
 
 def _build_id_uuid_map(objects_list):
@@ -445,21 +451,10 @@ def load_json(strdata, update_func):
 	if task_tags:
 		del data['task_tag']
 
-	_LOG.info("load_json: czyszczenie")
-	update_func(72, _("Cleanup"))
-	# pokasowanie staroci
-	# TOOD: do naprawienia
-#	synclog = data.get('syncLog')[0]
-#	file_sync_time = str2datetime_utc(synclog.get('syncTime'))
-#	_delete_missing(objects.Task, tasks_cache, file_sync_time, session)
-#	_delete_missing(objects.Folder, folders_cache, file_sync_time, session)
-#	_delete_missing(objects.Context, contexts_cache, file_sync_time, session)
-#	_delete_missing(objects.Tasknote, tasknotes_cache, file_sync_time, session)
-	update_func(78, _("Cleanup done"))
-
 	# load synclog
 	_LOG.info("load_json: synclog")
-	update_func(79, _("Loading synclog"))
+	last_sync_time = last_prev_sync_time = datetime.datetime(1900, 1, 1)
+	update_func(72, _("Loading synclog"))
 	for sync_log in data.get('syncLog'):
 		_convert_timestamps(sync_log, 'prevSyncTime', 'syncTime')
 		slog_item = objects.SyncLog.get(session, device_id=sync_log['deviceId'])
@@ -470,10 +465,30 @@ def load_json(strdata, update_func):
 			slog_item.device_id = sync_log['deviceId']
 		slog_item.sync_time = sync_log['syncTime']
 		session.add(slog_item)
+		if slog_item.sync_time > last_sync_time:
+			last_sync_time = slog_item.sync_time
+			last_prev_sync_time = slog_item.prev_sync_time
 	if sync_log:
 		del data['syncLog']
 
-	update_func(90, _("Commiting..."))
+	_LOG.info("load_json: czyszczenie")
+	update_func(85, _("Cleanup"))
+	# pokasowanie staroci
+	# TOOD: do naprawienia
+	deleted_task = _delete_missing(objects.Task, tasks_cache,
+			last_prev_sync_time, session)
+	update_func(86, _("Removed tasks: %d") % deleted_task)
+	deleted_folders = _delete_missing(objects.Folder, folders_cache,
+			last_prev_sync_time, session)
+	update_func(87, _("Removed folders: %d") % deleted_folders)
+	deleted_contexts = _delete_missing(objects.Context, contexts_cache,
+			last_prev_sync_time, session)
+	update_func(88, _("Removed contexts: %d") % deleted_contexts)
+	deleted_notes = _delete_missing(objects.Tasknote, tasknotes_cache,
+			last_prev_sync_time, session)
+	update_func(89, _("Removed task notes: %d") % deleted_notes)
+
+	update_func(90, _("Committing..."))
 	session.commit()
 	update_func(100, _("Load completed"))
 
