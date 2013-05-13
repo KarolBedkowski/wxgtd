@@ -222,6 +222,29 @@ def _check_synclog(data, session):
 	return True
 
 
+def sort_objects_by_parent(objs):
+	""" Sort objects by parent.
+	Put first object with no parent. Then object with known parent (already
+	existing in result objects). Etc.
+	"""
+	if not objs:
+		return []
+	all_objs_count = len(objs)
+	# no parent
+	result = filter(lambda x: x['parent_id'] == 0, objs)
+	result_uuids = set(obj['_id'] for obj in result)
+	objs = filter(lambda x: x['parent_id'] != 0, objs)
+	# rest
+	while objs:
+		objs_to_add = filter(lambda x: x['parent_id'] in result_uuids, objs)
+		objs = filter(lambda x: x['parent_id'] not in result_uuids, objs)
+		result.extend(objs_to_add)
+		result_uuids.update(obj['_id'] for obj in objs_to_add)
+		print objs
+	assert len(result) == all_objs_count
+	return result
+
+
 def load_json(strdata, update_func):
 	""" Load data from json string.
 
@@ -246,7 +269,7 @@ def load_json(strdata, update_func):
 	update_func(6, _("Loading folders"))
 	folders = data.get('folder')
 	folders_cache = _build_id_uuid_map(folders)
-	for folder in sorted(folders or []):  # musi być sortowane,
+	for folder in sort_objects_by_parent(folders):  # musi być sortowane,
 		# bo nie znajdzie parenta
 		_replace_ids(folder, folders_cache, 'parent_id')
 		_convert_timestamps(folder)
@@ -259,7 +282,7 @@ def load_json(strdata, update_func):
 	update_func(11, _("Loading contexts"))
 	contexts = data.get('context')
 	contexts_cache = _build_id_uuid_map(contexts)
-	for context in sorted(contexts or []):
+	for context in sort_objects_by_parent(contexts):
 		_replace_ids(context, contexts_cache, 'parent_id')
 		_convert_timestamps(context)
 		_create_or_update(session, objects.Context, context)
@@ -272,7 +295,7 @@ def load_json(strdata, update_func):
 	update_func(16, _("Loading goals"))
 	goals = data.get('goal')
 	goals_cache = _build_id_uuid_map(goals)
-	for goal in sorted(goals or []):
+	for goal in sort_objects_by_parent(goals):
 		_replace_ids(goal, goals_cache, 'parent_id')
 		_convert_timestamps(goal)
 		_create_or_update(session, objects.Goal, goal)
@@ -284,7 +307,7 @@ def load_json(strdata, update_func):
 	update_func(21, _("Loading tasks"))
 	tasks = data.get('task')
 	tasks_cache = _build_id_uuid_map(tasks)
-	for task in sorted(tasks or []):
+	for task in sort_objects_by_parent(tasks):
 		_replace_ids(task, tasks_cache, 'parent_id')
 		_convert_timestamps(task, 'completed', 'start_date', 'due_date',
 				'due_date_project', 'hide_until')
@@ -393,7 +416,7 @@ def load_json(strdata, update_func):
 	update_func(62, _("Loading tags"))
 	tags = data.get('tag')
 	tags_cache = _build_id_uuid_map(tags)
-	for tag in sorted(tags or []):
+	for tag in sort_objects_by_parent(tags):
 		_replace_ids(tag, tags_cache, 'parent_id')
 		_convert_timestamps(tag)
 		_create_or_update(session, objects.Tag, tag)
