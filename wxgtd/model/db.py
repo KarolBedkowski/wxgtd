@@ -17,11 +17,19 @@ import sqlite3
 import logging
 
 import sqlalchemy
+from sqlalchemy.engine import Engine
 
 from wxgtd.model import sqls
 from wxgtd.model import objects
 
 _LOG = logging.getLogger(__name__)
+
+
+@sqlalchemy.event.listens_for(Engine, "connect")
+def _set_sqlite_pragma(dbapi_connection, connection_record):
+	cursor = dbapi_connection.cursor()
+	cursor.execute("PRAGMA foreign_keys=ON")
+	cursor.close()
 
 
 def connect(filename, debug=False, *args, **kwargs):

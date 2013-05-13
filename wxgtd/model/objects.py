@@ -106,7 +106,8 @@ class Task(BaseModelMixin, Base):
 	__tablename__ = "tasks"
 
 	uuid = Column(String(36), primary_key=True, default=generate_uuid)
-	parent_uuid = Column(String(36), ForeignKey('tasks.uuid'))
+	parent_uuid = Column(String(36), ForeignKey('tasks.uuid',
+			onupdate="CASCADE", ondelete="SET NULL"))
 	created = Column(DateTime, default=datetime.datetime.utcnow)
 	modified = Column(DateTime, default=datetime.datetime.utcnow,
 			onupdate=datetime.datetime.utcnow)
@@ -140,9 +141,12 @@ class Task(BaseModelMixin, Base):
 	alarm = Column(DateTime)
 	alarm_pattern = Column(String)
 
-	folder_uuid = Column(String(36), ForeignKey("folders.uuid"))
-	context_uuid = Column(String(36), ForeignKey("contexts.uuid"))
-	goal_uuid = Column(String(36), ForeignKey("goals.uuid"))
+	folder_uuid = Column(String(36), ForeignKey("folders.uuid",
+			onupdate="CASCADE", ondelete="SET NULL"))
+	context_uuid = Column(String(36), ForeignKey("contexts.uuid",
+			onupdate="CASCADE", ondelete="SET NULL"))
+	goal_uuid = Column(String(36), ForeignKey("goals.uuid", onupdate="CASCADE",
+			ondelete="SET NULL"))
 
 	folder = orm.relationship("Folder")
 	context = orm.relationship("Context")
@@ -350,7 +354,8 @@ class Folder(BaseModelMixin, Base):
 	__tablename__ = "folders"
 
 	uuid = Column(String(36), primary_key=True, default=generate_uuid)
-	parent_uuid = Column(String(36), ForeignKey("folders.uuid"))
+	parent_uuid = Column(String(36), ForeignKey("folders.uuid",
+			onupdate="CASCADE", ondelete="SET NULL"))
 	created = Column(DateTime, default=datetime.datetime.utcnow)
 	modified = Column(DateTime, default=datetime.datetime.utcnow,
 			onupdate=datetime.datetime.utcnow)
@@ -374,7 +379,8 @@ class Context(BaseModelMixin, Base):
 	"""context"""
 	__tablename__ = "contexts"
 	uuid = Column(String(36), primary_key=True, default=generate_uuid)
-	parent_uuid = Column(String(36), ForeignKey("contexts.uuid"))
+	parent_uuid = Column(String(36), ForeignKey("contexts.uuid",
+			onupdate="CASCADE", ondelete="SET NULL"))
 	created = Column(DateTime, default=datetime.datetime.utcnow)
 	modified = Column(DateTime, default=datetime.datetime.utcnow,
 			onupdate=datetime.datetime.utcnow)
@@ -393,7 +399,8 @@ class Tasknote(BaseModelMixin, Base):
 	""" Task note object. """
 	__tablename__ = "tasknotes"
 	uuid = Column(String(36), primary_key=True, default=generate_uuid)
-	task_uuid = Column(String(36), ForeignKey("tasks.uuid"))
+	task_uuid = Column(String(36), ForeignKey("tasks.uuid", onupdate="CASCADE",
+			ondelete="SET NULL"))
 	created = Column(DateTime, default=datetime.datetime.utcnow)
 	modified = Column(DateTime, default=datetime.datetime.utcnow,
 			onupdate=datetime.datetime.utcnow)
@@ -407,7 +414,8 @@ class Goal(BaseModelMixin, Base):
 	""" Goal """
 	__tablename__ = "goals"
 	uuid = Column(String(36), primary_key=True, default=generate_uuid)
-	parent_uuid = Column(String(36), ForeignKey("goals.uuid"))
+	parent_uuid = Column(String(36), ForeignKey("goals.uuid", onupdate="CASCADE",
+			ondelete="SET NULL"))
 	created = Column(DateTime, default=datetime.datetime.utcnow)
 	modified = Column(DateTime, default=datetime.datetime.utcnow,
 			onupdate=datetime.datetime.utcnow)
@@ -436,7 +444,8 @@ class Tag(BaseModelMixin, Base):
 
 	__tablename__ = 'tags'
 	uuid = Column(String(36), primary_key=True, default=generate_uuid)
-	parent_uuid = Column(String(36), ForeignKey("tags.uuid"))
+	parent_uuid = Column(String(36), ForeignKey("tags.uuid", onupdate="CASCADE",
+			ondelete="SET NULL"))
 	created = Column(DateTime, default=datetime.datetime.utcnow)
 	modified = Column(DateTime, default=datetime.datetime.utcnow,
 			onupdate=datetime.datetime.utcnow)
@@ -454,8 +463,10 @@ class Tag(BaseModelMixin, Base):
 class TaskTag(BaseModelMixin, Base):
 	""" Association object for task and tags. """
 	__tablename__ = "task_tags"
-	task_uuid = Column(String(50), ForeignKey("tasks.uuid"), primary_key=True)
-	tag_uuid = Column(String(50), ForeignKey("tags.uuid"), primary_key=True)
+	task_uuid = Column(String(50), ForeignKey("tasks.uuid", onupdate="CASCADE",
+			ondelete="CASCADE"), primary_key=True)
+	tag_uuid = Column(String(50), ForeignKey("tags.uuid", onupdate="CASCADE",
+			ondelete="CASCADE"), primary_key=True)
 	created = Column(DateTime, default=datetime.datetime.utcnow)
 	modified = Column(DateTime, default=datetime.datetime.utcnow,
 			onupdate=datetime.datetime.utcnow)
