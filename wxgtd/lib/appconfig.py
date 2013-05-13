@@ -37,7 +37,10 @@ class AppConfig(Singleton):
 		app_name: name of applicaiton
 		main_dir: directory containing main file
 	"""
+	# pylint: disable=R0902
+
 	def _init(self, filename, app_name, main_dir=None):
+		# pylint: disable=W0221
 		_LOG.debug('AppConfig.__init__(%r, %r, %r)', filename, app_name,
 				main_dir)
 		self._user_home = os.path.expanduser('~')
@@ -168,7 +171,7 @@ class AppConfig(Singleton):
 				and self._config.has_option(section, key)):
 			try:
 				return eval(self._config.get(section, key))
-			except:
+			except:  # catch all errors; pylint: disable=W0702
 				_LOG.exception('AppConfig.get(%s, %s, %r)' % (section, key, default))
 		return default
 
@@ -187,7 +190,7 @@ class AppConfig(Singleton):
 				if items:
 					result = list((key, eval(val)) for key, val in items)
 				return result
-			except:
+			except:  # catch all errors; pylint: disable=W0702
 				_LOG.exception('AppConfig.get(%s)' % section)
 		return None
 
@@ -265,7 +268,7 @@ class AppConfig(Singleton):
 			try:
 				os.makedirs(config_path)
 			except IOError:
-				_LOG.exception('Error creating config directory: %s' \
+				_LOG.exception('Error creating config directory: %s'
 						% self.config_path)
 				config_path = self.main_dir
 		return config_path
