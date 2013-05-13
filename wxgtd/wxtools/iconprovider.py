@@ -41,8 +41,11 @@ class _IconProviderCache(Singleton):
 		icons_pkg: python module/package that contains encoded icons
 		icons_directory: directory containing images.
 	"""
+	# pylint: disable=R0903
 
 	def _init(self, icons_pkg=None, icons_directory=None):
+		""" Constructor. """
+		# pylint: disable=W0221
 		self._icons_cache = {}
 		self._icons_pkg = icons_pkg
 		self._icons_dir = icons_directory
