@@ -33,6 +33,8 @@ class DlgSelectTags(BaseDialog):
 	"""
 
 	def __init__(self, parent, selected=None):
+		self._tagslist = None
+		self._clb_tags = None
 		BaseDialog.__init__(self, parent, 'dlg_select_tags', save_pos=False)
 		self._setup(selected)
 		self._show_tags()
@@ -68,15 +70,15 @@ class DlgSelectTags(BaseDialog):
 			return
 		tag = Tag()
 		tag.title = new_tag
-		self._session.add(tag)
-		self._session.commit()
+		self._session.add(tag)  # pylint: disable=E1101
+		self._session.commit()  # pylint: disable=E1101
 		self._show_tags()
 
 	def _show_tags(self):
 		selected_tags = self.selected_tags
 		self._clb_tags.Clear()
 		self._tagslist = []
-		for tag in self._session.query(Tag):
+		for tag in self._session.query(Tag):  # pylint: disable=E1101
 			num = self._clb_tags.Append(tag.title)
 			if wx.Platform == '__WXMSW__':
 				self._tagslist.append(tag.uuid)

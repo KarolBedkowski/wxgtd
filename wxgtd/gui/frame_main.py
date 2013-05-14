@@ -22,7 +22,7 @@ import wx.lib.customtreectrl as CT
 try:
 	from wx.lib.pubsub.pub import Publisher
 except ImportError:
-	from wx.lib.pubsub import Publisher
+	from wx.lib.pubsub import Publisher  # pylint: disable=E0611
 
 from wxgtd.lib.appconfig import AppConfig
 from wxgtd.wxtools import wxresources
@@ -55,6 +55,7 @@ _LOG = logging.getLogger(__name__)
 
 class FrameMain:
 	""" Main window class. """
+	# pylint: disable=R0903, R0902
 
 	def __init__(self):
 		self.res = wxresources.load_xrc_resource('wxgtd.xrc')
@@ -85,7 +86,7 @@ class FrameMain:
 
 	def _setup_wnd(self):
 		self.wnd.SetIcon(iconprovider.get_icon('wxgtd'))
-		self._tbicon = TaskBarIcon(self.wnd)
+		self._tbicon = TaskBarIcon(self.wnd)  # pylint: disable=W0201
 
 		if wx.Platform == '__WXMSW__':
 			# fix controls background
@@ -96,6 +97,7 @@ class FrameMain:
 		self._set_size_pos()
 
 	def _load_controls(self):
+		# pylint: disable=W0201
 		self.wnd = self.res.LoadFrame(None, 'frame_main')
 		assert self.wnd is not None, 'Frame not found'
 		# filter tree ctrl
@@ -188,16 +190,16 @@ class FrameMain:
 		appconfig = AppConfig()
 
 		# show subtask
-		self._btn_show_subtasks = wx.ToggleButton(toolbar, -1,
-				_(" Show subtasks "))
+		self._btn_show_subtasks = wx.ToggleButton(toolbar,  # pylint: disable=W0201
+				-1, _(" Show subtasks "))
 		toolbar.AddControl(self._btn_show_subtasks)
 		self.wnd.Bind(wx.EVT_TOGGLEBUTTON, self._on_btn_show_subtasks,
 				self._btn_show_subtasks)
 		self._btn_show_subtasks.SetValue(appconfig.get('main', 'show_subtask', True))
 
 		# show completed
-		self._btn_show_finished = wx.ToggleButton(toolbar, -1,
-				_(" Show finished "))
+		self._btn_show_finished = wx.ToggleButton(toolbar,  # pylint: disable=W0201
+				-1, _(" Show finished "))
 		toolbar.AddControl(self._btn_show_finished)
 		self.wnd.Bind(wx.EVT_TOGGLEBUTTON, self._on_btn_show_finished,
 				self._btn_show_finished)
@@ -205,8 +207,8 @@ class FrameMain:
 				False))
 
 		# hide until due
-		self._btn_hide_until = wx.ToggleButton(toolbar, -1,
-				_(" Hide until "))
+		self._btn_hide_until = wx.ToggleButton(toolbar,  # pylint: disable=W0201
+				-1, _(" Hide until "))
 		toolbar.AddControl(self._btn_hide_until)
 		self.wnd.Bind(wx.EVT_TOGGLEBUTTON, self._on_btn_hide_due,
 				self._btn_hide_until)
@@ -221,7 +223,8 @@ class FrameMain:
 		toolbar.AddSeparator()
 
 		# search box
-		self._searchbox = wx.SearchCtrl(toolbar, -1, size=(150, -1))
+		self._searchbox = wx.SearchCtrl(toolbar, -1,  # pylint: disable=W0201
+				size=(150, -1))
 		self._searchbox.SetDescriptiveText(_('Search'))
 		self._searchbox.ShowCancelButton(True)
 		toolbar.AddControl(self._searchbox)
@@ -373,7 +376,8 @@ class FrameMain:
 		task_uuid, task_type = self._items_list_ctrl.items[evt.GetData()]
 		if task_type in (enums.TYPE_PROJECT, enums.TYPE_CHECKLIST):
 			session = self._session
-			task = session.query(OBJ.Task).filter_by(uuid=task_uuid).first()
+			task = session.query(  # pylint: disable=E1101
+					OBJ.Task).filter_by(uuid=task_uuid).first()
 			self._items_path.append(task)
 			self._refresh_list()
 			return
@@ -413,14 +417,15 @@ class FrameMain:
 		if task_uuid is None:  # not selected
 			return
 		session = self._session
-		task = session.query(OBJ.Task).filter_by(uuid=task_uuid).first()
+		task = session.query(  # pylint: disable=E1101
+				OBJ.Task).filter_by(uuid=task_uuid).first()
 		if not task.task_completed:
 			if not logic.complete_task(task, self.wnd, session):
 				return
 		else:
 			task.task_completed = False
-		session.commit()
-		Publisher.sendMessage('task.update', data={'task_uuid': self._task.uuid})
+		session.commit()  # pylint: disable=E1101
+		Publisher.sendMessage('task.update', data={'task_uuid': task_uuid})
 		self._refresh_list()
 
 	def _on_btn_edit_parent(self, _evt):
@@ -444,15 +449,14 @@ class FrameMain:
 			self._searchbox.SetValue('')
 			self._refresh_list()
 
-	def _on_timer(self, _evt, force_show=False):
+	def _on_timer(self, _evt, _force_show=False):
 		appconfig = AppConfig()
 		if appconfig.get('notification', 'popup_alarms'):
 			_LOG.debug('FrameMain._on_timer: check reminders')
 			DlgReminders.check(self.wnd, self._session)
 
-	# logic
-
 	def _refresh_list(self):
+		# TODO: refactor, pylint: disable=R0912, R0915
 		group_id = self['rb_show_selection'].GetSelection()
 		tmodel = self._filter_tree_ctrl.model
 		params = {'starred': False, 'finished': None, 'min_priority': None,
@@ -502,13 +506,12 @@ class FrameMain:
 					else False)
 		_LOG.debug("FrameMain._refresh_list; params=%r", params)
 		wx.SetCursor(wx.HOURGLASS_CURSOR)
-		self._session.expire_all()
+		self._session.expire_all()  # pylint: disable=E1101
 		tasks = OBJ.Task.select_by_filters(params, session=self._session)
 		items_list = self._items_list_ctrl
 		active_only = not self._btn_show_finished.GetValue()
 		self._items_list_ctrl.fill(tasks, active_only=active_only)
 		self.wnd.SetStatusText(_("Showed %d items") % items_list.GetItemCount())
-		#path_str = ' / '.join(task.title for task in self._items_path)
 		self._show_parent_info(active_only)
 		wx.SetCursor(wx.STANDARD_CURSOR)
 

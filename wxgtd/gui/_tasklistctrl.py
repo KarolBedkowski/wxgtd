@@ -64,10 +64,10 @@ class _ListItemRenderer(object):
 		infobox.draw_info(mdc, self._task, self._overdue)
 		dc.Blit(rect.x + 3, rect.y, rect.width - 6, rect.height, mdc, 0, 0)
 
-	def GetLineHeight(self):
+	def GetLineHeight(self):  # pylint: disable=R0201
 		return infobox.SETTINGS['line_height']
 
-	def GetSubItemWidth(self):
+	def GetSubItemWidth(self):  # pylint: disable=R0201
 		return 400
 
 
@@ -104,18 +104,20 @@ class _ListItemRendererIcons(object):
 		infobox.draw_icons(mdc, self._task, self._overdue, self._active_only)
 		dc.Blit(rect.x + 3, rect.y, rect.width - 6, rect.height, mdc, 0, 0)
 
-	def GetLineHeight(self):
+	def GetLineHeight(self):  # pylint: disable=R0201
 		return infobox.SETTINGS['line_height']
 
-	def GetSubItemWidth(self):
+	def GetSubItemWidth(self):  # pylint: disable=R0201
 		return 72
 
 
 class TaskListControl(ULC.UltimateListCtrl, listmix.ColumnSorterMixin):
 	""" TaskList Control based on wxListCtrl. """
+	# pylint: disable=R0901
 
-	def __init__(self, parent, wid=wx.ID_ANY, pos=wx.DefaultPosition,
-				size=wx.DefaultSize, style=0, agwStyle=0, buttons=0):
+	def __init__(self, parent, wid=wx.ID_ANY,  # pylint: disable=R0913
+			pos=wx.DefaultPosition, size=wx.DefaultSize, style=0, agwStyle=0,
+			buttons=0):
 		# configure infobox
 		infobox.configure()
 		agwStyle = agwStyle | wx.LC_REPORT | wx.BORDER_SUNKEN | wx.LC_HRULES \
@@ -163,6 +165,7 @@ class TaskListControl(ULC.UltimateListCtrl, listmix.ColumnSorterMixin):
 			task: list of tasks
 			active_only: boolean - show/count only active tasks.
 		"""
+		# pylint: disable=R0915
 		self.Freeze()
 		current_sort_state = self.GetSortState()
 		if current_sort_state[0] == -1:
@@ -224,7 +227,7 @@ class TaskListControl(ULC.UltimateListCtrl, listmix.ColumnSorterMixin):
 				self.SetItemTextColour(index, wx.RED)
 		self._mainWin.ResetCurrent()
 		if index > 0:
-			self.SortListItems(*current_sort_state)
+			self.SortListItems(*current_sort_state)  # pylint: disable=W0142
 		self.Thaw()
 		self.Update()
 

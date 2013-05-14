@@ -21,7 +21,7 @@ import wx
 try:
 	from wx.lib.pubsub.pub import Publisher
 except ImportError:
-	from wx.lib.pubsub import Publisher
+	from wx.lib.pubsub import Publisher  # pylint: disable=E0611
 
 from wxgtd.model import objects as OBJ
 from wxgtd.model import enums
@@ -83,14 +83,14 @@ class DlgTask(BaseDialog):
 		self._current_note = None
 		self._session = OBJ.Session()
 		if task_uuid:
-			self._task = self._session.query(OBJ.Task).filter_by(
-					uuid=task_uuid).first()
+			self._task = self._session.query(  # pylint: disable=E1101
+					OBJ.Task).filter_by(uuid=task_uuid).first()
 		else:
 			self._task = OBJ.Task(parent_uuid=parent_uuid, priority=0,
 					type=(task_type or enums.TYPE_TASK))
 			logic.update_task_from_parent(self._task, parent_uuid, self._session,
 					self._appconfig)
-			self._session.add(self._task)
+			self._session.add(self._task)  # pylint: disable=E1101
 		_LOG.debug("Task=%r", self._task)
 		self[wx.ID_DELETE].Enable(bool(task_uuid))
 		task = self._task
@@ -162,7 +162,7 @@ class DlgTask(BaseDialog):
 			# zakonczono zadanie
 			if not logic.complete_task(self._task, self._wnd, self._session):
 				return
-		self._session.commit()
+		self._session.commit()  # pylint: disable=E1101
 		Publisher.sendMessage('task.update', data={'task_uuid': self._task.uuid})
 		self._on_ok(evt)
 
@@ -248,14 +248,14 @@ class DlgTask(BaseDialog):
 			new_tags = dlg.selected_tags
 			for tasktag in list(task.tags):
 				if tasktag.tag_uuid not in new_tags:
-					task.tags.delete(tasktag)
+					task.tags.delete(tasktag)  # pylint: disable=E1103
 				else:
 					new_tags.remove(tasktag.tag_uuid)
 			for tag_uuid in new_tags:
 				tasktag = OBJ.TaskTag()
-				tasktag.tag = self._session.query(OBJ.Tag).filter_by(
-						uuid=tag_uuid).first()
-				task.tags.append(tasktag)
+				tasktag.tag = self._session.query(  # pylint: disable=E1101
+						OBJ.Tag).filter_by(uuid=tag_uuid).first()
+				task.tags.append(tasktag)  # pylint: disable=E1103
 			self._refresh_static_texts()
 
 	def _on_btn_delete(self, _evt):
@@ -277,7 +277,7 @@ class DlgTask(BaseDialog):
 				cnote.modified = datetime.datetime.utcnow()
 				if not cnote.created:
 					cnote.created = cnote.modified
-					self._task.notes.append(cnote)
+					self._task.notes.append(cnote)  # pylint: disable=E1103
 			wx.CallAfter(self._refresh_static_texts)
 
 	def _refresh_static_texts(self):

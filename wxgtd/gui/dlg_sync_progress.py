@@ -15,9 +15,9 @@ import logging
 
 import wx
 try:
-	from wx.lib.pubsub.pub import Publisher
+	from wx.lib.pubsub.pub import Publisher  # pylint: disable=E0611
 except ImportError:
-	from wx.lib.pubsub import Publisher
+	from wx.lib.pubsub import Publisher  # pylint: disable=E0611
 
 from ._base_dialog import BaseDialog
 
@@ -31,6 +31,8 @@ class DlgSyncProggress(BaseDialog):
 		parent: parent window
 	"""
 	def __init__(self, parent):
+		self._g_progress = None
+		self._tc_progress = None
 		BaseDialog.__init__(self, parent, 'dlg_sync_progress', save_pos=False)
 		self._setup()
 
@@ -59,7 +61,7 @@ class DlgSyncProggress(BaseDialog):
 		elif autoclose > 0:
 			wx.CallLater(autoclose * 1000, self._wnd.Close)
 
-	def run(self):
+	def run(self, *_args, **_kwargs):
 		self._wnd.Show()
 		self._wnd.Raise()
 

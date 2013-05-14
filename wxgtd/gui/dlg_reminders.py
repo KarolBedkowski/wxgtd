@@ -19,7 +19,7 @@ import wx
 try:
 	from wx.lib.pubsub.pub import Publisher
 except ImportError:
-	from wx.lib.pubsub import Publisher
+	from wx.lib.pubsub import Publisher  # pylint: disable=E0611
 
 from wxgtd.model import enums
 from wxgtd.model import logic
@@ -42,6 +42,7 @@ class DlgReminders(BaseDialog):
 	"""
 
 	def __init__(self, parent, session):
+		self._task_list_ctrl = None
 		BaseDialog.__init__(self, parent, 'dlg_reminders', save_pos=True)
 		self._obj_key = 'dlg_reminders'
 		self._setup(session)

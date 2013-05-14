@@ -20,7 +20,7 @@ import wx
 try:
 	from wx.lib.pubsub.pub import Publisher
 except ImportError:
-	from wx.lib.pubsub import Publisher
+	from wx.lib.pubsub import Publisher  # pylint: disable=E0611
 
 from wxgtd.model import objects as OBJ
 from wxgtd.model import enums
@@ -66,12 +66,12 @@ class DlgChecklistitem(BaseDialog):
 		self._current_note = None
 		self._session = OBJ.Session()
 		if task_uuid:
-			self._task = self._session.query(OBJ.Task).filter_by(
-					uuid=task_uuid).first()
+			self._task = self._session.query(  # pylint: disable=E1101
+					OBJ.Task).filter_by(uuid=task_uuid).first()
 		else:
 			self._task = OBJ.Task(type=enums.TYPE_CHECKLIST_ITEM,
 					parent_uuid=parent_uuid)
-			self._session.add(self._task)
+			self._session.add(self._task)  # pylint: disable=E1101
 		task = self._task
 		self._data = {'prev_completed': task.completed}
 		self['tc_title'].SetValidator(Validator(task, 'title',
@@ -93,7 +93,7 @@ class DlgChecklistitem(BaseDialog):
 			return
 		if not self._wnd.TransferDataFromWindow():
 			return
-		self._session.commit()
+		self._session.commit()  # pylint: disable=E1101
 		Publisher.sendMessage('task.update', data={'task_uuid': self._task.uuid})
 		self._on_ok(evt)
 
@@ -135,7 +135,7 @@ class DlgChecklistitem(BaseDialog):
 				cnote.modified = datetime.datetime.utcnow()
 				if not cnote.created:
 					cnote.created = cnote.modified
-					self._task.notes.append(cnote)
+					self._task.notes.append(cnote)  # pylint: disable=E1103
 			wx.CallAfter(self._refresh_static_texts)
 
 	def _refresh_static_texts(self):
