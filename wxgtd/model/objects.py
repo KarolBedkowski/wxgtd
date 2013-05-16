@@ -72,6 +72,14 @@ class BaseModelMixin(object):
 		return session.query(cls).filter(cls.modified < timestamp).all()
 
 	@classmethod
+	def selecy_old_usunsed(cls, timestamp, session=None):
+		""" Find object with modified date less than given and nod used in
+		any task. """
+		session = session or Session()
+		return session.query(cls).filter(cls.modified < timestamp).filter(
+				~cls.tasks.any()).all()
+
+	@classmethod
 	def all(cls):
 		""" Return all objects this class. """
 		session = Session()
@@ -381,13 +389,6 @@ class Folder(BaseModelMixin, Base):
 			self.uuid = str(uuid.uuid4())
 		BaseModelMixin.save(self)
 
-	@classmethod
-	def selecy_old_usunsed(cls, timestamp, session=None):
-		""" Find object with modified date less than given. """
-		session = session or Session()
-		return session.query(cls).filter(cls.modified < timestamp).filter(
-				~Folder.tasks.any()).all()
-
 
 class Context(BaseModelMixin, Base):
 	"""context"""
@@ -408,13 +409,6 @@ class Context(BaseModelMixin, Base):
 	children = orm.relationship("Context", backref=orm.backref('parent',
 		remote_side=[uuid]))
 
-	@classmethod
-	def selecy_old_usunsed(cls, timestamp, session=None):
-		""" Find object with modified date less than given. """
-		session = session or Session()
-		return session.query(cls).filter(cls.modified < timestamp).filter(
-				~Context.tasks.any()).all()
-
 
 class Tasknote(BaseModelMixin, Base):
 	""" Task note object. """
@@ -429,13 +423,6 @@ class Tasknote(BaseModelMixin, Base):
 	title = Column(String)
 	bg_color = Column(String, default="FFEFFF00")
 	visible = Column(Integer, default=1)
-
-	@classmethod
-	def selecy_old_usunsed(cls, timestamp, session=None):
-		""" Find object with modified date less than given. """
-		session = session or Session()
-		return session.query(cls).filter(cls.modified < timestamp).filter(
-				~cls.tasks.any()).all()
 
 
 class Goal(BaseModelMixin, Base):
@@ -458,13 +445,6 @@ class Goal(BaseModelMixin, Base):
 
 	children = orm.relationship("Goal", backref=orm.backref('parent',
 		remote_side=[uuid]))
-
-	@classmethod
-	def selecy_old_usunsed(cls, timestamp, session=None):
-		""" Find object with modified date less than given. """
-		session = session or Session()
-		return session.query(cls).filter(cls.modified < timestamp).filter(
-				~cls.tasks.any()).all()
 
 
 class Conf(Base):
