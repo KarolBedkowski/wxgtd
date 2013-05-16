@@ -164,29 +164,104 @@ def _convert_timestamps(dictobj, *fields):
 		convert(field)
 
 
-def _delete_missing(objcls, cache, last_sync, session):
-	""" Delete old object given class.
 
-	Deleted are objects given class, thats uuids not found in list ``ids``
-	and with last date of modification < ``last_sync``.
-
+def _cleanup_tasks(loaded_tasks, last_sync, session):
+	""" Remove old (removed) tasks.
 	Args:
-		objcls: object class for search / delete
-		cache: dict[id->uuid] loaded object to keep
+		loaded_tasks: list of uuids loaded object to keep
 		last_sync: items with modification older that this date will be deleted.
+		session: SqlAlchemy session.
+	Returns:
+		number of deleted tasks.
 	"""
-	_LOG.info('_delete_missing(%r, %r)', objcls, last_sync)
-	uuids = set(cache.itervalues())
-	objs = objcls.selecy_by_modified_is_less(last_sync, session=session)
-	to_delete = []
-	for obj in objs:
-		if obj.uuid not in uuids:
-			to_delete.append(obj)
-	_LOG.info('_delete_missing(%r) to_delete=%d', objcls, len(to_delete))
-	for obj in to_delete:
-		_LOG.debug("_delete_missing %r", obj)
-		session.delete(obj)
-	return len(to_delete)
+	_LOG.info('_cleanup_tasks()')
+	idx = 0
+	for task in objects.Task.selecy_by_modified_is_less(last_sync,
+			session=session):
+		if task.uuid not in loaded_tasks:
+			_LOG.info('_cleanup_tasks: delete task %r', task.uuid)
+			session.delete(task)
+			idx += 1
+	return idx
+
+
+def _cleanup_folders(loaded_folders, last_sync, session):
+	""" Remove old (removed) and not used folders.
+	Args:
+		loaded_folders: list of uuids loaded object to keep
+		last_sync: items with modification older that this date will be deleted.
+		session: SqlAlchemy session.
+	Returns:
+		number of deleted folders.
+	"""
+	_LOG.info('_cleanup_folders()')
+	idx = 0
+	for folder in objects.Folder.selecy_old_usunsed(last_sync,
+			session=session):
+		if folder.uuid not in loaded_folders:
+			_LOG.info('_cleanup_folders: delete folder %r', folder.uuid)
+			session.delete(folder)
+			idx += 1
+	return idx
+
+
+def _cleanup_contexts(loaded_contexts, last_sync, session):
+	""" Remove old (removed) and not used folders.
+	Args:
+		loaded_contexts: list of uuids loaded object to keep
+		last_sync: items with modification older that this date will be deleted.
+		session: SqlAlchemy session.
+	Returns:
+		number of deleted contexts.
+	"""
+	_LOG.info('_cleanup_contexts()')
+	idx = 0
+	for context in objects.Context.selecy_old_usunsed(last_sync,
+			session=session):
+		if context.uuid not in loaded_contexts:
+			_LOG.info('_cleanup_contexts: delete context %r', context.uuid)
+			session.delete(context)
+			idx += 1
+	return idx
+
+
+def _cleanup_tasknotes(loaded_tasknotes, last_sync, session):
+	""" Remove old (removed) and not used task notes.
+	Args:
+		loaded_tasknotes: list of uuids loaded object to keep
+		last_sync: items with modification older that this date will be deleted.
+		session: SqlAlchemy session.
+	Returns:
+		number of deleted task notes.
+	"""
+	_LOG.info('_cleanup_tasknotes()')
+	idx = 0
+	for tasknote in objects.Tasknote.selecy_old_usunsed(last_sync,
+			session=session):
+		if tasknote.uuid not in loaded_tasknotes:
+			_LOG.info('_cleanup_tasknotes: delete tasknote %r', tasknote.uuid)
+			session.delete(tasknote)
+			idx += 1
+	return idx
+
+
+def _cleanup_goals(loaded_goals, last_sync, session):
+	""" Remove old (removed) and not used task notes.
+	Args:
+		loaded_tasknotes: list of uuids loaded object to keep
+		last_sync: items with modification older that this date will be deleted.
+		session: SqlAlchemy session.
+	Returns:
+		number of deleted goals.
+	"""
+	_LOG.info('_cleanup_goals()')
+	idx = 0
+	for goal in objects.Goal.selecy_old_usunsed(last_sync, session=session):
+		if goal.uuid not in loaded_goals:
+			_LOG.info('_cleanup_goals: delete goals %r', goal.uuid)
+			session.delete(goal)
+			idx += 1
+	return idx
 
 
 def _build_id_uuid_map(objects_list):
@@ -479,22 +554,24 @@ def load_json(strdata, update_func):
 		del data['syncLog']
 
 	_LOG.info("load_json: czyszczenie")
-	update_func(85, _("Cleanup"))
+	update_func(84, _("Cleanup"))
 	# pokasowanie staroci
 	# TOOD: do naprawienia
-	deleted_task = _delete_missing(objects.Task, tasks_cache,
+	deleted_task = _cleanup_tasks(set(tasks_cache.itervalues()),
 			last_prev_sync_time, session)
-	update_func(86, _("Removed tasks: %d") % deleted_task)
-	deleted_folders = _delete_missing(objects.Folder, folders_cache,
-			last_prev_sync_time, session)
-	update_func(87, _("Removed folders: %d") % deleted_folders)
-	deleted_contexts = _delete_missing(objects.Context, contexts_cache,
-			last_prev_sync_time, session)
-	update_func(88, _("Removed contexts: %d") % deleted_contexts)
-	deleted_notes = _delete_missing(objects.Tasknote, tasknotes_cache,
-			last_prev_sync_time, session)
-	update_func(89, _("Removed task notes: %d") % deleted_notes)
-
+	update_func(85, _("Removed tasks: %d") % deleted_task)
+	deleted_folders = _cleanup_folders(folders_cache, last_prev_sync_time,
+			session)
+	update_func(86, _("Removed folders: %d") % deleted_folders)
+	deleted_contexts = _cleanup_contexts(contexts_cache, last_prev_sync_time,
+			session)
+	update_func(87, _("Removed contexts: %d") % deleted_contexts)
+	deleted_notes = _cleanup_contexts(tasknotes_cache, last_prev_sync_time,
+			session)
+	update_func(88, _("Removed task notes: %d") % deleted_notes)
+	deleted_goals = _cleanup_goals(goals_cache, last_prev_sync_time,
+			session)
+	update_func(89, _("Removed goals %d") % deleted_goals)
 	update_func(90, _("Committing..."))
 	session.commit()  # pylint: disable=E1101
 	update_func(100, _("Load completed"))
