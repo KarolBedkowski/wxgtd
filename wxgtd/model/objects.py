@@ -72,6 +72,14 @@ class BaseModelMixin(object):
 		return session.query(cls).filter(cls.modified < timestamp).all()
 
 	@classmethod
+	def selecy_old_usunsed(cls, timestamp, session=None):
+		""" Find object with modified date less than given and nod used in
+		any task. """
+		session = session or Session()
+		return session.query(cls).filter(cls.modified < timestamp).filter(
+				~cls.tasks.any()).all()
+
+	@classmethod
 	def all(cls):
 		""" Return all objects this class. """
 		session = Session()
@@ -151,13 +159,14 @@ class Task(BaseModelMixin, Base):
 	goal_uuid = Column(String(36), ForeignKey("goals.uuid", onupdate="CASCADE",
 			ondelete="SET NULL"))
 
-	folder = orm.relationship("Folder")
-	context = orm.relationship("Context")
-	goal = orm.relationship("Goal")
+	folder = orm.relationship("Folder", backref=orm.backref('tasks'))
+	context = orm.relationship("Context", backref=orm.backref('tasks'))
+	goal = orm.relationship("Goal", backref=orm.backref('tasks'))
 	tags = orm.relationship("TaskTag", cascade="all, delete, delete-orphan")
 	children = orm.relationship("Task", backref=orm.backref('parent',
 		remote_side=[uuid]))
-	notes = orm.relationship("Tasknote", cascade="all, delete, delete-orphan")
+	notes = orm.relationship("Tasknote", backref=orm.backref('tasks'),
+			cascade="all, delete, delete-orphan")
 
 	@property
 	def status_name(self):
