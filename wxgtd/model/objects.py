@@ -31,7 +31,7 @@ _ = gettext.gettext
 
 # SQLAlchemy
 Base = declarative_base()  # pylint: disable=C0103
-Session = orm.sessionmaker  # pylint: disable=C0103
+Session = orm.sessionmaker()  # pylint: disable=C0103
 
 
 def generate_uuid():

@@ -1,3 +1,4 @@
+# -*- coding: utf8 -*-
 """ wx widgets utilities.
 
 Copyright (c) Karol Będkowski, 2013

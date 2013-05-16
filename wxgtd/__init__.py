@@ -1,3 +1,4 @@
+# -*- coding: utf8 -*-
 """ wxGTD main module.
 
 Copyright (c) Karol Będkowski, 2013

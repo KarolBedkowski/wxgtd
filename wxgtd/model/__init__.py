@@ -1,3 +1,4 @@
+# -*- coding: utf8 -*-
 """ wxGTD model definition.
 
 Copyright (c) Karol Będkowski, 2013
