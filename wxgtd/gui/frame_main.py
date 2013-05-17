@@ -11,10 +11,12 @@ __author__ = "Karol Będkowski"
 __copyright__ = "Copyright (c) Karol Będkowski, 2013"
 __version__ = "2013-04-28"
 
+import sys
 import os
 import gettext
 import logging
 import datetime
+import traceback
 
 import wx
 from wx import xrc
@@ -326,9 +328,10 @@ class FrameMain:
 						_("wxGTD"), wx.OK | wx.ICON_HAND)
 				msgbox.ShowModal()
 				msgbox.Destroy()
-			except sync.Otherwise as err:
+			except sync.OtherSyncError as err:
+				error = "\n".join(traceback.format_exception(*sys.exc_info()))
 				msgdlg = wx.lib.dialogs.ScrolledMessageDialog(self.wnd,
-						str(err), "Synchronisation error")
+						str(err) + "\n\n" + error, _("Synchronisation error"))
 				msgdlg.ShowModal()
 				msgdlg.Destroy()
 			dlg.mark_finished()
