@@ -79,6 +79,8 @@ class FrameMain:
 		self._filter_tree_ctrl.RefreshItems()
 		wx.CallAfter(self._refresh_list)
 		appconfig = AppConfig()
+		self['rb_show_selection'].SetSelection(appconfig.get('main',
+			'selected_group', 0))
 		if appconfig.get('sync', 'sync_on_startup'):
 			wx.CallAfter(self._autosync)
 		self._reminders_timer = wx.Timer(self.wnd)
@@ -263,6 +265,8 @@ class FrameMain:
 		appconfig.set('main', 'show_finished', self._btn_show_finished.GetValue())
 		appconfig.set('main', 'show_subtask', self._btn_show_subtasks.GetValue())
 		appconfig.set('main', 'show_hide_until', self._btn_hide_until.GetValue())
+		appconfig.set('main', 'selected_group',
+				self['rb_show_selection'].GetSelection())
 		self._tbicon.Destroy()
 		self.wnd.Destroy()
 
