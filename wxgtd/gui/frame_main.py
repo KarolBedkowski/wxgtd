@@ -19,6 +19,7 @@ import datetime
 import wx
 from wx import xrc
 import wx.lib.customtreectrl as CT
+import wx.lib.dialogs
 try:
 	from wx.lib.pubsub.pub import Publisher
 except ImportError:
@@ -325,6 +326,11 @@ class FrameMain:
 						_("wxGTD"), wx.OK | wx.ICON_HAND)
 				msgbox.ShowModal()
 				msgbox.Destroy()
+			except sync.Otherwise as err:
+				msgdlg = wx.lib.dialogs.ScrolledMessageDialog(self.wnd,
+						str(err), "Synchronisation error")
+				msgdlg.ShowModal()
+				msgdlg.Destroy()
 			dlg.mark_finished()
 			self._filter_tree_ctrl.RefreshItems()
 			Publisher.sendMessage('task.update')
