@@ -13,6 +13,7 @@ __copyright__ = "Copyright (c) Karol Będkowski, 2013"
 __version__ = "2013-04-26"
 
 
+import time
 import sqlite3
 import logging
 
@@ -51,8 +52,24 @@ def connect(filename, debug=False, *args, **kwargs):
 		for sql in schema:
 			engine.execute(sql)
 	objects.Session.configure(bind=engine)  # pylint: disable=E1120
+
+	if debug:
+		@sqlalchemy.event.listens_for(Engine, "before_cursor_execute")
+		def before_cursor_execute(_conn, _cursor, _stmt, _params, context,
+				_executemany):
+			context._query_start = time.time()
+
+		@sqlalchemy.event.listens_for(Engine, "after_cursor_execute")
+		def after_cursor_execute(_conn, _cursor, _stmt, _params, context,
+				_executemany):
+			_LOG.debug("Query time: %.02fms" % (
+					(time.time() - context._query_start) * 1000))
+
+	_LOG.info('Database create_all START')
 	objects.Base.metadata.create_all(engine)
+	_LOG.info('Database create_all COMPLETED')
 	# bootstrap
+	_LOG.info('Database bootstrap START')
 	session = objects.Session()
 	# 1. deviceId
 	conf = session.query(  # pylint: disable=E1101
@@ -63,8 +80,11 @@ def connect(filename, debug=False, *args, **kwargs):
 		session.add(conf)  # pylint: disable=E1101
 		_LOG.info('DB bootstrap: create deviceId=%r', conf.val)
 		session.commit()  # pylint: disable=E1101
+	_LOG.info('Database bootstrap cleanup')
 	# 2. cleanup
 	engine.execute("delete from task_tags "
 			"where task_uuid not in (select uuid from tasks)"
 			"or tag_uuid not in (select uuid from tags)")
+	_LOG.info('Database bootstrap COMPLETED')
+
 	return objects.Session

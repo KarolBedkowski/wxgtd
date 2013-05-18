@@ -580,13 +580,15 @@ class FrameMain:
 		if not self._items_path:
 			self['btn_parent_edit'].Enable(False)
 			self.wnd.FindWindowById(wx.ID_UP).Enable(False)
-			panel_parent_info.task = panel_parent_icons.task = None
+			panel_parent_info.set_task(None)
+			panel_parent_icons.set_task(None)
 			self['l_parent_due'].SetLabel("")
 		else:
 			self['btn_parent_edit'].Enable(True)
 			self.wnd.FindWindowById(wx.ID_UP).Enable(True)
 			parent = self._items_path[-1]
-			panel_parent_info.task = panel_parent_icons.task = parent
+			panel_parent_info.set_task(parent)
+			panel_parent_icons.set_task(parent)
 			self['l_parent_due'].SetLabel(fmt.format_timestamp(parent.due_date,
 	-				parent.due_time_set).replace(' ', '\n'))
 		panel_parent_icons.active_only = active_only

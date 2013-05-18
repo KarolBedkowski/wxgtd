@@ -19,7 +19,7 @@ import gettext
 import uuid
 import datetime
 
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Index
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import orm, or_, and_
 from sqlalchemy import select, func
@@ -118,14 +118,14 @@ class Task(BaseModelMixin, Base):
 
 	uuid = Column(String(36), primary_key=True, default=generate_uuid)
 	parent_uuid = Column(String(36), ForeignKey('tasks.uuid',
-			onupdate="CASCADE", ondelete="SET NULL"))
+			onupdate="CASCADE", ondelete="SET NULL"), index=True)
 	created = Column(DateTime, default=datetime.datetime.utcnow)
 	modified = Column(DateTime, default=datetime.datetime.utcnow,
-			onupdate=datetime.datetime.utcnow)
+			onupdate=datetime.datetime.utcnow, index=True)
 	completed = Column(DateTime)
 	deleted = Column(DateTime)
 	ordinal = Column(Integer, default=0)
-	title = Column(String)
+	title = Column(String, index=True)
 	note = Column(String)
 	type = Column(Integer, nullable=False)
 	starred = Column(Integer, default=0)
@@ -134,7 +134,7 @@ class Task(BaseModelMixin, Base):
 	importance = Column(Integer, default=0)  # dla checlist pozycja
 	start_date = Column(DateTime)
 	start_time_set = Column(Integer, default=0)
-	due_date = Column(DateTime)
+	due_date = Column(DateTime, index=True)
 	due_date_project = Column(DateTime)
 	due_time_set = Column(Integer, default=0)
 	due_date_mod = Column(Integer, default=0)
@@ -149,15 +149,15 @@ class Task(BaseModelMixin, Base):
 	prevent_auto_purge = Column(Integer, default=0)
 	trash_bin = Column(Integer, default=0)
 	metainf = Column(String)
-	alarm = Column(DateTime)
+	alarm = Column(DateTime, index=True)
 	alarm_pattern = Column(String)
 
 	folder_uuid = Column(String(36), ForeignKey("folders.uuid",
-			onupdate="CASCADE", ondelete="SET NULL"))
+			onupdate="CASCADE", ondelete="SET NULL"), index=True)
 	context_uuid = Column(String(36), ForeignKey("contexts.uuid",
-			onupdate="CASCADE", ondelete="SET NULL"))
-	goal_uuid = Column(String(36), ForeignKey("goals.uuid", onupdate="CASCADE",
-			ondelete="SET NULL"))
+			onupdate="CASCADE", ondelete="SET NULL"), index=True)
+	goal_uuid = Column(String(36), ForeignKey("goals.uuid",
+			onupdate="CASCADE", ondelete="SET NULL"), index=True)
 
 	folder = orm.relationship("Folder", backref=orm.backref('tasks'))
 	context = orm.relationship("Context", backref=orm.backref('tasks'))
@@ -270,11 +270,7 @@ class Task(BaseModelMixin, Base):
 		# future alarms
 		if params.get('active_alarm'):
 			query = query.filter(Task.alarm >= now)
-		query = query.options(orm.joinedload(Task.context)) \
-				.options(orm.joinedload(Task.folder)) \
-				.options(orm.joinedload(Task.goal)) \
-				.options(orm.subqueryload(Task.tags)) \
-				.order_by(Task.title)
+		query = query.order_by(Task.title)
 		return query.all()
 
 	@classmethod
@@ -311,11 +307,7 @@ class Task(BaseModelMixin, Base):
 		# if "since" is set - use it as minimal alarm
 		# not completed
 		query = query.filter(Task.completed.is_(None))
-		query = query.options(orm.joinedload(Task.context)) \
-				.options(orm.joinedload(Task.folder)) \
-				.options(orm.joinedload(Task.goal)) \
-				.options(orm.subqueryload(Task.tags)) \
-				.order_by(Task.alarm)
+		query = query.order_by(Task.alarm)
 		return query.all()
 
 	@property
@@ -370,13 +362,13 @@ class Folder(BaseModelMixin, Base):
 
 	uuid = Column(String(36), primary_key=True, default=generate_uuid)
 	parent_uuid = Column(String(36), ForeignKey("folders.uuid",
-			onupdate="CASCADE", ondelete="SET NULL"))
+			onupdate="CASCADE", ondelete="SET NULL"), index=True)
 	created = Column(DateTime, default=datetime.datetime.utcnow)
 	modified = Column(DateTime, default=datetime.datetime.utcnow,
-			onupdate=datetime.datetime.utcnow)
+			onupdate=datetime.datetime.utcnow, index=True)
 	deleted = Column(DateTime)
 	ordinal = Column(Integer, default=0)
-	title = Column(String)
+	title = Column(String, index=True)
 	note = Column(String)
 	bg_color = Column(String, default="FFEFFF00")
 	visible = Column(Integer, default=1)
@@ -395,13 +387,13 @@ class Context(BaseModelMixin, Base):
 	__tablename__ = "contexts"
 	uuid = Column(String(36), primary_key=True, default=generate_uuid)
 	parent_uuid = Column(String(36), ForeignKey("contexts.uuid",
-			onupdate="CASCADE", ondelete="SET NULL"))
+			onupdate="CASCADE", ondelete="SET NULL"), index=True)
 	created = Column(DateTime, default=datetime.datetime.utcnow)
 	modified = Column(DateTime, default=datetime.datetime.utcnow,
-			onupdate=datetime.datetime.utcnow)
+			onupdate=datetime.datetime.utcnow, index=True)
 	deleted = Column(DateTime)
 	ordinal = Column(Integer, default=0)
-	title = Column(String)
+	title = Column(String, index=True)
 	note = Column(String)
 	bg_color = Column(String, default="FFEFFF00")
 	visible = Column(Integer, default=1)
@@ -414,13 +406,13 @@ class Tasknote(BaseModelMixin, Base):
 	""" Task note object. """
 	__tablename__ = "tasknotes"
 	uuid = Column(String(36), primary_key=True, default=generate_uuid)
-	task_uuid = Column(String(36), ForeignKey("tasks.uuid", onupdate="CASCADE",
-			ondelete="SET NULL"))
+	task_uuid = Column(String(36), ForeignKey("tasks.uuid",
+			onupdate="CASCADE", ondelete="SET NULL"), index=True)
 	created = Column(DateTime, default=datetime.datetime.utcnow)
 	modified = Column(DateTime, default=datetime.datetime.utcnow,
-			onupdate=datetime.datetime.utcnow)
+			onupdate=datetime.datetime.utcnow, index=True)
 	ordinal = Column(Integer, default=0)
-	title = Column(String)
+	title = Column(String, index=True)
 	bg_color = Column(String, default="FFEFFF00")
 	visible = Column(Integer, default=1)
 
@@ -429,14 +421,14 @@ class Goal(BaseModelMixin, Base):
 	""" Goal """
 	__tablename__ = "goals"
 	uuid = Column(String(36), primary_key=True, default=generate_uuid)
-	parent_uuid = Column(String(36), ForeignKey("goals.uuid", onupdate="CASCADE",
-			ondelete="SET NULL"))
+	parent_uuid = Column(String(36), ForeignKey("goals.uuid",
+			onupdate="CASCADE", ondelete="SET NULL"), index=True)
 	created = Column(DateTime, default=datetime.datetime.utcnow)
 	modified = Column(DateTime, default=datetime.datetime.utcnow,
-			onupdate=datetime.datetime.utcnow)
+			onupdate=datetime.datetime.utcnow, index=True)
 	deleted = Column(DateTime)
 	ordinal = Column(Integer, default=0)
-	title = Column(String)
+	title = Column(String, index=True)
 	note = Column(String)
 	time_period = Column(Integer, default=0)
 	archived = Column(Integer, default=0)
@@ -462,14 +454,14 @@ class Tag(BaseModelMixin, Base):
 
 	__tablename__ = 'tags'
 	uuid = Column(String(36), primary_key=True, default=generate_uuid)
-	parent_uuid = Column(String(36), ForeignKey("tags.uuid", onupdate="CASCADE",
-			ondelete="SET NULL"))
+	parent_uuid = Column(String(36), ForeignKey("tags.uuid",
+			onupdate="CASCADE", ondelete="SET NULL"), index=True)
 	created = Column(DateTime, default=datetime.datetime.utcnow)
 	modified = Column(DateTime, default=datetime.datetime.utcnow,
-			onupdate=datetime.datetime.utcnow)
+			onupdate=datetime.datetime.utcnow, index=True)
 	deleted = Column(DateTime)
 	ordinal = Column(Integer, default=0)
-	title = Column(String)
+	title = Column(String, index=True)
 	note = Column(String)
 	bg_color = Column(String, default="FFEFFF00")
 	visible = Column(Integer, default=1)
@@ -487,7 +479,7 @@ class TaskTag(BaseModelMixin, Base):
 			ondelete="CASCADE"), primary_key=True)
 	created = Column(DateTime, default=datetime.datetime.utcnow)
 	modified = Column(DateTime, default=datetime.datetime.utcnow,
-			onupdate=datetime.datetime.utcnow)
+			onupdate=datetime.datetime.utcnow, index=True)
 
 	tag = orm.relationship("Tag", cascade="all", lazy="joined")
 
@@ -498,3 +490,8 @@ class SyncLog(BaseModelMixin, Base):
 	device_id = Column(String(50), primary_key=True)
 	sync_time = Column(DateTime, primary_key=True)
 	prev_sync_time = Column(DateTime)
+
+
+Index('idx_task_childs', Task.parent_uuid, Task.due_date, Task.completed)
+Index('idx_task_show', Task.hide_until, Task.parent_uuid, Task.completed,
+		Task.title)

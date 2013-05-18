@@ -53,7 +53,7 @@ _TYPE_ICON_NAMES = {enums.TYPE_PROJECT: 'project_big',
 		enums.TYPE_RETURN_CALL: 'returncall_big'}
 
 
-def draw_info(mdc, task, overdue):
+def draw_info(mdc, task, overdue, cache):
 	""" Draw information about task on given DC.
 
 	Args:
@@ -72,45 +72,75 @@ def draw_info(mdc, task, overdue):
 	mdc.SetFont(SETTINGS['font_info'])
 	inf_y_offset = mdc.GetTextExtent("Agw")[1] + 10
 	inf_x_offset = 35
-	if task.status:
+
+	# status
+	task_status = cache.get('task_status')
+	if task_status is None and task.status:
+		cache['task_status'] = task_status = enums.STATUSES[task.status]
+		cache['task_status_x_off'] = mdc.GetTextExtent(task_status)[0] + 10
+	if task_status:
 		mdc.DrawBitmap(iconprovider.get_image('status_small'), inf_x_offset,
 				inf_y_offset, False)
 		inf_x_offset += 15  # 12=icon
-		status_text = enums.STATUSES[task.status]
-		mdc.DrawText(status_text, inf_x_offset, inf_y_offset)
-		inf_x_offset += mdc.GetTextExtent(status_text)[0] + 10
-	if task.context:
-		context = task.context.title
-		mdc.DrawText(context, inf_x_offset, inf_y_offset)
-		inf_x_offset += mdc.GetTextExtent(context)[0] + 10
-	if task.parent:
+		mdc.DrawText(task_status, inf_x_offset, inf_y_offset)
+		inf_x_offset += cache['task_status_x_off']
+
+	# context
+	task_context = cache.get('task_context')
+	if task_context is None and task.context:
+		cache['task_context'] = task_context = task.context.title
+		cache['task_context_x_off'] = mdc.GetTextExtent(task_context)[0] + 10
+	if task_context:
+		mdc.DrawText(task_context, inf_x_offset, inf_y_offset)
+		inf_x_offset += cache['task_context_x_off']
+
+	# parent
+	task_parent = cache.get('task_parent')
+	if task_parent is None and task.parent:
+		cache['task_parent'] = task_parent = task.parent.title
+		cache['task_parent_x_off'] = mdc.GetTextExtent(task_parent)[0] + 10
+	if task_parent:
 		mdc.DrawBitmap(iconprovider.get_image('project_small'), inf_x_offset,
 				inf_y_offset, False)
 		inf_x_offset += 15  # 12=icon
-		parent = task.parent.title
-		mdc.DrawText(parent, inf_x_offset, inf_y_offset)
-		inf_x_offset += mdc.GetTextExtent(parent)[0] + 10
-	if task.goal:
+		mdc.DrawText(task_parent, inf_x_offset, inf_y_offset)
+		inf_x_offset += cache['task_parent_x_off']
+
+	# goal
+	task_goal = cache.get('task_goal')
+	if task_goal is None and task.goal:
+		cache['task_goal'] = task_goal = task.goal.title
+		cache['task_goal_x_off'] = mdc.GetTextExtent(task_goal)[0] + 10
+	if task_goal:
 		mdc.DrawBitmap(iconprovider.get_image('goal_small'), inf_x_offset,
 				inf_y_offset, False)
 		inf_x_offset += 15  # 12=icon
-		goal = task.goal.title
-		mdc.DrawText(goal, inf_x_offset, inf_y_offset)
-		inf_x_offset += mdc.GetTextExtent(goal)[0] + 10
-	if task.folder:
+		mdc.DrawText(task_goal, inf_x_offset, inf_y_offset)
+		inf_x_offset += cache['task_goal_x_off']
+
+	# folder
+	task_folder = cache.get('task_folder')
+	if task_folder is None and task.folder:
+		cache['task_folder'] = task_folder = task.folder.title
+		cache['task_folder_x_off'] = mdc.GetTextExtent(task_folder)[0] + 10
+	if task_folder:
 		mdc.DrawBitmap(iconprovider.get_image('folder_small'), inf_x_offset,
 				inf_y_offset, False)
 		inf_x_offset += 15  # 12=icon
-		folder = task.folder.title
-		mdc.DrawText(folder, inf_x_offset, inf_y_offset)
-		inf_x_offset += mdc.GetTextExtent(folder)[0] + 10
-	if task.tags:
+		mdc.DrawText(task_folder, inf_x_offset, inf_y_offset)
+		inf_x_offset += cache['task_folder_x_off']
+
+	# tags
+	task_tags = cache.get('task_tags')
+	if task_tags is None and task.tags:
+		cache['task_tags'] = task_tags = ",".join(
+				tasktag.tag.title for tasktag in task.tags)
+	if task_tags:
 		mdc.DrawBitmap(iconprovider.get_image('tag_small'), inf_x_offset,
 				inf_y_offset, False)
 		inf_x_offset += 15  # 12=icon
-		tags = ",".join(tasktag.tag.title for tasktag in task.tags)
-		mdc.DrawText(tags, inf_x_offset, inf_y_offset)
-		inf_x_offset += mdc.GetTextExtent(tags)[0] + 10
+		mdc.DrawText(task_tags, inf_x_offset, inf_y_offset)
+		#inf_x_offset += mdc.GetTextExtent(task_tags)[0] + 10
 
 
 _TASK_TYPE_ICONS = {enums.TYPE_TASK: "",
@@ -124,7 +154,7 @@ _TASK_TYPE_ICONS = {enums.TYPE_TASK: "",
 		enums.TYPE_RETURN_CALL: "returncall_small"}
 
 
-def draw_icons(mdc, task, overdue, active_only):
+def draw_icons(mdc, task, overdue, active_only, cache):
 	""" Draw information icons about task on given DC.
 
 	Args:
@@ -137,19 +167,21 @@ def draw_icons(mdc, task, overdue, active_only):
 	inf_y_offset = mdc.GetTextExtent("Agw")[1] + 10
 	if task.starred:
 		mdc.DrawBitmap(iconprovider.get_image('starred_small'), 0, 7, False)
+
+	child_count = cache.get('child_count')
+	if child_count is None:
 		child_count = task.active_child_count if active_only else \
 				task.child_count
-	#icon = _TASK_TYPE_ICONS.get(task.type)
-	#if icon:
-		#mdc.DrawBitmap(iconprovider.get_image(icon), 16, 7, False)
-	child_count = task.active_child_count if active_only else \
-			task.child_count
+		cache['child_count'] = child_count
 	if child_count > 0:
-		info = ""
-		overdue = task.child_overdue
-		if overdue > 0:
-			info += "%d / " % overdue
-		info += "%d" % child_count
+		info = cache.get('info')
+		if info is None:
+			info = ''
+			overdue = cache.get('overdue')
+			if overdue > 0:
+				info += "%d / " % overdue
+			info += "%d" % child_count
+			cache['info'] = info
 		mdc.DrawText(info, 16, 7)
 	if task.alarm:
 		mdc.DrawBitmap(iconprovider.get_image('alarm_small'), 0, inf_y_offset,
@@ -169,8 +201,13 @@ class TaskInfoPanel(wx.Panel):
 		wx.Panel.__init__(self, *args, **kwargs)
 		self.task = None
 		self.overdue = False
+		self._values_cache = {}
 		configure()
 		self.Bind(wx.EVT_PAINT, self._on_paint)
+
+	def set_task(self, task):
+		self.task = task
+		self._values_cache.clear()
 
 	def _on_paint(self, _evt):
 		dc = wx.BufferedPaintDC(self)
@@ -179,7 +216,7 @@ class TaskInfoPanel(wx.Panel):
 		dc.SetBackground(bg)
 		dc.Clear()
 		if self.task:
-			draw_info(dc, self.task, self.overdue)
+			draw_info(dc, self.task, self.overdue, self._values_cache)
 		dc.EndDrawing()
 
 
@@ -191,8 +228,13 @@ class TaskIconsPanel(wx.Panel):
 		self.task = None
 		self.overdue = False
 		self.active_only = False
+		self._values_cache = {}
 		configure()
 		self.Bind(wx.EVT_PAINT, self._on_paint)
+
+	def set_task(self, task):
+		self.task = task
+		self._values_cache.clear()
 
 	def _on_paint(self, _evt):
 		dc = wx.BufferedPaintDC(self)
@@ -201,5 +243,6 @@ class TaskIconsPanel(wx.Panel):
 		dc.SetBackground(bg)
 		dc.Clear()
 		if self.task:
-			draw_icons(dc, self.task, self.overdue, self.active_only)
+			draw_icons(dc, self.task, self.overdue, self.active_only,
+					self._values_cache)
 		dc.EndDrawing()
