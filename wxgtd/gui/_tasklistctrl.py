@@ -55,13 +55,15 @@ class _ListItemRenderer(object):
 	def __init__(self, _parent, task, overdue=False):
 		self._task = task
 		self._overdue = overdue
+		self._values_cache = {}
 
 	def DrawSubItem(self, dc, rect, _line, _highlighted, _enabled):
 		canvas = wx.EmptyBitmap(rect.width, rect.height)
 		mdc = wx.MemoryDC()
 		mdc.SelectObject(canvas)
 		mdc.Clear()
-		infobox.draw_info(mdc, self._task, self._overdue)
+		infobox.draw_info(mdc, self._task, self._overdue,
+				cache=self._values_cache)
 		dc.Blit(rect.x + 3, rect.y, rect.width - 6, rect.height, mdc, 0, 0)
 
 	def GetLineHeight(self):  # pylint: disable=R0201
@@ -89,13 +91,15 @@ class _ListItemRendererIcons(object):
 		self._task = task
 		self._overdue = overdue
 		self._active_only = active_only
+		self._values_cache = {}
 
 	def DrawSubItem(self, dc, rect, _line, _highlighted, _enabled):
 		canvas = wx.EmptyBitmap(rect.width, rect.height)
 		mdc = wx.MemoryDC()
 		mdc.SelectObject(canvas)
 		mdc.Clear()
-		infobox.draw_icons(mdc, self._task, self._overdue, self._active_only)
+		infobox.draw_icons(mdc, self._task, self._overdue, self._active_only,
+				self._values_cache)
 		dc.Blit(rect.x + 3, rect.y, rect.width - 6, rect.height, mdc, 0, 0)
 
 	def GetLineHeight(self):  # pylint: disable=R0201
