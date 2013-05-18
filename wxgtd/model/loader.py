@@ -164,7 +164,6 @@ def _convert_timestamps(dictobj, *fields):
 		convert(field)
 
 
-
 def _cleanup_tasks(loaded_tasks, last_sync, session):
 	""" Remove old (removed) tasks.
 	Args:
@@ -553,25 +552,27 @@ def load_json(strdata, update_func):
 	if 'syncLog' in data:
 		del data['syncLog']
 
-	_LOG.info("load_json: czyszczenie")
-	update_func(84, _("Cleanup"))
-	# pokasowanie staroci
-	# TOOD: do naprawienia
-	deleted_task = _cleanup_tasks(set(tasks_cache.itervalues()),
-			last_prev_sync_time, session)
-	update_func(85, _("Removed tasks: %d") % deleted_task)
-	deleted_folders = _cleanup_folders(folders_cache, last_prev_sync_time,
-			session)
-	update_func(86, _("Removed folders: %d") % deleted_folders)
-	deleted_contexts = _cleanup_contexts(contexts_cache, last_prev_sync_time,
-			session)
-	update_func(87, _("Removed contexts: %d") % deleted_contexts)
-	deleted_notes = _cleanup_contexts(tasknotes_cache, last_prev_sync_time,
-			session)
-	update_func(88, _("Removed task notes: %d") % deleted_notes)
-	deleted_goals = _cleanup_goals(goals_cache, last_prev_sync_time,
-			session)
-	update_func(89, _("Removed goals %d") % deleted_goals)
+	if last_prev_sync_time:
+		_LOG.info("load_json: czyszczenie: %r", last_prev_sync_time)
+		update_func(84, _("Cleanup"))
+		# pokasowanie staroci
+		# TOOD: do naprawienia
+		deleted_task = _cleanup_tasks(set(tasks_cache.itervalues()),
+				last_prev_sync_time, session)
+		update_func(85, _("Removed tasks: %d") % deleted_task)
+		deleted_folders = _cleanup_folders(folders_cache, last_prev_sync_time,
+				session)
+		update_func(86, _("Removed folders: %d") % deleted_folders)
+		deleted_contexts = _cleanup_contexts(contexts_cache, last_prev_sync_time,
+				session)
+		update_func(87, _("Removed contexts: %d") % deleted_contexts)
+		deleted_notes = _cleanup_contexts(tasknotes_cache, last_prev_sync_time,
+				session)
+		update_func(88, _("Removed task notes: %d") % deleted_notes)
+		deleted_goals = _cleanup_goals(goals_cache, last_prev_sync_time,
+				session)
+		update_func(89, _("Removed goals %d") % deleted_goals)
+
 	update_func(90, _("Committing..."))
 	session.commit()  # pylint: disable=E1101
 	update_func(100, _("Load completed"))
