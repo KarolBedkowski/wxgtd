@@ -19,7 +19,7 @@ import gettext
 import uuid
 import datetime
 
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Index
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import orm, or_, and_
 from sqlalchemy import select, func
@@ -490,3 +490,8 @@ class SyncLog(BaseModelMixin, Base):
 	device_id = Column(String(50), primary_key=True)
 	sync_time = Column(DateTime, primary_key=True)
 	prev_sync_time = Column(DateTime)
+
+
+Index('idx_task_childs', Task.parent_uuid, Task.due_date, Task.completed)
+Index('idx_task_show', Task.hide_until, Task.parent_uuid, Task.completed,
+		Task.title)
