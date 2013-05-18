@@ -84,17 +84,11 @@ class _ListItemRendererIcons(object):
 	| priority  | status, goal, project |      | alarm, repeat |
 	+-----------+-----------------------+------+---------------+
 	"""
-	_font_task = None
-	_font_info = None
 
 	def __init__(self, _parent, task, overdue=False, active_only=False):
 		self._task = task
 		self._overdue = overdue
 		self._active_only = active_only
-		if not self._font_task:
-			self._font_task = wx.Font(10, wx.NORMAL, wx.NORMAL, wx.BOLD, False)
-		if not self._font_info:
-			self._font_info = wx.Font(8, wx.NORMAL, wx.NORMAL, wx.NORMAL, False)
 
 	def DrawSubItem(self, dc, rect, _line, _highlighted, _enabled):
 		canvas = wx.EmptyBitmap(rect.width, rect.height)
