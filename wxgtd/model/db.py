@@ -52,22 +52,6 @@ def connect(filename, debug=False, *args, **kwargs):
 		for sql in schema:
 			engine.execute(sql)
 	objects.Session.configure(bind=engine)  # pylint: disable=E1120
-	objects.Base.metadata.create_all(engine)
-	# bootstrap
-	session = objects.Session()
-	# 1. deviceId
-	conf = session.query(  # pylint: disable=E1101
-			objects.Conf).filter_by(key='deviceId').first()
-	if conf is None:
-		conf = objects.Conf(key='deviceId')
-		conf.val = objects.generate_uuid()
-		session.add(conf)  # pylint: disable=E1101
-		_LOG.info('DB bootstrap: create deviceId=%r', conf.val)
-		session.commit()  # pylint: disable=E1101
-	# 2. cleanup
-	engine.execute("delete from task_tags "
-			"where task_uuid not in (select uuid from tasks)"
-			"or tag_uuid not in (select uuid from tags)")
 
 	if debug:
 		@sqlalchemy.event.listens_for(Engine, "before_cursor_execute")
@@ -80,5 +64,27 @@ def connect(filename, debug=False, *args, **kwargs):
 				_executemany):
 			_LOG.debug("Query time: %.02fms" % (
 					(time.time() - context._query_start) * 1000))
+
+	_LOG.info('Database create_all START')
+	objects.Base.metadata.create_all(engine)
+	_LOG.info('Database create_all COMPLETED')
+	# bootstrap
+	_LOG.info('Database bootstrap START')
+	session = objects.Session()
+	# 1. deviceId
+	conf = session.query(  # pylint: disable=E1101
+			objects.Conf).filter_by(key='deviceId').first()
+	if conf is None:
+		conf = objects.Conf(key='deviceId')
+		conf.val = objects.generate_uuid()
+		session.add(conf)  # pylint: disable=E1101
+		_LOG.info('DB bootstrap: create deviceId=%r', conf.val)
+		session.commit()  # pylint: disable=E1101
+	_LOG.info('Database bootstrap cleanup')
+	# 2. cleanup
+	engine.execute("delete from task_tags "
+			"where task_uuid not in (select uuid from tasks)"
+			"or tag_uuid not in (select uuid from tags)")
+	_LOG.info('Database bootstrap COMPLETED')
 
 	return objects.Session
