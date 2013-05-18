@@ -270,11 +270,7 @@ class Task(BaseModelMixin, Base):
 		# future alarms
 		if params.get('active_alarm'):
 			query = query.filter(Task.alarm >= now)
-		query = query.options(orm.joinedload(Task.context)) \
-				.options(orm.joinedload(Task.folder)) \
-				.options(orm.joinedload(Task.goal)) \
-				.options(orm.subqueryload(Task.tags)) \
-				.order_by(Task.title)
+		query = query.order_by(Task.title)
 		return query.all()
 
 	@classmethod
@@ -311,11 +307,7 @@ class Task(BaseModelMixin, Base):
 		# if "since" is set - use it as minimal alarm
 		# not completed
 		query = query.filter(Task.completed.is_(None))
-		query = query.options(orm.joinedload(Task.context)) \
-				.options(orm.joinedload(Task.folder)) \
-				.options(orm.joinedload(Task.goal)) \
-				.options(orm.subqueryload(Task.tags)) \
-				.order_by(Task.alarm)
+		query = query.order_by(Task.alarm)
 		return query.all()
 
 	@property
