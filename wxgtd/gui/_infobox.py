@@ -72,50 +72,65 @@ def draw_info(mdc, task, overdue, cache):
 	mdc.SetFont(SETTINGS['font_info'])
 	inf_y_offset = mdc.GetTextExtent("Agw")[1] + 10
 	inf_x_offset = 35
-	task_status = None
 
+	# status
 	task_status = cache.get('task_status')
 	if task_status is None and task.status:
 		cache['task_status'] = task_status = enums.STATUSES[task.status]
+		cache['task_status_x_off'] = mdc.GetTextExtent(task_status)[0] + 10
 	if task_status:
 		mdc.DrawBitmap(iconprovider.get_image('status_small'), inf_x_offset,
 				inf_y_offset, False)
 		inf_x_offset += 15  # 12=icon
 		mdc.DrawText(task_status, inf_x_offset, inf_y_offset)
-		inf_x_offset += mdc.GetTextExtent(task_status)[0] + 10
+		inf_x_offset += cache['task_status_x_off']
+
+	# context
 	task_context = cache.get('task_context')
 	if task_context is None and task.context:
 		cache['task_context'] = task_context = task.context.title
+		cache['task_context_x_off'] = mdc.GetTextExtent(task_context)[0] + 10
 	if task_context:
 		mdc.DrawText(task_context, inf_x_offset, inf_y_offset)
-		inf_x_offset += mdc.GetTextExtent(task_context)[0] + 10
+		inf_x_offset += cache['task_context_x_off']
+
+	# parent
 	task_parent = cache.get('task_parent')
 	if task_parent is None and task.parent:
 		cache['task_parent'] = task_parent = task.parent.title
+		cache['task_parent_x_off'] = mdc.GetTextExtent(task_parent)[0] + 10
 	if task_parent:
 		mdc.DrawBitmap(iconprovider.get_image('project_small'), inf_x_offset,
 				inf_y_offset, False)
 		inf_x_offset += 15  # 12=icon
 		mdc.DrawText(task_parent, inf_x_offset, inf_y_offset)
-		inf_x_offset += mdc.GetTextExtent(task_parent)[0] + 10
+		inf_x_offset += cache['task_parent_x_off']
+
+	# goal
 	task_goal = cache.get('task_goal')
 	if task_goal is None and task.goal:
 		cache['task_goal'] = task_goal = task.goal.title
+		cache['task_goal_x_off'] = mdc.GetTextExtent(task_goal)[0] + 10
 	if task_goal:
 		mdc.DrawBitmap(iconprovider.get_image('goal_small'), inf_x_offset,
 				inf_y_offset, False)
 		inf_x_offset += 15  # 12=icon
 		mdc.DrawText(task_goal, inf_x_offset, inf_y_offset)
-		inf_x_offset += mdc.GetTextExtent(task_goal)[0] + 10
+		inf_x_offset += cache['task_goal_x_off']
+
+	# folder
 	task_folder = cache.get('task_folder')
 	if task_folder is None and task.folder:
 		cache['task_folder'] = task_folder = task.folder.title
+		cache['task_folder_x_off'] = mdc.GetTextExtent(task_folder)[0] + 10
 	if task_folder:
 		mdc.DrawBitmap(iconprovider.get_image('folder_small'), inf_x_offset,
 				inf_y_offset, False)
 		inf_x_offset += 15  # 12=icon
 		mdc.DrawText(task_folder, inf_x_offset, inf_y_offset)
-		inf_x_offset += mdc.GetTextExtent(task_folder)[0] + 10
+		inf_x_offset += cache['task_folder_x_off']
+
+	# tags
 	task_tags = cache.get('task_tags')
 	if task_tags is None and task.tags:
 		cache['task_tags'] = task_tags = ",".join(
