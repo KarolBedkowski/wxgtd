@@ -36,6 +36,8 @@ from .dlg_remind_settings import DlgRemindSettings
 from .dlg_show_settings import DlgShowSettings
 from .dlg_repeat_settings import DlgRepeatSettings
 from .dlg_select_tags import DlgSelectTags
+from . import dialogs
+from . import message_boxes as mbox
 from . import _fmt as fmt
 
 _ = gettext.gettext
@@ -67,11 +69,11 @@ class DlgTask(BaseDialog):
 		BaseDialog._create_bindings(self)
 		self['btn_due_date_set'].Bind(wx.EVT_BUTTON, self._on_btn_due_date_set)
 		self['btn_start_date_set'].Bind(wx.EVT_BUTTON, self._on_btn_start_date_set)
-		self['lb_notes_list'].Bind(wx.EVT_LISTBOX, self._on_lb_notes_list)
+		self['lb_notes_list'].Bind(wx.EVT_LISTBOX_DCLICK,
+				self._on_lb_notes_list)
 		self._wnd.Bind(wx.EVT_BUTTON, self._on_btn_new_note, id=wx.ID_ADD)
 		self._wnd.Bind(wx.EVT_BUTTON, self._on_btn_delete, id=wx.ID_DELETE)
 		self['btn_del_note'].Bind(wx.EVT_BUTTON, self._on_btn_del_note)
-		self['btn_save_note'].Bind(wx.EVT_BUTTON, self._on_btn_save_note)
 		self['btn_remind_set'].Bind(wx.EVT_BUTTON, self._on_btn_remiand_set)
 		self['btn_hide_until_set'].Bind(wx.EVT_BUTTON, self._on_btn_hide_until_set)
 		self['btn_repeat_set'].Bind(wx.EVT_BUTTON, self._on_btn_repeat_set)
@@ -173,33 +175,40 @@ class DlgTask(BaseDialog):
 		self._set_date('start_date', 'start_time_set')
 
 	def _on_lb_notes_list(self, evt):
-		note_uuid = evt.GetClientData()
-		for note in self._task.notes:
-			if note.uuid == note_uuid:
-				# czy aktualne jest zmienione
-				if note != self._current_note and self._current_note:
-					# TODO: potwierdzenie zapisania
-					value = self['tc_notes_note'].GetValue()
-					if value != self._current_note.title:
-						self._current_note.title = value
-				self._current_note = note
-				self['tc_notes_note'].SetValue(note.title or '')
+		sel = self['lb_notes_list'].GetSelection()
+		if sel >= 0:
+			note = self._task.notes[sel]
+			dlg = dialogs.MultilineTextDialog(self.wnd, note.title,
+					_("Task Note"), buttons=wx.ID_SAVE | wx.ID_CLOSE)
+			if dlg.ShowModal() == wx.ID_SAVE:
+				note.title = dlg.text
+				self._session.add(note)
+			dlg.Destroy()
+			self._refresh_static_texts()
 
 	def _on_btn_new_note(self, _evt):
-		self._save_current_note()
-		self._current_note = OBJ.Tasknote(title=_("New note"))
-		self['tc_notes_note'].SetValue(self._current_note.title)
+		note = OBJ.Tasknote()
+		dlg = dialogs.MultilineTextDialog(self.wnd, note.title,
+				_("Task Note"), buttons=wx.ID_SAVE | wx.ID_CLOSE)
+		if dlg.ShowModal() == wx.ID_SAVE:
+			note.title = dlg.text
+			self._session.add(note)
+			self._task.notes.append(note)
+		dlg.Destroy()
+		self._refresh_static_texts()
 
 	def _on_btn_del_note(self, _evt):
 		lb_notes_list = self['lb_notes_list']
 		sel = lb_notes_list.GetSelection()
 		if sel < 0:
 			return
+		if not mbox.message_box_delete_confirm(self.wnd, _("note")):
+			return
+		note = self._task.notes[sel]
+		if note.uuid:
+			self._session.delete(note)
 		del self._task.notes[sel]
 		self._refresh_static_texts()
-
-	def _on_btn_save_note(self, _evt):
-		self._save_current_note()
 
 	def _on_btn_remiand_set(self, _evt):
 		task = self._task
