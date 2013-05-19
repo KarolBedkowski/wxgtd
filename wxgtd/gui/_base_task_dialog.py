@@ -69,8 +69,8 @@ class BaseTaskDialog(BaseDialog):
 		self['tc_title'].SetValidator(Validator(task, 'title',
 				validators=LVALID.NotEmptyValidator(), field='title'))
 		self['tc_note'].SetValidator(Validator(task, 'note',))
-		self['l_created'].SetLabel(str(task.created))
-		self['l_modified'].SetLabel(str(task.modified))
+		self['l_created'].SetLabel(fmt.format_timestamp(task.created))
+		self['l_modified'].SetLabel(fmt.format_timestamp(task.modified))
 		self['cb_completed'].SetValidator(Validator(task, 'task_completed'))
 		self['cb_starred'].SetValidator(Validator(task, 'starred'))
 
