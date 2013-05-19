@@ -93,17 +93,17 @@ class BaseTaskDialog(BaseDialog):
 		self._on_ok(evt)
 
 	def _on_lb_notes_list(self, evt):
-		note_uuid = evt.GetClientData()
-		for note in self._task.notes:
-			if note.uuid == note_uuid:
-				# czy aktualne jest zmienione
-				if note != self._current_note and self._current_note:
-					# TODO: potwierdzenie zapisania
-					value = self['tc_notes_note'].GetValue()
-					if value != self._current_note.title:
-						self._current_note.title = value
-				self._current_note = note
-				self['tc_notes_note'].SetValue(note.title or '')
+		sel = self['lb_notes_list'].GetSelection()
+		if sel < 0:
+			return
+		note = self._task.notes[sel]
+		dlg = dialogs.MultilineTextDialog(self.wnd, note.title,
+				_("Task Note"), buttons=wx.ID_SAVE | wx.ID_CLOSE)
+		if dlg.ShowModal() == wx.ID_SAVE:
+			note.title = dlg.text
+			self._session.add(note)
+		dlg.Destroy()
+		self._refresh_static_texts()
 
 	def _on_btn_new_note(self, _evt):
 		note = OBJ.Tasknote()
