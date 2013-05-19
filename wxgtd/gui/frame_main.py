@@ -578,12 +578,15 @@ class FrameMain:
 		panel_parent_icons = self._panel_parent_icons
 		panel_parent_info = self._panel_parent_info
 		if not self._items_path:
+			self['panel_parent'].SetBackgroundColour(
+					self.wnd.GetBackgroundColour())
 			self['btn_parent_edit'].Enable(False)
 			self.wnd.FindWindowById(wx.ID_UP).Enable(False)
 			panel_parent_info.set_task(None)
 			panel_parent_icons.set_task(None)
 			self['l_parent_due'].SetLabel("")
 		else:
+			self['panel_parent'].SetBackgroundColour(wx.WHITE)
 			self['btn_parent_edit'].Enable(True)
 			self.wnd.FindWindowById(wx.ID_UP).Enable(True)
 			parent = self._items_path[-1]
