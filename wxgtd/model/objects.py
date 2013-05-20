@@ -310,6 +310,13 @@ class Task(BaseModelMixin, Base):
 		query = query.order_by(Task.alarm)
 		return query.all()
 
+	@classmethod
+	def find_max_importance(cls, parent_uuid, session=None):
+		""" Find maximal importance in childs of given task."""
+		return (session or Session()).scalar(
+				select([func.max(Task.importance)]).where(
+						Task.parent_uuid == parent_uuid))
+
 	@property
 	def child_count(self):
 		"""  Count subtask. """

@@ -36,6 +36,7 @@ BUTTON_DISMISS = 2
 
 _ListBtnDismissEvent, EVT_LIST_BTN_DISMISS = wx.lib.newevent.NewEvent()
 _ListBtnSnoozeEvent, EVT_LIST_BTN_SNOOZE = wx.lib.newevent.NewEvent()
+_DragTaskEvent, EVT_DRAG_TASK = wx.lib.newevent.NewEvent()
 
 
 class _ListItemRenderer(object):
@@ -133,6 +134,10 @@ class TaskListControl(ULC.UltimateListCtrl, listmix.ColumnSorterMixin):
 		self.itemDataMap = {}  # for sorting
 		self._icon_sm_up = icon_prov.get_image_index('sm_up')
 		self._icon_sm_down = icon_prov.get_image_index('sm_down')
+		self._drag_item_start = None
+
+		self.Bind(ULC.EVT_LIST_BEGIN_DRAG, self._on_begin_drag)
+		self.Bind(ULC.EVT_LIST_END_DRAG, self._on_end_drag)
 
 	@property
 	def items(self):
@@ -168,6 +173,7 @@ class TaskListControl(ULC.UltimateListCtrl, listmix.ColumnSorterMixin):
 		current_sort_state = self.GetSortState()
 		if current_sort_state[0] == -1:
 			current_sort_state = (2, 1)
+		self._drag_item_start = None
 		self._items.clear()
 		self.itemDataMap.clear()
 		self._mainWin.HideWindows()  # workaround for some bug in ULC
@@ -287,6 +293,24 @@ class TaskListControl(ULC.UltimateListCtrl, listmix.ColumnSorterMixin):
 	def _on_list_btn_snooze_click(self, evt):
 		wx.PostEvent(self, _ListBtnSnoozeEvent(
 				task=evt.GetEventObject().task))
+
+	def _on_begin_drag(self, evt):
+		self._drag_item_start = None
+		item_index = evt.GetIndex()
+		_item_uuid, item_type = self._items[item_index]
+		if item_type != enums.TYPE_CHECKLIST_ITEM:
+			return  # veto don't work
+		else:
+			self._drag_item_start = item_index
+
+	def _on_end_drag(self, evt):
+		print '_on_end_drag', self._drag_item_start
+		if self._drag_item_start is None:
+			return
+		item_index = evt.GetIndex()
+		wx.PostEvent(self, _DragTaskEvent(start=self._drag_item_start,
+				stop=item_index))
+		self._drag_item_start = None
 
 
 def _get_sort_info_for_task(task):

@@ -50,8 +50,11 @@ class DlgChecklistitem(BaseTaskDialog):
 		self['cb_checklist'].SetValidator(ValidatorDv(task, 'parent_uuid'))
 
 	def _create_task(self, parent_uuid):
+		# find last importance in this checlist
+		importance = OBJ.Task.find_max_importance(parent_uuid, self._session)
 		task = OBJ.Task(type=enums.TYPE_CHECKLIST_ITEM,
-					parent_uuid=parent_uuid)
+					parent_uuid=parent_uuid,
+					importance=importance + 1)
 		self._session.add(task)  # pylint: disable=E1101
 		return task
 
