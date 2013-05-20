@@ -72,7 +72,7 @@ class BaseModelMixin(object):
 		return session.query(cls).filter(cls.modified < timestamp).all()
 
 	@classmethod
-	def selecy_old_usunsed(cls, timestamp, session=None):
+	def select_old_usunsed(cls, timestamp, session=None):
 		""" Find object with modified date less than given and nod used in
 		any task. """
 		session = session or Session()
@@ -422,6 +422,13 @@ class Tasknote(BaseModelMixin, Base):
 	title = Column(String, index=True)
 	bg_color = Column(String, default="FFEFFF00")
 	visible = Column(Integer, default=1)
+
+	@classmethod
+	def select_old_usunsed(cls, timestamp, session=None):
+		""" Find object with modified date less than given and nod used in
+		any task. """
+		session = session or Session()
+		return session.query(cls).filter(cls.task_uuid.is_(None))
 
 
 class Goal(BaseModelMixin, Base):
