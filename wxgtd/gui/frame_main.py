@@ -40,8 +40,8 @@ from wxgtd.gui import dlg_about
 from wxgtd.gui import _fmt as fmt
 from wxgtd.gui import _infobox as infobox
 from wxgtd.gui import message_boxes as mbox
+from wxgtd.gui import _tasklistctrl as TLC
 from wxgtd.gui._filtertreectrl import FilterTreeCtrl
-from wxgtd.gui._tasklistctrl import TaskListControl
 from wxgtd.gui._taskbaricon import TaskBarIcon
 from wxgtd.gui.dlg_task import DlgTask
 from wxgtd.gui.dlg_checklistitem import DlgChecklistitem
@@ -114,7 +114,7 @@ class FrameMain:
 		# tasklist
 		tasklist_panel = self['tasklist_panel']
 		box = wx.BoxSizer(wx.HORIZONTAL)
-		self._items_list_ctrl = TaskListControl(tasklist_panel)
+		self._items_list_ctrl = TLC.TaskListControl(tasklist_panel)
 		box.Add(self._items_list_ctrl, 1, wx.EXPAND)
 		tasklist_panel.SetSizer(box)
 		ppinfo = self['panel_parent_info']
@@ -157,6 +157,7 @@ class FrameMain:
 				self._on_rb_show_selection)
 		self._items_list_ctrl.Bind(wx.EVT_LIST_ITEM_ACTIVATED,
 				self._on_items_list_activated)
+		self._items_list_ctrl.Bind(TLC.EVT_DRAG_TASK, self._on_item_drag)
 		wnd.Bind(wx.EVT_BUTTON, self._on_btn_path_back, id=wx.ID_UP)
 		self['btn_parent_edit'].Bind(wx.EVT_BUTTON, self._on_btn_edit_parent)
 		wnd.Bind(wx.EVT_TIMER, self._on_timer)
@@ -401,6 +402,28 @@ class FrameMain:
 		else:
 			dlg = DlgTask.create(task_uuid, self.wnd, task_uuid)
 		dlg.run()
+
+	def _on_item_drag(self, evt):
+		s_index = evt.start
+		e_index = evt.stop
+		if s_index == e_index:
+			return
+		items = []
+		if s_index < e_index:
+			for idx in xrange(s_index, e_index):
+				items.append(OBJ.Task.get(self._session,
+						uuid=self._items_list_ctrl.get_item_uuid(idx)))
+			items.append(items.pop(0))
+		else:
+			for idx in xrange(e_index, s_index + 1):
+				items.append(OBJ.Task.get(self._session,
+						uuid=self._items_list_ctrl.get_item_uuid(idx)))
+			items.insert(0, items.pop(-1))
+		first_importance = min(item.importance for item in items)
+		for idx, item in enumerate(items):
+			item.importance = first_importance + idx
+		self._session.commit()
+		self._refresh_list()
 
 	def _on_btn_path_back(self, _evt):
 		if self._items_path:
