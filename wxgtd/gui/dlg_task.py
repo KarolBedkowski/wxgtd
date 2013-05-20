@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """ Edit task dialog.
 
-TODO: wydzielenie cześci wspólnej z dlg_checklistitem
-
 Copyright (c) Karol Będkowski, 2013
 
 This file is part of wxGTD
@@ -14,7 +12,6 @@ __copyright__ = "Copyright (c) Karol Będkowski, 2010-2013"
 __version__ = "2010-11-25"
 
 import logging
-import datetime
 import gettext
 
 import wx
@@ -216,18 +213,6 @@ class DlgTask(BaseTaskDialog):
 
 	def _on_sl_priority(self, _evt):
 		self['l_prio'].SetLabel(enums.PRIORITIES[self['sl_priority'].GetValue()])
-
-	def _save_current_note(self):
-		cnote = self._current_note
-		if cnote:
-			value = self['tc_notes_note'].GetValue()
-			if value and value != cnote.title:
-				cnote.title = value
-				cnote.modified = datetime.datetime.utcnow()
-				if not cnote.created:
-					cnote.created = cnote.modified
-					self._task.notes.append(cnote)  # pylint: disable=E1103
-			wx.CallAfter(self._refresh_static_texts)
 
 	def _refresh_static_texts(self):
 		""" Odświeżenie pól dat na dlg """

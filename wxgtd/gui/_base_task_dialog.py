@@ -74,13 +74,13 @@ class BaseTaskDialog(BaseDialog):
 		self['cb_completed'].SetValidator(Validator(task, 'task_completed'))
 		self['cb_starred'].SetValidator(Validator(task, 'starred'))
 
-	def _setup_comboboxes(self):
+	def _setup_comboboxes(self):  # pylint: disable=R0201
 		pass
 
-	def _load_task(self, task_uuid):
+	def _load_task(self, _task_uuid):  # pylint: disable=R0201
 		return None
 
-	def _create_task(self, parent_uuid):
+	def _create_task(self, _parent_uuid):  # pylint: disable=R0201
 		return None
 
 	def _on_save(self, evt):
@@ -92,7 +92,7 @@ class BaseTaskDialog(BaseDialog):
 		Publisher.sendMessage('task.update', data={'task_uuid': self._task.uuid})
 		self._on_ok(evt)
 
-	def _on_lb_notes_list(self, evt):
+	def _on_lb_notes_list(self, _evt):
 		sel = self['lb_notes_list'].GetSelection()
 		if sel < 0:
 			return

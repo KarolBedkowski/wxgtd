@@ -61,6 +61,7 @@ def draw_info(mdc, task, overdue, cache):
 		task: task to render
 		overdue: is task overdue
 	"""
+	# TODO: refactor; pylint: disable=R0912,R0915
 	main_icon_y_offset = (SETTINGS['line_height'] - 32) / 2
 	icon_name = _TYPE_ICON_NAMES.get(task.type)
 	if icon_name:

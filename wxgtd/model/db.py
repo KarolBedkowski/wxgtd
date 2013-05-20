@@ -55,15 +55,15 @@ def connect(filename, debug=False, *args, **kwargs):
 
 	if debug:
 		@sqlalchemy.event.listens_for(Engine, "before_cursor_execute")
-		def before_cursor_execute(_conn, _cursor, _stmt, _params, context,
-				_executemany):
-			context._query_start = time.time()
+		def before_cursor_execute(_conn, _cursor,  # pylint: disable=W0612
+				_stmt, _params, context, _executemany):
+			context.app_query_start = time.time()
 
 		@sqlalchemy.event.listens_for(Engine, "after_cursor_execute")
-		def after_cursor_execute(_conn, _cursor, _stmt, _params, context,
-				_executemany):
+		def after_cursor_execute(_conn, _cursor,  # pylint: disable=W0612
+				_stmt, _params, context, _executemany):
 			_LOG.debug("Query time: %.02fms" % (
-					(time.time() - context._query_start) * 1000))
+					(time.time() - context.app_query_start) * 1000))
 
 	_LOG.info('Database create_all START')
 	objects.Base.metadata.create_all(engine)
