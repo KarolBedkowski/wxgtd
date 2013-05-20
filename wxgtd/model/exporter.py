@@ -38,14 +38,14 @@ def _fake_update_func(*args, **kwargs):
 	_LOG.info('progress %r %r', args, kwargs)
 
 
-def save_to_file(filename, update_func=_fake_update_func, internal_fname=None):
+def save_to_file(filename, notify_cb=_fake_update_func, internal_fname=None):
 	"""Load data from (zip)file.
 
 	Load data from and insert/update it into database.
 
 	Args:
 		filename: source filename
-		update_func: function that is called after each step
+		notify_cb: function that is called after each step
 		internal_fname: name of file inside zip file; default - filename
 			without ".zip" extension.
 	"""
@@ -54,11 +54,11 @@ def save_to_file(filename, update_func=_fake_update_func, internal_fname=None):
 			fname = internal_fname or os.path.basename(filename[:-4])
 			if not fname.endswith('.json'):
 				fname += '.json'
-			zfile.writestr(fname, dump_database_to_json(update_func))
+			zfile.writestr(fname, dump_database_to_json(notify_cb))
 	else:
 		with open(filename, 'w') as ifile:
-			ifile.write(dump_database_to_json(update_func))
-	update_func(100, _("Saved"))
+			ifile.write(dump_database_to_json(notify_cb))
+	notify_cb(100, _("Saved"))
 
 
 def fmt_date(date):
@@ -96,22 +96,20 @@ def _build_uuid_map(session, objclass):
 _DEFAULT_BG_COLOR = "FFFFFF00"
 
 
-def dump_database_to_json(update_func):
+def dump_database_to_json(notify_cb):
 	""" Dump object in database to json string in GTD sync file format.
 
 	Args:
-		update_func: function called on each step.
+		notify_cb: function called on each step.
 
 	Returns:
 		Data encoded in json format.
 	"""
-	# TODO: refactor; pylint: disable=R0914, R0912, R0915
 	res = {'version': 2}
 
 	session = objects.Session()
 
 	# pylint: disable=E1101
-	device_id = session.query(objects.Conf).filter_by(key='deviceId').first().val
 	c_last_sync = session.query(objects.Conf).filter_by(key='last_sync').first()
 	# pylint: enable=E1101
 	if c_last_sync is None:
@@ -120,241 +118,21 @@ def dump_database_to_json(update_func):
 	c_last_sync.val = fmt_date(datetime.datetime.utcnow())
 	session.commit()  # pylint: disable=E1101
 
-	# folders
-	_LOG.info("dump_database_to_json: folders")
-	update_func(1, _("Saving folders"))
-	folders_cache = _build_uuid_map(session, objects.Folder)
-	folders = []
-	for obj in session.query(objects.Folder):  # pylint: disable=E1101
-		folder = {'_id': folders_cache[obj.uuid],
-				'parent_id': folders_cache[obj.parent_uuid] if obj.parent_uuid
-						else 0,
-				'uuid': obj.uuid,
-				'created': fmt_date(obj.created),
-				'modified': fmt_date(obj.modified or obj.created),
-				'deleted': fmt_date(obj.deleted),
-				'ordinal': obj.ordinal or 0,
-				'title': obj.title or '',
-				'note': obj.note or '',
-				'bg_color': obj.bg_color or _DEFAULT_BG_COLOR,
-				'visible': obj.visible}
-		folders.append(folder)
-	if folders:
-		res['folder'] = folders
-	update_func(5, _("Saved %d folders") % len(folders))
-
-	# contexts
-	_LOG.info("dump_database_to_json: contexts")
-	update_func(6, _("Saving contexts"))
-	contexts_cache = _build_uuid_map(session, objects.Context)
-	contexts = []
-	for obj in session.query(objects.Context):  # pylint: disable=E1101
-		folder = {'_id': contexts_cache[obj.uuid],
-				'parent_id': contexts_cache[obj.parent_uuid] if obj.parent_uuid
-						else 0,
-				'uuid': obj.uuid,
-				'created': fmt_date(obj.created),
-				'modified': fmt_date(obj.modified or obj.created),
-				'deleted': fmt_date(obj.deleted),
-				'ordinal': obj.ordinal or 0,
-				'title': obj.title or '',
-				'note': obj.note or '',
-				'bg_color': obj.bg_color or _DEFAULT_BG_COLOR,
-				'visible': obj.visible}
-		contexts.append(folder)
-	if contexts:
-		res['context'] = contexts
-	update_func(10, _("Saved %d contexts") % len(contexts))
-
-	# goals
-	_LOG.info("dump_database_to_json: goals")
-	update_func(11, _("Saving goals"))
-	goals_cache = _build_uuid_map(session, objects.Goal)
-	goals = []
-	for obj in session.query(objects.Goal):  # pylint: disable=E1101
-		folder = {'_id': goals_cache[obj.uuid],
-				'parent_id': goals_cache[obj.parent_uuid] if obj.parent_uuid
-						else 0,
-				'uuid': obj.uuid,
-				'created': fmt_date(obj.created),
-				'modified': fmt_date(obj.modified or obj.created),
-				'deleted': fmt_date(obj.deleted),
-				'ordinal': obj.ordinal or 0,
-				'title': obj.title or '',
-				'note': obj.note or '',
-				'time_period': obj.time_period,
-				'archived': obj.archived,
-				'bg_color': obj.bg_color or _DEFAULT_BG_COLOR,
-				'visible': obj.visible}
-		goals.append(folder)
-	if goals:
-		res['goal'] = goals
-	update_func(15, _("Saved %d goals") % len(goals))
-
-	update_func(16, _("Saving task, alarms..."))
-	_LOG.info("dump_database_to_json: tasks")
-	tasks_cache = _build_uuid_map(session, objects.Task)
-	tasks = []
-	alarms = []
-	task_folders = []
-	task_contexts = []
-	task_goals = []
-	alarm_idx = 0
-	for task in session.query(objects.Task):  # pylint: disable=E1101
-		taskd = {'_id': tasks_cache[task.uuid],
-				'parent_id': tasks_cache[task.parent_uuid] if task.parent_uuid
-						else 0,
-				'uuid': task.uuid,
-				'created': fmt_date(task.created),
-				'modified': fmt_date(task.modified or task.created),
-				'completed': fmt_date(task.completed),
-				'deleted': fmt_date(task.deleted),
-				'ordinal': obj.ordinal or 0,
-				'title': task.title or '',
-				'note': task.note or "",
-				'type': task.type or 0,
-				'starred': 1 if task.starred else 0,
-				'status': task.status or 0,
-				'priority': task.priority,
-				'importance': task.importance,
-				'start_date': fmt_date(task.start_date),
-				'start_time_set': task.start_time_set,
-				'due_date': fmt_date(task.due_date),
-				"due_date_project": fmt_date(task.due_date_project),
-				"due_time_set": task.due_time_set or 0,
-				"due_date_mod": task.due_date_mod or 0,
-				"floating_event": task.floating_event,
-				"duration": task.duration or 0,
-				"energy_required": task.energy_required,
-				"repeat_from": task.repeat_from or 0,
-				"repeat_pattern": task.repeat_pattern or "",
-				"repeat_end": task.repeat_end or 0,
-				"hide_pattern": task.hide_pattern or "",
-				"hide_until": fmt_date(task.hide_until),
-				"prevent_auto_purge": task.prevent_auto_purge or 0,
-				"trash_bin": task.trash_bin or 0,
-				"metainf": task.metainf or ''}
-		tasks.append(taskd)
-		if task.alarm:
-			alarmd = {'_id': alarm_idx,
-					'task_id': tasks_cache[task.uuid],
-					'uuid': objects.generate_uuid(),
-					'created': fmt_date(task.created),
-					'modified': fmt_date(task.modified or task.created),
-					'alarm': fmt_date(task.alarm),
-					'reminder': 0,
-					'active': 1,
-					'note': ""}
-			alarms.append(alarmd)
-			alarm_idx += 1
-		if task.folder_uuid:
-			tfolder = {'task_id': tasks_cache[task.uuid],
-					'folder_id': folders_cache[task.folder_uuid],
-					'created': fmt_date(task.created),
-					'modified': fmt_date(task.modified or task.created)}
-			task_folders.append(tfolder)
-		if task.context_uuid:
-			tcontext = {'task_id': tasks_cache[task.uuid],
-					'context_id': contexts_cache[task.context_uuid],
-					'created': fmt_date(task.created),
-					'modified': fmt_date(task.modified or task.created)}
-			task_contexts.append(tcontext)
-		if task.goal_uuid:
-			tgoal = {'task_id': tasks_cache[task.uuid],
-					'goal_id': goals_cache[task.goal_uuid],
-					'created': fmt_date(task.created),
-					'modified': fmt_date(task.modified or task.created)}
-			task_goals.append(tgoal)
-	if tasks:
-		res['task'] = tasks
-		res['alarm'] = alarms
-		res['task_folder'] = task_folders
-		res['task_context'] = task_contexts
-		res['task_goal'] = task_goals
-	update_func(65, _("Saved %d tasks") % len(tasks))
-	update_func(66, _("Saved %d alarms") % len(alarms))
-	update_func(67, _("Saved %d task folders") % len(task_folders))
-	update_func(68, _("Saved %d task contexts") % len(task_contexts))
-	update_func(69, _("Saved %d task goals") % len(task_goals))
-
-	update_func(70, _("Saving tags"))
-	# tags
-	_LOG.info("dump_database_to_json: tags")
-	tags_cache = _build_uuid_map(session, objects.Tag)
-	tags = []
-	for obj in session.query(objects.Tag):  # pylint: disable=E1101
-		folder = {'_id': tags_cache[obj.uuid],
-				'parent_id': tags_cache[obj.parent_uuid] if obj.parent_uuid
-						else 0,
-				'uuid': obj.uuid,
-				'created': fmt_date(obj.created),
-				'modified': fmt_date(obj.modified or obj.created),
-				'deleted': fmt_date(obj.deleted),
-				'ordinal': obj.ordinal or 0,
-				'title': obj.title or '',
-				'note': obj.note or "",
-				'bg_color': obj.bg_color or _DEFAULT_BG_COLOR,
-				'visible': obj.visible}
-		tags.append(folder)
-	if tags:
-		res['tag'] = tags
-	update_func(74, _("Saved %d tags") % len(tags))
-
-	update_func(75, _("Saving task notes"))
-	# tasknotes
-	_LOG.info("dump_database_to_json: tasknotes")
-	tasknotes_cache = _build_uuid_map(session, objects.Tasknote)
-	tasknotes = []
-	for obj in session.query(objects.Tasknote):  # pylint: disable=E1101
-		folder = {'_id': tasknotes_cache[obj.uuid],
-				'task_id': tasks_cache[obj.task_uuid],
-				'uuid': obj.uuid,
-				'created': fmt_date(obj.created),
-				'modified': fmt_date(obj.modified or obj.created),
-				'ordinal': obj.ordinal or 0,
-				'title': obj.title or '',
-				'bg_color': obj.bg_color or "FFEFFF00",
-				'visible': obj.visible}
-		tasknotes.append(folder)
-	if tasknotes:
-		res['tasknote'] = tasknotes
-	update_func(79, _("Saved %d task notes") % len(tasknotes))
-
-	update_func(80, _("Saving task tags"))
-	tasktags = []
-	for obj in session.query(objects.TaskTag):  # pylint: disable=E1101
-		ttag = {'task_id': tasks_cache[obj.task_uuid],
-				'tag_id': tags_cache[obj.tag_uuid],
-				'created': fmt_date(obj.created),
-				'modified': fmt_date(obj.modified or obj.created)}
-		tasktags.append(ttag)
-	if tasktags:
-		res['task_tag'] = tasktags
-	update_func(84, _("Saved %d task tags") % len(tasktags))
-
-	update_func(85, _("Sync log"))
-	# synclog
-
-	sync_logs = []
-	slog_item = objects.SyncLog.get(session, device_id=device_id)
-	if slog_item:
-		slog_item.prev_sync_time = slog_item.sync_time
-	else:
-		slog_item = objects.SyncLog()
-		slog_item.device_id = device_id
-	slog_item.sync_time = datetime.datetime.utcnow()
-	session.add(slog_item)  # pylint: disable=E1101
-
-	for sync_log in session.query(  # pylint: disable=E1101
-			objects.SyncLog).order_by(objects.SyncLog.sync_time):
-		sync_logs.append({
-			'deviceId': sync_log.device_id,
-			"prevSyncTime": fmt_date(sync_log.prev_sync_time),
-			"syncTime": fmt_date(sync_log.sync_time)})
-	res['syncLog'] = sync_logs
+	# dump
+	res['folders'], folders_cache = _dump_folders(session, notify_cb)
+	res['context'], contexts_cache = _dump_contexts(session, notify_cb)
+	res['goal'], goals_cache = _dump_goals(session, notify_cb)
+	res_tasks, tasks_cache = _dump_tasks(session, notify_cb, folders_cache,
+			contexts_cache, goals_cache)
+	res.update(res_tasks)
+	res['tag'], tags_cache = _dump_tags(session, notify_cb)
+	res['tasknote'] = _dump_task_notes(session, notify_cb, tasks_cache)
+	res['task_tag'] = _dump_task_tags(session, notify_cb, tasks_cache,
+			tags_cache)
+	res['syncLog'] = _dump_synclog(session, notify_cb)
 
 	session.commit()  # pylint: disable=E1101
-	update_func(80, _("Saving..."))
+	notify_cb(80, _("Saving..."))
 
 	return _JSON_ENCODER(res)
 
@@ -424,3 +202,238 @@ def delete_sync_lock(sync_filename):
 		os.unlink(lock_filename)
 	except IOError:
 		_LOG.exception('delete_sync_lock error %r', lock_filename)
+
+
+def _dump_folders(session, notify_cb):
+	_LOG.info("dump_database_to_json: folders")
+	notify_cb(1, _("Saving folders"))
+	folders_cache = _build_uuid_map(session, objects.Folder)
+	folders = []
+	for obj in session.query(objects.Folder):  # pylint: disable=E1101
+		folder = {'_id': folders_cache[obj.uuid],
+				'parent_id': folders_cache[obj.parent_uuid] if obj.parent_uuid
+						else 0,
+				'uuid': obj.uuid,
+				'created': fmt_date(obj.created),
+				'modified': fmt_date(obj.modified or obj.created),
+				'deleted': fmt_date(obj.deleted),
+				'ordinal': obj.ordinal or 0,
+				'title': obj.title or '',
+				'note': obj.note or '',
+				'bg_color': obj.bg_color or _DEFAULT_BG_COLOR,
+				'visible': obj.visible}
+		folders.append(folder)
+	notify_cb(5, _("Saved %d folders") % len(folders))
+	return folders, folders_cache
+
+
+def _dump_contexts(session, notify_cb):
+	_LOG.info("dump_database_to_json: contexts")
+	notify_cb(6, _("Saving contexts"))
+	contexts_cache = _build_uuid_map(session, objects.Context)
+	contexts = []
+	for obj in session.query(objects.Context):  # pylint: disable=E1101
+		folder = {'_id': contexts_cache[obj.uuid],
+				'parent_id': contexts_cache[obj.parent_uuid] if obj.parent_uuid
+						else 0,
+				'uuid': obj.uuid,
+				'created': fmt_date(obj.created),
+				'modified': fmt_date(obj.modified or obj.created),
+				'deleted': fmt_date(obj.deleted),
+				'ordinal': obj.ordinal or 0,
+				'title': obj.title or '',
+				'note': obj.note or '',
+				'bg_color': obj.bg_color or _DEFAULT_BG_COLOR,
+				'visible': obj.visible}
+		contexts.append(folder)
+	notify_cb(10, _("Saved %d contexts") % len(contexts))
+	return contexts, contexts_cache
+
+
+def _dump_goals(session, notify_cb):
+	_LOG.info("dump_database_to_json: goals")
+	notify_cb(11, _("Saving goals"))
+	goals_cache = _build_uuid_map(session, objects.Goal)
+	goals = []
+	for obj in session.query(objects.Goal):  # pylint: disable=E1101
+		folder = {'_id': goals_cache[obj.uuid],
+				'parent_id': goals_cache[obj.parent_uuid] if obj.parent_uuid
+						else 0,
+				'uuid': obj.uuid,
+				'created': fmt_date(obj.created),
+				'modified': fmt_date(obj.modified or obj.created),
+				'deleted': fmt_date(obj.deleted),
+				'ordinal': obj.ordinal or 0,
+				'title': obj.title or '',
+				'note': obj.note or '',
+				'time_period': obj.time_period,
+				'archived': obj.archived,
+				'bg_color': obj.bg_color or _DEFAULT_BG_COLOR,
+				'visible': obj.visible}
+		goals.append(folder)
+	notify_cb(15, _("Saved %d goals") % len(goals))
+	return goals, goals_cache
+
+
+def _dump_tasks(session, notify_cb, folders_cache, contexts_cache,
+		goals_cache):
+	notify_cb(16, _("Saving task, alarms..."))
+	_LOG.info("dump_database_to_json: tasks")
+	tasks_cache = _build_uuid_map(session, objects.Task)
+	tasks = []
+	alarms = []
+	task_folders = []
+	task_contexts = []
+	task_goals = []
+	for task in session.query(objects.Task):  # pylint: disable=E1101
+		tasks.append({'_id': tasks_cache[task.uuid],
+				'parent_id': tasks_cache[task.parent_uuid] if task.parent_uuid
+						else 0,
+				'uuid': task.uuid,
+				'created': fmt_date(task.created),
+				'modified': fmt_date(task.modified or task.created),
+				'completed': fmt_date(task.completed),
+				'deleted': fmt_date(task.deleted),
+				'ordinal': task.ordinal or 0,
+				'title': task.title or '',
+				'note': task.note or "",
+				'type': task.type or 0,
+				'starred': 1 if task.starred else 0,
+				'status': task.status or 0,
+				'priority': task.priority,
+				'importance': task.importance,
+				'start_date': fmt_date(task.start_date),
+				'start_time_set': task.start_time_set,
+				'due_date': fmt_date(task.due_date),
+				"due_date_project": fmt_date(task.due_date_project),
+				"due_time_set": task.due_time_set or 0,
+				"due_date_mod": task.due_date_mod or 0,
+				"floating_event": task.floating_event,
+				"duration": task.duration or 0,
+				"energy_required": task.energy_required,
+				"repeat_from": task.repeat_from or 0,
+				"repeat_pattern": task.repeat_pattern or "",
+				"repeat_end": task.repeat_end or 0,
+				"hide_pattern": task.hide_pattern or "",
+				"hide_until": fmt_date(task.hide_until),
+				"prevent_auto_purge": task.prevent_auto_purge or 0,
+				"trash_bin": task.trash_bin or 0,
+				"metainf": task.metainf or ''})
+		if task.alarm:
+			alarms.append({'_id': len(alarms),
+					'task_id': tasks_cache[task.uuid],
+					'uuid': objects.generate_uuid(),
+					'created': fmt_date(task.created),
+					'modified': fmt_date(task.modified or task.created),
+					'alarm': fmt_date(task.alarm),
+					'reminder': 0,
+					'active': 1,
+					'note': ""})
+		if task.folder_uuid:
+			task_folders.append({'task_id': tasks_cache[task.uuid],
+					'folder_id': folders_cache[task.folder_uuid],
+					'created': fmt_date(task.created),
+					'modified': fmt_date(task.modified or task.created)})
+		if task.context_uuid:
+			task_contexts.append({'task_id': tasks_cache[task.uuid],
+					'context_id': contexts_cache[task.context_uuid],
+					'created': fmt_date(task.created),
+					'modified': fmt_date(task.modified or task.created)})
+		if task.goal_uuid:
+			task_goals.append({'task_id': tasks_cache[task.uuid],
+					'goal_id': goals_cache[task.goal_uuid],
+					'created': fmt_date(task.created),
+					'modified': fmt_date(task.modified or task.created)})
+	res = {'task': tasks,
+			'alarm': alarms,
+			'task_folder': task_folders,
+			'task_context': task_contexts,
+			'task_goal': task_goals}
+	notify_cb(65, _("Saved %d tasks") % len(tasks))
+	notify_cb(66, _("Saved %d alarms") % len(alarms))
+	notify_cb(67, _("Saved %d task folders") % len(task_folders))
+	notify_cb(68, _("Saved %d task contexts") % len(task_contexts))
+	notify_cb(69, _("Saved %d task goals") % len(task_goals))
+	return res, tasks_cache
+
+
+def _dump_tags(session, notify_cb):
+	notify_cb(70, _("Saving tags"))
+	# tags
+	_LOG.info("dump_database_to_json: tags")
+	tags_cache = _build_uuid_map(session, objects.Tag)
+	tags = []
+	for obj in session.query(objects.Tag):  # pylint: disable=E1101
+		folder = {'_id': tags_cache[obj.uuid],
+				'parent_id': tags_cache[obj.parent_uuid] if obj.parent_uuid
+						else 0,
+				'uuid': obj.uuid,
+				'created': fmt_date(obj.created),
+				'modified': fmt_date(obj.modified or obj.created),
+				'deleted': fmt_date(obj.deleted),
+				'ordinal': obj.ordinal or 0,
+				'title': obj.title or '',
+				'note': obj.note or "",
+				'bg_color': obj.bg_color or _DEFAULT_BG_COLOR,
+				'visible': obj.visible}
+		tags.append(folder)
+	notify_cb(74, _("Saved %d tags") % len(tags))
+	return tags, tags_cache
+
+
+def _dump_task_notes(session, notify_cb, tasks_cache):
+	notify_cb(75, _("Saving task notes"))
+	# tasknotes
+	_LOG.info("dump_database_to_json: tasknotes")
+	tasknotes_cache = _build_uuid_map(session, objects.Tasknote)
+	tasknotes = []
+	for obj in session.query(objects.Tasknote):  # pylint: disable=E1101
+		folder = {'_id': tasknotes_cache[obj.uuid],
+				'task_id': tasks_cache[obj.task_uuid],
+				'uuid': obj.uuid,
+				'created': fmt_date(obj.created),
+				'modified': fmt_date(obj.modified or obj.created),
+				'ordinal': obj.ordinal or 0,
+				'title': obj.title or '',
+				'bg_color': obj.bg_color or "FFEFFF00",
+				'visible': obj.visible}
+		tasknotes.append(folder)
+	notify_cb(79, _("Saved %d task notes") % len(tasknotes))
+	return tasknotes
+
+
+def _dump_task_tags(session, notify_cb, tasks_cache, tags_cache):
+	notify_cb(80, _("Saving task tags"))
+	tasktags = []
+	for obj in session.query(objects.TaskTag):  # pylint: disable=E1101
+		ttag = {'task_id': tasks_cache[obj.task_uuid],
+				'tag_id': tags_cache[obj.tag_uuid],
+				'created': fmt_date(obj.created),
+				'modified': fmt_date(obj.modified or obj.created)}
+		tasktags.append(ttag)
+	notify_cb(84, _("Saved %d task tags") % len(tasktags))
+	return tasktags
+
+
+def _dump_synclog(session, notify_cb):
+	notify_cb(85, _("Sync log"))
+	# synclog
+	sync_logs = []
+	device_id = session.query(objects.Conf).filter_by(
+			key='deviceId').first().val
+	slog_item = objects.SyncLog.get(session, device_id=device_id)
+	if slog_item:
+		slog_item.prev_sync_time = slog_item.sync_time
+	else:
+		slog_item = objects.SyncLog()
+		slog_item.device_id = device_id
+	slog_item.sync_time = datetime.datetime.utcnow()
+	session.add(slog_item)  # pylint: disable=E1101
+
+	for sync_log in session.query(  # pylint: disable=E1101
+			objects.SyncLog).order_by(objects.SyncLog.sync_time):
+		sync_logs.append({
+			'deviceId': sync_log.device_id,
+			"prevSyncTime": fmt_date(sync_log.prev_sync_time),
+			"syncTime": fmt_date(sync_log.sync_time)})
+	return sync_logs
