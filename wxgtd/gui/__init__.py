@@ -1,4 +1,4 @@
-# -*- coding: utf8 -*-
+# -*- coding: utf-8 -*-
 """ GUI definition.
 
 Copyright (c) Karol Będkowski, 2013
