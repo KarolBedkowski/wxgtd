@@ -119,7 +119,7 @@ def dump_database_to_json(notify_cb):
 	session.commit()  # pylint: disable=E1101
 
 	# dump
-	res['folders'], folders_cache = _dump_folders(session, notify_cb)
+	res['folder'], folders_cache = _dump_folders(session, notify_cb)
 	res['context'], contexts_cache = _dump_contexts(session, notify_cb)
 	res['goal'], goals_cache = _dump_goals(session, notify_cb)
 	res_tasks, tasks_cache = _dump_tasks(session, notify_cb, folders_cache,
