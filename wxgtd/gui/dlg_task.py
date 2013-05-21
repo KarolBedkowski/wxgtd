@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """ Edit task dialog.
 
-TODO: wydzielenie cześci wspólnej z dlg_checklistitem
-
 Copyright (c) Karol Będkowski, 2013
 
 This file is part of wxGTD
@@ -14,23 +12,21 @@ __copyright__ = "Copyright (c) Karol Będkowski, 2010-2013"
 __version__ = "2010-11-25"
 
 import logging
-import datetime
 import gettext
 
 import wx
 try:
 	from wx.lib.pubsub.pub import Publisher
 except ImportError:
-	from wx.lib.pubsub import Publisher
+	from wx.lib.pubsub import Publisher  # pylint: disable=E0611
 
 from wxgtd.model import objects as OBJ
 from wxgtd.model import enums
 from wxgtd.model import logic
 from wxgtd.lib import datetimeutils as DTU
 from wxgtd.wxtools.validators import Validator, ValidatorDv
-from wxgtd.wxtools.validators import v_length as LVALID
 
-from ._base_dialog import BaseDialog
+from ._base_task_dialog import BaseTaskDialog
 from .dlg_datetime import DlgDateTime
 from .dlg_remind_settings import DlgRemindSettings
 from .dlg_show_settings import DlgShowSettings
@@ -42,7 +38,7 @@ _ = gettext.gettext
 _LOG = logging.getLogger(__name__)
 
 
-class DlgTask(BaseDialog):
+class DlgTask(BaseTaskDialog):
 	""" Edit task dialog.
 
 	WARRNING: non-modal dialog
@@ -55,46 +51,25 @@ class DlgTask(BaseDialog):
 	"""
 
 	def __init__(self, parent, task_uuid, parent_uuid=None, task_type=None):
-		BaseDialog.__init__(self, parent, 'dlg_task')
-		self._setup_comboboxes()
-		self._setup(task_uuid, parent_uuid, task_type)
-		self._refresh_static_texts()
-
-	def _load_controls(self, wnd):
-		BaseDialog._load_controls(self, wnd)
+		self._task_type = task_type
+		BaseTaskDialog.__init__(self, parent, 'dlg_task', task_uuid, parent_uuid)
 
 	def _create_bindings(self):
-		BaseDialog._create_bindings(self)
+		BaseTaskDialog._create_bindings(self)
 		self['btn_due_date_set'].Bind(wx.EVT_BUTTON, self._on_btn_due_date_set)
 		self['btn_start_date_set'].Bind(wx.EVT_BUTTON, self._on_btn_start_date_set)
-		self['lb_notes_list'].Bind(wx.EVT_LISTBOX, self._on_lb_notes_list)
-		self._wnd.Bind(wx.EVT_BUTTON, self._on_btn_new_note, id=wx.ID_ADD)
 		self._wnd.Bind(wx.EVT_BUTTON, self._on_btn_delete, id=wx.ID_DELETE)
-		self['btn_del_note'].Bind(wx.EVT_BUTTON, self._on_btn_del_note)
-		self['btn_save_note'].Bind(wx.EVT_BUTTON, self._on_btn_save_note)
 		self['btn_remind_set'].Bind(wx.EVT_BUTTON, self._on_btn_remiand_set)
 		self['btn_hide_until_set'].Bind(wx.EVT_BUTTON, self._on_btn_hide_until_set)
 		self['btn_repeat_set'].Bind(wx.EVT_BUTTON, self._on_btn_repeat_set)
 		self['btn_select_tags'].Bind(wx.EVT_BUTTON, self._on_btn_select_tags)
 		self['sl_priority'].Bind(wx.EVT_SCROLL, self._on_sl_priority)
 
-	def _setup(self, task_uuid, parent_uuid, task_type):
-		_LOG.debug("DlgTask(%r)", (task_uuid, parent_uuid, task_type))
-		self._current_note = None
-		self._session = OBJ.Session()
-		if task_uuid:
-			self._task = self._session.query(OBJ.Task).filter_by(
-					uuid=task_uuid).first()
-		else:
-			self._task = OBJ.Task(parent_uuid=parent_uuid, priority=0,
-					type=(task_type or enums.TYPE_TASK))
-			logic.update_task_from_parent(self._task, parent_uuid, self._session,
-					self._appconfig)
-			self._session.add(self._task)
-		_LOG.debug("Task=%r", self._task)
+	def _setup(self, task_uuid, parent_uuid):
+		_LOG.debug("DlgTask(%r)", (task_uuid, parent_uuid))
+		BaseTaskDialog._setup(self, task_uuid, parent_uuid)
 		self[wx.ID_DELETE].Enable(bool(task_uuid))
 		task = self._task
-		self._data = {'prev_completed': task.completed}
 		self._data['duration_d'] = self._data['duration_h'] = \
 				self._data['duration_m'] = 0
 		if task.duration:
@@ -103,23 +78,11 @@ class DlgTask(BaseDialog):
 			duration = duration % 1440
 			self._data['duration_h'] = int(duration / 60)
 			self._data['duration_m'] = duration % 60
-		#self._data['due_time'] = self._data['due_date'] = task.due_date
-		#self._data['start_time'] = self._data['start_date'] = task.start_date
-		self['tc_title'].SetValidator(Validator(task, 'title',
-				validators=LVALID.NotEmptyValidator(), field='title'))
-		self['tc_note'].SetValidator(Validator(task, 'note',))
 		self['cb_status'].SetValidator(ValidatorDv(task, 'status'))
 		self['cb_context'].SetValidator(ValidatorDv(task, 'context_uuid'))
 		self['cb_folder'].SetValidator(ValidatorDv(task, 'folder_uuid'))
 		self['cb_goal'].SetValidator(ValidatorDv(task, 'goal_uuid'))
 		self['cb_type'].SetValidator(ValidatorDv(task, 'type'))
-		# parent == projekt/lista
-		self['cb_project'].SetValidator(ValidatorDv(task,
-				'parent_uuid'))
-		self['l_created'].SetLabel(fmt.format_timestamp(task.created, True))
-		self['l_modified'].SetLabel(fmt.format_timestamp(task.modified, True))
-		self['cb_completed'].SetValidator(Validator(task, 'task_completed'))
-		self['cb_starred'].SetValidator(Validator(task, 'starred'))
 		self['sl_priority'].SetValidator(Validator(task, 'priority'))
 		self['sc_duration_d'].SetValidator(Validator(self._data, 'duration_d'))
 		self['sc_duration_h'].SetValidator(Validator(self._data, 'duration_h'))
@@ -128,7 +91,19 @@ class DlgTask(BaseDialog):
 		if task_uuid and self._task.child_count > 0:
 			self['cb_type'].Enable(False)
 
+	def _load_task(self, task_uuid):
+		return self._session.query(  # pylint: disable=E1101
+				OBJ.Task).filter_by(uuid=task_uuid).first()
+
+	def _create_task(self, parent_uuid):
+		task = OBJ.Task(parent_uuid=parent_uuid, priority=0,
+				type=(self._task_type or enums.TYPE_TASK))
+		logic.update_task_from_parent(task, parent_uuid, self._session,
+					self._appconfig)
+		return task
+
 	def _setup_comboboxes(self):
+		BaseTaskDialog._setup_comboboxes(self)
 		cb_status = self['cb_status']
 		for key, status in sorted(enums.STATUSES.iteritems()):
 			cb_status.Append(status, key)
@@ -162,7 +137,7 @@ class DlgTask(BaseDialog):
 			# zakonczono zadanie
 			if not logic.complete_task(self._task, self._wnd, self._session):
 				return
-		self._session.commit()
+		self._session.commit()  # pylint: disable=E1101
 		Publisher.sendMessage('task.update', data={'task_uuid': self._task.uuid})
 		self._on_ok(evt)
 
@@ -171,35 +146,6 @@ class DlgTask(BaseDialog):
 
 	def _on_btn_start_date_set(self, _evt):
 		self._set_date('start_date', 'start_time_set')
-
-	def _on_lb_notes_list(self, evt):
-		note_uuid = evt.GetClientData()
-		for note in self._task.notes:
-			if note.uuid == note_uuid:
-				# czy aktualne jest zmienione
-				if note != self._current_note and self._current_note:
-					# TODO: potwierdzenie zapisania
-					value = self['tc_notes_note'].GetValue()
-					if value != self._current_note.title:
-						self._current_note.title = value
-				self._current_note = note
-				self['tc_notes_note'].SetValue(note.title or '')
-
-	def _on_btn_new_note(self, _evt):
-		self._save_current_note()
-		self._current_note = OBJ.Tasknote(title=_("New note"))
-		self['tc_notes_note'].SetValue(self._current_note.title)
-
-	def _on_btn_del_note(self, _evt):
-		lb_notes_list = self['lb_notes_list']
-		sel = lb_notes_list.GetSelection()
-		if sel < 0:
-			return
-		del self._task.notes[sel]
-		self._refresh_static_texts()
-
-	def _on_btn_save_note(self, _evt):
-		self._save_current_note()
 
 	def _on_btn_remiand_set(self, _evt):
 		task = self._task
@@ -248,14 +194,14 @@ class DlgTask(BaseDialog):
 			new_tags = dlg.selected_tags
 			for tasktag in list(task.tags):
 				if tasktag.tag_uuid not in new_tags:
-					task.tags.delete(tasktag)
+					task.tags.delete(tasktag)  # pylint: disable=E1103
 				else:
 					new_tags.remove(tasktag.tag_uuid)
 			for tag_uuid in new_tags:
 				tasktag = OBJ.TaskTag()
-				tasktag.tag = self._session.query(OBJ.Tag).filter_by(
-						uuid=tag_uuid).first()
-				task.tags.append(tasktag)
+				tasktag.tag = self._session.query(  # pylint: disable=E1101
+						OBJ.Tag).filter_by(uuid=tag_uuid).first()
+				task.tags.append(tasktag)  # pylint: disable=E1103
 			self._refresh_static_texts()
 
 	def _on_btn_delete(self, _evt):
@@ -268,20 +214,9 @@ class DlgTask(BaseDialog):
 	def _on_sl_priority(self, _evt):
 		self['l_prio'].SetLabel(enums.PRIORITIES[self['sl_priority'].GetValue()])
 
-	def _save_current_note(self):
-		cnote = self._current_note
-		if cnote:
-			value = self['tc_notes_note'].GetValue()
-			if value and value != cnote.title:
-				cnote.title = value
-				cnote.modified = datetime.datetime.utcnow()
-				if not cnote.created:
-					cnote.created = cnote.modified
-					self._task.notes.append(cnote)
-			wx.CallAfter(self._refresh_static_texts)
-
 	def _refresh_static_texts(self):
 		""" Odświeżenie pól dat na dlg """
+		BaseTaskDialog._refresh_static_texts(self)
 		task = self._task
 		self['l_due'].SetLabel(fmt.format_timestamp(task.due_date,
 				task.due_time_set))
@@ -303,16 +238,7 @@ class DlgTask(BaseDialog):
 			self['l_hide_until'].SetLabel('')
 		self['l_repeat'].SetLabel(enums.REPEAT_PATTERN.get(task.repeat_pattern,
 				task.repeat_pattern or ""))
-		lb_notes_list = self['lb_notes_list']
-		lb_notes_list.Clear()
-		for note in task.notes:
-			lb_notes_list.Append(note.title[:50], note.uuid)
 		self['l_prio'].SetLabel(enums.PRIORITIES[task.priority])
-		if task.completed:
-			self['l_completed_date'].SetLabel(fmt.format_timestamp(task.completed,
-					True))
-		else:
-			self['l_completed_date'].SetLabel('')
 
 	def _set_date(self, attr_date, attr_time_set):
 		""" Wyśweitlenie dlg wyboru daty dla danego atrybutu """

@@ -21,9 +21,9 @@ import logging
 import sys
 reload(sys)
 try:
-	sys.setappdefaultencoding("utf-8")
+	sys.setappdefaultencoding("utf-8")  # pylint: disable=E1101
 except AttributeError:
-	sys.setdefaultencoding("utf-8")
+	sys.setdefaultencoding("utf-8")  # pylint: disable=E1101
 
 
 _LOG = logging.getLogger(__name__)
@@ -70,6 +70,35 @@ def _setup_locale(app_config):
 	_LOG.info('locale: %s' % str(locale.getlocale()))
 
 
+def _try_path(path):
+	""" Check if in given path exists wxgtd.db file. """
+	file_path = os.path.join(path, 'wxgtd.db')
+	if os.path.isfile(file_path):
+		return file_path
+	return None
+
+
+def _create_file_dir(db_filename):
+	""" Create dirs for given file if not exists. """
+	db_dirname = os.path.dirname(db_filename)
+	if not os.path.isdir(db_dirname):
+		os.mkdir(db_dirname)
+
+
+def _find_db_file(config):
+	""" Find existing database file. """
+	db_filename = _try_path(config.main_dir)
+	if not db_filename:
+		db_filename = _try_path(os.path.join(config.main_dir, 'db'))
+	if not db_filename:
+		db_dir = os.path.join(config.main_dir, 'db')
+		if os.path.isdir(db_dir):
+			db_filename = os.path.join(db_dir, 'wxgtd.db')
+	if not db_filename:
+		db_filename = os.path.join(config.user_share_dir, 'wxgtd.db')
+	return db_filename
+
+
 def run():
 	""" Run application. """
 	# parse options
@@ -104,13 +133,13 @@ def run():
 
 	import wx
 
-	# splash screen
-	from wxgtd.gui.splash import Splash
+	# create app
 	app = wx.PySimpleApp(0)
 	wx.InitAllImageHandlers()
 
-	splash = Splash()
-	splash.Show()
+	# splash screen
+	from wxgtd.gui.splash import Splash
+	Splash().Show()
 
 	# program
 	from wxgtd.gui.frame_main import FrameMain
@@ -118,32 +147,14 @@ def run():
 	from wxgtd.wxtools import iconprovider
 
 	# find database file.
-
-	def try_path(path):
-		file_path = os.path.join(path, 'wxgtd.db')
-		if os.path.isfile(file_path):
-			return file_path
-		return None
-
-	db_filename = try_path(config.main_dir)
-	if not db_filename:
-		db_filename = try_path(os.path.join(config.main_dir, 'db'))
-	if not db_filename:
-		db_dir = os.path.join(config.main_dir, 'db')
-		if os.path.isdir(db_dir):
-			db_filename = os.path.join(db_dir, 'wxgtd.db')
-	if not db_filename:
-		db_filename = os.path.join(config.user_share_dir, 'wxgtd.db')
+	db_filename = _find_db_file(config)
 
 	#  create dir for database if not exist
-	db_dirname = os.path.dirname(db_filename)
-	if not os.path.isdir(db_dirname):
-		os.mkdir(db_dirname)
+	_create_file_dir(db_filename)
 
 	if sys.platform == 'win32':
 		wx.Locale.AddCatalogLookupPathPrefix(config.locales_dir)
-		wxloc = wx.Locale(wx.LANGUAGE_DEFAULT)
-		wxloc.AddCatalog('wxstd')
+		wx.Locale(wx.LANGUAGE_DEFAULT).AddCatalog('wxstd')
 
 	# init icons
 	iconprovider.init_icon_cache(None, config.data_dir)

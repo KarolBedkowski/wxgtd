@@ -45,6 +45,7 @@ class DictBaseDlg(BaseDialog):
 		class _Proxy(object):
 			""" Proxy class that allow use validators on dynamically changed
 			objects. """
+			# pylint: disable=W0212, E0213, R0903
 			def __getattr__(selfi, key):
 				if not self._displayed_item:
 					return ""
@@ -56,6 +57,7 @@ class DictBaseDlg(BaseDialog):
 		self._proxy = _Proxy()
 		self._current_selected_uuid = None
 		self._session = Session()
+		self._items_lctrl = None
 		BaseDialog.__init__(self, parent, dlg_name, save_pos=False)
 		wx.CallAfter(self._refresh_list)
 
@@ -75,7 +77,7 @@ class DictBaseDlg(BaseDialog):
 	def _on_add_item(self, _evt):
 		""" Action for add item button. """
 		self._on_save(None)  # wymuszone zapisanie zmian
-		self._display_item(self._item_class())
+		self._display_item(self._item_class())  # tworzenie ob; pylint: disable=E1102
 
 	def _on_save(self, _evt):
 		""" Save selected & edited item. """
@@ -85,8 +87,8 @@ class DictBaseDlg(BaseDialog):
 			return
 		if not self._wnd.TransferDataFromWindow():
 			return
-		self._session.add(self._displayed_item)
-		self._session.commit()
+		self._session.add(self._displayed_item)  # pylint: disable=E1101
+		self._session.commit()  # pylint: disable=E1101
 		self._refresh_list()
 
 	def _on_del_item(self, _evt):
@@ -97,8 +99,8 @@ class DictBaseDlg(BaseDialog):
 		if mbox.message_box_delete_confirm(self._wnd, self._item_name):
 			item = self._get_item(sel)
 			if item:
-				self._session.delete(item)
-				self._session.commit()
+				self._session.delete(item)  # pylint: disable=E1101
+				self._session.commit()  # pylint: disable=E1101
 			self._refresh_list()
 			return True
 
@@ -126,11 +128,13 @@ class DictBaseDlg(BaseDialog):
 
 	def _get_item(self, uuid):
 		""" Get item from database on the basis of uuid. """
-		return self._session.query(self._item_class).filter_by(uuid=uuid).first()
+		return self._session.query(  # pylint: disable=E1101
+				self._item_class).filter_by(uuid=uuid).first()
 
 	def _get_items(self):
 		""" Get all items given class from database. """
-		for obj in self._session.query(self._item_class):
+		for obj in self._session.query(  # pylint: disable=E1101
+				self._item_class):
 			yield obj.title, obj.uuid
 
 	def _display_item(self, item):

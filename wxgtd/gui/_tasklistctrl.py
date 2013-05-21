@@ -36,6 +36,7 @@ BUTTON_DISMISS = 2
 
 _ListBtnDismissEvent, EVT_LIST_BTN_DISMISS = wx.lib.newevent.NewEvent()
 _ListBtnSnoozeEvent, EVT_LIST_BTN_SNOOZE = wx.lib.newevent.NewEvent()
+_DragTaskEvent, EVT_DRAG_TASK = wx.lib.newevent.NewEvent()
 
 
 class _ListItemRenderer(object):
@@ -55,19 +56,21 @@ class _ListItemRenderer(object):
 	def __init__(self, _parent, task, overdue=False):
 		self._task = task
 		self._overdue = overdue
+		self._values_cache = {}
 
 	def DrawSubItem(self, dc, rect, _line, _highlighted, _enabled):
 		canvas = wx.EmptyBitmap(rect.width, rect.height)
 		mdc = wx.MemoryDC()
 		mdc.SelectObject(canvas)
 		mdc.Clear()
-		infobox.draw_info(mdc, self._task, self._overdue)
+		infobox.draw_info(mdc, self._task, self._overdue,
+				cache=self._values_cache)
 		dc.Blit(rect.x + 3, rect.y, rect.width - 6, rect.height, mdc, 0, 0)
 
-	def GetLineHeight(self):
+	def GetLineHeight(self):  # pylint: disable=R0201
 		return infobox.SETTINGS['line_height']
 
-	def GetSubItemWidth(self):
+	def GetSubItemWidth(self):  # pylint: disable=R0201
 		return 400
 
 
@@ -84,38 +87,36 @@ class _ListItemRendererIcons(object):
 	| priority  | status, goal, project |      | alarm, repeat |
 	+-----------+-----------------------+------+---------------+
 	"""
-	_font_task = None
-	_font_info = None
 
 	def __init__(self, _parent, task, overdue=False, active_only=False):
 		self._task = task
 		self._overdue = overdue
 		self._active_only = active_only
-		if not self._font_task:
-			self._font_task = wx.Font(10, wx.NORMAL, wx.NORMAL, wx.BOLD, False)
-		if not self._font_info:
-			self._font_info = wx.Font(8, wx.NORMAL, wx.NORMAL, wx.NORMAL, False)
+		self._values_cache = {}
 
 	def DrawSubItem(self, dc, rect, _line, _highlighted, _enabled):
 		canvas = wx.EmptyBitmap(rect.width, rect.height)
 		mdc = wx.MemoryDC()
 		mdc.SelectObject(canvas)
 		mdc.Clear()
-		infobox.draw_icons(mdc, self._task, self._overdue, self._active_only)
+		infobox.draw_icons(mdc, self._task, self._overdue, self._active_only,
+				self._values_cache)
 		dc.Blit(rect.x + 3, rect.y, rect.width - 6, rect.height, mdc, 0, 0)
 
-	def GetLineHeight(self):
+	def GetLineHeight(self):  # pylint: disable=R0201
 		return infobox.SETTINGS['line_height']
 
-	def GetSubItemWidth(self):
+	def GetSubItemWidth(self):  # pylint: disable=R0201
 		return 72
 
 
 class TaskListControl(ULC.UltimateListCtrl, listmix.ColumnSorterMixin):
 	""" TaskList Control based on wxListCtrl. """
+	# pylint: disable=R0901
 
-	def __init__(self, parent, wid=wx.ID_ANY, pos=wx.DefaultPosition,
-				size=wx.DefaultSize, style=0, agwStyle=0, buttons=0):
+	def __init__(self, parent, wid=wx.ID_ANY,  # pylint: disable=R0913
+			pos=wx.DefaultPosition, size=wx.DefaultSize, style=0, agwStyle=0,
+			buttons=0):
 		# configure infobox
 		infobox.configure()
 		agwStyle = agwStyle | wx.LC_REPORT | wx.BORDER_SUNKEN | wx.LC_HRULES \
@@ -133,6 +134,10 @@ class TaskListControl(ULC.UltimateListCtrl, listmix.ColumnSorterMixin):
 		self.itemDataMap = {}  # for sorting
 		self._icon_sm_up = icon_prov.get_image_index('sm_up')
 		self._icon_sm_down = icon_prov.get_image_index('sm_down')
+		self._drag_item_start = None
+
+		self.Bind(ULC.EVT_LIST_BEGIN_DRAG, self._on_begin_drag)
+		self.Bind(ULC.EVT_LIST_END_DRAG, self._on_end_drag)
 
 	@property
 	def items(self):
@@ -163,10 +168,12 @@ class TaskListControl(ULC.UltimateListCtrl, listmix.ColumnSorterMixin):
 			task: list of tasks
 			active_only: boolean - show/count only active tasks.
 		"""
+		# pylint: disable=R0915
 		self.Freeze()
 		current_sort_state = self.GetSortState()
 		if current_sort_state[0] == -1:
 			current_sort_state = (2, 1)
+		self._drag_item_start = None
 		self._items.clear()
 		self.itemDataMap.clear()
 		self._mainWin.HideWindows()  # workaround for some bug in ULC
@@ -224,7 +231,7 @@ class TaskListControl(ULC.UltimateListCtrl, listmix.ColumnSorterMixin):
 				self.SetItemTextColour(index, wx.RED)
 		self._mainWin.ResetCurrent()
 		if index > 0:
-			self.SortListItems(*current_sort_state)
+			self.SortListItems(*current_sort_state)  # pylint: disable=W0142
 		self.Thaw()
 		self.Update()
 
@@ -286,6 +293,24 @@ class TaskListControl(ULC.UltimateListCtrl, listmix.ColumnSorterMixin):
 	def _on_list_btn_snooze_click(self, evt):
 		wx.PostEvent(self, _ListBtnSnoozeEvent(
 				task=evt.GetEventObject().task))
+
+	def _on_begin_drag(self, evt):
+		self._drag_item_start = None
+		item_index = evt.GetIndex()
+		_item_uuid, item_type = self._items[item_index]
+		if item_type != enums.TYPE_CHECKLIST_ITEM:
+			return  # veto don't work
+		else:
+			self._drag_item_start = item_index
+
+	def _on_end_drag(self, evt):
+		print '_on_end_drag', self._drag_item_start
+		if self._drag_item_start is None:
+			return
+		item_index = evt.GetIndex()
+		wx.PostEvent(self, _DragTaskEvent(start=self._drag_item_start,
+				stop=item_index))
+		self._drag_item_start = None
 
 
 def _get_sort_info_for_task(task):

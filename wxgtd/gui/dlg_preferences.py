@@ -29,6 +29,7 @@ _ = gettext.gettext
 
 class AppConfigWrapper(object):
 	""" Wrapper for AppConfig class that allow use it with validators. """
+	# pylint: disable=R0903
 
 	def __init__(self):
 		self._config = AppConfig()
@@ -54,13 +55,14 @@ class DlgPreferences(BaseDialog):
 	"""
 
 	def __init__(self, parent):
+		self._config = AppConfigWrapper()
 		BaseDialog.__init__(self, parent, 'dlg_preferences', save_pos=False)
 		self._setup()
 
 	def _load_controls(self, wnd):
 		BaseDialog._load_controls(self, wnd)
 
-		config = self._config = AppConfigWrapper()
+		config = self._config
 
 		self['sc_hotlist_due'].SetValidator(Validator(config, 'hotlist/due'))
 		self['sl_hotlist_priority'].SetValidator(Validator(config,
@@ -106,7 +108,7 @@ class DlgPreferences(BaseDialog):
 		self['btn_sync_file_select'].Bind(wx.EVT_BUTTON,
 				self._on_btn_sync_file_select)
 
-	def _setup(self):
+	def _setup(self):  # pylint: disable=R0201
 		_LOG.debug("DlgPreferences()")
 
 	def _on_ok(self, evt):

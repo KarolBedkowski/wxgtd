@@ -94,6 +94,7 @@ def update_task_hide(task):
 		- "given date"
 		- "<number> (weak|day|month) before (due|start)
 	"""
+	# pylint: disable=R0911
 	hide_pattern = task.hide_pattern
 	_LOG.debug('update_task_hide: date=%r, pattern=%r, due=%r, start=%r',
 			task.hide_until, task.hide_pattern, task.due_date, task.start_date)
@@ -173,6 +174,7 @@ def _move_date_repeat(date, repeat_pattern):
 	Returns:
 		Updated date
 	"""
+	# pylint: disable=R0911, R0912
 	# TODO: czy przy uwzględnianiu należy uwzględniać aktualną datę?
 	if not repeat_pattern:
 		return date
@@ -380,6 +382,7 @@ def complete_task(task, parent_wnd=None, session=None):
 	if not mbox.message_box_question(parent_wnd, _("Set task completed?"),
 			None, _("Set complete"), _("Close")):
 		return False
+	# pylint: disable=E1101
 	session = session or OBJ.Session.objects_session(task) or OBJ.Session()
 	task.task_completed = True
 	repeated_task = repeat_task(task)

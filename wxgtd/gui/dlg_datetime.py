@@ -25,7 +25,6 @@ _LOG = logging.getLogger(__name__)
 
 class DlgDateTime(BaseDialog):
 	""" Dialog for edit date and time.
-	TODO: maska na timestamp
 
 	Args:
 		parent: parent window

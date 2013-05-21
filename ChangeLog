@@ -1,3 +1,10 @@
+wxgtd 0.5.0 2013-05-21
+	* fix synchronisation and removing old objects
+	* dev: optimisations
+	* dev: redactor code
+	* gui: improvements
+	* minor bugfixes
+
 wxgtd 0.4.0 2013-05-12
 
 	* fix synchronisation

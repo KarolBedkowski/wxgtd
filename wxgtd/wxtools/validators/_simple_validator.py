@@ -32,7 +32,7 @@ class SimpleValidator:
 		""" Return error message for validator """
 		return self._error_message
 
-	def value_from_window(self, value):
+	def value_from_window(self, value):  # pylint: disable=R0201
 		""" Validate and convert value read from widget.
 
 		Args:
@@ -46,7 +46,7 @@ class SimpleValidator:
 		"""
 		return value
 
-	def value_to_window(self, value):
+	def value_to_window(self, value):  # pylint: disable=R0201
 		""" Convert value to widget.
 
 		Convert value to appropriate format (i.e. date in string to wxDateTime).

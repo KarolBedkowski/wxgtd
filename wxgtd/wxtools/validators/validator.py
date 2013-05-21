@@ -134,7 +134,7 @@ class Validator(wx.PyValidator):
 			val = self._process_through_validators(val)
 			try:
 				self._set_value_to_control(val)
-			except:
+			except:  # pylint: disable=W0702
 				_LOG.exception("Validator.TransferToWindow error; value=%r",
 						val)
 		return True
@@ -249,7 +249,7 @@ class ValidatorDv(Validator):
 		ctrl = self.GetWindow()
 		try:
 			value = ctrl.GetClientData(ctrl.GetSelection())
-		except:
+		except:  # pylint: disable=W0702
 			pass
 		return value
 
@@ -277,10 +277,9 @@ class ValidatorColorStr(Validator):
 			channel.
 		add_hash: add hash (#) character on beginning of string
 	"""
-
-	def __init__(self, data_obj=None, data_key=None, validators=None,
-			field=None, default=None, readonly=False, with_alpha=False,
-			add_hash=False):
+	def __init__(self, data_obj=None, data_key=None,  # pylint: disable=R0913
+			validators=None, field=None, default=None, readonly=False,
+			with_alpha=False, add_hash=False):
 		Validator.__init__(self, data_obj, data_key, validators, field,
 				default, readonly)
 		self._with_alpha = with_alpha

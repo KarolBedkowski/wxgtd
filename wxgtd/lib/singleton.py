@@ -13,12 +13,14 @@ class Singleton(object):
 
 	Require do not use __init__ constructor - instead overwrite _init method.
 	"""
+	# pylint: disable=R0903
 
 	def __new__(cls, *args, **kwarg):
 		instance = cls.__dict__.get('__instance__')
 		if instance is None:
 			instance = object.__new__(cls)
-			instance._init(*args, **kwarg)
+			# call _init as constructor
+			instance._init(*args, **kwarg)  # pylint: disable=W0212
 			cls.__instance__ = instance
 		return instance
 

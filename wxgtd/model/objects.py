@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+# pylint: disable=W0105
 
 """ SqlAlchemy objects definition.
 
@@ -18,7 +19,7 @@ import gettext
 import uuid
 import datetime
 
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Index
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import orm, or_, and_
 from sqlalchemy import select, func
@@ -29,8 +30,8 @@ _LOG = logging.getLogger(__name__)
 _ = gettext.gettext
 
 # SQLAlchemy
-Base = declarative_base()
-Session = orm.sessionmaker()
+Base = declarative_base()  # pylint: disable=C0103
+Session = orm.sessionmaker()  # pylint: disable=C0103
 
 
 def generate_uuid():
@@ -71,10 +72,18 @@ class BaseModelMixin(object):
 		return session.query(cls).filter(cls.modified < timestamp).all()
 
 	@classmethod
+	def select_old_usunsed(cls, timestamp, session=None):
+		""" Find object with modified date less than given and nod used in
+		any task. """
+		session = session or Session()
+		return session.query(cls).filter(cls.modified < timestamp).filter(
+				~cls.tasks.any()).all()
+
+	@classmethod
 	def all(cls):
 		""" Return all objects this class. """
 		session = Session()
-		return session.query(cls).all()
+		return session.query(cls).all()  # pylint: disable=E1101
 
 	@classmethod
 	def get(cls, session=None, **kwargs):
@@ -103,17 +112,20 @@ class BaseModelMixin(object):
 class Task(BaseModelMixin, Base):
 	""" Task.
 	"""
+	# pylint: disable=R0902
+
 	__tablename__ = "tasks"
 
 	uuid = Column(String(36), primary_key=True, default=generate_uuid)
-	parent_uuid = Column(String(36), ForeignKey('tasks.uuid'))
+	parent_uuid = Column(String(36), ForeignKey('tasks.uuid',
+			onupdate="CASCADE", ondelete="SET NULL"), index=True)
 	created = Column(DateTime, default=datetime.datetime.utcnow)
 	modified = Column(DateTime, default=datetime.datetime.utcnow,
-			onupdate=datetime.datetime.utcnow)
+			onupdate=datetime.datetime.utcnow, index=True)
 	completed = Column(DateTime)
 	deleted = Column(DateTime)
 	ordinal = Column(Integer, default=0)
-	title = Column(String)
+	title = Column(String, index=True)
 	note = Column(String)
 	type = Column(Integer, nullable=False)
 	starred = Column(Integer, default=0)
@@ -122,7 +134,7 @@ class Task(BaseModelMixin, Base):
 	importance = Column(Integer, default=0)  # dla checlist pozycja
 	start_date = Column(DateTime)
 	start_time_set = Column(Integer, default=0)
-	due_date = Column(DateTime)
+	due_date = Column(DateTime, index=True)
 	due_date_project = Column(DateTime)
 	due_time_set = Column(Integer, default=0)
 	due_date_mod = Column(Integer, default=0)
@@ -137,20 +149,24 @@ class Task(BaseModelMixin, Base):
 	prevent_auto_purge = Column(Integer, default=0)
 	trash_bin = Column(Integer, default=0)
 	metainf = Column(String)
-	alarm = Column(DateTime)
+	alarm = Column(DateTime, index=True)
 	alarm_pattern = Column(String)
 
-	folder_uuid = Column(String(36), ForeignKey("folders.uuid"))
-	context_uuid = Column(String(36), ForeignKey("contexts.uuid"))
-	goal_uuid = Column(String(36), ForeignKey("goals.uuid"))
+	folder_uuid = Column(String(36), ForeignKey("folders.uuid",
+			onupdate="CASCADE", ondelete="SET NULL"), index=True)
+	context_uuid = Column(String(36), ForeignKey("contexts.uuid",
+			onupdate="CASCADE", ondelete="SET NULL"), index=True)
+	goal_uuid = Column(String(36), ForeignKey("goals.uuid",
+			onupdate="CASCADE", ondelete="SET NULL"), index=True)
 
-	folder = orm.relationship("Folder")
-	context = orm.relationship("Context")
-	goal = orm.relationship("Goal")
+	folder = orm.relationship("Folder", backref=orm.backref('tasks'))
+	context = orm.relationship("Context", backref=orm.backref('tasks'))
+	goal = orm.relationship("Goal", backref=orm.backref('tasks'))
 	tags = orm.relationship("TaskTag", cascade="all, delete, delete-orphan")
 	children = orm.relationship("Task", backref=orm.backref('parent',
 		remote_side=[uuid]))
-	notes = orm.relationship("Tasknote", cascade="all, delete, delete-orphan")
+	notes = orm.relationship("Tasknote", backref=orm.backref('tasks'),
+			cascade="all, delete, delete-orphan")
 
 	@property
 	def status_name(self):
@@ -198,6 +214,7 @@ class Task(BaseModelMixin, Base):
 		Returns:
 			list of task
 		"""
+		# pylint: disable=R0912
 		session = session or Session()
 		query = session.query(cls)
 		query = _append_filter_list(query, Task.context_uuid, params.get('contexts'))
@@ -212,7 +229,7 @@ class Task(BaseModelMixin, Base):
 					Task.note.like(search_str)))
 		now = datetime.datetime.utcnow()
 		if params.get('tags'):
-			# filter by tags
+			# filter by tags; pylint: disable=E1101
 			query = query.filter(Task.tags.any(TaskTag.task_uuid.in_(params['tags'])))
 		if params.get('hide_until'):
 			# hide task with hide_until value in future
@@ -233,9 +250,9 @@ class Task(BaseModelMixin, Base):
 		if opt:
 			# use "or" or "and" operator for hotlist params
 			if params.get('filter_operator', 'and') == 'or':
-				query = query.filter(or_(*opt))
+				query = query.filter(or_(*opt))  # pylint: disable=W0142
 			else:
-				query = query.filter(*opt)
+				query = query.filter(*opt)  # pylint: disable=W0142
 		finished = params.get('finished')  # filter by completed value
 		if finished is not None:
 			if finished:  # only finished
@@ -253,21 +270,19 @@ class Task(BaseModelMixin, Base):
 		# future alarms
 		if params.get('active_alarm'):
 			query = query.filter(Task.alarm >= now)
-		query = query.options(orm.joinedload(Task.context)) \
-				.options(orm.joinedload(Task.folder)) \
-				.options(orm.joinedload(Task.goal)) \
-				.options(orm.subqueryload(Task.tags)) \
-				.order_by(Task.title)
+		query = query.order_by(Task.title)
 		return query.all()
 
 	@classmethod
 	def all_projects(cls):
 		""" Get all projects from database. """
+		# pylint: disable=E1101
 		return Session().query(cls).filter_by(type=enums.TYPE_PROJECT).all()
 
 	@classmethod
 	def all_checklists(cls):
 		""" Get all checklists from database. """
+		# pylint: disable=E1101
 		return Session().query(cls).filter_by(type=enums.TYPE_CHECKLIST).all()
 
 	@classmethod
@@ -292,12 +307,15 @@ class Task(BaseModelMixin, Base):
 		# if "since" is set - use it as minimal alarm
 		# not completed
 		query = query.filter(Task.completed.is_(None))
-		query = query.options(orm.joinedload(Task.context)) \
-				.options(orm.joinedload(Task.folder)) \
-				.options(orm.joinedload(Task.goal)) \
-				.options(orm.subqueryload(Task.tags)) \
-				.order_by(Task.alarm)
+		query = query.order_by(Task.alarm)
 		return query.all()
+
+	@classmethod
+	def find_max_importance(cls, parent_uuid, session=None):
+		""" Find maximal importance in childs of given task."""
+		return (session or Session()).scalar(
+				select([func.max(Task.importance)]).where(
+						Task.parent_uuid == parent_uuid))
 
 	@property
 	def child_count(self):
@@ -350,13 +368,14 @@ class Folder(BaseModelMixin, Base):
 	__tablename__ = "folders"
 
 	uuid = Column(String(36), primary_key=True, default=generate_uuid)
-	parent_uuid = Column(String(36), ForeignKey("folders.uuid"))
+	parent_uuid = Column(String(36), ForeignKey("folders.uuid",
+			onupdate="CASCADE", ondelete="SET NULL"), index=True)
 	created = Column(DateTime, default=datetime.datetime.utcnow)
 	modified = Column(DateTime, default=datetime.datetime.utcnow,
-			onupdate=datetime.datetime.utcnow)
+			onupdate=datetime.datetime.utcnow, index=True)
 	deleted = Column(DateTime)
 	ordinal = Column(Integer, default=0)
-	title = Column(String)
+	title = Column(String, index=True)
 	note = Column(String)
 	bg_color = Column(String, default="FFEFFF00")
 	visible = Column(Integer, default=1)
@@ -374,13 +393,14 @@ class Context(BaseModelMixin, Base):
 	"""context"""
 	__tablename__ = "contexts"
 	uuid = Column(String(36), primary_key=True, default=generate_uuid)
-	parent_uuid = Column(String(36), ForeignKey("contexts.uuid"))
+	parent_uuid = Column(String(36), ForeignKey("contexts.uuid",
+			onupdate="CASCADE", ondelete="SET NULL"), index=True)
 	created = Column(DateTime, default=datetime.datetime.utcnow)
 	modified = Column(DateTime, default=datetime.datetime.utcnow,
-			onupdate=datetime.datetime.utcnow)
+			onupdate=datetime.datetime.utcnow, index=True)
 	deleted = Column(DateTime)
 	ordinal = Column(Integer, default=0)
-	title = Column(String)
+	title = Column(String, index=True)
 	note = Column(String)
 	bg_color = Column(String, default="FFEFFF00")
 	visible = Column(Integer, default=1)
@@ -393,27 +413,36 @@ class Tasknote(BaseModelMixin, Base):
 	""" Task note object. """
 	__tablename__ = "tasknotes"
 	uuid = Column(String(36), primary_key=True, default=generate_uuid)
-	task_uuid = Column(String(36), ForeignKey("tasks.uuid"))
+	task_uuid = Column(String(36), ForeignKey("tasks.uuid",
+			onupdate="CASCADE", ondelete="SET NULL"), index=True)
 	created = Column(DateTime, default=datetime.datetime.utcnow)
 	modified = Column(DateTime, default=datetime.datetime.utcnow,
-			onupdate=datetime.datetime.utcnow)
+			onupdate=datetime.datetime.utcnow, index=True)
 	ordinal = Column(Integer, default=0)
-	title = Column(String)
+	title = Column(String, index=True)
 	bg_color = Column(String, default="FFEFFF00")
 	visible = Column(Integer, default=1)
+
+	@classmethod
+	def select_old_usunsed(cls, timestamp, session=None):
+		""" Find object with modified date less than given and nod used in
+		any task. """
+		session = session or Session()
+		return session.query(cls).filter(cls.task_uuid.is_(None))
 
 
 class Goal(BaseModelMixin, Base):
 	""" Goal """
 	__tablename__ = "goals"
 	uuid = Column(String(36), primary_key=True, default=generate_uuid)
-	parent_uuid = Column(String(36), ForeignKey("goals.uuid"))
+	parent_uuid = Column(String(36), ForeignKey("goals.uuid",
+			onupdate="CASCADE", ondelete="SET NULL"), index=True)
 	created = Column(DateTime, default=datetime.datetime.utcnow)
 	modified = Column(DateTime, default=datetime.datetime.utcnow,
-			onupdate=datetime.datetime.utcnow)
+			onupdate=datetime.datetime.utcnow, index=True)
 	deleted = Column(DateTime)
 	ordinal = Column(Integer, default=0)
-	title = Column(String)
+	title = Column(String, index=True)
 	note = Column(String)
 	time_period = Column(Integer, default=0)
 	archived = Column(Integer, default=0)
@@ -426,7 +455,10 @@ class Goal(BaseModelMixin, Base):
 
 class Conf(Base):
 	""" Internal configuration table  / object. """
+	# pylint: disable=W0232, R0903
+
 	__tablename__ = 'wxgtd'
+
 	key = Column(String(50), primary_key=True)
 	val = Column(String)
 
@@ -436,13 +468,14 @@ class Tag(BaseModelMixin, Base):
 
 	__tablename__ = 'tags'
 	uuid = Column(String(36), primary_key=True, default=generate_uuid)
-	parent_uuid = Column(String(36), ForeignKey("tags.uuid"))
+	parent_uuid = Column(String(36), ForeignKey("tags.uuid",
+			onupdate="CASCADE", ondelete="SET NULL"), index=True)
 	created = Column(DateTime, default=datetime.datetime.utcnow)
 	modified = Column(DateTime, default=datetime.datetime.utcnow,
-			onupdate=datetime.datetime.utcnow)
+			onupdate=datetime.datetime.utcnow, index=True)
 	deleted = Column(DateTime)
 	ordinal = Column(Integer, default=0)
-	title = Column(String)
+	title = Column(String, index=True)
 	note = Column(String)
 	bg_color = Column(String, default="FFEFFF00")
 	visible = Column(Integer, default=1)
@@ -454,11 +487,13 @@ class Tag(BaseModelMixin, Base):
 class TaskTag(BaseModelMixin, Base):
 	""" Association object for task and tags. """
 	__tablename__ = "task_tags"
-	task_uuid = Column(String(50), ForeignKey("tasks.uuid"), primary_key=True)
-	tag_uuid = Column(String(50), ForeignKey("tags.uuid"), primary_key=True)
+	task_uuid = Column(String(50), ForeignKey("tasks.uuid", onupdate="CASCADE",
+			ondelete="CASCADE"), primary_key=True)
+	tag_uuid = Column(String(50), ForeignKey("tags.uuid", onupdate="CASCADE",
+			ondelete="CASCADE"), primary_key=True)
 	created = Column(DateTime, default=datetime.datetime.utcnow)
 	modified = Column(DateTime, default=datetime.datetime.utcnow,
-			onupdate=datetime.datetime.utcnow)
+			onupdate=datetime.datetime.utcnow, index=True)
 
 	tag = orm.relationship("Tag", cascade="all", lazy="joined")
 
@@ -469,3 +504,8 @@ class SyncLog(BaseModelMixin, Base):
 	device_id = Column(String(50), primary_key=True)
 	sync_time = Column(DateTime, primary_key=True)
 	prev_sync_time = Column(DateTime)
+
+
+Index('idx_task_childs', Task.parent_uuid, Task.due_date, Task.completed)
+Index('idx_task_show', Task.hide_until, Task.parent_uuid, Task.completed,
+		Task.title)

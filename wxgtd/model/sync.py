@@ -20,7 +20,7 @@ import datetime
 try:
 	from wx.lib.pubsub.pub import Publisher
 except ImportError:
-	from wx.lib.pubsub import Publisher
+	from wx.lib.pubsub import Publisher  # pylint: disable=E0611
 
 from wxgtd.lib import appconfig
 
@@ -33,8 +33,12 @@ _ = gettext.gettext
 
 
 class SyncLockedError(RuntimeError):
-	""" Sync folder is locked.
-	"""
+	""" Sync folder is locked. """
+	pass
+
+
+class OtherSyncError(RuntimeError):
+	""" Other (unknown) syncing error. """
 	pass
 
 
@@ -74,9 +78,9 @@ def sync(filename):
 					_notify_loading_progress):
 				exporter.save_to_file(filename,
 						_notify_exporting_progress)
-		except:
+		except Exception as err:
 			_LOG.exception("file sync error")
-			raise SyncLockedError()
+			raise OtherSyncError(err)
 		finally:
 			_notify_progress(99, _("Removing sync lock"))
 			exporter.delete_sync_lock(filename)
@@ -84,6 +88,7 @@ def sync(filename):
 	else:
 		_notify_progress(100, _("Synchronization file is locked. "
 			"Can't synchronize..."))
+		raise SyncLockedError()
 
 
 def create_backup():

@@ -31,6 +31,8 @@ NODE_RADIO = 2
 
 class TreeItem(object):
 	"""Single tree item"""
+	# pylint: disable=R0903
+
 	def __init__(self, title, obj, *childs):
 		self.title = title
 		self.obj = obj
@@ -120,6 +122,7 @@ class FilterTreeModel(object):
 class FilterTreeCtrl(treemixin.VirtualTree, treemixin.ExpansionState,
 		CT.CustomTreeCtrl):
 	""" TreeControl with checboxes allows to filter elements to show. """
+	# pylint: disable=R0901
 
 	def __init__(self, *args, **kwargs):
 		self._model = FilterTreeModel()
@@ -142,7 +145,7 @@ class FilterTreeCtrl(treemixin.VirtualTree, treemixin.ExpansionState,
 		item = self._model.get_item(indices)
 		return hasattr(item, 'checked') and item.checked
 
-	def OnGetItemText(self, indices):
+	def OnGetItemText(self, indices, *_args, **_kwargs):
 		return self._model.get_text(indices)
 
 	def OnGetChildrenCount(self, indices):

@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# pylint: disable-msg=R0901, R0904, C0103
 """ Task bar icon.
 
 Copyright (c) Karol Będkowski, 2013
@@ -56,12 +57,12 @@ class TaskBarIcon(wx.TaskBarIcon):
 		self.Bind(wx.EVT_MENU, self._on_icon_activate, id=self.TBMENU_RESTORE)
 		self.Bind(wx.EVT_MENU, self._on_menu_app_close, id=self.TBMENU_CLOSE)
 
-	def _on_icon_activate(self, evt):
+	def _on_icon_activate(self, _evt):
 		if self._frame.IsIconized():
 			self._frame.Iconize(False)
 		if not self._frame.IsShown():
 			self._frame.Show(True)
 		self._frame.Raise()
 
-	def _on_menu_app_close(self, evt):
+	def _on_menu_app_close(self, _evt):
 		wx.CallAfter(self._frame.Close)
