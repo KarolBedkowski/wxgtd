@@ -3,8 +3,8 @@ wxgtd/main.py
 wxgtd/version.py
 wxgtd/configuration.py
 wxgtd/lib/__init__.py
-wxgtd/lib/enum.py
 wxgtd/lib/appconfig.py
+wxgtd/lib/datetimeutils.py
 wxgtd/lib/logging_setup.py
 wxgtd/lib/singleton.py
 wxgtd/gui/_infobox.py
@@ -25,9 +25,11 @@ wxgtd/gui/dlg_goals.py
 wxgtd/gui/dlg_remind_settings.py
 wxgtd/gui/dlg_checklistitem.py
 wxgtd/gui/dlg_select_tags.py
+wxgtd/gui/dialogs.py
 wxgtd/gui/dlg_reminders.py
 wxgtd/gui/dlg_datetime.py
 wxgtd/gui/_dict_base_dlg.py
+wxgtd/gui/_base_task_dialog.py
 wxgtd/gui/_tasklistctrl.py
 wxgtd/gui/dlg_about.py
 wxgtd/gui/_filtertreectrl.py
