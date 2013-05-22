@@ -303,6 +303,9 @@ def load_json(strdata, notify_cb):
 	_load_task_goals(data, session, tasks_cache, goals_cache, notify_cb)
 	tags_cache = _load_tags(data, session, notify_cb)
 	_load_task_tags(data, session, tasks_cache, tags_cache, notify_cb)
+	notebooks_cache = _load_notebooks(data, session, notify_cb)
+	_load_notebook_folders(data, session, notebooks_cache, folders_cache,
+			notify_cb)
 	last_prev_sync_time = _load_synclog(data, session, notify_cb)
 
 	# cleanup
@@ -324,6 +327,8 @@ def load_json(strdata, notify_cb):
 		deleted_cnt = _cleanup_unused(objects.Goal, goals_cache,
 				last_prev_sync_time, session)
 		notify_cb(89, _("Removed goals %d") % deleted_cnt)
+		# TODO: kasowanie notatników;
+		# TODO: renumeracja
 
 	notify_cb(90, _("Committing..."))
 	session.commit()  # pylint: disable=E1101
@@ -545,6 +550,46 @@ def _load_task_tags(data, session, tasks_cache, tags_cache, notify_cb):
 	if task_tags:
 		del data["task_tag"]
 	notify_cb(71, _("Loaded %d task tags") % len(task_tags))
+
+
+def _load_notebooks(data, session, notify_cb):
+	_LOG.info("_load_notebooks")
+	notify_cb(16, _("Loading notebooks"))
+	notebooks = data.get("notebook") or []
+	notebooks_cache = _build_id_uuid_map(notebooks)
+	for notebook in notebooks:
+		_convert_timestamps(notebook)
+		notebook['folder_uuid'] = None
+		_create_or_update(session, objects.NotebookPage, notebook)
+	if notebooks:
+		del data["notebook"]
+	notify_cb(20, _("Loaded %d notebook pages") % len(notebooks_cache))
+	return notebooks_cache
+
+
+def _load_notebook_folders(data, session, notebooks_cache, folders_cache,
+		notify_cb):
+	_LOG.info("_load_notebook_folders")
+	notify_cb(47, _("Loading notebook pages folders"))
+	notebook_folders = data.get("notebook_folder") or []
+	for notebook_folder in notebook_folders:
+		notebook_uuid = _replace_ids(notebook_folder, notebooks_cache,
+				"notebook_id")
+		folder_uuid = _replace_ids(notebook_folder, folders_cache, "folder_id")
+		if not notebook_uuid or not folder_uuid:
+			_LOG.error("load notebook folder error %r; %r; %r", notebook_folder,
+					notebook_uuid, folder_uuid)
+			continue
+		_convert_timestamps(notebook_folder)
+		notebook = session.query(  # pylint: disable=E1101
+				objects.NotebookPage).filter_by(uuid=notebook_uuid).first()
+		if notebook.modified <= notebook_folder["modified"]:
+			notebook.folder_uuid = folder_uuid
+		else:
+			_LOG.debug("skip %r", notebook_folder)
+	if notebook_folders:
+		del data["notebook_folder"]
+	notify_cb(51, _("Loaded %d notebook folders") % len(notebook_folders))
 
 
 def _load_synclog(data, session, notify_cb):
