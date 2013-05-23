@@ -427,3 +427,31 @@ def build_repeat_pattern_every_xdm(num_weekday, weekday, num_months):
 	mname = "months" if num_months > 1 else "month"
 	return "The %s %s every %d %s" % (num_weekday, weekday, num_months,
 			mname)
+
+
+def delete_notebook_page(page_uuid, parent_wnd=None, session=None):
+	""" Delete given notebook page.
+
+	Show confirmation and delete page from database.
+
+	Args:
+		page_uuid: notebook page for delete
+		parent_wnd: current wxWindow
+		session: sqlalchemy session
+
+	Returns:
+		True = task deleted
+	"""
+	if not mbox.message_box_delete_confirm(parent_wnd,
+			_("notebook page")):
+		return False
+
+	session = session or OBJ.Session()
+	page = session.query(OBJ.NotebookPage).filter_by(uuid=page_uuid).first()
+	if not page:
+		_LOG.warning("delete_notebook_page: missing page %r", page_uuid)
+		return False
+
+	session.delete(page)
+	session.commit()
+	return True
