@@ -104,10 +104,10 @@ class FrameNotebook(BaseFrame):
 
 		toolbar.AddSeparator()
 
-		#tbi = toolbar.AddLabelTool(-1, _('Exit'),
-				#iconprovider.get_image(wx.ID_EXIT),
-				#shortHelp=_('Close'))
-		#self.wnd.Bind(wx.EVT_TOOL, self._on_btn_close, id=tbi.GetId())
+		tbi = toolbar.AddLabelTool(-1, _('Exit'),
+			iconprovider.get_image("exit"),
+			shortHelp=_('Close window'))
+		self.wnd.Bind(wx.EVT_TOOL, self._on_btn_close, id=tbi.GetId())
 
 		toolbar.Realize()
 
