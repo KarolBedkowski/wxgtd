@@ -9,6 +9,8 @@ This file is part of wxGTD
 Licence: GPLv2+
 """
 
+# TODO: renumeracja
+
 __author__ = "Karol Będkowski"
 __copyright__ = "Copyright (c) Karol Będkowski, 2013"
 __version__ = '2013-04-21'
@@ -130,6 +132,7 @@ def dump_database_to_json(notify_cb):
 	res['task_tag'] = _dump_task_tags(session, notify_cb, tasks_cache,
 			tags_cache)
 	res['syncLog'] = _dump_synclog(session, notify_cb)
+	res.update(_dump_notebooks(session, notify_cb, folders_cache))
 
 	session.commit()  # pylint: disable=E1101
 	notify_cb(80, _("Saving..."))
@@ -437,3 +440,34 @@ def _dump_synclog(session, notify_cb):
 			"prevSyncTime": fmt_date(sync_log.prev_sync_time),
 			"syncTime": fmt_date(sync_log.sync_time)})
 	return sync_logs
+
+
+def _dump_notebooks(session, notify_cb, folders_cache):
+	notify_cb(16, _("Saving notebooks..."))
+	_LOG.info("dump_database_to_json: notebooks")
+	notebooks_cache = _build_uuid_map(session, objects.NotebookPage)
+	notebooks = []
+	notebook_folders = []
+	for notebook in session.query(objects.NotebookPage):  # pylint: disable=E1101
+		notebooks.append({'_id': notebooks_cache[notebook.uuid],
+				'uuid': notebook.uuid,
+				'created': fmt_date(notebook.created),
+				'modified': fmt_date(notebook.modified or notebook.created),
+				'deleted': fmt_date(notebook.deleted),
+				'ordinal': notebook.ordinal or 0,
+				'title': notebook.title or '',
+				'note': notebook.note or "",
+				'starred': 1 if notebook.starred else 0,
+				'bg_color': notebook.bg_color or "FFEFFF00",
+				'visible': notebook.visible})
+		if notebook.folder_uuid:
+			notebook_folders.append({
+					'notebook_id': notebooks_cache[notebook.uuid],
+					'folder_id': folders_cache[notebook.folder_uuid],
+					'created': fmt_date(notebook.created),
+					'modified': fmt_date(notebook.modified or notebook.created)})
+	res = {'notebook': notebooks,
+			'notebook_folder': notebook_folders}
+	notify_cb(65, _("Saved %d notebooks") % len(notebooks))
+	notify_cb(67, _("Saved %d notebook folders") % len(notebook_folders))
+	return res

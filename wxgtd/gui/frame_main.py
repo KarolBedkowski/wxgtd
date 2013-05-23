@@ -51,6 +51,7 @@ from wxgtd.gui.dlg_tags import DlgTags
 from wxgtd.gui.dlg_goals import DlgGoals
 from wxgtd.gui.dlg_folders import DlgFolders
 from wxgtd.gui.dlg_reminders import DlgReminders
+from wxgtd.gui.frame_notebooks import FrameNotebook
 
 _ = gettext.gettext
 _LOG = logging.getLogger(__name__)
@@ -145,6 +146,7 @@ class FrameMain:
 		_create_menu_bind('menu_task_new', self._on_menu_task_new)
 		_create_menu_bind('menu_task_edit', self._on_menu_task_edit)
 		_create_menu_bind('menu_task_delete', self._on_menu_task_delete)
+		_create_menu_bind('menu_task_notebook', self._on_menu_task_notebook)
 		_create_menu_bind('menu_sett_tags', self._on_menu_sett_tags)
 		_create_menu_bind('menu_sett_goals', self._on_menu_sett_goals)
 		_create_menu_bind('menu_sett_folders', self._on_menu_sett_folders)
@@ -246,6 +248,10 @@ class FrameMain:
 		tbi = toolbar.AddLabelTool(-1, _('Reminders'),
 				iconprovider.get_image('reminders'))
 		self.wnd.Bind(wx.EVT_TOOL, self._on_btn_reminders, id=tbi.GetId())
+
+		tbi = toolbar.AddLabelTool(-1, _('Notebook'),
+				iconprovider.get_image('notebook'))
+		self.wnd.Bind(wx.EVT_TOOL, self._on_menu_task_notebook, id=tbi.GetId())
 
 		toolbar.Realize()
 
@@ -361,6 +367,9 @@ class FrameMain:
 
 	def _on_menu_task_edit(self, _evt):
 		self._edit_selected_task()
+
+	def _on_menu_task_notebook(self, _evt):
+		FrameNotebook.run()
 
 	def _on_menu_sett_tags(self, _evt):
 		DlgTags(self.wnd).run(True)
