@@ -76,9 +76,9 @@ class FrameNotebook(BaseFrame):
 		self['pages_panel'].SetSizer(box)
 
 	def _create_bindings(self, wnd):
-		self._lb_folders.Bind(wx.EVT_LISTBOX, self._on_folders_listbox)
-		self._lb_pages.Bind(wx.EVT_LIST_ITEM_ACTIVATED,
-				self._on_pages_list_activated)
+		wnd.Bind(wx.EVT_LISTBOX, self._on_folders_listbox, self._lb_folders)
+		wnd.Bind(wx.EVT_LIST_ITEM_ACTIVATED, self._on_pages_list_activated,
+				self._lb_pages)
 
 		Publisher.subscribe(self._on_notebook_update, ('notebook', 'update'))
 		Publisher.subscribe(self._on_notebook_update, ('notebook', 'delete'))

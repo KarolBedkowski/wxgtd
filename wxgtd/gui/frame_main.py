@@ -124,17 +124,18 @@ class FrameMain(BaseFrame):
 		self._create_menu_bind('menu_sett_goals', self._on_menu_sett_goals)
 		self._create_menu_bind('menu_sett_folders', self._on_menu_sett_folders)
 
-		self._filter_tree_ctrl.Bind(wx.EVT_TREE_ITEM_ACTIVATED,
-				self._on_filter_tree_item_activated)
-		self._filter_tree_ctrl.Bind(CT.EVT_TREE_ITEM_CHECKED,
-				self._on_filter_tree_item_selected)
-		self['rb_show_selection'].Bind(wx.EVT_RADIOBOX,
-				self._on_rb_show_selection)
-		self._items_list_ctrl.Bind(wx.EVT_LIST_ITEM_ACTIVATED,
-				self._on_items_list_activated)
-		self._items_list_ctrl.Bind(TLC.EVT_DRAG_TASK, self._on_item_drag)
+		wnd.Bind(wx.EVT_TREE_ITEM_ACTIVATED, self._on_filter_tree_item_activated,
+				self._filter_tree_ctrl)
+		wnd.Bind(CT.EVT_TREE_ITEM_CHECKED, self._on_filter_tree_item_selected,
+				self._filter_tree_ctrl)
+		wnd.Bind(wx.EVT_RADIOBOX, self._on_rb_show_selection,
+				self['rb_show_selection'])
+		wnd.Bind(wx.EVT_LIST_ITEM_ACTIVATED, self._on_items_list_activated,
+				self._items_list_ctrl)
+		wnd.Bind(TLC.EVT_DRAG_TASK, self._on_item_drag, self._items_list_ctrl)
 		wnd.Bind(wx.EVT_BUTTON, self._on_btn_path_back, id=wx.ID_UP)
-		self['btn_parent_edit'].Bind(wx.EVT_BUTTON, self._on_btn_edit_parent)
+		wnd.Bind(wx.EVT_BUTTON, self._on_btn_edit_parent,
+				self['btn_parent_edit'])
 		wnd.Bind(wx.EVT_TIMER, self._on_timer)
 
 		Publisher.subscribe(self._on_tasks_update, ('task', 'update'))
