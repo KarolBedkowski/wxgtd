@@ -19,7 +19,6 @@ import datetime
 import traceback
 
 import wx
-from wx import xrc
 import wx.lib.customtreectrl as CT
 import wx.lib.dialogs
 try:
@@ -27,8 +26,6 @@ try:
 except ImportError:
 	from wx.lib.pubsub import Publisher  # pylint: disable=E0611
 
-from wxgtd.lib.appconfig import AppConfig
-from wxgtd.wxtools import wxresources
 from wxgtd.wxtools import iconprovider
 from wxgtd.model import objects as OBJ
 from wxgtd.model import loader
@@ -41,6 +38,7 @@ from wxgtd.gui import _fmt as fmt
 from wxgtd.gui import _infobox as infobox
 from wxgtd.gui import message_boxes as mbox
 from wxgtd.gui import _tasklistctrl as TLC
+from wxgtd.gui._base_frame import BaseFrame
 from wxgtd.gui._filtertreectrl import FilterTreeCtrl
 from wxgtd.gui._taskbaricon import TaskBarIcon
 from wxgtd.gui.dlg_task import DlgTask
@@ -57,55 +55,34 @@ _ = gettext.gettext
 _LOG = logging.getLogger(__name__)
 
 
-class FrameMain:
+class FrameMain(BaseFrame):
 	""" Main window class. """
 	# pylint: disable=R0903, R0902
 
-	def __init__(self):
-		self.res = wxresources.load_xrc_resource('wxgtd.xrc')
-		self._load_controls()
-		self._create_toolbar()
-		self._create_bindings()
-		self._setup_wnd()
-		self._setup()
+	_xrc_resource = 'wxgtd.xrc'
+	_window_name = 'frame_main'
+	_window_icon = 'wxgtd'
 
-	def __getitem__(self, key):
-		ctrl = xrc.XRCCTRL(self.wnd, key)
-		if ctrl is None:
-			ctrl = self.wnd.GetMenuBar().FindItemById(xrc.XRCID(key))
-		assert ctrl is not None, 'Control %r not found' % key
-		return ctrl
+	def __init__(self):
+		BaseFrame.__init__(self)
+		self._setup()
 
 	def _setup(self):
 		self._session = OBJ.Session()
 		self._items_path = []
 		self._last_reminders_check = None
 		self._filter_tree_ctrl.RefreshItems()
+		self._tbicon = TaskBarIcon(self.wnd)  # pylint: disable=W0201
 		wx.CallAfter(self._refresh_list)
-		appconfig = AppConfig()
-		self['rb_show_selection'].SetSelection(appconfig.get('main',
+		self['rb_show_selection'].SetSelection(self._appconfig.get('main',
 			'selected_group', 0))
-		if appconfig.get('sync', 'sync_on_startup'):
+		if self._appconfig.get('sync', 'sync_on_startup'):
 			wx.CallAfter(self._autosync)
 		self._reminders_timer = wx.Timer(self.wnd)
 		self._reminders_timer.Start(30 * 1000)  # 30 sec
 
-	def _setup_wnd(self):
-		self.wnd.SetIcon(iconprovider.get_icon('wxgtd'))
-		self._tbicon = TaskBarIcon(self.wnd)  # pylint: disable=W0201
-
-		if wx.Platform == '__WXMSW__':
-			# fix controls background
-			bgcolor = wx.SystemSettings.GetColour(wx.SYS_COLOUR_ACTIVEBORDER)
-			self.wnd.SetBackgroundColour(bgcolor)
-			_update_color(self.wnd, bgcolor)
-
-		self._set_size_pos()
-
 	def _load_controls(self):
 		# pylint: disable=W0201
-		self.wnd = self.res.LoadFrame(None, 'frame_main')
-		assert self.wnd is not None, 'Frame not found'
 		# filter tree ctrl
 		filter_tree_panel = self['filter_tree_panel']
 		box = wx.BoxSizer(wx.HORIZONTAL)
@@ -129,27 +106,23 @@ class FrameMain:
 		box.Add(self._panel_parent_icons, 1, wx.EXPAND)
 		ppicons.SetSizer(box)
 
-	def _create_bindings(self):
-		wnd = self.wnd
-		wnd.Bind(wx.EVT_CLOSE, self._on_close)
+	def _create_bindings(self, wnd):
+		BaseFrame._create_bindings(self, wnd)
 
-		def _create_menu_bind(menu_id, handler):
-			self.wnd.Bind(wx.EVT_MENU, handler, id=xrc.XRCID(menu_id))
-
-		_create_menu_bind('menu_file_load', self._on_menu_file_load)
-		_create_menu_bind('menu_file_save', self._on_menu_file_save)
-		_create_menu_bind('menu_file_exit', self._on_menu_file_exit)
-		_create_menu_bind('menu_file_sync', self._on_menu_file_sync)
-		_create_menu_bind('menu_file_preferences',
+		self._create_menu_bind('menu_file_load', self._on_menu_file_load)
+		self._create_menu_bind('menu_file_save', self._on_menu_file_save)
+		self._create_menu_bind('menu_file_exit', self._on_menu_file_exit)
+		self._create_menu_bind('menu_file_sync', self._on_menu_file_sync)
+		self._create_menu_bind('menu_file_preferences',
 				self._on_menu_file_preferences)
-		_create_menu_bind('menu_help_about', self._on_menu_help_about)
-		_create_menu_bind('menu_task_new', self._on_menu_task_new)
-		_create_menu_bind('menu_task_edit', self._on_menu_task_edit)
-		_create_menu_bind('menu_task_delete', self._on_menu_task_delete)
-		_create_menu_bind('menu_task_notebook', self._on_menu_task_notebook)
-		_create_menu_bind('menu_sett_tags', self._on_menu_sett_tags)
-		_create_menu_bind('menu_sett_goals', self._on_menu_sett_goals)
-		_create_menu_bind('menu_sett_folders', self._on_menu_sett_folders)
+		self._create_menu_bind('menu_help_about', self._on_menu_help_about)
+		self._create_menu_bind('menu_task_new', self._on_menu_task_new)
+		self._create_menu_bind('menu_task_edit', self._on_menu_task_edit)
+		self._create_menu_bind('menu_task_delete', self._on_menu_task_delete)
+		self._create_menu_bind('menu_task_notebook', self._on_menu_task_notebook)
+		self._create_menu_bind('menu_sett_tags', self._on_menu_sett_tags)
+		self._create_menu_bind('menu_sett_goals', self._on_menu_sett_goals)
+		self._create_menu_bind('menu_sett_folders', self._on_menu_sett_folders)
 
 		self._filter_tree_ctrl.Bind(wx.EVT_TREE_ITEM_ACTIVATED,
 				self._on_filter_tree_item_activated)
@@ -195,7 +168,7 @@ class FrameMain:
 
 		toolbar.AddSeparator()
 
-		appconfig = AppConfig()
+		appconfig = self._appconfig
 
 		# show subtask
 		self._btn_show_subtasks = wx.ToggleButton(toolbar,  # pylint: disable=W0201
@@ -255,33 +228,22 @@ class FrameMain:
 
 		toolbar.Realize()
 
-	def _set_size_pos(self):
-		appconfig = AppConfig()
-		size = appconfig.get('frame_main', 'size', (800, 600))
-		if size:
-			self.wnd.SetSize(size)
-		position = appconfig.get('frame_main', 'position')
-		if position:
-			self.wnd.Move(position)
-
 	# events
 
-	def _on_close(self, _event):
-		appconfig = AppConfig()
+	def _on_close(self, event):
+		appconfig = self._appconfig
 		if appconfig.get('sync', 'sync_on_exit'):
 			wx.CallAfter(self._autosync)
-		appconfig.set('frame_main', 'size', self.wnd.GetSizeTuple())
-		appconfig.set('frame_main', 'position', self.wnd.GetPositionTuple())
 		appconfig.set('main', 'show_finished', self._btn_show_finished.GetValue())
 		appconfig.set('main', 'show_subtask', self._btn_show_subtasks.GetValue())
 		appconfig.set('main', 'show_hide_until', self._btn_hide_until.GetValue())
 		appconfig.set('main', 'selected_group',
 				self['rb_show_selection'].GetSelection())
 		self._tbicon.Destroy()
-		self.wnd.Destroy()
+		BaseFrame._on_close(self, event)
 
 	def _on_menu_file_load(self, _evt):
-		appconfig = AppConfig()
+		appconfig = self._appconfig
 		dlg = wx.FileDialog(self.wnd,
 				_("Please select sync file."),
 				defaultDir=appconfig.get('files', 'last_dir', ''),
@@ -297,7 +259,7 @@ class FrameMain:
 		dlg.Destroy()
 
 	def _on_menu_file_save(self, _evt):
-		appconfig = AppConfig()
+		appconfig = self._appconfig
 		dlg = wx.FileDialog(self.wnd,
 				_("Please select target sync file."),
 				defaultDir=appconfig.get('files', 'last_dir', ''),
@@ -313,7 +275,7 @@ class FrameMain:
 		dlg.Destroy()
 
 	def _on_menu_file_sync(self, _evt):
-		appconfig = AppConfig()
+		appconfig = self._appconfig
 		last_sync_file = appconfig.get('files', 'last_sync_file')
 		if not last_sync_file:
 			dlg = wx.FileDialog(self.wnd,
@@ -368,7 +330,7 @@ class FrameMain:
 	def _on_menu_task_edit(self, _evt):
 		self._edit_selected_task()
 
-	def _on_menu_task_notebook(self, _evt):
+	def _on_menu_task_notebook(self, _evt):  # pylint: disable=R0201
 		FrameNotebook.run()
 
 	def _on_menu_sett_tags(self, _evt):
@@ -495,8 +457,7 @@ class FrameMain:
 			self._refresh_list()
 
 	def _on_timer(self, _evt, _force_show=False):
-		appconfig = AppConfig()
-		if appconfig.get('notification', 'popup_alarms'):
+		if self._appconfig.get('notification', 'popup_alarms'):
 			_LOG.debug('FrameMain._on_timer: check reminders')
 			DlgReminders.check(self.wnd, self._session)
 
@@ -526,7 +487,7 @@ class FrameMain:
 		elif group_id == 1:  # hot
 			if not params['parent_uuid']:
 				# ignore hotlist settings when showing subtasks
-				_get_hotlist_settings(params)
+				_get_hotlist_settings(params, self._appconfig)
 		elif group_id == 2:  # stared
 			if not params['parent_uuid']:
 				# ignore starred when showing subtasks
@@ -561,8 +522,7 @@ class FrameMain:
 		wx.SetCursor(wx.STANDARD_CURSOR)
 
 	def _autosync(self):
-		appconfig = AppConfig()
-		last_sync_file = appconfig.get('files', 'last_sync_file')
+		last_sync_file = self._appconfig.get('files', 'last_sync_file')
 		if last_sync_file:
 			dlg = DlgSyncProggress(self.wnd)
 			dlg.run()
@@ -634,16 +594,8 @@ class FrameMain:
 		self['panel_parent'].GetSizer().Layout()
 
 
-def _update_color(wnd, bgcolor):
-	for child in wnd.GetChildren():
-		if isinstance(child, wx.Panel):
-			child.SetBackgroundColour(bgcolor)
-		_update_color(child, bgcolor)
-
-
-def _get_hotlist_settings(params):
+def _get_hotlist_settings(params, conf):
 	now = datetime.datetime.utcnow()
-	conf = AppConfig()
 	params['filter_operator'] = 'or' if conf.get('hotlist', 'cond', True) \
 			else 'and'
 	params['max_due_date'] = now + datetime.timedelta(days=conf.get('hotlist',

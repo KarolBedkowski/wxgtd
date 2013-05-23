@@ -15,46 +15,36 @@ import gettext
 import logging
 
 import wx
-from wx import xrc
 import wx.lib.dialogs
 try:
 	from wx.lib.pubsub.pub import Publisher
 except ImportError:
 	from wx.lib.pubsub import Publisher  # pylint: disable=E0611
 
-from wxgtd.lib.appconfig import AppConfig
-from wxgtd.wxtools import wxresources
 from wxgtd.wxtools import iconprovider
 from wxgtd.wxtools import wxutils
 from wxgtd.model import objects as OBJ
 from wxgtd.model import logic
 from wxgtd.gui import _fmt as fmt
+from wxgtd.gui._base_frame import BaseFrame
 from wxgtd.gui.dlg_notebook_page import DlgNotebookPage
 
 _ = gettext.gettext
 _LOG = logging.getLogger(__name__)
 
 
-class FrameNotebook:
+class FrameNotebook(BaseFrame):
 	""" Notebook window class. """
 	# pylint: disable=R0903, R0902
 
+	_xrc_resource = 'wxgtd.xrc'
+	_window_name = 'frame_notebook'
+	_window_icon = 'wxgtd'
 	_instance = None
 
 	def __init__(self):
-		self.res = wxresources.load_xrc_resource('wxgtd.xrc')
-		self._load_controls()
-		self._create_toolbar()
-		self._create_bindings()
-		self._setup_wnd()
+		BaseFrame.__init__(self)
 		self._setup()
-
-	def __getitem__(self, key):
-		ctrl = xrc.XRCCTRL(self.wnd, key)
-		if ctrl is None:
-			ctrl = self.wnd.GetMenuBar().FindItemById(xrc.XRCID(key))
-		assert ctrl is not None, 'Control %r not found' % key
-		return ctrl
 
 	@classmethod
 	def run(cls):
@@ -74,21 +64,9 @@ class FrameNotebook:
 		self._lb_folders.Select(0)
 		self._refresh_pages()
 
-	def _setup_wnd(self):
-		self.wnd.SetIcon(iconprovider.get_icon('wxgtd'))
-
-		if wx.Platform == '__WXMSW__':
-			# fix controls background
-			bgcolor = wx.SystemSettings.GetColour(wx.SYS_COLOUR_ACTIVEBORDER)
-			self.wnd.SetBackgroundColour(bgcolor)
-			_update_color(self.wnd, bgcolor)
-
-		self._set_size_pos()
-
 	def _load_controls(self):
 		# pylint: disable=W0201
-		self.wnd = self.res.LoadFrame(None, 'frame_notebook')
-		assert self.wnd is not None, 'Frame not found'
+		BaseFrame._load_controls(self)
 		# filter tree ctrl
 		self._lb_folders = self['lb_folders']
 		self._lb_pages = wx.ListCtrl(self['pages_panel'], -1, style=wx.LC_REPORT)
@@ -97,9 +75,7 @@ class FrameNotebook:
 		box.Add(self._lb_pages, 1, wx.EXPAND | wx.ALL, 12)
 		self['pages_panel'].SetSizer(box)
 
-	def _create_bindings(self):
-		wnd = self.wnd
-		wnd.Bind(wx.EVT_CLOSE, self._on_close)
+	def _create_bindings(self, wnd):
 		self._lb_folders.Bind(wx.EVT_LISTBOX, self._on_folders_listbox)
 		self._lb_pages.Bind(wx.EVT_LIST_ITEM_ACTIVATED,
 				self._on_pages_list_activated)
@@ -136,28 +112,19 @@ class FrameNotebook:
 		toolbar.Realize()
 
 	def _set_size_pos(self):
+		BaseFrame._set_size_pos(self)
 		self['window_1'].SetSashGravity(0.0)
 		self['window_1'].SetMinimumPaneSize(20)
-
-		appconfig = AppConfig()
-		size = appconfig.get('frame_notebook', 'size', (800, 600))
-		if size:
-			self.wnd.SetSize(size)
-		position = appconfig.get('frame_notebook', 'position')
-		if position:
-			self.wnd.Move(position)
-		self['window_1'].SetSashPosition(appconfig.get('frame_notebooks',
+		self['window_1'].SetSashPosition(self._appconfig.get('frame_notebooks',
 				'win1', 200))
 
 	# events
 
-	def _on_close(self, _event):
-		appconfig = AppConfig()
-		appconfig.set('frame_notebook', 'size', self.wnd.GetSizeTuple())
-		appconfig.set('frame_notebook', 'position', self.wnd.GetPositionTuple())
-		appconfig.set('frame_notebook', 'win1', self['window_1'].GetSashPosition())
+	def _on_close(self, event):
+		self._appconfig.set('frame_notebook', 'win1', self['window_1']
+				.GetSashPosition())
 		self._instance = None
-		self.wnd.Destroy()
+		BaseFrame._on_close(self, event)
 
 	def _on_btn_close(self, _evt):
 		self.wnd.Close()
@@ -245,10 +212,3 @@ class FrameNotebook:
 		self._lb_pages.SetColumnWidth(0, wx.LIST_AUTOSIZE)
 		self._lb_pages.SetColumnWidth(1, wx.LIST_AUTOSIZE)
 		self._lb_pages.SetColumnWidth(2, wx.LIST_AUTOSIZE)
-
-
-def _update_color(wnd, bgcolor):
-	for child in wnd.GetChildren():
-		if isinstance(child, wx.Panel):
-			child.SetBackgroundColour(bgcolor)
-		_update_color(child, bgcolor)
