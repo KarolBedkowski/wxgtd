@@ -12,6 +12,7 @@ __copyright__ = "Copyright (c) Karol Będkowski, 2013"
 __version__ = "2013-04-28"
 
 import logging
+import gettext
 
 import wx
 try:
@@ -26,6 +27,7 @@ from wxgtd.model import logic
 
 from ._base_dialog import BaseDialog
 
+_ = gettext.gettext
 _LOG = logging.getLogger(__name__)
 
 
@@ -53,8 +55,11 @@ class DlgNotebookPage(BaseDialog):
 		if page_uuid:
 			self._page = OBJ.NotebookPage.get(self._session, uuid=page_uuid)
 		else:
+			if not folder_uuid or folder_uuid == '-':
+				folder_uuid = None
 			self._page = OBJ.NotebookPage(folder_uuid=folder_uuid)
 		cb_folder = self['c_folder']
+		cb_folder.Append(_("No Folder"), None)
 		for folder in self._session.query(OBJ.Folder).all():
 			cb_folder.Append(folder.title, folder.uuid)
 		self['tc_title'].SetValidator(Validator(self._page, 'title',

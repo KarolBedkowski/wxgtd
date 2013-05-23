@@ -152,6 +152,7 @@ class FrameNotebook(BaseFrame):
 		self._refresh_pages()
 
 	def _on_notebook_update(self, _evt):
+		self._refresh_folders()
 		self._refresh_pages()
 
 	def _on_pages_list_activated(self, evt):
@@ -174,17 +175,25 @@ class FrameNotebook(BaseFrame):
 	@wxutils.wait_cursor
 	def _refresh_folders(self):
 		self._session.expire_all()  # pylint: disable=E1101
+		to_sel = self._lb_folders.GetSelection()
 		self._lb_folders.Clear()
 		self._lb_pages.DeleteAllItems()
-		self._lb_folders.Append(_("Any Folder"), "-")
-		self._lb_folders.Append(_("No Folder"), None)
-		for folder in self._session.query(OBJ.Folder)\
-				.order_by(OBJ.Folder.title).all():
+		all_cnt = self._session.query(OBJ.NotebookPage).count()
+		cnt_str = ("  (%d)" % all_cnt) if all_cnt else ""
+		self._lb_folders.Append(_("Any Folder") + cnt_str, "-")
+		no_folder_cnt = self._session.query(OBJ.NotebookPage)\
+				.filter(OBJ.NotebookPage.folder_uuid.is_(None)).count()
+		cnt_str = ("  (%d)" % no_folder_cnt) if no_folder_cnt else ""
+		self._lb_folders.Append(_("No Folder") + cnt_str, None)
+		for idx, folder in enumerate(self._session.query(OBJ.Folder)
+				.filter(OBJ.Folder.deleted.is_(None))
+				.order_by(OBJ.Folder.title).all()):
 			title = folder.title
 			cnt = len(folder.notebook_pages)
 			if cnt > 0:
 				title += "  (" + str(cnt) + ")"
 			self._lb_folders.Append(title, folder.uuid)
+		self._lb_folders.Select(to_sel)
 
 	@wxutils.wait_cursor
 	def _refresh_pages(self):
@@ -193,6 +202,7 @@ class FrameNotebook(BaseFrame):
 		self._lb_pages.DeleteAllItems()
 		self._pages_uuid.clear()
 		query = self._session.query(OBJ.NotebookPage)\
+				.filter(OBJ.NotebookPage.deleted.is_(None))\
 				.order_by(OBJ.NotebookPage.ordinal, OBJ.NotebookPage.title)
 		if sel_folder is None:
 			query = query.filter(OBJ.NotebookPage.folder_uuid.is_(None))
