@@ -43,9 +43,9 @@ class DlgSelectTags(BaseDialog):
 		BaseDialog._load_controls(self, wnd)
 		self._clb_tags = self['clb_tags']
 
-	def _create_bindings(self):
-		BaseDialog._create_bindings(self)
-		self._wnd.Bind(wx.EVT_BUTTON, self._on_add_tag, id=wx.ID_ADD)
+	def _create_bindings(self, wnd):
+		BaseDialog._create_bindings(self, wnd)
+		wnd.Bind(wx.EVT_BUTTON, self._on_add_tag, id=wx.ID_ADD)
 
 	def _setup(self, selected):
 		_LOG.debug("DlgSelectTags(%r)", selected)

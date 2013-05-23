@@ -42,11 +42,10 @@ class DlgNotebookPage(BaseDialog):
 
 	def _load_controls(self, wnd):
 		BaseDialog._load_controls(self, wnd)
-		wnd.SetExtraStyle(wx.WS_EX_VALIDATE_RECURSIVELY)
 
-	def _create_bindings(self):
-		BaseDialog._create_bindings(self)
-		self.wnd.Bind(wx.EVT_BUTTON, self._on_delete, id=wx.ID_DELETE)
+	def _create_bindings(self, wnd):
+		BaseDialog._create_bindings(self, wnd)
+		wnd.Bind(wx.EVT_BUTTON, self._on_delete, id=wx.ID_DELETE)
 
 	def _setup(self, session, page_uuid, folder_uuid):
 		_LOG.debug("DlgNotebookPage(%r)", (session, page_uuid, folder_uuid))

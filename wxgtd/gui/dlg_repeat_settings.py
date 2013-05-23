@@ -37,6 +37,7 @@ class DlgRepeatSettings(BaseDialog):
 	def __init__(self, parent, pattern, repeat_from):
 		self._data = {'pattern': pattern, 'from': repeat_from}
 		BaseDialog.__init__(self, parent, 'dlg_repeat_settings', save_pos=False)
+		self._setup_comboboxes()
 		self._setup(pattern, repeat_from)
 
 	@property
@@ -47,39 +48,8 @@ class DlgRepeatSettings(BaseDialog):
 	def pattern(self):
 		return self._data['pattern']
 
-	def _load_controls(self, wnd):
-		BaseDialog._load_controls(self, wnd)
-		wnd.SetExtraStyle(wx.WS_EX_VALIDATE_RECURSIVELY)
-		c_every = self['c_every']
-		for rem_key, rem_name in enums.REPEAT_PATTERN_LIST:
-			c_every.Append(rem_name, rem_key)
-		c_every.Select(0)
-		c_everyxt_period = self['c_everyxt_period']
-		c_everyxt_period.Append(_("days"), "Day")
-		c_everyxt_period.Append(_("weeks"), "Week")
-		c_everyxt_period.Append(_("months"), "Month")
-		c_everyxt_period.Append(_("years"), "Year")
-		c_everyxt_period.Select(0)
-		cb_xdm_num_wday = self['cb_xdm_num_wday']
-		cb_xdm_num_wday.Append(_("first"), 'first')
-		cb_xdm_num_wday.Append(_("second"), 'second')
-		cb_xdm_num_wday.Append(_("third"), 'third')
-		cb_xdm_num_wday.Append(_("fourth"), 'fourth')
-		cb_xdm_num_wday.Append(_("fifth"), 'fifth')
-		cb_xdm_num_wday.Append(_("last"), 'last')
-		cb_xdm_num_wday.Select(0)
-		c_xdm_weekday = self['c_xdm_weekday']
-		c_xdm_weekday.Append(_("Monday"), "Mon")
-		c_xdm_weekday.Append(_("Tuesday"), "Tue")
-		c_xdm_weekday.Append(_("Wednesday"), "Wed")
-		c_xdm_weekday.Append(_("Thursday"), "Thu")
-		c_xdm_weekday.Append(_("Friday"), "Fri")
-		c_xdm_weekday.Append(_("Saturday"), "Sat")
-		c_xdm_weekday.Append(_("Sunday"), "Sun")
-		c_xdm_weekday.Select(0)
-
-	def _create_bindings(self):
-		BaseDialog._create_bindings(self)
+	def _create_bindings(self, wnd):
+		BaseDialog._create_bindings(self, wnd)
 		self['c_every'].Bind(wx.EVT_CHOICE, self._on_cb_every_pattern)
 		self['sc_everyxt_num'].Bind(wx.EVT_SPINCTRL, self._on_every_xt_sc)
 		self['c_everyxt_period'].Bind(wx.EVT_CHOICE, self._on_every_xt_period)
@@ -98,6 +68,7 @@ class DlgRepeatSettings(BaseDialog):
 		_LOG.debug("DlgRemindSettings(%r)", (pattern, repeat_from))
 		self['rb_never'].SetValue(True)
 		self['rb_completion'].SetValue(bool(repeat_from))
+
 		if pattern:
 			if _choice_select_by_data(self['c_every'], pattern):
 				self['rb_every'].SetValue(True)
@@ -132,6 +103,35 @@ class DlgRepeatSettings(BaseDialog):
 			# brak znanego typu
 			_LOG.warn("DlgRepeatSettings.setup: wrong pattern: %r", pattern)
 
+	def _setup_comboboxes(self):
+		c_every = self['c_every']
+		for rem_key, rem_name in enums.REPEAT_PATTERN_LIST:
+			c_every.Append(rem_name, rem_key)
+		c_every.Select(0)
+		c_everyxt_period = self['c_everyxt_period']
+		c_everyxt_period.Append(_("days"), "Day")
+		c_everyxt_period.Append(_("weeks"), "Week")
+		c_everyxt_period.Append(_("months"), "Month")
+		c_everyxt_period.Append(_("years"), "Year")
+		c_everyxt_period.Select(0)
+		cb_xdm_num_wday = self['cb_xdm_num_wday']
+		cb_xdm_num_wday.Append(_("first"), 'first')
+		cb_xdm_num_wday.Append(_("second"), 'second')
+		cb_xdm_num_wday.Append(_("third"), 'third')
+		cb_xdm_num_wday.Append(_("fourth"), 'fourth')
+		cb_xdm_num_wday.Append(_("fifth"), 'fifth')
+		cb_xdm_num_wday.Append(_("last"), 'last')
+		cb_xdm_num_wday.Select(0)
+		c_xdm_weekday = self['c_xdm_weekday']
+		c_xdm_weekday.Append(_("Monday"), "Mon")
+		c_xdm_weekday.Append(_("Tuesday"), "Tue")
+		c_xdm_weekday.Append(_("Wednesday"), "Wed")
+		c_xdm_weekday.Append(_("Thursday"), "Thu")
+		c_xdm_weekday.Append(_("Friday"), "Fri")
+		c_xdm_weekday.Append(_("Saturday"), "Sat")
+		c_xdm_weekday.Append(_("Sunday"), "Sun")
+		c_xdm_weekday.Select(0)
+
 	def _on_ok(self, evt):
 		self._data['from'] = 1 if self['rb_completion'].GetValue() else 0
 		if self['rb_never'].GetValue():
@@ -162,25 +162,32 @@ class DlgRepeatSettings(BaseDialog):
 		BaseDialog._on_ok(self, evt)
 
 	def _on_cb_every_pattern(self, _evt):
-		self['rb_every'].SetValue(True)
+		if self._wnd.IsActive():
+			self['rb_every'].SetValue(True)
 
 	def _on_every_xt_sc(self, _evt):
-		self['rb_everyxt'].SetValue(True)
+		if self._wnd.IsActive():
+			self['rb_everyxt'].SetValue(True)
 
 	def _on_every_xt_period(self, _evt):
-		self['rb_everyxt'].SetValue(True)
+		if self._wnd.IsActive():
+			self['rb_everyxt'].SetValue(True)
 
 	def _on_every_w_day(self, _evt):
-		self['rb_everyw'].SetValue(True)
+		if self._wnd.IsActive():
+			self['rb_everyw'].SetValue(True)
 
 	def _on_xdm_num_wdays(self, _evt):
-		self['rb_xdm'].SetValue(True)
+		if self._wnd.IsActive():
+			self['rb_xdm'].SetValue(True)
 
 	def _on_xdm_weekday(self, _evt):
-		self['rb_xdm'].SetValue(True)
+		if self._wnd.IsActive():
+			self['rb_xdm'].SetValue(True)
 
 	def _on_xdm_months(self, _evt):
-		self['rb_xdm'].SetValue(True)
+		if self._wnd.IsActive():
+			self['rb_xdm'].SetValue(True)
 
 
 def _choice_select_by_data(control, value):

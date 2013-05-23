@@ -22,6 +22,12 @@ from wxgtd.wxtools import wxresources
 class BaseDialog:
 	""" Base class for dialogs defined in xrc files.
 
+	Steps:
+		1. _create_window
+		2. _load_controls
+		3. _create_bindings
+		4. _setup_wnd
+
 	Args:
 		parent: parent window
 		dialog_name: name dialog in resource file
@@ -38,18 +44,12 @@ class BaseDialog:
 		self._dialog_name = dialog_name
 		self._obj_key = None
 		self._save_pos = save_pos
-		# load resource & create wind
-		res = wxresources.load_xrc_resource(resource)
-		assert res is not None, 'resource %s not found' % resource
-		self._wnd = res.LoadDialog(parent, dialog_name)
-		assert self._wnd is not None, 'wnd %s not found in %s' % (dialog_name,
-				resource)
-		self._wnd.SetExtraStyle(wx.WS_EX_VALIDATE_RECURSIVELY)
 		# setup
+		self._wnd = self._create_window(dialog_name, resource, parent)
 		self._appconfig = AppConfig()
 		self._load_controls(self._wnd)
-		self._create_bindings()
-		self._setup_wnd(icon)
+		self._create_bindings(self._wnd)
+		self._setup_wnd(self._wnd, icon)
 
 	@property
 	def wnd(self):
@@ -104,41 +104,52 @@ class BaseDialog:
 		assert ctrl is not None, 'ctrl %s not found' % key
 		return ctrl
 
-	def _setup_wnd(self, icon):
+	def _create_window(self, dialog_name, resource,  # pylint: disable=R0201
+			parent):
+		""" Load resources & create window """
+		# load resource & create wind
+		res = wxresources.load_xrc_resource(resource)
+		assert res is not None, 'resource %s not found' % resource
+		wnd = res.LoadDialog(parent, dialog_name)
+		assert wnd is not None, 'wnd %s not found in %s' % (dialog_name,
+				resource)
+		wnd.SetExtraStyle(wx.WS_EX_VALIDATE_RECURSIVELY)
+		return wnd
+
+	def _setup_wnd(self, wnd, icon):
 		""" Setup window.
 
 		Args:
 			icon: name of icon; if empty try to use icon from parent window.
 		"""
 		if not icon:
-			parent = self._wnd.GetParent()
+			parent = wnd.GetParent()
 			if parent and hasattr(parent, 'GetIcon'):
-				self._wnd.SetIcon(parent.GetIcon())
+				wnd.SetIcon(parent.GetIcon())
 		else:
-			self._wnd.SetIcon(iconprovider.get_icon(icon))
-		_fix_panels(self._wnd)
+			wnd.SetIcon(iconprovider.get_icon(icon))
+		_fix_panels(wnd)
 		if wx.Platform == '__WXMSW__':
-			self._wnd.SetBackgroundColour(wx.SystemSettings.GetColour(
+			wnd.SetBackgroundColour(wx.SystemSettings.GetColour(
 					wx.SYS_COLOUR_ACTIVEBORDER))
 		if self._save_pos:
 			size = self._appconfig.get(self._dialog_name, 'size', (400, 300))
 			if size:
-				self._wnd.SetSize(size)
+				wnd.SetSize(size)
 			position = self._appconfig.get(self._dialog_name, 'position')
 			if position:
-				self._wnd.Move(position)
+				wnd.Move(position)
 		else:
-			self._wnd.Centre()
-		self._wnd.SetFocus()
-		self._wnd.SetEscapeId(wx.ID_CLOSE)
+			wnd.Centre()
+		wnd.SetFocus()
+		wnd.SetEscapeId(wx.ID_CLOSE)
 
 	def _load_controls(self, wnd):
 		""" Load/create additional controls. """
 		pass
 
-	def _create_bindings(self):
+	def _create_bindings(self, wnd):
 		""" Create default bindings."""
-		wnd = self._wnd
 		wnd.Bind(wx.EVT_CLOSE, self._on_close)
 		wnd.Bind(wx.EVT_BUTTON, self._on_cancel, id=wx.ID_CLOSE)
 		wnd.Bind(wx.EVT_BUTTON, self._on_save, id=wx.ID_SAVE)
