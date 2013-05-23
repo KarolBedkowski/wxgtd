@@ -29,6 +29,18 @@ def with_wait_cursor():
 		wx.SetCursor(wx.STANDARD_CURSOR)
 
 
+def wait_cursor(func):
+	""" Set "HOURGLASS_CURSOR" when executing decorated function. """
+	@wraps(func)
+	def wrapper(*args, **kwds):
+		wx.SetCursor(wx.HOURGLASS_CURSOR)
+		try:
+			return func(*args, **kwds)
+		finally:
+			wx.SetCursor(wx.STANDARD_CURSOR)
+	return wrapper
+
+
 def call_after(func):
 	""" Call decorated function with wxCallAfter. """
 	@wraps(func)
