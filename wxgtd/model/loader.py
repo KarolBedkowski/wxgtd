@@ -186,6 +186,26 @@ def _cleanup_tasks(loaded_tasks, last_sync, session):
 	return idx
 
 
+def _cleanup_notebooks(loaded_notebooks, last_sync, session):
+	""" Remove old (removed) notebook pages.
+	Args:
+		loaded_tasks: list of uuids loaded object to keep
+		last_sync: items with modification older that this date will be deleted.
+		session: SqlAlchemy session.
+	Returns:
+		number of deleted pages.
+	"""
+	_LOG.info("_cleanup_notebooks()")
+	idx = 0
+	for page in objects.NotebookPage.selecy_by_modified_is_less(last_sync,
+			session=session):
+		if page.uuid not in loaded_notebooks:
+			_LOG.info("_cleanup_notebooks: delete page %r", page.uuid)
+			session.delete(page)
+			idx += 1
+	return idx
+
+
 def _cleanup_unused(objcls, loaded_cache, last_sync, session):
 	""" Remove old (removed) and not used folders.
 	Args:
@@ -327,7 +347,9 @@ def load_json(strdata, notify_cb):
 		deleted_cnt = _cleanup_unused(objects.Goal, goals_cache,
 				last_prev_sync_time, session)
 		notify_cb(89, _("Removed goals %d") % deleted_cnt)
-		# TODO: kasowanie notatników;
+		deleted_cnt = _cleanup_notebooks(set(notebooks_cache.itervalues()),
+				last_prev_sync_time, session)
+		notify_cb(85, _("Removed notebook pages: %d") % deleted_cnt)
 		# TODO: renumeracja
 
 	notify_cb(90, _("Committing..."))
