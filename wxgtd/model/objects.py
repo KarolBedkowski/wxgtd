@@ -63,6 +63,11 @@ class BaseModelMixin(object):
 					(isinstance(prop, orm.RelationshipProperty)
 							and prop.secondary):
 				setattr(newobj, prop.key, getattr(self, prop.key))
+		if hasattr(newobj, 'uuid'):
+			newobj.uuid = None
+		if hasattr(self, 'children'):
+			for child in self.children:
+				newobj.children.append(child.clone())
 		return newobj
 
 	@classmethod
@@ -334,6 +339,7 @@ class Task(BaseModelMixin, Base):
 		# clone notes
 		for note in self.notes:
 			newobj.notes.append(note.clone())
+		newobj.completed = None
 		return newobj
 
 

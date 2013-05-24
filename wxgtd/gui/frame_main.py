@@ -119,6 +119,7 @@ class FrameMain(BaseFrame):
 		self._create_menu_bind('menu_task_new', self._on_menu_task_new)
 		self._create_menu_bind('menu_task_edit', self._on_menu_task_edit)
 		self._create_menu_bind('menu_task_delete', self._on_menu_task_delete)
+		self._create_menu_bind('menu_task_clone', self._on_menu_task_clone)
 		self._create_menu_bind('menu_task_notebook', self._on_menu_task_notebook)
 		self._create_menu_bind('menu_sett_tags', self._on_menu_sett_tags)
 		self._create_menu_bind('menu_sett_goals', self._on_menu_sett_goals)
@@ -330,6 +331,9 @@ class FrameMain(BaseFrame):
 
 	def _on_menu_task_edit(self, _evt):
 		self._edit_selected_task()
+
+	def _on_menu_task_clone(self, _evt):
+		self._clone_selected_task()
 
 	def _on_menu_task_notebook(self, _evt):  # pylint: disable=R0201
 		FrameNotebook.run()
@@ -566,6 +570,22 @@ class FrameMain(BaseFrame):
 		if task_uuid:
 			dlg = DlgTask.create(task_uuid, self.wnd, task_uuid)
 			dlg.run()
+
+	def _clone_selected_task(self):
+		task_uuid = self._items_list_ctrl.get_item_uuid(None)
+		if not task_uuid:
+			return
+		if not mbox.message_box_question_yesno(self.wnd,
+				_("Clone task with all subtasks?")):
+			return
+		task = self._session.query(OBJ.Task).filter_by(uuid=task_uuid).first()
+		if not task:
+			_LOG.warn("_clone_selected_task; missing task %r", task_uuid)
+			return
+		new_task = task.clone()
+		self._session.add(new_task)
+		self._session.commit()
+		Publisher.sendMessage('task.update', data={'task_uuid': new_task.uuid})
 
 	def _show_parent_info(self, active_only):
 		panel_parent_icons = self._panel_parent_icons
