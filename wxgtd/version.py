@@ -17,9 +17,9 @@ _ = gettext.gettext
 
 SHORTNAME = 'wxgtd'
 NAME = _("wxGTD")
-VERSION = '0.5.0'
-VERSION_INFO = (0, 5, 0, 'alpha', 1)
-RELEASE = '2013-05-21'
+VERSION = '0.6.0'
+VERSION_INFO = (0, 6, 0, 'alpha', 1)
+RELEASE = '2013-05-24'
 DESCRIPTION = _('''wxGTD''')
 DEVELOPERS = u'''Karol Będkowski'''
 TRANSLATORS = u'''Karol Będkowski'''

@@ -8,13 +8,16 @@ wxgtd/lib/datetimeutils.py
 wxgtd/lib/logging_setup.py
 wxgtd/lib/singleton.py
 wxgtd/gui/_infobox.py
+wxgtd/gui/dlg_notebook_page.py
 wxgtd/gui/dlg_sync_progress.py
 wxgtd/gui/message_boxes.py
 wxgtd/gui/dlg_show_settings.py
 wxgtd/gui/dlg_tags.py
+wxgtd/gui/frame_notebooks.py
 wxgtd/gui/dlg_task.py
 wxgtd/gui/_taskbaricon.py
 wxgtd/gui/dlg_repeat_settings.py
+wxgtd/gui/_base_frame.py
 wxgtd/gui/dlg_folders.py
 wxgtd/gui/__init__.py
 wxgtd/gui/_fmt.py
