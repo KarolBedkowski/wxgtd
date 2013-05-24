@@ -1,3 +1,9 @@
+wxgtd 0.6.0 2013-05-24
+
+	* support notebooks
+	* minor bugfixes
+
+
 wxgtd 0.5.0 2013-05-21
 	* fix synchronisation and removing old objects
 	* dev: optimisations

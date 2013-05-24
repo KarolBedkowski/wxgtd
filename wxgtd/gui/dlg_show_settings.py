@@ -33,8 +33,6 @@ class DlgShowSettings(BaseDialog):
 	"""
 
 	def __init__(self, parent, date, pattern):
-		self._data = {'date': None, 'time': None, 'pattern': pattern,
-				'datetime': date}
 		BaseDialog.__init__(self, parent, 'dlg_show_settings', save_pos=False)
 		self._setup(date, pattern)
 
@@ -46,9 +44,16 @@ class DlgShowSettings(BaseDialog):
 	def pattern(self):
 		return self._data['pattern']
 
-	def _load_controls(self, wnd):
-		BaseDialog._load_controls(self, wnd)
-		wnd.SetExtraStyle(wx.WS_EX_VALIDATE_RECURSIVELY)
+	def _create_bindings(self, wnd):
+		BaseDialog._create_bindings(self, wnd)
+		self['dp_date'].Bind(wx.EVT_DATE_CHANGED, self._on_dp_changed)
+		self['tc_time'].Bind(wx.lib.masked.EVT_TIMEUPDATE, self._on_time_ctrl)
+		self['c_pattern'].Bind(wx.EVT_CHOICE, self._on_choice_pattern)
+
+	def _setup(self, date, pattern):
+		_LOG.debug("DlgShowSettings(%r)", (date, pattern))
+		self._data = {'date': None, 'time': None, 'pattern': pattern,
+				'datetime': date}
 
 		self['dp_date'].SetValidator(ValidatorDate(self._data, 'date'))
 		self['tc_time'].SetValidator(ValidatorTime(self._data, 'time'))
@@ -58,14 +63,6 @@ class DlgShowSettings(BaseDialog):
 		for rem_key, rem_name in enums.HIDE_PATTERNS_LIST:
 			c_pattern.Append(rem_name, rem_key)
 
-	def _create_bindings(self):
-		BaseDialog._create_bindings(self)
-		self['dp_date'].Bind(wx.EVT_DATE_CHANGED, self._on_dp_changed)
-		self['tc_time'].Bind(wx.lib.masked.EVT_TIMEUPDATE, self._on_time_ctrl)
-		self['c_pattern'].Bind(wx.EVT_CHOICE, self._on_choice_pattern)
-
-	def _setup(self, date, pattern):
-		_LOG.debug("DlgShowSettings(%r)", (date, pattern))
 		self['rb_always'].SetValue(True)
 		if date:
 			self._data['date'] = self._data['time'] = date
@@ -98,10 +95,13 @@ class DlgShowSettings(BaseDialog):
 		BaseDialog._on_ok(self, evt)
 
 	def _on_dp_changed(self, _evt):
-		self['rb_datetime'].SetValue(True)
+		if self._wnd.IsActive():
+			self['rb_datetime'].SetValue(True)
 
 	def _on_time_ctrl(self, _evt):
-		self['rb_datetime'].SetValue(True)
+		if self._wnd.IsActive():
+			self['rb_datetime'].SetValue(True)
 
 	def _on_choice_pattern(self, _evt):
-		self['rb_before'].SetValue(True)
+		if self._wnd.IsActive():
+			self['rb_before'].SetValue(True)

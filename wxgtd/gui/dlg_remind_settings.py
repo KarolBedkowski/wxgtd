@@ -33,8 +33,6 @@ class DlgRemindSettings(BaseDialog):
 	"""
 
 	def __init__(self, parent, alarm, alarm_pattern):
-		self._data = {'date': None, 'time': None, 'pattern': alarm_pattern,
-				'alarm': alarm}
 		BaseDialog.__init__(self, parent, 'dlg_remind_settings', save_pos=False)
 		self._setup(alarm, alarm_pattern)
 
@@ -46,34 +44,32 @@ class DlgRemindSettings(BaseDialog):
 	def alarm_pattern(self):
 		return self._data['alarm_pattern']
 
-	def _load_controls(self, wnd):
-		BaseDialog._load_controls(self, wnd)
-		wnd.SetExtraStyle(wx.WS_EX_VALIDATE_RECURSIVELY)
-
-		self['dp_date'].SetValidator(ValidatorDate(self._data, 'date'))
-		self['tc_time'].SetValidator(ValidatorTime(self._data, 'time'))
-		self['tc_time'].BindSpinButton(self['sb_time'])
-
-		c_before = self['c_before']
-		for rem_key, rem_name in enums.REMIND_PATTERNS_LIST:
-			c_before.Append(rem_name, rem_key)
-
-	def _create_bindings(self):
-		BaseDialog._create_bindings(self)
+	def _create_bindings(self, wnd):
+		BaseDialog._create_bindings(self, wnd)
 		self['dp_date'].Bind(wx.EVT_DATE_CHANGED, self._on_dp_changed)
 		self['tc_time'].Bind(wx.lib.masked.EVT_TIMEUPDATE, self._on_time_ctrl)
 		self['c_before'].Bind(wx.EVT_CHOICE, self._on_choice_before)
 
 	def _setup(self, alarm, alarm_pattern):
 		_LOG.debug("DlgRemindSettings(%r)", (alarm, alarm_pattern))
+		self._data = {'date': None, 'time': None, 'pattern': alarm_pattern,
+				'alarm': alarm}
 		self['rb_never'].SetValue(True)
+		self['tc_time'].BindSpinButton(self['sb_time'])
+
+		c_before = self['c_before']
+		for rem_key, rem_name in enums.REMIND_PATTERNS_LIST:
+			c_before.Append(rem_name, rem_key)
+
+		self['dp_date'].SetValidator(ValidatorDate(self._data, 'date'))
+		self['tc_time'].SetValidator(ValidatorTime(self._data, 'time'))
+		self['rb_never'].SetValue(True)
+
 		if alarm:
 			self._data['date'] = self._data['time'] = alarm
 			if not alarm_pattern or alarm_pattern == 'due':
 				self['rb_datetime'].SetValue(True)
-				return
-		if alarm_pattern:
-			c_before = self['c_before']
+		elif alarm_pattern:
 			for idx in xrange(c_before.GetCount()):
 				if c_before.GetClientData(idx) == alarm_pattern:
 					c_before.Select(idx)
@@ -98,10 +94,13 @@ class DlgRemindSettings(BaseDialog):
 		BaseDialog._on_ok(self, evt)
 
 	def _on_dp_changed(self, _evt):
-		self['rb_datetime'].SetValue(True)
+		if self._wnd.IsActive():
+			self['rb_datetime'].SetValue(True)
 
 	def _on_time_ctrl(self, _evt):
-		self['rb_datetime'].SetValue(True)
+		if self._wnd.IsActive():
+			self['rb_datetime'].SetValue(True)
 
 	def _on_choice_before(self, _evt):
-		self['rb_before'].SetValue(True)
+		if self._wnd.IsActive():
+			self['rb_before'].SetValue(True)

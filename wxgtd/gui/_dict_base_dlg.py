@@ -65,10 +65,10 @@ class DictBaseDlg(BaseDialog):
 		BaseDialog._load_controls(self, wnd)
 		self._items_lctrl = self[self._items_list_control]
 
-	def _create_bindings(self):
-		BaseDialog._create_bindings(self)
-		self._wnd.Bind(wx.EVT_BUTTON, self._on_add_item, id=wx.ID_ADD)
-		self._wnd.Bind(wx.EVT_BUTTON, self._on_del_item, id=wx.ID_DELETE)
+	def _create_bindings(self, wnd):
+		BaseDialog._create_bindings(self, wnd)
+		wnd.Bind(wx.EVT_BUTTON, self._on_add_item, id=wx.ID_ADD)
+		wnd.Bind(wx.EVT_BUTTON, self._on_del_item, id=wx.ID_DELETE)
 		self._items_lctrl.Bind(wx.EVT_LISTBOX, self._on_list_item_activate)
 
 	def _on_ok(self, evt):

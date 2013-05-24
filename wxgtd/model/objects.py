@@ -63,6 +63,11 @@ class BaseModelMixin(object):
 					(isinstance(prop, orm.RelationshipProperty)
 							and prop.secondary):
 				setattr(newobj, prop.key, getattr(self, prop.key))
+		if hasattr(newobj, 'uuid'):
+			newobj.uuid = None
+		if hasattr(self, 'children'):
+			for child in self.children:
+				newobj.children.append(child.clone())
 		return newobj
 
 	@classmethod
@@ -334,6 +339,7 @@ class Task(BaseModelMixin, Base):
 		# clone notes
 		for note in self.notes:
 			newobj.notes.append(note.clone())
+		newobj.completed = None
 		return newobj
 
 
@@ -364,7 +370,13 @@ def _append_filter_list(query, param, values):
 
 
 class Folder(BaseModelMixin, Base):
-	""" Folder. """
+	""" Folder.
+
+
+	Backref:
+		- tasks
+		- notebook_pages
+	"""
 	__tablename__ = "folders"
 
 	uuid = Column(String(36), primary_key=True, default=generate_uuid)
@@ -496,6 +508,29 @@ class TaskTag(BaseModelMixin, Base):
 			onupdate=datetime.datetime.utcnow, index=True)
 
 	tag = orm.relationship("Tag", cascade="all", lazy="joined")
+
+
+class NotebookPage(BaseModelMixin, Base):
+	""" Notebook page. """
+
+	__tablename__ = "notebook_pages"
+
+	uuid = Column(String(36), primary_key=True, default=generate_uuid)
+	created = Column(DateTime, default=datetime.datetime.utcnow)
+	modified = Column(DateTime, default=datetime.datetime.utcnow,
+			onupdate=datetime.datetime.utcnow, index=True)
+	deleted = Column(DateTime)
+	ordinal = Column(Integer, default=0)
+	title = Column(String, index=True)
+	note = Column(String)
+	starred = Column(Integer, default=0)
+	bg_color = Column(String, default="FFEFFF00")
+	visible = Column(Integer, default=1)
+
+	folder_uuid = Column(String(36), ForeignKey("folders.uuid",
+			onupdate="CASCADE", ondelete="SET NULL"), index=True)
+
+	folder = orm.relationship("Folder", backref=orm.backref('notebook_pages'))
 
 
 class SyncLog(BaseModelMixin, Base):

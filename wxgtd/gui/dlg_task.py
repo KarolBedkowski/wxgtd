@@ -54,11 +54,11 @@ class DlgTask(BaseTaskDialog):
 		self._task_type = task_type
 		BaseTaskDialog.__init__(self, parent, 'dlg_task', task_uuid, parent_uuid)
 
-	def _create_bindings(self):
-		BaseTaskDialog._create_bindings(self)
+	def _create_bindings(self, wnd):
+		BaseTaskDialog._create_bindings(self, wnd)
 		self['btn_due_date_set'].Bind(wx.EVT_BUTTON, self._on_btn_due_date_set)
 		self['btn_start_date_set'].Bind(wx.EVT_BUTTON, self._on_btn_start_date_set)
-		self._wnd.Bind(wx.EVT_BUTTON, self._on_btn_delete, id=wx.ID_DELETE)
+		wnd.Bind(wx.EVT_BUTTON, self._on_btn_delete, id=wx.ID_DELETE)
 		self['btn_remind_set'].Bind(wx.EVT_BUTTON, self._on_btn_remiand_set)
 		self['btn_hide_until_set'].Bind(wx.EVT_BUTTON, self._on_btn_hide_until_set)
 		self['btn_repeat_set'].Bind(wx.EVT_BUTTON, self._on_btn_repeat_set)

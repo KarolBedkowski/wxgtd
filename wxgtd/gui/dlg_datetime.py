@@ -34,9 +34,11 @@ class DlgDateTime(BaseDialog):
 
 	def __init__(self, parent, timestamp, timeset):
 		BaseDialog.__init__(self, parent, 'dlg_datetime', save_pos=False)
-		self._setup(timestamp, timeset)
 		self._timeset = timeset
 		self._timestamp = timestamp
+		self._values = {'date': timestamp,
+				'time': (timestamp if timeset else 0)}
+		self._setup(timestamp, timeset)
 
 	@property
 	def timestamp(self):
@@ -50,8 +52,8 @@ class DlgDateTime(BaseDialog):
 		BaseDialog._load_controls(self, wnd)
 		wnd.SetExtraStyle(wx.WS_EX_VALIDATE_RECURSIVELY)
 
-	def _create_bindings(self):
-		BaseDialog._create_bindings(self)
+	def _create_bindings(self, wnd):
+		BaseDialog._create_bindings(self, wnd)
 		self['cc_date'].Bind(wx.calendar.EVT_CALENDAR, self._on_calendar)
 		self['cc_date'].Bind(wx.calendar.EVT_CALENDAR_SEL_CHANGED,
 				self._on_calendar)
@@ -60,8 +62,6 @@ class DlgDateTime(BaseDialog):
 
 	def _setup(self, timestamp, timeset):
 		_LOG.debug("DlgDateTime(%r)", timestamp)
-		self._values = {'date': timestamp,
-				'time': (timestamp if timeset else 0)}
 		self['cc_date'].SetValidator(ValidatorDate(self._values, 'date'))
 		self['tc_time'].SetValidator(ValidatorTime(self._values, 'time'))
 		self['tc_time'].BindSpinButton(self['sb_time'])

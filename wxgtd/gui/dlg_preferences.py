@@ -55,14 +55,18 @@ class DlgPreferences(BaseDialog):
 	"""
 
 	def __init__(self, parent):
-		self._config = AppConfigWrapper()
 		BaseDialog.__init__(self, parent, 'dlg_preferences', save_pos=False)
 		self._setup()
 
-	def _load_controls(self, wnd):
-		BaseDialog._load_controls(self, wnd)
+	def _create_bindings(self, wnd):
+		BaseDialog._create_bindings(self, wnd)
+		self['sl_hotlist_priority'].Bind(wx.EVT_SCROLL, self._on_sl_priority)
+		self['btn_sync_file_select'].Bind(wx.EVT_BUTTON,
+				self._on_btn_sync_file_select)
 
-		config = self._config
+	def _setup(self):  # pylint: disable=R0201
+		_LOG.debug("DlgPreferences()")
+		config = self._config = AppConfigWrapper()
 
 		self['sc_hotlist_due'].SetValidator(Validator(config, 'hotlist/due'))
 		self['sl_hotlist_priority'].SetValidator(Validator(config,
@@ -102,21 +106,13 @@ class DlgPreferences(BaseDialog):
 		self['cb_gui_hide_on_start'].SetValidator(Validator(config,
 				'gui/hide_on_start'))
 
-	def _create_bindings(self):
-		BaseDialog._create_bindings(self)
-		self['sl_hotlist_priority'].Bind(wx.EVT_SCROLL, self._on_sl_priority)
-		self['btn_sync_file_select'].Bind(wx.EVT_BUTTON,
-				self._on_btn_sync_file_select)
-
-	def _setup(self):  # pylint: disable=R0201
-		_LOG.debug("DlgPreferences()")
-
 	def _on_ok(self, evt):
 		if not self._wnd.Validate():
 			return
 		if not self._wnd.TransferDataFromWindow():
 			return
-		self._config['hotlist/condition_or'] = self['rb_hotlist_cond_or'].GetValue()
+		self._config['hotlist/condition_or'] = \
+				self['rb_hotlist_cond_or'].GetValue()
 		BaseDialog._on_ok(self, evt)
 
 	def _on_sl_priority(self, _evt):

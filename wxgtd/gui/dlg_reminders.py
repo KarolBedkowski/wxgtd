@@ -83,8 +83,8 @@ class DlgReminders(BaseDialog):
 		box.Add(self._task_list_ctrl, 1, wx.EXPAND)
 		tasklist_panel.SetSizer(box)
 
-	def _create_bindings(self):
-		BaseDialog._create_bindings(self)
+	def _create_bindings(self, wnd):
+		BaseDialog._create_bindings(self, wnd)
 		self._task_list_ctrl.Bind(tlc.EVT_LIST_BTN_SNOOZE,
 				self._on_task_btn_snooze)
 		self._task_list_ctrl.Bind(tlc.EVT_LIST_BTN_DISMISS,

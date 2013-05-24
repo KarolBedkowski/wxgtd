@@ -50,10 +50,10 @@ class BaseTaskDialog(BaseDialog):
 		self._setup(task_uuid, parent_uuid)
 		self._refresh_static_texts()
 
-	def _create_bindings(self):
-		BaseDialog._create_bindings(self)
+	def _create_bindings(self, wnd):
+		BaseDialog._create_bindings(self, wnd)
 		self['lb_notes_list'].Bind(wx.EVT_LISTBOX_DCLICK, self._on_lb_notes_list)
-		self._wnd.Bind(wx.EVT_BUTTON, self._on_btn_new_note, id=wx.ID_ADD)
+		wnd.Bind(wx.EVT_BUTTON, self._on_btn_new_note, id=wx.ID_ADD)
 		self['btn_del_note'].Bind(wx.EVT_BUTTON, self._on_btn_del_note)
 
 	def _setup(self, task_uuid, parent_uuid):
