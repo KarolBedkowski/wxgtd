@@ -252,7 +252,7 @@ class FrameMain(BaseFrame):
 				style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST)
 		if dlg.ShowModal() == wx.ID_OK:
 			filename = dlg.GetPath()
-			loader.load_from_file(filename)
+			loader.load_from_file(filename, force=True)
 			self._filter_tree_ctrl.RefreshItems()
 			Publisher.sendMessage('task.update')
 			appconfig.set('files', 'last_dir', os.path.dirname(filename))

@@ -40,12 +40,13 @@ def _fake_update_func(*args, **kwargs):
 	_LOG.info("progress %r %r", args, kwargs)
 
 
-def load_from_file(filename, notify_cb=_fake_update_func):
+def load_from_file(filename, notify_cb=_fake_update_func, force=False):
 	"""Load data from (zip)file.
 
 	Args:
 		filename: file to load
 		notify_cb: function called in each step.
+		force: don't check timestamps in synclog; always sync
 
 	Returns:
 		True if success.
@@ -57,10 +58,10 @@ def load_from_file(filename, notify_cb=_fake_update_func):
 	if filename.endswith(".zip"):
 		with zipfile.ZipFile(filename, "r") as zfile:
 			fname = zfile.namelist()[0]
-			return load_json(zfile.read(fname), notify_cb)
+			return load_json(zfile.read(fname), notify_cb, force)
 	else:
 		with open(filename, "r") as ifile:
-			return load_json(ifile.read(), notify_cb)
+			return load_json(ifile.read(), notify_cb, force)
 	return False
 
 
@@ -250,23 +251,24 @@ def _build_id_uuid_map(objects_list):
 def _check_synclog(data, session):
 	""" Check synclog for last modification.
 	"""
-	last_sync = 0
-	c_last_sync = session.query(objects.Conf).filter_by(key="last_sync").first()
-	if c_last_sync is None:
+	last_sync_log = session.query(objects.SyncLog).order_by(
+			objects.SyncLog.sync_time.desc()).first()
+	print last_sync_log
+	if last_sync_log is None:
 		return True
-	last_sync = str2datetime_utc(c_last_sync.val)
-	device_id = session.query(objects.Conf).filter_by(key="deviceId").first().val
 
-	synclog = data.get("syncLog")[0]
-	file_sync_time_str = synclog.get("syncTime")
-	file_sync_time = str2datetime_utc(file_sync_time_str)
-	sync_device = synclog.get("deviceId")
+	last_file_sync_time = datetime.datetime(1900, 1, 1)
+	for synclog in data.get("syncLog") or []:
+		file_sync_time_str = synclog.get("syncTime")
+		file_sync_time = str2datetime_utc(file_sync_time_str)
+		if last_file_sync_time < file_sync_time:
+			last_file_sync_time = file_sync_time
 
-	if last_sync >= file_sync_time and device_id == sync_device:
-		_LOG.info("_check_synclog last_sync=%r, file=%r", c_last_sync.val,
-				file_sync_time_str)
-		#return False
-	return True
+	if last_file_sync_time > last_sync_log.sync_time:
+		_LOG.info("_check_synclog need sync %r, %r", last_file_sync_time,
+				last_sync_log.sync_time),
+		return True
+	return False
 
 
 def sort_objects_by_parent(objs):
@@ -291,7 +293,7 @@ def sort_objects_by_parent(objs):
 	return result
 
 
-def load_json(strdata, notify_cb):
+def load_json(strdata, notify_cb, force=False):
 	""" Load data from json string.
 
 	Args:
@@ -306,7 +308,7 @@ def load_json(strdata, notify_cb):
 	session = objects.Session()
 
 	notify_cb(5, _("Checking..."))
-	if not _check_synclog(data, session):
+	if not force and not _check_synclog(data, session):
 		notify_cb(2, _("Don't load"))
 		_LOG.info("load_json: no loading file")
 		return True
