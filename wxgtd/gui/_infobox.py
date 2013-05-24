@@ -66,7 +66,12 @@ def draw_info(mdc, task, overdue, cache):
 	if icon_name:
 		mdc.DrawBitmap(iconprovider.get_image(icon_name), 0, main_icon_y_offset,
 				False)
-	mdc.SetTextForeground(wx.RED if overdue else wx.BLACK)
+	if task.completed:
+		mdc.SetTextForeground(wx.Color(150, 150, 150))
+	elif overdue:
+		mdc.SetTextForeground(wx.RED)
+	else:
+		mdc.SetTextForeground(wx.BLACK)
 	mdc.SetFont(SETTINGS['font_task'])
 	mdc.DrawText(task.title, 35, 5)
 	mdc.SetFont(SETTINGS['font_info'])
