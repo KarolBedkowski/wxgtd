@@ -180,6 +180,8 @@ class FrameMain(BaseFrame):
 				self._btn_show_subtasks)
 		self._btn_show_subtasks.SetValue(appconfig.get('main', 'show_subtask', True))
 
+		toolbar.AddControl(wx.StaticText(toolbar, -1, " "))
+
 		# show completed
 		self._btn_show_finished = wx.ToggleButton(toolbar,  # pylint: disable=W0201
 				-1, _(" Show finished "))
@@ -188,6 +190,8 @@ class FrameMain(BaseFrame):
 				self._btn_show_finished)
 		self._btn_show_finished.SetValue(appconfig.get('main', 'show_finished',
 				False))
+
+		toolbar.AddControl(wx.StaticText(toolbar, -1, " "))
 
 		# hide until due
 		self._btn_hide_until = wx.ToggleButton(toolbar,  # pylint: disable=W0201
