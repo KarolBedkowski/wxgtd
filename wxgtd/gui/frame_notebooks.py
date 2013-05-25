@@ -185,7 +185,7 @@ class FrameNotebook(BaseFrame):
 				.filter(OBJ.NotebookPage.folder_uuid.is_(None)).count()
 		cnt_str = ("  (%d)" % no_folder_cnt) if no_folder_cnt else ""
 		self._lb_folders.Append(_("No Folder") + cnt_str, None)
-		for idx, folder in enumerate(self._session.query(OBJ.Folder)
+		for folder in (self._session.query(OBJ.Folder)
 				.filter(OBJ.Folder.deleted.is_(None))
 				.order_by(OBJ.Folder.title).all()):
 			title = folder.title
