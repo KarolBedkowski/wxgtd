@@ -137,8 +137,9 @@ class DlgTask(BaseTaskDialog):
 			# zakonczono zadanie
 			if not logic.complete_task(self._task, self._wnd, self._session):
 				return
+		self._task.update_modify_time()
 		self._session.commit()  # pylint: disable=E1101
-		Publisher.sendMessage('task.update', data={'task_uuid': self._task.uuid})
+		Publisher().sendMessage('task.update', data={'task_uuid': self._task.uuid})
 		self._on_ok(evt)
 
 	def _on_btn_due_date_set(self, _evt):
@@ -208,7 +209,7 @@ class DlgTask(BaseTaskDialog):
 		tuuid = self._task.uuid
 		if tuuid:
 			if logic.delete_task(tuuid, self.wnd, self._session):
-				Publisher.sendMessage('task.delete', data={'task_uuid': tuuid})
+				Publisher().sendMessage('task.delete', data={'task_uuid': tuuid})
 				self._on_ok(None)
 
 	def _on_sl_priority(self, _evt):

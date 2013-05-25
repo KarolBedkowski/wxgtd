@@ -71,7 +71,7 @@ class DlgSyncProggress(BaseDialog):
 		self._tc_progress = self['tc_progress']
 
 	def _setup(self):
-		Publisher.subscribe(self._on_update_message, ('sync', 'progress'))
+		Publisher().subscribe(self._on_update_message, ('sync', 'progress'))
 		self[wx.ID_CLOSE].Enable(False)
 
 	def _on_update_message(self, args):

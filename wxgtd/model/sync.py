@@ -43,24 +43,24 @@ class OtherSyncError(RuntimeError):
 
 
 def _notify_loading_progress(progress, msg):
-	Publisher.sendMessage('sync.progress',
+	Publisher().sendMessage('sync.progress',
 			data=(progress * 0.45 + 2, msg))
 
 
 def _notify_exporting_progress(progress, msg):
-	Publisher.sendMessage('sync.progress',
+	Publisher().sendMessage('sync.progress',
 			data=(progress * 0.45 + 52, msg))
 
 
 def _notify_progress(progress, msg):
-	Publisher.sendMessage('sync.progress',
+	Publisher().sendMessage('sync.progress',
 			data=(progress, msg))
 
 
 def sync(filename):
 	""" Sync data from/to given file.
 
-	Notify progress by Publisher.
+	Notify progress by Publisher().
 
 	Args:
 		filename: full path to file

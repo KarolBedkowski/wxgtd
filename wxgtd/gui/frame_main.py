@@ -139,8 +139,8 @@ class FrameMain(BaseFrame):
 				self['btn_parent_edit'])
 		wnd.Bind(wx.EVT_TIMER, self._on_timer)
 
-		Publisher.subscribe(self._on_tasks_update, ('task', 'update'))
-		Publisher.subscribe(self._on_tasks_update, ('task', 'delete'))
+		Publisher().subscribe(self._on_tasks_update, ('task', 'update'))
+		Publisher().subscribe(self._on_tasks_update, ('task', 'delete'))
 
 	def _create_toolbar(self):
 		toolbar = self.wnd.CreateToolBar()
@@ -255,7 +255,7 @@ class FrameMain(BaseFrame):
 			filename = dlg.GetPath()
 			loader.load_from_file(filename, force=True)
 			self._filter_tree_ctrl.RefreshItems()
-			Publisher.sendMessage('task.update')
+			Publisher().sendMessage('task.update')
 			appconfig.set('files', 'last_dir', os.path.dirname(filename))
 			appconfig.set('files', 'last_file', os.path.basename(filename))
 		dlg.Destroy()
@@ -271,7 +271,7 @@ class FrameMain(BaseFrame):
 			filename = dlg.GetPath()
 			exporter.save_to_file(filename)
 			self._filter_tree_ctrl.RefreshItems()
-			Publisher.sendMessage('task.update')
+			Publisher().sendMessage('task.update')
 			appconfig.set('files', 'last_dir', os.path.dirname(filename))
 			appconfig.set('files', 'last_file', os.path.basename(filename))
 		dlg.Destroy()
@@ -307,7 +307,7 @@ class FrameMain(BaseFrame):
 				msgdlg.Destroy()
 			dlg.mark_finished()
 			self._filter_tree_ctrl.RefreshItems()
-			Publisher.sendMessage('task.update')
+			Publisher().sendMessage('task.update')
 
 	def _on_menu_file_preferences(self, _evt):
 		if DlgPreferences(self.wnd).run(True):
@@ -398,6 +398,7 @@ class FrameMain(BaseFrame):
 		first_importance = min(item.importance for item in items)
 		for idx, item in enumerate(items):
 			item.importance = first_importance + idx
+			item.update_modify_time()
 		self._session.commit()
 		self._refresh_list()
 
@@ -436,8 +437,9 @@ class FrameMain(BaseFrame):
 				return
 		else:
 			task.task_completed = False
+		task.update_modify_time()
 		session.commit()  # pylint: disable=E1101
-		Publisher.sendMessage('task.update', data={'task_uuid': task_uuid})
+		Publisher().sendMessage('task.update', data={'task_uuid': task_uuid})
 		self._refresh_list()
 
 	def _on_btn_edit_parent(self, _evt):
@@ -540,13 +542,13 @@ class FrameMain(BaseFrame):
 				msgbox.Destroy()
 			dlg.mark_finished(2)
 			self._filter_tree_ctrl.RefreshItems()
-			Publisher.sendMessage('task.update')
+			Publisher().sendMessage('task.update')
 
 	def _delete_selected_task(self):
 		task_uuid = self._items_list_ctrl.get_item_uuid(None)
 		if task_uuid:
 			if logic.delete_task(task_uuid, self.wnd):
-				Publisher.sendMessage('task.delete', data={'task_uuid': task_uuid})
+				Publisher().sendMessage('task.delete', data={'task_uuid': task_uuid})
 
 	def _new_task(self):
 		parent_uuid = None
@@ -583,9 +585,10 @@ class FrameMain(BaseFrame):
 			_LOG.warn("_clone_selected_task; missing task %r", task_uuid)
 			return
 		new_task = task.clone()
+		new_task.update_modify_time()
 		self._session.add(new_task)
 		self._session.commit()
-		Publisher.sendMessage('task.update', data={'task_uuid': new_task.uuid})
+		Publisher().sendMessage('task.update', data={'task_uuid': new_task.uuid})
 
 	def _show_parent_info(self, active_only):
 		panel_parent_icons = self._panel_parent_icons

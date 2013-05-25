@@ -92,8 +92,8 @@ class DlgReminders(BaseDialog):
 		self._task_list_ctrl.Bind(wx.EVT_LIST_ITEM_ACTIVATED,
 				self._on_items_list_activated)
 
-		Publisher.subscribe(self._on_tasks_update, ('task', 'update'))
-		Publisher.subscribe(self._on_tasks_update, ('task', 'delete'))
+		Publisher().subscribe(self._on_tasks_update, ('task', 'update'))
+		Publisher().subscribe(self._on_tasks_update, ('task', 'delete'))
 
 	def _setup(self, session):
 		self._reminders = []
@@ -106,8 +106,9 @@ class DlgReminders(BaseDialog):
 		task_uuid = evt.task
 		task = OBJ.Task.get(self._session, uuid=task_uuid)
 		task.alarm = None
+		task.update_modify_time()
 		self._session.commit()
-		Publisher.sendMessage('task.update', data={'task_uuid': task.uuid})
+		Publisher().sendMessage('task.update', data={'task_uuid': task.uuid})
 
 	def _on_task_btn_snooze(self, evt):
 		task_uuid = evt.task
@@ -119,8 +120,9 @@ class DlgReminders(BaseDialog):
 			pattern = enums.SNOOZE_PATTERNS[dlg.GetSelection()][0]
 			task = OBJ.Task.get(self._session, uuid=task_uuid)
 			task.alarm = datetime.utcnow() + logic.alarm_pattern_to_time(pattern)
+			task.update_modify_time()
 			self._session.commit()
-			Publisher.sendMessage('task.update', data={'task_uuid': task.uuid})
+			Publisher().sendMessage('task.update', data={'task_uuid': task.uuid})
 		dlg.Destroy()
 
 	def _remove_task(self, task_uuid):
