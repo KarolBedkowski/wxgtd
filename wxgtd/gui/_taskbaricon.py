@@ -22,6 +22,7 @@ import wx
 	#from wx.lib.pubsub import Publisher
 
 from wxgtd.wxtools import iconprovider
+from wxgtd.gui.frame_notebooks import FrameNotebook
 
 _ = gettext.gettext
 _LOG = logging.getLogger(__name__)
@@ -30,6 +31,7 @@ _LOG = logging.getLogger(__name__)
 class TaskBarIcon(wx.TaskBarIcon):
 	TBMENU_RESTORE = wx.NewId()
 	TBMENU_CLOSE = wx.NewId()
+	TBMENU_SHOW_NOTEBOOK = wx.NewId()
 
 	def __init__(self, parent_frame):
 		wx.TaskBarIcon.__init__(self)
@@ -48,6 +50,8 @@ class TaskBarIcon(wx.TaskBarIcon):
 	def CreatePopupMenu(self):
 		menu = wx.Menu()
 		menu.Append(self.TBMENU_RESTORE, _("Restore wxGTD"))
+		menu.Append(self.TBMENU_SHOW_NOTEBOOK, _("Show notebook"))
+		menu.AppendSeparator()
 		menu.Append(self.TBMENU_CLOSE,  _("Close wxGTD"))
 		return menu
 
@@ -56,6 +60,8 @@ class TaskBarIcon(wx.TaskBarIcon):
 		self.Bind(wx.EVT_TASKBAR_LEFT_DCLICK, self._on_icon_activate)
 		self.Bind(wx.EVT_MENU, self._on_icon_activate, id=self.TBMENU_RESTORE)
 		self.Bind(wx.EVT_MENU, self._on_menu_app_close, id=self.TBMENU_CLOSE)
+		self.Bind(wx.EVT_MENU, self._on_menu_show_notebook,
+				id=self.TBMENU_SHOW_NOTEBOOK)
 
 	def _on_icon_activate(self, _evt):
 		if self._frame.IsIconized():
@@ -66,3 +72,6 @@ class TaskBarIcon(wx.TaskBarIcon):
 
 	def _on_menu_app_close(self, _evt):
 		wx.CallAfter(self._frame.Close)
+
+	def _on_menu_show_notebook(self, _evt):
+		FrameNotebook.run()
