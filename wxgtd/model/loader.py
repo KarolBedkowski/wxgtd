@@ -251,23 +251,21 @@ def _build_id_uuid_map(objects_list):
 def _check_synclog(data, session):
 	""" Check synclog for last modification.
 	"""
-	last_sync_log = session.query(objects.SyncLog).order_by(
-			objects.SyncLog.sync_time.desc()).first()
-	print last_sync_log
-	if last_sync_log is None:
-		return True
-
-	last_file_sync_time = datetime.datetime(1900, 1, 1)
 	for synclog in data.get("syncLog") or []:
 		file_sync_time_str = synclog.get("syncTime")
 		file_sync_time = str2datetime_utc(file_sync_time_str)
-		if last_file_sync_time < file_sync_time:
-			last_file_sync_time = file_sync_time
-
-	if last_file_sync_time > last_sync_log.sync_time:
-		_LOG.info("_check_synclog need sync %r, %r", last_file_sync_time,
-				last_sync_log.sync_time),
-		return True
+		last_sync_log = (session.query(objects.SyncLog)
+				.filter_by(device_id=synclog['deviceId'])
+				.order_by(objects.SyncLog.sync_time.desc())
+				.first())
+		if not last_sync_log:
+			_LOG.info("_check_synclog: device %r not found; need sync...",
+				synclog['deviceId'])
+			return True
+		if last_sync_log.sync_time < file_sync_time:
+			_LOG.info("_check_synclog: device %r updated; need sync...",
+				synclog['deviceId'])
+			return True
 	return False
 
 
@@ -357,6 +355,9 @@ def load_json(strdata, notify_cb, force=False):
 	notify_cb(90, _("Committing..."))
 	session.commit()  # pylint: disable=E1101
 	notify_cb(100, _("Load completed"))
+
+	if 'version' in data:
+		del data['version']
 
 	if data:
 		_LOG.warn("Loader: remaining: %r", data.keys())
