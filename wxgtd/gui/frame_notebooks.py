@@ -76,6 +76,7 @@ class FrameNotebook(BaseFrame):
 		self['pages_panel'].SetSizer(box)
 
 	def _create_bindings(self, wnd):
+		BaseFrame._create_bindings(self, wnd)
 		wnd.Bind(wx.EVT_LISTBOX, self._on_folders_listbox, self._lb_folders)
 		wnd.Bind(wx.EVT_LIST_ITEM_ACTIVATED, self._on_pages_list_activated,
 				self._lb_pages)
@@ -123,7 +124,7 @@ class FrameNotebook(BaseFrame):
 	def _on_close(self, event):
 		self._appconfig.set('frame_notebook', 'win1', self['window_1']
 				.GetSashPosition())
-		self._instance = None
+		FrameNotebook._instance = None
 		BaseFrame._on_close(self, event)
 
 	def _on_btn_close(self, _evt):
