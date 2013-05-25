@@ -89,7 +89,7 @@ class BaseTaskDialog(BaseDialog):
 		if not self._wnd.TransferDataFromWindow():
 			return
 		self._session.commit()  # pylint: disable=E1101
-		Publisher.sendMessage('task.update', data={'task_uuid': self._task.uuid})
+		Publisher().sendMessage('task.update', data={'task_uuid': self._task.uuid})
 		self._on_ok(evt)
 
 	def _on_lb_notes_list(self, _evt):
