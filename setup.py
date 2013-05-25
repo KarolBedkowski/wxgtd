@@ -40,9 +40,9 @@ def get_data_files():
 		locales_dir = configuration.LINUX_LOCALES_DIR
 		data_dir = configuration.LINUX_DATA_DIR
 	yield (doc_dir, ['AUTHORS', 'README', "TODO", "COPYING", 'ChangeLog'])
-	if use_py2exe:
-		yield (doc_dir, ["LICENCE_python.txt", "LICENCE_wxPython.txt",
-				"LICENCE_httplib2.txt"])
+#	if use_py2exe:
+#		yield (doc_dir, ["LICENCE_python.txt", "LICENCE_wxPython.txt",
+#				"LICENCE_httplib2.txt"])
 	filter_func = None
 	if use_py2exe:
 		filter_func = lambda x: not (x.endswith('.svg') or x.endswith('.wxg'))

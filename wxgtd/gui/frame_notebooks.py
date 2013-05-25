@@ -80,8 +80,8 @@ class FrameNotebook(BaseFrame):
 		wnd.Bind(wx.EVT_LIST_ITEM_ACTIVATED, self._on_pages_list_activated,
 				self._lb_pages)
 
-		Publisher.subscribe(self._on_notebook_update, ('notebook', 'update'))
-		Publisher.subscribe(self._on_notebook_update, ('notebook', 'delete'))
+		Publisher().subscribe(self._on_notebook_update, ('notebook', 'update'))
+		Publisher().subscribe(self._on_notebook_update, ('notebook', 'delete'))
 
 	def _create_toolbar(self):
 		toolbar = self.wnd.CreateToolBar()
@@ -145,7 +145,7 @@ class FrameNotebook(BaseFrame):
 		if not uuid:
 			return
 		if logic.delete_notebook_page(uuid, self.wnd, self._session):
-			Publisher.sendMessage('notebook.delete',
+			Publisher().sendMessage('notebook.delete',
 					data={'notebook_uuid': uuid})
 
 	def _on_folders_listbox(self, _evt):
