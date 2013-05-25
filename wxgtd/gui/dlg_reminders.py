@@ -106,6 +106,7 @@ class DlgReminders(BaseDialog):
 		task_uuid = evt.task
 		task = OBJ.Task.get(self._session, uuid=task_uuid)
 		task.alarm = None
+		task.update_modify_time()
 		self._session.commit()
 		Publisher().sendMessage('task.update', data={'task_uuid': task.uuid})
 
@@ -119,6 +120,7 @@ class DlgReminders(BaseDialog):
 			pattern = enums.SNOOZE_PATTERNS[dlg.GetSelection()][0]
 			task = OBJ.Task.get(self._session, uuid=task_uuid)
 			task.alarm = datetime.utcnow() + logic.alarm_pattern_to_time(pattern)
+			task.update_modify_time()
 			self._session.commit()
 			Publisher().sendMessage('task.update', data={'task_uuid': task.uuid})
 		dlg.Destroy()

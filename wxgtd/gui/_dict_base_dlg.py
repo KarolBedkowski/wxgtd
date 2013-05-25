@@ -87,6 +87,7 @@ class DictBaseDlg(BaseDialog):
 			return
 		if not self._wnd.TransferDataFromWindow():
 			return
+		self._displayed_item.update_modify_time()
 		self._session.add(self._displayed_item)  # pylint: disable=E1101
 		self._session.commit()  # pylint: disable=E1101
 		self._refresh_list()

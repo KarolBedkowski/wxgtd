@@ -72,6 +72,7 @@ class DlgNotebookPage(BaseDialog):
 			return
 		if not self._wnd.TransferDataFromWindow():
 			return
+		self._page.update_modify_time()
 		self._session.add(self._page)
 		self._session.commit()
 		Publisher().sendMessage('notebook.update',

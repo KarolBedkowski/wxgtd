@@ -274,6 +274,7 @@ def repeat_task(task, reset_task=True):
 	_LOG.info('repeat_task %r', task)
 	ntask = task.clone()
 	ntask.uuid = OBJ.generate_uuid()
+	ntask.update_modify_time()
 	repeat_pattern = task.repeat_pattern
 	repeat_from = task.repeat_from
 	if repeat_pattern == 'WITHPARENT':
@@ -385,6 +386,7 @@ def complete_task(task, parent_wnd=None, session=None):
 	# pylint: disable=E1101
 	session = session or OBJ.Session.objects_session(task) or OBJ.Session()
 	task.task_completed = True
+	task.update_modify_time()
 	repeated_task = repeat_task(task)
 	if repeated_task is not None:
 		session.add(repeated_task)

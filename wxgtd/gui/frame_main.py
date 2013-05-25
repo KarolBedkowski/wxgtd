@@ -398,6 +398,7 @@ class FrameMain(BaseFrame):
 		first_importance = min(item.importance for item in items)
 		for idx, item in enumerate(items):
 			item.importance = first_importance + idx
+			item.update_modify_time()
 		self._session.commit()
 		self._refresh_list()
 
@@ -436,6 +437,7 @@ class FrameMain(BaseFrame):
 				return
 		else:
 			task.task_completed = False
+		task.update_modify_time()
 		session.commit()  # pylint: disable=E1101
 		Publisher().sendMessage('task.update', data={'task_uuid': task_uuid})
 		self._refresh_list()
@@ -583,6 +585,7 @@ class FrameMain(BaseFrame):
 			_LOG.warn("_clone_selected_task; missing task %r", task_uuid)
 			return
 		new_task = task.clone()
+		new_task.update_modify_time()
 		self._session.add(new_task)
 		self._session.commit()
 		Publisher().sendMessage('task.update', data={'task_uuid': new_task.uuid})

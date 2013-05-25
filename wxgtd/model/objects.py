@@ -70,6 +70,10 @@ class BaseModelMixin(object):
 				newobj.children.append(child.clone())
 		return newobj
 
+	def update_modify_time(self):
+		if hasattr(self, 'modified'):
+			self.modified = datetime.datetime.utcnow()  # pylint: disable=W0201
+
 	@classmethod
 	def selecy_by_modified_is_less(cls, timestamp, session=None):
 		""" Find object with modified date less than given. """
@@ -125,8 +129,7 @@ class Task(BaseModelMixin, Base):
 	parent_uuid = Column(String(36), ForeignKey('tasks.uuid',
 			onupdate="CASCADE", ondelete="SET NULL"), index=True)
 	created = Column(DateTime, default=datetime.datetime.utcnow)
-	modified = Column(DateTime, default=datetime.datetime.utcnow,
-			onupdate=datetime.datetime.utcnow, index=True)
+	modified = Column(DateTime, default=datetime.datetime.utcnow, index=True)
 	completed = Column(DateTime)
 	deleted = Column(DateTime)
 	ordinal = Column(Integer, default=0)
@@ -383,8 +386,7 @@ class Folder(BaseModelMixin, Base):
 	parent_uuid = Column(String(36), ForeignKey("folders.uuid",
 			onupdate="CASCADE", ondelete="SET NULL"), index=True)
 	created = Column(DateTime, default=datetime.datetime.utcnow)
-	modified = Column(DateTime, default=datetime.datetime.utcnow,
-			onupdate=datetime.datetime.utcnow, index=True)
+	modified = Column(DateTime, default=datetime.datetime.utcnow, index=True)
 	deleted = Column(DateTime)
 	ordinal = Column(Integer, default=0)
 	title = Column(String, index=True)
@@ -408,8 +410,7 @@ class Context(BaseModelMixin, Base):
 	parent_uuid = Column(String(36), ForeignKey("contexts.uuid",
 			onupdate="CASCADE", ondelete="SET NULL"), index=True)
 	created = Column(DateTime, default=datetime.datetime.utcnow)
-	modified = Column(DateTime, default=datetime.datetime.utcnow,
-			onupdate=datetime.datetime.utcnow, index=True)
+	modified = Column(DateTime, default=datetime.datetime.utcnow, index=True)
 	deleted = Column(DateTime)
 	ordinal = Column(Integer, default=0)
 	title = Column(String, index=True)
@@ -428,8 +429,7 @@ class Tasknote(BaseModelMixin, Base):
 	task_uuid = Column(String(36), ForeignKey("tasks.uuid",
 			onupdate="CASCADE", ondelete="SET NULL"), index=True)
 	created = Column(DateTime, default=datetime.datetime.utcnow)
-	modified = Column(DateTime, default=datetime.datetime.utcnow,
-			onupdate=datetime.datetime.utcnow, index=True)
+	modified = Column(DateTime, default=datetime.datetime.utcnow, index=True)
 	ordinal = Column(Integer, default=0)
 	title = Column(String, index=True)
 	bg_color = Column(String, default="FFEFFF00")
@@ -450,8 +450,7 @@ class Goal(BaseModelMixin, Base):
 	parent_uuid = Column(String(36), ForeignKey("goals.uuid",
 			onupdate="CASCADE", ondelete="SET NULL"), index=True)
 	created = Column(DateTime, default=datetime.datetime.utcnow)
-	modified = Column(DateTime, default=datetime.datetime.utcnow,
-			onupdate=datetime.datetime.utcnow, index=True)
+	modified = Column(DateTime, default=datetime.datetime.utcnow, index=True)
 	deleted = Column(DateTime)
 	ordinal = Column(Integer, default=0)
 	title = Column(String, index=True)
@@ -483,8 +482,7 @@ class Tag(BaseModelMixin, Base):
 	parent_uuid = Column(String(36), ForeignKey("tags.uuid",
 			onupdate="CASCADE", ondelete="SET NULL"), index=True)
 	created = Column(DateTime, default=datetime.datetime.utcnow)
-	modified = Column(DateTime, default=datetime.datetime.utcnow,
-			onupdate=datetime.datetime.utcnow, index=True)
+	modified = Column(DateTime, default=datetime.datetime.utcnow, index=True)
 	deleted = Column(DateTime)
 	ordinal = Column(Integer, default=0)
 	title = Column(String, index=True)
@@ -504,8 +502,7 @@ class TaskTag(BaseModelMixin, Base):
 	tag_uuid = Column(String(50), ForeignKey("tags.uuid", onupdate="CASCADE",
 			ondelete="CASCADE"), primary_key=True)
 	created = Column(DateTime, default=datetime.datetime.utcnow)
-	modified = Column(DateTime, default=datetime.datetime.utcnow,
-			onupdate=datetime.datetime.utcnow, index=True)
+	modified = Column(DateTime, default=datetime.datetime.utcnow, index=True)
 
 	tag = orm.relationship("Tag", cascade="all", lazy="joined")
 
@@ -517,8 +514,7 @@ class NotebookPage(BaseModelMixin, Base):
 
 	uuid = Column(String(36), primary_key=True, default=generate_uuid)
 	created = Column(DateTime, default=datetime.datetime.utcnow)
-	modified = Column(DateTime, default=datetime.datetime.utcnow,
-			onupdate=datetime.datetime.utcnow, index=True)
+	modified = Column(DateTime, default=datetime.datetime.utcnow, index=True)
 	deleted = Column(DateTime)
 	ordinal = Column(Integer, default=0)
 	title = Column(String, index=True)

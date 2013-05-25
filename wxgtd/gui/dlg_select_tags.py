@@ -70,6 +70,7 @@ class DlgSelectTags(BaseDialog):
 			return
 		tag = Tag()
 		tag.title = new_tag
+		tag.update_modify_time()
 		self._session.add(tag)  # pylint: disable=E1101
 		self._session.commit()  # pylint: disable=E1101
 		self._show_tags()
