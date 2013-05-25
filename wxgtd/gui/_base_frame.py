@@ -58,7 +58,7 @@ class BaseFrame(object):
 			# fix controls background
 			bgcolor = wx.SystemSettings.GetColour(wx.SYS_COLOUR_ACTIVEBORDER)
 			wnd.SetBackgroundColour(bgcolor)
-			_update_color(wnd, bgcolor)
+			#_update_color(wnd, bgcolor)
 
 		self._set_size_pos()
 
