@@ -30,6 +30,7 @@ from wxgtd.gui._base_frame import BaseFrame
 from wxgtd.gui.dlg_notebook_page import DlgNotebookPage
 
 _ = gettext.gettext
+ngettext = gettext.ngettext  # pylint: disable=C0103
 _LOG = logging.getLogger(__name__)
 
 
@@ -219,7 +220,7 @@ class FrameNotebook(BaseFrame):
 			self._lb_pages.SetItemData(idx, idx)
 			self._pages_uuid[idx] = page.uuid
 
-		self.wnd.SetStatusText(_("Showed %d items") % idx)
+		self.wnd.SetStatusText(ngettext("%d item", "%d items", idx) % idx, 1)
 		self._lb_pages.SetColumnWidth(0, wx.LIST_AUTOSIZE)
 		self._lb_pages.SetColumnWidth(1, wx.LIST_AUTOSIZE)
 		self._lb_pages.SetColumnWidth(2, wx.LIST_AUTOSIZE)

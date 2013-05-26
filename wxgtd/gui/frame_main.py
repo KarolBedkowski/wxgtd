@@ -52,6 +52,7 @@ from wxgtd.gui.dlg_reminders import DlgReminders
 from wxgtd.gui.frame_notebooks import FrameNotebook
 
 _ = gettext.gettext
+ngettext = gettext.ngettext
 _LOG = logging.getLogger(__name__)
 
 
@@ -547,7 +548,8 @@ class FrameMain(BaseFrame):
 		items_list = self._items_list_ctrl
 		active_only = not self._btn_show_finished.GetValue()
 		self._items_list_ctrl.fill(tasks, active_only=active_only)
-		self.wnd.SetStatusText(_("Showed %d items") % items_list.GetItemCount())
+		showed = items_list.GetItemCount()
+		self.wnd.SetStatusText(ngettext("%d item", "%d items", showed) % showed, 1)
 		self._show_parent_info(active_only)
 		wx.SetCursor(wx.STANDARD_CURSOR)
 
