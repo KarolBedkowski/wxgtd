@@ -257,6 +257,8 @@ class Task(BaseModelMixin, Base):
 			# hide task with hide_until value in future
 			query = query.filter(or_(Task.hide_until.is_(None),
 					Task.hide_until <= now))
+		if params.get('max_due_date'):
+			query = query.filter(Task.due_date.isnot(None))
 		# params hotlistd
 		opt = []
 		if params.get('starred'):  # show starred task
@@ -266,8 +268,10 @@ class Task(BaseModelMixin, Base):
 		if params.get('max_due_date'):
 			opt.append(or_(
 				and_(Task.type != enums.TYPE_PROJECT,
+						Task.due_date.isnot(None),
 						Task.due_date <= params['max_due_date']),
 				and_(Task.type == enums.TYPE_PROJECT,
+						Task.due_date_project.isnot(None),
 						Task.due_date_project <= params['max_due_date'])))
 		if params.get('next_action'):
 			opt.append(Task.status == 1)  # status = next action
