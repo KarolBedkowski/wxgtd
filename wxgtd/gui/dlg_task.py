@@ -105,23 +105,29 @@ class DlgTask(BaseTaskDialog):
 	def _setup_comboboxes(self):
 		BaseTaskDialog._setup_comboboxes(self)
 		cb_status = self['cb_status']
+		cb_status.Clear()
 		for key, status in sorted(enums.STATUSES.iteritems()):
 			cb_status.Append(status, key)
 		cb_types = self['cb_type']
+		cb_types.Clear()
 		for key, typename in sorted(enums.TYPES.iteritems()):
 			if key != enums.TYPE_CHECKLIST_ITEM:
 				# nie można utworzyć checklist item bez checlisty jako parenta
 				cb_types.Append(typename, key)
 		cb_context = self['cb_context']
+		cb_context.Clear()
 		for context in OBJ.Context.all():
 			cb_context.Append(context.title, context.uuid)
 		cb_folder = self['cb_folder']
+		cb_folder.Clear()
 		for folder in OBJ.Folder.all():
 			cb_folder.Append(folder.title, folder.uuid)
 		cb_goal = self['cb_goal']
+		cb_goal.Clear()
 		for goal in OBJ.Goal.all():
 			cb_goal.Append(goal.title, goal.uuid)
 		cb_project = self['cb_project']
+		cb_project.Clear()
 		for project in OBJ.Task.all_projects():
 			# projects
 			cb_project.Append(project.title, project.uuid)
