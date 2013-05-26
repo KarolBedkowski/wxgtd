@@ -258,11 +258,20 @@ class FrameMain(BaseFrame):
 				style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST)
 		if dlg.ShowModal() == wx.ID_OK:
 			filename = dlg.GetPath()
-			loader.load_from_file(filename, force=True)
-			self._filter_tree_ctrl.RefreshItems()
-			Publisher().sendMessage('task.update')
+			dlgp = DlgSyncProggress(self.wnd)
+			dlgp.run()
+			try:
+				loader.load_from_file(filename, dlgp.update, force=True)
+			except Exception as err:
+				error = "\n".join(traceback.format_exception(*sys.exc_info()))
+				msgdlg = wx.lib.dialogs.ScrolledMessageDialog(self.wnd,
+						str(err) + "\n\n" + error, _("Synchronisation error"))
+				msgdlg.ShowModal()
+				msgdlg.Destroy()
+			dlgp.mark_finished(2)
 			appconfig.set('files', 'last_dir', os.path.dirname(filename))
 			appconfig.set('files', 'last_file', os.path.basename(filename))
+			Publisher().sendMessage('task.update')
 		dlg.Destroy()
 
 	def _on_menu_file_save(self, _evt):
@@ -546,7 +555,6 @@ class FrameMain(BaseFrame):
 				msgbox.ShowModal()
 				msgbox.Destroy()
 			dlg.mark_finished(2)
-			self._filter_tree_ctrl.RefreshItems()
 			Publisher().sendMessage('task.update')
 
 	def _delete_selected_task(self):
