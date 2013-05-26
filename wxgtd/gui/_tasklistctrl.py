@@ -201,6 +201,9 @@ class TaskListControl(ULC.UltimateListCtrl, listmix.ColumnSorterMixin):
 				task, task_is_overdue))
 			if task.type == enums.TYPE_CHECKLIST_ITEM:
 				self.SetStringItem(index, 2, str(task.importance + 1))
+			elif task.type == enums.TYPE_PROJECT:
+				self.SetStringItem(index, 2, fmt.format_timestamp(task.due_date_project,
+						False).replace(' ', '\n'))
 			else:
 				self.SetStringItem(index, 2, fmt.format_timestamp(task.due_date,
 						task.due_time_set).replace(' ', '\n'))

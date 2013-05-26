@@ -612,8 +612,12 @@ class FrameMain(BaseFrame):
 			parent = self._items_path[-1]
 			panel_parent_info.set_task(parent)
 			panel_parent_icons.set_task(parent)
-			self['l_parent_due'].SetLabel(fmt.format_timestamp(parent.due_date,
-	-				parent.due_time_set).replace(' ', '\n'))
+			if parent.type == enums.TYPE_PROJECT:
+				self['l_parent_due'].SetLabel(fmt.format_timestamp(
+					parent.due_date_project, parent.due_time_set).replace(' ', '\n'))
+			else:
+				self['l_parent_due'].SetLabel(fmt.format_timestamp(
+					parent.due_date, parent.due_time_set).replace(' ', '\n'))
 		panel_parent_icons.active_only = active_only
 		panel_parent_info.Refresh()
 		panel_parent_info.Update()
