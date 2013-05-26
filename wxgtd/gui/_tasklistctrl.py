@@ -303,7 +303,6 @@ class TaskListControl(ULC.UltimateListCtrl, listmix.ColumnSorterMixin):
 			self._drag_item_start = item_index
 
 	def _on_end_drag(self, evt):
-		print '_on_end_drag', self._drag_item_start
 		if self._drag_item_start is None:
 			return
 		item_index = evt.GetIndex()

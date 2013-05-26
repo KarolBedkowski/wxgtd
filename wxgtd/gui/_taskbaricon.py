@@ -73,5 +73,5 @@ class TaskBarIcon(wx.TaskBarIcon):
 	def _on_menu_app_close(self, _evt):
 		wx.CallAfter(self._frame.Close)
 
-	def _on_menu_show_notebook(self, _evt):
+	def _on_menu_show_notebook(self, _evt):  # pylint: disable=R0201
 		FrameNotebook.run()

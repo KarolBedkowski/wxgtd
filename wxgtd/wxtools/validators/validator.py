@@ -304,7 +304,6 @@ class ValidatorColorStr(Validator):
 		ctrl = self.GetWindow()
 		color = ctrl.GetColour()
 		value = color.GetAsString(wx.C2S_HTML_SYNTAX)
-		print value, self._with_alpha,
 		if self._with_alpha:
 			value += "%02X" % color.alpha
 		if self._add_hash:
@@ -313,7 +312,6 @@ class ValidatorColorStr(Validator):
 		else:
 			if value[0] == '#':
 				value = value[1:]
-		print value
 		return value
 
 

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-## pylint: disable-msg=W0401, C0103
+## pylint: disable=W0401,C0103,W0141
 """ Filter tree widget.
 
 Copyright (c) Karol Będkowski, 2013
