@@ -237,6 +237,7 @@ class Task(BaseModelMixin, Base):
 			list of task
 		"""
 		# pylint: disable=R0912
+		_LOG.debug('Task.select_by_filters(%r)', params)
 		session = session or Session()
 		query = session.query(cls)
 		query = _append_filter_list(query, Task.context_uuid, params.get('contexts'))
@@ -252,7 +253,16 @@ class Task(BaseModelMixin, Base):
 		now = datetime.datetime.utcnow()
 		if params.get('tags'):
 			# filter by tags; pylint: disable=E1101
-			query = query.filter(Task.tags.any(TaskTag.task_uuid.in_(params['tags'])))
+			tags = set(params.get('tags'))
+			if None in tags:
+				if len(tags) == 1:
+					query = query.filter(~Task.tags.any())
+				else:
+					query = query.filter(or_(
+							Task.tags.any(TaskTag.tag_uuid.in_(params['tags'])),
+							~Task.tags.any()))
+			else:
+				query = query.filter(Task.tags.any(TaskTag.tag_uuid.in_(params['tags'])))
 		if params.get('hide_until'):
 			# hide task with hide_until value in future
 			query = query.filter(or_(Task.hide_until.is_(None),
