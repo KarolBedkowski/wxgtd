@@ -245,6 +245,7 @@ class FrameMain(BaseFrame):
 		appconfig.set('main', 'show_hide_until', self._btn_hide_until.GetValue())
 		appconfig.set('main', 'selected_group',
 				self['rb_show_selection'].GetSelection())
+		self._filter_tree_ctrl.save_last_settings()
 		self._tbicon.Destroy()
 		BaseFrame._on_close(self, event)
 
