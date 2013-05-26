@@ -208,8 +208,13 @@ class Task(BaseModelMixin, Base):
 		now = datetime.datetime.utcnow()
 		return orm.object_session(self).scalar(select([func.count(Task.uuid)])
 				.where(and_(Task.parent_uuid == self.uuid,
-						Task.due_date.isnot(None), Task.due_date < now,
-						Task.completed.is_(None))))
+						Task.due_date.isnot(None), Task.completed.is_(None),
+						or_(
+							and_(Task.due_date < now,
+								Task.type != enums.TYPE_PROJECT),
+							and_(Task.due_date_project < now,
+								Task.type == enums.TYPE_PROJECT)))))
+
 	@property
 	def overdue(self):
 		""" Is task overdue. """
@@ -259,7 +264,11 @@ class Task(BaseModelMixin, Base):
 		if params.get('min_priority') is not None:  # minimal task priority
 			opt.append(Task.priority >= params['min_priority'])
 		if params.get('max_due_date'):
-			opt.append(Task.due_date <= params['max_due_date'])
+			opt.append(or_(
+				and_(Task.type != enums.TYPE_PROJECT,
+						Task.due_date <= params['max_due_date']),
+				and_(Task.type == enums.TYPE_PROJECT,
+						Task.due_date_project <= params['max_due_date'])))
 		if params.get('next_action'):
 			opt.append(Task.status == 1)  # status = next action
 		if params.get('started'):  # started task (with start date in past)
