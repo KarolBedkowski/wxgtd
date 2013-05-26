@@ -208,8 +208,22 @@ class Task(BaseModelMixin, Base):
 		now = datetime.datetime.utcnow()
 		return orm.object_session(self).scalar(select([func.count(Task.uuid)])
 				.where(and_(Task.parent_uuid == self.uuid,
-						Task.due_date.isnot(None), Task.due_date < now,
-						Task.completed.is_(None))))
+						Task.due_date.isnot(None), Task.completed.is_(None),
+						or_(
+							and_(Task.due_date < now,
+								Task.type != enums.TYPE_PROJECT),
+							and_(Task.due_date_project < now,
+								Task.type == enums.TYPE_PROJECT)))))
+
+	@property
+	def overdue(self):
+		""" Is task overdue. """
+		if self.completed:
+			return False
+		now = datetime.datetime.utcnow()
+		if self.type == enums.TYPE_PROJECT:
+			return self.due_date_project and self.due_date_project < now
+		return self.due_date and self.due_date < now
 
 	@classmethod
 	def select_by_filters(cls, params, session=None):
@@ -243,6 +257,8 @@ class Task(BaseModelMixin, Base):
 			# hide task with hide_until value in future
 			query = query.filter(or_(Task.hide_until.is_(None),
 					Task.hide_until <= now))
+		if params.get('max_due_date'):
+			query = query.filter(Task.due_date.isnot(None))
 		# params hotlistd
 		opt = []
 		if params.get('starred'):  # show starred task
@@ -250,7 +266,13 @@ class Task(BaseModelMixin, Base):
 		if params.get('min_priority') is not None:  # minimal task priority
 			opt.append(Task.priority >= params['min_priority'])
 		if params.get('max_due_date'):
-			opt.append(Task.due_date <= params['max_due_date'])
+			opt.append(or_(
+				and_(Task.type != enums.TYPE_PROJECT,
+						Task.due_date.isnot(None),
+						Task.due_date <= params['max_due_date']),
+				and_(Task.type == enums.TYPE_PROJECT,
+						Task.due_date_project.isnot(None),
+						Task.due_date_project <= params['max_due_date'])))
 		if params.get('next_action'):
 			opt.append(Task.status == 1)  # status = next action
 		if params.get('started'):  # started task (with start date in past)

@@ -137,13 +137,17 @@ class DlgTask(BaseTaskDialog):
 			# zakonczono zadanie
 			if not logic.complete_task(self._task, self._wnd, self._session):
 				return
+		logic.update_project_due_date(self._task)
 		self._task.update_modify_time()
 		self._session.commit()  # pylint: disable=E1101
 		Publisher().sendMessage('task.update', data={'task_uuid': self._task.uuid})
 		self._on_ok(evt)
 
 	def _on_btn_due_date_set(self, _evt):
-		self._set_date('due_date', 'due_time_set')
+		if self._task.type == enums.TYPE_PROJECT:
+			self._set_date('due_date_project', 'due_time_set')
+		else:
+			self._set_date('due_date', 'due_time_set')
 
 	def _on_btn_start_date_set(self, _evt):
 		self._set_date('start_date', 'start_time_set')
@@ -219,8 +223,9 @@ class DlgTask(BaseTaskDialog):
 		""" Odświeżenie pól dat na dlg """
 		BaseTaskDialog._refresh_static_texts(self)
 		task = self._task
-		self['l_due'].SetLabel(fmt.format_timestamp(task.due_date,
-				task.due_time_set))
+		due_date = (task.due_date_project if task.type == enums.TYPE_PROJECT
+				else task.due_date)
+		self['l_due'].SetLabel(fmt.format_timestamp(due_date, task.due_time_set))
 		self['l_start_date'].SetLabel(fmt.format_timestamp(task.start_date,
 				task.start_time_set))
 		self['l_tags'].SetLabel(", ".join(tag.tag.title for tag in task.tags) or '')

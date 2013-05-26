@@ -30,6 +30,7 @@ except ImportError:
 from dateutil import parser, tz
 
 from wxgtd.model import objects
+from wxgtd.model import enums
 from wxgtd.model import logic
 
 _LOG = logging.getLogger(__name__)
@@ -352,6 +353,9 @@ def load_json(strdata, notify_cb, force=False):
 		notify_cb(85, _("Removed notebook pages: %d") % deleted_cnt)
 		# TODO: renumeracja
 
+	# after load actions
+	_update_all_tasks(session)
+
 	notify_cb(90, _("Committing..."))
 	session.commit()  # pylint: disable=E1101
 	notify_cb(100, _("Load completed"))
@@ -637,6 +641,15 @@ def _load_synclog(data, session, notify_cb):
 	if "syncLog" in data:
 		del data["syncLog"]
 	return last_prev_sync_time
+
+
+def _update_all_tasks(session):
+	""" Update tasks after load.
+
+	1. update due dates in projects
+	"""
+	for task in session.query(objects.Task).filter_by(type=enums.TYPE_PROJECT):
+		logic.update_project_due_date(task)
 
 
 def test():
