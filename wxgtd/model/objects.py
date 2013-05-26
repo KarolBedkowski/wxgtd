@@ -210,6 +210,15 @@ class Task(BaseModelMixin, Base):
 				.where(and_(Task.parent_uuid == self.uuid,
 						Task.due_date.isnot(None), Task.due_date < now,
 						Task.completed.is_(None))))
+	@property
+	def overdue(self):
+		""" Is task overdue. """
+		if self.completed:
+			return False
+		now = datetime.datetime.utcnow()
+		if self.type == enums.TYPE_PROJECT:
+			return self.due_date_project and self.due_date_project < now
+		return self.due_date and self.due_date < now
 
 	@classmethod
 	def select_by_filters(cls, params, session=None):

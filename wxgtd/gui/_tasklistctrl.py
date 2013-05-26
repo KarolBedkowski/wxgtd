@@ -15,7 +15,6 @@ __version__ = "2011-03-29"
 import sys
 import gettext
 import logging
-import datetime
 
 import wx
 import wx.lib.newevent
@@ -184,16 +183,13 @@ class TaskListControl(ULC.UltimateListCtrl, listmix.ColumnSorterMixin):
 				1: self._icons.get_image_index('prio1'),
 				2: self._icons.get_image_index('prio2'),
 				3: self._icons.get_image_index('prio3')}
-		now = datetime.datetime.utcnow()
 		index = -1
 		for task in tasks:
 			child_count = task.active_child_count if active_only else \
 					task.child_count
 			if active_only and child_count == 0 and task.completed:
 				continue
-			task_is_overdue = ((task.due_date and task.due_date < now and
-						not task.completed) or
-						(child_count > 0 and task.child_overdue))
+			task_is_overdue = task.overdue or (child_count > 0 and task.child_overdue)
 			icon = icon_completed if task.completed else prio_icon[task.priority]
 			index = self.InsertImageStringItem(sys.maxint, "", icon)
 			self.SetStringItem(index, 1, "")
