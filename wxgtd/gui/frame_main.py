@@ -52,7 +52,7 @@ from wxgtd.gui.dlg_reminders import DlgReminders
 from wxgtd.gui.frame_notebooks import FrameNotebook
 
 _ = gettext.gettext
-ngettext = gettext.ngettext
+ngettext = gettext.ngettext  # pylint: disable=C0103
 _LOG = logging.getLogger(__name__)
 
 
@@ -263,7 +263,7 @@ class FrameMain(BaseFrame):
 			dlgp.run()
 			try:
 				loader.load_from_file(filename, dlgp.update, force=True)
-			except Exception as err:
+			except Exception as err:  # pylint: disable=W0703
 				error = "\n".join(traceback.format_exception(*sys.exc_info()))
 				msgdlg = wx.lib.dialogs.ScrolledMessageDialog(self.wnd,
 						str(err) + "\n\n" + error, _("Synchronisation error"))
@@ -288,7 +288,7 @@ class FrameMain(BaseFrame):
 			dlgp.run()
 			try:
 				exporter.save_to_file(filename, dlgp.update)
-			except Exception as err:
+			except Exception as err:  # pylint: disable=W0703
 				error = "\n".join(traceback.format_exception(*sys.exc_info()))
 				msgdlg = wx.lib.dialogs.ScrolledMessageDialog(self.wnd,
 						str(err) + "\n\n" + error, _("Synchronisation error"))
