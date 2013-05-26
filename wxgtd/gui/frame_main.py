@@ -283,8 +283,17 @@ class FrameMain(BaseFrame):
 				style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT)
 		if dlg.ShowModal() == wx.ID_OK:
 			filename = dlg.GetPath()
-			exporter.save_to_file(filename)
-			self._filter_tree_ctrl.RefreshItems()
+			dlgp = DlgSyncProggress(self.wnd)
+			dlgp.run()
+			try:
+				exporter.save_to_file(filename, dlgp.update)
+			except Exception as err:
+				error = "\n".join(traceback.format_exception(*sys.exc_info()))
+				msgdlg = wx.lib.dialogs.ScrolledMessageDialog(self.wnd,
+						str(err) + "\n\n" + error, _("Synchronisation error"))
+				msgdlg.ShowModal()
+				msgdlg.Destroy()
+			dlgp.mark_finished(2)
 			Publisher().sendMessage('task.update')
 			appconfig.set('files', 'last_dir', os.path.dirname(filename))
 			appconfig.set('files', 'last_file', os.path.basename(filename))
