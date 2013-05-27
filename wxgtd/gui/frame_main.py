@@ -240,7 +240,7 @@ class FrameMain(BaseFrame):
 	def _on_close(self, event):
 		appconfig = self._appconfig
 		if appconfig.get('sync', 'sync_on_exit'):
-			wx.CallAfter(self._autosync)
+			self._autosync(False)
 		appconfig.set('main', 'show_finished', self._btn_show_finished.GetValue())
 		appconfig.set('main', 'show_subtask', self._btn_show_subtasks.GetValue())
 		appconfig.set('main', 'show_hide_until', self._btn_hide_until.GetValue())
@@ -505,13 +505,13 @@ class FrameMain(BaseFrame):
 		self._show_parent_info(active_only)
 		wx.SetCursor(wx.STANDARD_CURSOR)
 
-	def _autosync(self):
+	def _autosync(self, on_load=True):
 		last_sync_file = self._appconfig.get('files', 'last_sync_file')
 		if last_sync_file:
 			dlg = DlgSyncProggress(self.wnd)
 			dlg.run()
 			try:
-				sync.sync(last_sync_file)
+				sync.sync(last_sync_file, load_only=on_load)
 			except sync.SyncLockedError:
 				msgbox = wx.MessageDialog(dlg.wnd, _("Sync file is locked."),
 						_("wxGTD"), wx.OK | wx.ICON_HAND)
