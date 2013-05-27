@@ -65,6 +65,7 @@ class BaseTaskDialog(BaseDialog):
 			self._task = self._create_task(parent_uuid)
 			self._session.add(self._task)  # pylint: disable=E1101
 		task = self._task
+		self._original_task = task.clone(cleanup=False)
 		self._data = {'prev_completed': task.completed}
 		self['tc_title'].SetValidator(Validator(task, 'title',
 				validators=LVALID.NotEmptyValidator(), field='title'))
@@ -142,3 +143,8 @@ class BaseTaskDialog(BaseDialog):
 					True))
 		else:
 			self['l_completed_date'].SetLabel('')
+
+	def _data_changed(self):
+		if not self._wnd.TransferDataFromWindow():
+			return False
+		return not self._original_task.compare(self._task)

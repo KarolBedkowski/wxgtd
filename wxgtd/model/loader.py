@@ -30,6 +30,7 @@ except ImportError:
 from dateutil import parser, tz
 
 from wxgtd.model import objects
+from wxgtd.model import enums
 from wxgtd.model import logic
 
 _LOG = logging.getLogger(__name__)
@@ -305,13 +306,13 @@ def load_json(strdata, notify_cb, force=False):
 	data = _JSON_DECODER(strdata.decode("UTF-8"))
 	session = objects.Session()
 
-	notify_cb(5, _("Checking..."))
+	notify_cb(4, _("Checking..."))
 	if not force and not _check_synclog(data, session):
 		notify_cb(2, _("Don't load"))
 		_LOG.info("load_json: no loading file")
 		return True
 
-	# load
+	# 5: load
 	folders_cache = _load_folders(data, session, notify_cb)
 	contexts_cache = _load_contexts(data, session, notify_cb)
 	goals_cache = _load_goals(data, session, notify_cb)
@@ -328,31 +329,34 @@ def load_json(strdata, notify_cb, force=False):
 			notify_cb)
 	last_prev_sync_time = _load_synclog(data, session, notify_cb)
 
-	# cleanup
+	# 80: cleanup
 	if last_prev_sync_time:
-		notify_cb(84, _("Cleanup"))
+		notify_cb(80, _("Cleanup"))
 		# pokasowanie staroci
 		deleted_cnt = _cleanup_tasks(set(tasks_cache.itervalues()),
 				last_prev_sync_time, session)
-		notify_cb(85, _("Removed tasks: %d") % deleted_cnt)
+		notify_cb(81, _("Removed tasks: %d") % deleted_cnt)
 		deleted_cnt = _cleanup_unused(objects.Folder, folders_cache,
 				last_prev_sync_time, session)
-		notify_cb(86, _("Removed folders: %d") % deleted_cnt)
+		notify_cb(82, _("Removed folders: %d") % deleted_cnt)
 		deleted_cnt = _cleanup_unused(objects.Context, contexts_cache,
 				last_prev_sync_time, session)
-		notify_cb(87, _("Removed contexts: %d") % deleted_cnt)
+		notify_cb(83, _("Removed contexts: %d") % deleted_cnt)
 		deleted_cnt = _cleanup_unused(objects.Tasknote, tasknotes_cache,
 				last_prev_sync_time, session)
-		notify_cb(88, _("Removed task notes: %d") % deleted_cnt)
+		notify_cb(84, _("Removed task notes: %d") % deleted_cnt)
 		deleted_cnt = _cleanup_unused(objects.Goal, goals_cache,
 				last_prev_sync_time, session)
-		notify_cb(89, _("Removed goals %d") % deleted_cnt)
+		notify_cb(85, _("Removed goals %d") % deleted_cnt)
 		deleted_cnt = _cleanup_notebooks(set(notebooks_cache.itervalues()),
 				last_prev_sync_time, session)
-		notify_cb(85, _("Removed notebook pages: %d") % deleted_cnt)
-		# TODO: renumeracja
+		notify_cb(86, _("Removed notebook pages: %d") % deleted_cnt)
 
-	notify_cb(90, _("Committing..."))
+	# 90: after load actions
+	notify_cb(90, _("Global updates"))
+	_update_all_tasks(session)
+
+	notify_cb(92, _("Committing..."))
 	session.commit()  # pylint: disable=E1101
 	notify_cb(100, _("Load completed"))
 
@@ -427,13 +431,13 @@ def _load_tasks(data, session, notify_cb):
 		logic.update_task_hide(task_obj)
 	if tasks:
 		del data["task"]
-	notify_cb(38, _("Loaded %d tasks") % len(tasks_cache))
+	notify_cb(29, _("Loaded %d tasks") % len(tasks_cache))
 	return tasks_cache
 
 
 def _load_tasknotes(data, session, tasks_cache, notify_cb):
 	_LOG.info("_load_tasknotes")
-	notify_cb(39, _("Loading task notes"))
+	notify_cb(30, _("Loading task notes"))
 	tasknotes = data.get("tasknote")
 	tasknotes_cache = _build_id_uuid_map(tasknotes)
 	for tasknote in tasknotes or []:
@@ -442,13 +446,13 @@ def _load_tasknotes(data, session, tasks_cache, notify_cb):
 		_create_or_update(session, objects.Tasknote, tasknote)
 	if tasknotes:
 		del data["tasknote"]
-	notify_cb(43, _("Loaded %d task notes") % len(tasknotes_cache))
+	notify_cb(34, _("Loaded %d task notes") % len(tasknotes_cache))
 	return tasknotes_cache
 
 
 def _load_alarms(data, session, tasks_cache, notify_cb):
 	_LOG.info("_load_alarms")
-	notify_cb(44, _("Loading alarms"))
+	notify_cb(35, _("Loading alarms"))
 	alarms = data.get("alarm") or []
 	for alarm in alarms:
 		task_uuid = _replace_ids(alarm, tasks_cache, "task_id")
@@ -465,12 +469,12 @@ def _load_alarms(data, session, tasks_cache, notify_cb):
 			_LOG.debug("skip %r", alarm)
 	if alarms:
 		del data["alarm"]
-	notify_cb(46, _("Loaded %d alarms") % len(alarms))
+	notify_cb(39, _("Loaded %d alarms") % len(alarms))
 
 
 def _load_task_folders(data, session, tasks_cache, folders_cache, notify_cb):
 	_LOG.info("_load_task_folders")
-	notify_cb(47, _("Loading task folders"))
+	notify_cb(40, _("Loading task folders"))
 	task_folders = data.get("task_folder") or []
 	for task_folder in task_folders:
 		task_uuid = _replace_ids(task_folder, tasks_cache, "task_id")
@@ -488,13 +492,13 @@ def _load_task_folders(data, session, tasks_cache, folders_cache, notify_cb):
 			_LOG.debug("skip %r", task_folder)
 	if task_folders:
 		del data["task_folder"]
-	notify_cb(51, _("Loaded %d task folders") % len(task_folders))
+	notify_cb(44, _("Loaded %d task folders") % len(task_folders))
 
 
 def _load_task_contexts(data, session, tasks_cache, contexts_cache,
 		notify_cb):
 	_LOG.info("_load_task_contexts")
-	notify_cb(52, _("Loading task contexts"))
+	notify_cb(45, _("Loading task contexts"))
 	task_contexts = data.get("task_context") or []
 	for task_context in task_contexts:
 		task_uuid = _replace_ids(task_context, tasks_cache, "task_id")
@@ -512,12 +516,12 @@ def _load_task_contexts(data, session, tasks_cache, contexts_cache,
 			_LOG.debug("skip %r", task_context)
 	if task_contexts:
 		del data["task_context"]
-	notify_cb(56, _("Loaded %d tasks contexts") % len(task_contexts))
+	notify_cb(49, _("Loaded %d tasks contexts") % len(task_contexts))
 
 
 def _load_task_goals(data, session, tasks_cache, goals_cache, notify_cb):
 	_LOG.info("_load_task_goals")
-	notify_cb(57, _("Loading task goals"))
+	notify_cb(50, _("Loading task goals"))
 	task_goals = data.get("task_goal") or []
 	for task_goal in task_goals:
 		task_uuid = _replace_ids(task_goal, tasks_cache, "task_id")
@@ -535,12 +539,12 @@ def _load_task_goals(data, session, tasks_cache, goals_cache, notify_cb):
 			_LOG.debug("skip %r", task_goal)
 	if task_goals:
 		del data["task_goal"]
-	notify_cb(61, _("Loaded %d task goals") % len(task_goals))
+	notify_cb(54, _("Loaded %d task goals") % len(task_goals))
 
 
 def _load_tags(data, session, notify_cb):
 	_LOG.info("_load_tags")
-	notify_cb(62, _("Loading tags"))
+	notify_cb(55, _("Loading tags"))
 	tags = data.get("tag")
 	tags_cache = _build_id_uuid_map(tags)
 	for tag in sort_objects_by_parent(tags):
@@ -549,13 +553,13 @@ def _load_tags(data, session, notify_cb):
 		_create_or_update(session, objects.Tag, tag)
 	if tags:
 		del data["tag"]
-	notify_cb(66, _("Loaded %d tags") % len(tags_cache))
+	notify_cb(59, _("Loaded %d tags") % len(tags_cache))
 	return tags_cache
 
 
 def _load_task_tags(data, session, tasks_cache, tags_cache, notify_cb):
 	_LOG.info("_load_task_tags")
-	notify_cb(67, _("Loading task tags"))
+	notify_cb(60, _("Loading task tags"))
 	task_tags = data.get("task_tag") or []
 	for task_tag in task_tags:
 		task_uuid = _replace_ids(task_tag, tasks_cache, "task_id")
@@ -574,12 +578,12 @@ def _load_task_tags(data, session, tasks_cache, tags_cache, notify_cb):
 			session.add(obj)  # pylint: disable=E1101
 	if task_tags:
 		del data["task_tag"]
-	notify_cb(71, _("Loaded %d task tags") % len(task_tags))
+	notify_cb(64, _("Loaded %d task tags") % len(task_tags))
 
 
 def _load_notebooks(data, session, notify_cb):
 	_LOG.info("_load_notebooks")
-	notify_cb(16, _("Loading notebooks"))
+	notify_cb(65, _("Loading notebooks"))
 	notebooks = data.get("notebook") or []
 	notebooks_cache = _build_id_uuid_map(notebooks)
 	for notebook in notebooks:
@@ -588,14 +592,14 @@ def _load_notebooks(data, session, notify_cb):
 		_create_or_update(session, objects.NotebookPage, notebook)
 	if notebooks:
 		del data["notebook"]
-	notify_cb(20, _("Loaded %d notebook pages") % len(notebooks_cache))
+	notify_cb(69, _("Loaded %d notebook pages") % len(notebooks_cache))
 	return notebooks_cache
 
 
 def _load_notebook_folders(data, session, notebooks_cache, folders_cache,
 		notify_cb):
 	_LOG.info("_load_notebook_folders")
-	notify_cb(47, _("Loading notebook pages folders"))
+	notify_cb(70, _("Loading notebook pages folders"))
 	notebook_folders = data.get("notebook_folder") or []
 	for notebook_folder in notebook_folders:
 		notebook_uuid = _replace_ids(notebook_folder, notebooks_cache,
@@ -614,12 +618,12 @@ def _load_notebook_folders(data, session, notebooks_cache, folders_cache,
 			_LOG.debug("skip %r", notebook_folder)
 	if notebook_folders:
 		del data["notebook_folder"]
-	notify_cb(51, _("Loaded %d notebook folders") % len(notebook_folders))
+	notify_cb(75, _("Loaded %d notebook folders") % len(notebook_folders))
 
 
 def _load_synclog(data, session, notify_cb):
 	_LOG.info("_load_synclog")
-	notify_cb(72, _("Loading synclog"))
+	notify_cb(76, _("Loading synclog"))
 	last_sync_time = last_prev_sync_time = datetime.datetime(1900, 1, 1)
 	for sync_log in data.get("syncLog"):
 		_convert_timestamps(sync_log, "prevSyncTime", "syncTime")
@@ -636,7 +640,17 @@ def _load_synclog(data, session, notify_cb):
 			last_prev_sync_time = slog_item.prev_sync_time
 	if "syncLog" in data:
 		del data["syncLog"]
+	notify_cb(79, _("Synclog loaded"))
 	return last_prev_sync_time
+
+
+def _update_all_tasks(session):
+	""" Update tasks after load.
+
+	1. update due dates in projects
+	"""
+	for task in session.query(objects.Task).filter_by(type=enums.TYPE_PROJECT):
+		logic.update_project_due_date(task)
 
 
 def test():

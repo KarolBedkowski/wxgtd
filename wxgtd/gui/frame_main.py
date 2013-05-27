@@ -52,6 +52,7 @@ from wxgtd.gui.dlg_reminders import DlgReminders
 from wxgtd.gui.frame_notebooks import FrameNotebook
 
 _ = gettext.gettext
+ngettext = gettext.ngettext  # pylint: disable=C0103
 _LOG = logging.getLogger(__name__)
 
 
@@ -180,6 +181,8 @@ class FrameMain(BaseFrame):
 				self._btn_show_subtasks)
 		self._btn_show_subtasks.SetValue(appconfig.get('main', 'show_subtask', True))
 
+		toolbar.AddControl(wx.StaticText(toolbar, -1, " "))
+
 		# show completed
 		self._btn_show_finished = wx.ToggleButton(toolbar,  # pylint: disable=W0201
 				-1, _(" Show finished "))
@@ -188,6 +191,8 @@ class FrameMain(BaseFrame):
 				self._btn_show_finished)
 		self._btn_show_finished.SetValue(appconfig.get('main', 'show_finished',
 				False))
+
+		toolbar.AddControl(wx.StaticText(toolbar, -1, " "))
 
 		# hide until due
 		self._btn_hide_until = wx.ToggleButton(toolbar,  # pylint: disable=W0201
@@ -235,12 +240,13 @@ class FrameMain(BaseFrame):
 	def _on_close(self, event):
 		appconfig = self._appconfig
 		if appconfig.get('sync', 'sync_on_exit'):
-			wx.CallAfter(self._autosync)
+			self._autosync(False)
 		appconfig.set('main', 'show_finished', self._btn_show_finished.GetValue())
 		appconfig.set('main', 'show_subtask', self._btn_show_subtasks.GetValue())
 		appconfig.set('main', 'show_hide_until', self._btn_hide_until.GetValue())
 		appconfig.set('main', 'selected_group',
 				self['rb_show_selection'].GetSelection())
+		self._filter_tree_ctrl.save_last_settings()
 		self._tbicon.Destroy()
 		BaseFrame._on_close(self, event)
 
@@ -253,11 +259,20 @@ class FrameMain(BaseFrame):
 				style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST)
 		if dlg.ShowModal() == wx.ID_OK:
 			filename = dlg.GetPath()
-			loader.load_from_file(filename, force=True)
-			self._filter_tree_ctrl.RefreshItems()
-			Publisher().sendMessage('task.update')
+			dlgp = DlgSyncProggress(self.wnd)
+			dlgp.run()
+			try:
+				loader.load_from_file(filename, dlgp.update, force=True)
+			except Exception as err:  # pylint: disable=W0703
+				error = "\n".join(traceback.format_exception(*sys.exc_info()))
+				msgdlg = wx.lib.dialogs.ScrolledMessageDialog(self.wnd,
+						str(err) + "\n\n" + error, _("Synchronisation error"))
+				msgdlg.ShowModal()
+				msgdlg.Destroy()
+			dlgp.mark_finished(2)
 			appconfig.set('files', 'last_dir', os.path.dirname(filename))
 			appconfig.set('files', 'last_file', os.path.basename(filename))
+			Publisher().sendMessage('task.update')
 		dlg.Destroy()
 
 	def _on_menu_file_save(self, _evt):
@@ -269,8 +284,17 @@ class FrameMain(BaseFrame):
 				style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT)
 		if dlg.ShowModal() == wx.ID_OK:
 			filename = dlg.GetPath()
-			exporter.save_to_file(filename)
-			self._filter_tree_ctrl.RefreshItems()
+			dlgp = DlgSyncProggress(self.wnd)
+			dlgp.run()
+			try:
+				exporter.save_to_file(filename, dlgp.update)
+			except Exception as err:  # pylint: disable=W0703
+				error = "\n".join(traceback.format_exception(*sys.exc_info()))
+				msgdlg = wx.lib.dialogs.ScrolledMessageDialog(self.wnd,
+						str(err) + "\n\n" + error, _("Synchronisation error"))
+				msgdlg.ShowModal()
+				msgdlg.Destroy()
+			dlgp.mark_finished(2)
 			Publisher().sendMessage('task.update')
 			appconfig.set('files', 'last_dir', os.path.dirname(filename))
 			appconfig.set('files', 'last_file', os.path.basename(filename))
@@ -469,79 +493,31 @@ class FrameMain(BaseFrame):
 			DlgReminders.check(self.wnd, self._session)
 
 	def _refresh_list(self):
-		# TODO: refactor, pylint: disable=R0912, R0915
-		group_id = self['rb_show_selection'].GetSelection()
-		tmodel = self._filter_tree_ctrl.model
-		params = {'starred': False, 'finished': None, 'min_priority': None,
-				'max_due_date': None, 'tags': None, 'types': None}
-		params['contexts'] = list(tmodel.checked_items_by_parent("CONTEXTS"))
-		params['folders'] = list(tmodel.checked_items_by_parent("FOLDERS"))
-		params['goals'] = list(tmodel.checked_items_by_parent("GOALS"))
-		params['statuses'] = list(tmodel.checked_items_by_parent("STATUSES"))
-		params['parent_uuid'] = parent = self._items_path[-1].uuid \
-				if self._items_path else None
-		params['tags'] = list(tmodel.checked_items_by_parent("TAGS"))
-		if not self._btn_show_finished.GetValue():
-			params['finished'] = False
-		params['hide_until'] = self._btn_hide_until.GetValue()
-		params['search_str'] = self._searchbox.GetValue()
-		if not parent:
-			if not self._btn_show_subtasks.GetValue():
-				# tylko nadrzędne
-				params['parent_uuid'] = 0
-		if group_id == 0:  # all
-			pass
-		elif group_id == 1:  # hot
-			if not params['parent_uuid']:
-				# ignore hotlist settings when showing subtasks
-				_get_hotlist_settings(params, self._appconfig)
-		elif group_id == 2:  # stared
-			if not params['parent_uuid']:
-				# ignore starred when showing subtasks
-				params['starred'] = True
-		elif group_id == 3:  # basket
-			# no status, no context
-			params['contexts'] = [None]
-			params['statuses'] = [None]
-		elif group_id == 4:  # finished
-			params['finished'] = True
-		elif group_id == 5:  # projects
-			if not parent:
-				params['types'] = [enums.TYPE_PROJECT]
-		elif group_id == 6:  # checklists
-			if parent:
-				params['types'] = [enums.TYPE_CHECKLIST, enums.TYPE_CHECKLIST_ITEM]
-			else:
-				params['types'] = [enums.TYPE_CHECKLIST]
-		elif group_id == 7:  # future alarms
-			params['active_alarm'] = True
-			params['finished'] = (None if self._btn_show_finished.GetValue()
-					else False)
-		_LOG.debug("FrameMain._refresh_list; params=%r", params)
 		wx.SetCursor(wx.HOURGLASS_CURSOR)
+		params = self._get_params_for_list()
+		_LOG.debug("FrameMain._refresh_list; params=%r", params)
 		self._session.expire_all()  # pylint: disable=E1101
 		tasks = OBJ.Task.select_by_filters(params, session=self._session)
-		items_list = self._items_list_ctrl
-		active_only = not self._btn_show_finished.GetValue()
+		active_only = params['finished'] is not None and not params['finished']
 		self._items_list_ctrl.fill(tasks, active_only=active_only)
-		self.wnd.SetStatusText(_("Showed %d items") % items_list.GetItemCount())
+		showed = self._items_list_ctrl.GetItemCount()
+		self.wnd.SetStatusText(ngettext("%d item", "%d items", showed) % showed, 1)
 		self._show_parent_info(active_only)
 		wx.SetCursor(wx.STANDARD_CURSOR)
 
-	def _autosync(self):
+	def _autosync(self, on_load=True):
 		last_sync_file = self._appconfig.get('files', 'last_sync_file')
 		if last_sync_file:
 			dlg = DlgSyncProggress(self.wnd)
 			dlg.run()
 			try:
-				sync.sync(last_sync_file)
+				sync.sync(last_sync_file, load_only=on_load)
 			except sync.SyncLockedError:
 				msgbox = wx.MessageDialog(dlg.wnd, _("Sync file is locked."),
 						_("wxGTD"), wx.OK | wx.ICON_HAND)
 				msgbox.ShowModal()
 				msgbox.Destroy()
 			dlg.mark_finished(2)
-			self._filter_tree_ctrl.RefreshItems()
 			Publisher().sendMessage('task.update')
 
 	def _delete_selected_task(self):
@@ -608,14 +584,63 @@ class FrameMain(BaseFrame):
 			parent = self._items_path[-1]
 			panel_parent_info.set_task(parent)
 			panel_parent_icons.set_task(parent)
-			self['l_parent_due'].SetLabel(fmt.format_timestamp(parent.due_date,
-	-				parent.due_time_set).replace(' ', '\n'))
+			if parent.type == enums.TYPE_PROJECT:
+				self['l_parent_due'].SetLabel(fmt.format_timestamp(
+					parent.due_date_project, parent.due_time_set).replace(' ', '\n'))
+			else:
+				self['l_parent_due'].SetLabel(fmt.format_timestamp(
+					parent.due_date, parent.due_time_set).replace(' ', '\n'))
 		panel_parent_icons.active_only = active_only
 		panel_parent_info.Refresh()
 		panel_parent_info.Update()
 		panel_parent_icons.Refresh()
 		panel_parent_icons.Update()
 		self['panel_parent'].GetSizer().Layout()
+
+	def _get_params_for_list(self):
+		""" Build params for database query """
+		group_id = self['rb_show_selection'].GetSelection()
+		parent = self._items_path[-1].uuid if self._items_path else None
+		_LOG.debug('_get_params_for_list: group_id=%r, parent=%r', group_id, parent)
+		tmodel = self._filter_tree_ctrl.model
+		params = {'starred': False, 'min_priority': None,
+				'max_due_date': None, 'types': None,
+				'contexts': list(tmodel.checked_items_by_parent("CONTEXTS")),
+				'folders': list(tmodel.checked_items_by_parent("FOLDERS")),
+				'goals': list(tmodel.checked_items_by_parent("GOALS")),
+				'statuses': list(tmodel.checked_items_by_parent("STATUSES")),
+				'tags': list(tmodel.checked_items_by_parent("TAGS")),
+				'hide_until': self._btn_hide_until.GetValue(),
+				'search_str': self._searchbox.GetValue(),
+				'parent_uuid': parent}
+		params['finished'] = None if self._btn_show_finished.GetValue() else False
+		if not parent and not self._btn_show_subtasks.GetValue():
+			# tylko nadrzędne
+			params['parent_uuid'] = 0
+		if group_id == 1 and not parent:  # hot
+			# ignore hotlist settings when showing subtasks
+			_get_hotlist_settings(params, self._appconfig)
+		elif group_id == 2 and not parent:  # stared
+			# ignore starred when showing subtasks
+			params['starred'] = True
+		elif group_id == 3:  # basket
+			# no status, no context
+			params['contexts'] = [None]
+			params['statuses'] = [None]
+		elif group_id == 4:  # finished
+			params['finished'] = True
+		elif group_id == 5 and not parent:  # projects
+			params['types'] = [enums.TYPE_PROJECT]
+		elif group_id == 6:  # checklists
+			if parent:
+				params['types'] = [enums.TYPE_CHECKLIST, enums.TYPE_CHECKLIST_ITEM]
+			else:
+				params['types'] = [enums.TYPE_CHECKLIST]
+		elif group_id == 7:  # future alarms
+			params['active_alarm'] = True
+			params['finished'] = (None if self._btn_show_finished.GetValue()
+					else False)
+		return params
 
 
 def _get_hotlist_settings(params, conf):

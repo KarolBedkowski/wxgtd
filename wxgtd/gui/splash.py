@@ -31,4 +31,3 @@ class Splash(wx.SplashScreen):
 		wnd = self.GetSplashWindow()
 		ver = wx.StaticText(wnd, -1, version.VERSION, pos=(330, 170))
 		ver.SetBackgroundColour(wx.WHITE)
-		wnd.Update()

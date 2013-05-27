@@ -30,6 +30,7 @@ from wxgtd.gui._base_frame import BaseFrame
 from wxgtd.gui.dlg_notebook_page import DlgNotebookPage
 
 _ = gettext.gettext
+ngettext = gettext.ngettext  # pylint: disable=C0103
 _LOG = logging.getLogger(__name__)
 
 
@@ -56,6 +57,8 @@ class FrameNotebook(BaseFrame):
 
 	def _setup(self):
 		self._pages_uuid = {}
+		self._current_sort_col = None
+		self._current_sort_ord = 1
 		self._session = OBJ.Session()
 		self._lb_pages.InsertColumn(0, _("Title"))
 		self._lb_pages.InsertColumn(1, _("Created"))
@@ -76,10 +79,11 @@ class FrameNotebook(BaseFrame):
 		self['pages_panel'].SetSizer(box)
 
 	def _create_bindings(self, wnd):
+		BaseFrame._create_bindings(self, wnd)
 		wnd.Bind(wx.EVT_LISTBOX, self._on_folders_listbox, self._lb_folders)
 		wnd.Bind(wx.EVT_LIST_ITEM_ACTIVATED, self._on_pages_list_activated,
 				self._lb_pages)
-
+		wnd.Bind(wx.EVT_LIST_COL_CLICK, self._on_pages_list_col_click)
 		Publisher().subscribe(self._on_notebook_update, ('notebook', 'update'))
 		Publisher().subscribe(self._on_notebook_update, ('notebook', 'delete'))
 
@@ -123,7 +127,7 @@ class FrameNotebook(BaseFrame):
 	def _on_close(self, event):
 		self._appconfig.set('frame_notebook', 'win1', self['window_1']
 				.GetSashPosition())
-		self._instance = None
+		FrameNotebook._instance = None
 		BaseFrame._on_close(self, event)
 
 	def _on_btn_close(self, _evt):
@@ -159,6 +163,15 @@ class FrameNotebook(BaseFrame):
 		uuid = self._pages_uuid[evt.GetData()]
 		DlgNotebookPage.create(uuid, self.wnd, self._session, uuid,
 				self.selected_folder_uuid).run(False)
+
+	def _on_pages_list_col_click(self, evt):
+		m_col = evt.m_col
+		if self._current_sort_col == m_col:
+			self._current_sort_ord = -self._current_sort_ord
+		else:
+			self._current_sort_col = m_col
+			self._current_sort_ord = 1
+		self._refresh_pages()
 
 	@property
 	def selected_folder_uuid(self):
@@ -202,14 +215,19 @@ class FrameNotebook(BaseFrame):
 		self._lb_pages.DeleteAllItems()
 		self._pages_uuid.clear()
 		query = self._session.query(OBJ.NotebookPage)\
-				.filter(OBJ.NotebookPage.deleted.is_(None))\
-				.order_by(OBJ.NotebookPage.ordinal, OBJ.NotebookPage.title)
+				.filter(OBJ.NotebookPage.deleted.is_(None))
 		if sel_folder is None:
 			query = query.filter(OBJ.NotebookPage.folder_uuid.is_(None))
 		elif sel_folder != '-':
 			query = query.filter(OBJ.NotebookPage.folder_uuid == sel_folder)
+		col = [OBJ.NotebookPage.title, OBJ.NotebookPage.created,
+				OBJ.NotebookPage.modified][self._current_sort_col or 0]
+		if self._current_sort_ord == 1:
+			query = query.order_by(col.asc())
+		else:
+			query = query.order_by(col.desc())
 		idx = 0
-		for idx, page in enumerate(query.all()):
+		for idx, page in enumerate(query):
 			self._lb_pages.InsertStringItem(idx, page.title)
 			self._lb_pages.SetStringItem(idx, 1,
 					fmt.format_timestamp(page.created))
@@ -218,7 +236,7 @@ class FrameNotebook(BaseFrame):
 			self._lb_pages.SetItemData(idx, idx)
 			self._pages_uuid[idx] = page.uuid
 
-		self.wnd.SetStatusText(_("Showed %d items") % idx)
+		self.wnd.SetStatusText(ngettext("%d item", "%d items", idx) % idx, 1)
 		self._lb_pages.SetColumnWidth(0, wx.LIST_AUTOSIZE)
 		self._lb_pages.SetColumnWidth(1, wx.LIST_AUTOSIZE)
 		self._lb_pages.SetColumnWidth(2, wx.LIST_AUTOSIZE)

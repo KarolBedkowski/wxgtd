@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-## pylint: disable-msg=W0401, C0103
+## pylint: disable=W0401,C0103,W0141
 """ Filter tree widget.
 
 Copyright (c) Karol Będkowski, 2013
@@ -21,6 +21,7 @@ from wx.lib.mixins import treemixin
 
 from wxgtd.model import objects as OBJ
 from wxgtd.model import enums
+from wxgtd.lib import appconfig
 
 _ = gettext.gettext
 
@@ -39,6 +40,10 @@ class TreeItem(object):
 		self.childs = childs
 		self.node_type = NODE_NORMAL
 
+	def __repr__(self):
+		return '<%r title=%r, obj=%r, type=%r, childs_count=%d>' % (self.__class__,
+				self.title, self.obj, self.node_type, len(self.childs))
+
 	def get_item(self, indices):
 		if len(indices) == 1:
 			return self.childs[indices[0]]
@@ -52,13 +57,17 @@ class TreeItemCB(TreeItem):
 		self.node_type = NODE_CHECKBOX
 		self.checked = False
 
+	def __repr__(self):
+		return '<%r title=%r, obj=%r, type=%r, checked=%r, childs_count=%d>' % (
+				self.__class__, self.title, self.obj, self.node_type, self.checked,
+				len(self.childs))
+
 	def get_item(self, indices):
 		if len(indices) == 1:
 			return self.childs[indices[0]]
 		return self.childs[indices[0]].get_item(indices[1:])
 
 	def set_child_check(self, check):
-		print 'set_child_check', check
 		for child in self.childs:
 			if hasattr(child, 'checked'):
 				child.checked = check
@@ -89,6 +98,7 @@ class FilterTreeModel(object):
 				TreeItemCB(_("No tag"), None),
 				*tuple(TreeItemCB(tag.title, tag.uuid)
 						for tag in OBJ.Tag.all())))
+		self._load_last_settings()
 
 	def get_item(self, indices):
 		if len(indices) == 1:
@@ -118,6 +128,46 @@ class FilterTreeModel(object):
 		return (item.obj for item in items[0].childs
 				if hasattr(item, 'checked') and item.checked)
 
+	def check_items(self, obj, ids):
+		items = [item for item in self._items if item.obj == obj]
+		if not items:
+			return
+		parent = items[0]
+		checked_cnt = 0
+		for item in parent.childs:
+			if item.obj in ids:
+				item.checked = True
+				checked_cnt += 1
+		parent.checked = checked_cnt == len(parent.childs)
+
+	def _load_last_settings(self):
+		appcfg = appconfig.AppConfig()
+
+		def convert(ids, func=str):
+			for id_ in ids:
+				yield None if id_ is None or id_ == 'None' else func(id_)
+
+		statuses = appcfg.get('last_filter', 'statuses', None)
+		if statuses:
+			ids = set(convert(statuses.split(','), int))
+			self.check_items("STATUSES", ids)
+		contexts = appcfg.get('last_filter', 'contexts', None)
+		if contexts:
+			ids = set(convert(contexts.split(',')))
+			self.check_items("CONTEXTS", ids)
+		folders = appcfg.get('last_filter', 'folders', None)
+		if folders:
+			ids = set(convert(folders.split(',')))
+			self.check_items("FOLDERS", ids)
+		goals = appcfg.get('last_filter', 'goals', None)
+		if goals:
+			ids = set(convert(goals.split(',')))
+			self.check_items("GOALS", ids)
+		tags = appcfg.get('last_filter', 'tags', None)
+		if tags:
+			ids = set(convert(tags.split(',')))
+			self.check_items("TAGS", ids)
+
 
 class FilterTreeCtrl(treemixin.VirtualTree, treemixin.ExpansionState,
 		CT.CustomTreeCtrl):
@@ -128,9 +178,9 @@ class FilterTreeCtrl(treemixin.VirtualTree, treemixin.ExpansionState,
 		self._model = FilterTreeModel()
 		kwargs['style'] = wx.TR_HIDE_ROOT | \
 			wx.TR_HAS_BUTTONS | wx.TR_FULL_ROW_HIGHLIGHT
-		kwargs['agwStyle'] = CT.TR_DEFAULT_STYLE | CT.TR_AUTO_CHECK_CHILD | \
-			CT.TR_AUTO_CHECK_PARENT | CT.TR_AUTO_TOGGLE_CHILD | wx.TR_HIDE_ROOT
+		kwargs['agwStyle'] = CT.TR_DEFAULT_STYLE | wx.TR_HIDE_ROOT
 		super(FilterTreeCtrl, self).__init__(*args, **kwargs)
+
 		self.Bind(CT.EVT_TREE_ITEM_CHECKED, self._on_item_checked)
 		wx.CallAfter(self.refresh)
 
@@ -154,15 +204,17 @@ class FilterTreeCtrl(treemixin.VirtualTree, treemixin.ExpansionState,
 	def _on_item_checked(self, event):
 		item = event.GetItem()
 		indices = self.GetIndexOfItem(item)
-		if self.GetItemType(item) == 2:
-			# It's a radio item; reset other items on the same level
-			#for nr in range(self.get_children_count(self.GetItemParent(item))):
+		if self.GetItemType(item) == 2:  # radio
 			pass
-			#self.checked[itemIndex[:-1] + (nr, )] = False
-		elif self.GetItemType(item) == 1:
+		elif self.GetItemType(item) == 1:  # checkbox
 			# checkbox - select or unselect all sub-items
 			self._model.get_item(indices).checked = item.GetValue()
-			#self._model.get_item(indices).set_child_check(item.GetValue())
+			if len(indices) == 1:
+				# zaznaczanie / odznaczanie podzadań
+				value = item.GetValue()
+				self._model.get_item(indices).set_child_check(value)
+				for child in item.GetChildren():
+					child.Check(value)
 			#self.AutoCheckChild(item, item.GetValue())
 			self.RefreshSubtree(item)
 		event.Skip()
@@ -171,3 +223,16 @@ class FilterTreeCtrl(treemixin.VirtualTree, treemixin.ExpansionState,
 		""" Refresh tree. """
 		self.ExpandAll()
 		wx.CallAfter(self.RefreshItems)
+
+	def save_last_settings(self):
+		appcfg = appconfig.AppConfig()
+		statuses = self._model.checked_items_by_parent("STATUSES")
+		appcfg.set('last_filter', 'statuses', ','.join(map(str, statuses)))
+		contexts = self._model.checked_items_by_parent("CONTEXTS")
+		appcfg.set('last_filter', 'contexts', ','.join(map(str, contexts)))
+		folders = self._model.checked_items_by_parent("FOLDERS")
+		appcfg.set('last_filter', 'folders', ','.join(map(str, folders)))
+		goals = self._model.checked_items_by_parent("GOALS")
+		appcfg.set('last_filter', 'goals', ','.join(map(str, goals)))
+		tags = self._model.checked_items_by_parent("TAGS")
+		appcfg.set('last_filter', 'tags', ','.join(map(str, tags)))

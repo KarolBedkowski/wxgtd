@@ -55,20 +55,34 @@ class BaseModelMixin(object):
 			if hasattr(self, key):
 				setattr(self, key, val)
 
-	def clone(self):
-		""" Clone current object. """
+	def clone(self, cleanup=True):
+		""" Clone current object.
+
+		Args:
+			cleanup: clean specific to instance values.
+		"""
 		newobj = type(self)()
 		for prop in orm.object_mapper(self).iterate_properties:
 			if isinstance(prop, orm.ColumnProperty) or \
 					(isinstance(prop, orm.RelationshipProperty)
 							and prop.secondary):
 				setattr(newobj, prop.key, getattr(self, prop.key))
-		if hasattr(newobj, 'uuid'):
+		if hasattr(newobj, 'uuid') and cleanup:
 			newobj.uuid = None
 		if hasattr(self, 'children'):
 			for child in self.children:
 				newobj.children.append(child.clone())
 		return newobj
+
+	def compare(self, obj):
+		""" Compare objects. """
+		for prop in orm.object_mapper(self).iterate_properties:
+			if isinstance(prop, orm.ColumnProperty) or \
+					(isinstance(prop, orm.RelationshipProperty)
+							and prop.secondary):
+				if getattr(obj, prop.key) != getattr(self, prop.key):
+					return False
+		return True
 
 	def update_modify_time(self):
 		if hasattr(self, 'modified'):
@@ -185,7 +199,8 @@ class Task(BaseModelMixin, Base):
 
 	def _set_task_completed(self, value):
 		if value:
-			self.completed = datetime.datetime.utcnow()
+			if not self.completed:
+				self.completed = datetime.datetime.utcnow()
 		else:
 			self.completed = None
 
@@ -208,8 +223,22 @@ class Task(BaseModelMixin, Base):
 		now = datetime.datetime.utcnow()
 		return orm.object_session(self).scalar(select([func.count(Task.uuid)])
 				.where(and_(Task.parent_uuid == self.uuid,
-						Task.due_date.isnot(None), Task.due_date < now,
-						Task.completed.is_(None))))
+						Task.due_date.isnot(None), Task.completed.is_(None),
+						or_(
+							and_(Task.due_date < now,
+								Task.type != enums.TYPE_PROJECT),
+							and_(Task.due_date_project < now,
+								Task.type == enums.TYPE_PROJECT)))))
+
+	@property
+	def overdue(self):
+		""" Is task overdue. """
+		if self.completed:
+			return False
+		now = datetime.datetime.utcnow()
+		if self.type == enums.TYPE_PROJECT:
+			return self.due_date_project and self.due_date_project < now
+		return self.due_date and self.due_date < now
 
 	@classmethod
 	def select_by_filters(cls, params, session=None):
@@ -223,6 +252,7 @@ class Task(BaseModelMixin, Base):
 			list of task
 		"""
 		# pylint: disable=R0912
+		_LOG.debug('Task.select_by_filters(%r)', params)
 		session = session or Session()
 		query = session.query(cls)
 		query = _append_filter_list(query, Task.context_uuid, params.get('contexts'))
@@ -236,45 +266,16 @@ class Task(BaseModelMixin, Base):
 			query = query.filter(or_(Task.title.like(search_str),
 					Task.note.like(search_str)))
 		now = datetime.datetime.utcnow()
-		if params.get('tags'):
-			# filter by tags; pylint: disable=E1101
-			query = query.filter(Task.tags.any(TaskTag.task_uuid.in_(params['tags'])))
+		query = _query_add_filter_by_tags(query, params)
 		if params.get('hide_until'):
 			# hide task with hide_until value in future
 			query = query.filter(or_(Task.hide_until.is_(None),
 					Task.hide_until <= now))
-		# params hotlistd
-		opt = []
-		if params.get('starred'):  # show starred task
-			opt.append(Task.starred > 0)
-		if params.get('min_priority') is not None:  # minimal task priority
-			opt.append(Task.priority >= params['min_priority'])
 		if params.get('max_due_date'):
-			opt.append(Task.due_date <= params['max_due_date'])
-		if params.get('next_action'):
-			opt.append(Task.status == 1)  # status = next action
-		if params.get('started'):  # started task (with start date in past)
-			opt.append(Task.start_date <= now)
-		if opt:
-			# use "or" or "and" operator for hotlist params
-			if params.get('filter_operator', 'and') == 'or':
-				query = query.filter(or_(*opt))  # pylint: disable=W0142
-			else:
-				query = query.filter(*opt)  # pylint: disable=W0142
-		finished = params.get('finished')  # filter by completed value
-		if finished is not None:
-			if finished:  # only finished
-				query = query.filter(Task.completed.isnot(None))
-			else:  # only not-completed
-				query = query.filter(Task.completed.is_(None))
-		parent_uuid = params.get('parent_uuid')
-		if parent_uuid is not None:
-			if parent_uuid == 0:
-				# filter by parent (show only master task (not subtask))
-				query = query.filter(Task.parent_uuid.is_(None))
-			elif parent_uuid:
-				# filter by parent (show only subtask)
-				query = query.filter(Task.parent_uuid == parent_uuid)
+			query = query.filter(Task.due_date.isnot(None))
+		query = _quert_add_filter_by_hotlist(query, params, now)
+		query = _query_add_filter_by_finished(query, params.get('finished'))
+		query = _query_add_filter_by_parent(query, params.get('parent_uuid'))
 		# future alarms
 		if params.get('active_alarm'):
 			query = query.filter(Task.alarm >= now)
@@ -331,9 +332,9 @@ class Task(BaseModelMixin, Base):
 		return orm.object_session(self).scalar(select([func.count(Task.uuid)])
 				.where(Task.parent_uuid == self.uuid))
 
-	def clone(self):
+	def clone(self, cleanup=True):
 		""" Clone current object. """
-		newobj = BaseModelMixin.clone(self)
+		newobj = BaseModelMixin.clone(self, cleanup)
 		# clone tags
 		for tasktag in self.tags:
 			ntasktag = TaskTag()
@@ -342,7 +343,8 @@ class Task(BaseModelMixin, Base):
 		# clone notes
 		for note in self.notes:
 			newobj.notes.append(note.clone())
-		newobj.completed = None
+		if cleanup:
+			newobj.completed = None
 		return newobj
 
 
@@ -370,6 +372,73 @@ def _append_filter_list(query, param, values):
 		return query.filter(or_(param.is_(None), param.in_(values)))
 	# lista parametrów bez NULL
 	return query.filter(param.in_(values))
+
+
+def _query_add_filter_by_tags(query, params):
+	""" Add filters related to tags. """
+	if params.get('tags'):
+		# filter by tags; pylint: disable=E1101
+		tags = set(params.get('tags'))
+		if None in tags:
+			if len(tags) == 1:
+				query = query.filter(~Task.tags.any())
+			else:
+				query = query.filter(or_(
+						Task.tags.any(TaskTag.tag_uuid.in_(params['tags'])),
+						~Task.tags.any()))
+		else:
+			query = query.filter(Task.tags.any(TaskTag.tag_uuid.in_(params['tags'])))
+	return query
+
+
+def _quert_add_filter_by_hotlist(query, params, now):
+	""" Add filters related to hotlist. """
+	opt = []
+	if params.get('starred'):  # show starred task
+		opt.append(Task.starred > 0)
+	if params.get('min_priority') is not None:  # minimal task priority
+		opt.append(Task.priority >= params['min_priority'])
+	if params.get('max_due_date'):
+		opt.append(or_(
+			and_(Task.type != enums.TYPE_PROJECT,
+					Task.due_date.isnot(None),
+					Task.due_date <= params['max_due_date']),
+			and_(Task.type == enums.TYPE_PROJECT,
+					Task.due_date_project.isnot(None),
+					Task.due_date_project <= params['max_due_date'])))
+	if params.get('next_action'):
+		opt.append(Task.status == 1)  # status = next action
+	if params.get('started'):  # started task (with start date in past)
+		opt.append(Task.start_date <= now)
+	if opt:
+		# use "or" or "and" operator for hotlist params
+		if params.get('filter_operator', 'and') == 'or':
+			query = query.filter(or_(*opt))  # pylint: disable=W0142
+		else:
+			query = query.filter(*opt)  # pylint: disable=W0142
+	return query
+
+
+def _query_add_filter_by_finished(query, finished):
+	""" Add filters by completed to query. """
+	if finished is not None:
+		if finished:  # only finished
+			query = query.filter(Task.completed.isnot(None))
+		else:  # only not-completed
+			query = query.filter(Task.completed.is_(None))
+	return query
+
+
+def _query_add_filter_by_parent(query, parent_uuid):
+	""" Add filters by parent to query. """
+	if parent_uuid is not None:
+		if parent_uuid == 0:
+			# filter by parent (show only master task (not subtask))
+			query = query.filter(Task.parent_uuid.is_(None))
+		elif parent_uuid:
+			# filter by parent (show only subtask)
+			query = query.filter(Task.parent_uuid == parent_uuid)
+	return query
 
 
 class Folder(BaseModelMixin, Base):

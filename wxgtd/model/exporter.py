@@ -9,8 +9,6 @@ This file is part of wxGTD
 Licence: GPLv2+
 """
 
-# TODO: renumeracja
-
 __author__ = "Karol Będkowski"
 __copyright__ = "Copyright (c) Karol Będkowski, 2013"
 __version__ = '2013-04-21'
@@ -131,8 +129,8 @@ def dump_database_to_json(notify_cb):
 	res['tasknote'] = _dump_task_notes(session, notify_cb, tasks_cache)
 	res['task_tag'] = _dump_task_tags(session, notify_cb, tasks_cache,
 			tags_cache)
-	res['syncLog'] = _dump_synclog(session, notify_cb)
 	res.update(_dump_notebooks(session, notify_cb, folders_cache))
+	res['syncLog'] = _dump_synclog(session, notify_cb)
 
 	session.commit()  # pylint: disable=E1101
 	notify_cb(80, _("Saving..."))
@@ -352,16 +350,16 @@ def _dump_tasks(session, notify_cb, folders_cache, contexts_cache,
 			'task_folder': task_folders,
 			'task_context': task_contexts,
 			'task_goal': task_goals}
-	notify_cb(65, _("Saved %d tasks") % len(tasks))
-	notify_cb(66, _("Saved %d alarms") % len(alarms))
-	notify_cb(67, _("Saved %d task folders") % len(task_folders))
-	notify_cb(68, _("Saved %d task contexts") % len(task_contexts))
-	notify_cb(69, _("Saved %d task goals") % len(task_goals))
+	notify_cb(49, _("Saved %d tasks") % len(tasks))
+	notify_cb(51, _("Saved %d alarms") % len(alarms))
+	notify_cb(52, _("Saved %d task folders") % len(task_folders))
+	notify_cb(53, _("Saved %d task contexts") % len(task_contexts))
+	notify_cb(54, _("Saved %d task goals") % len(task_goals))
 	return res, tasks_cache
 
 
 def _dump_tags(session, notify_cb):
-	notify_cb(70, _("Saving tags"))
+	notify_cb(55, _("Saving tags"))
 	# tags
 	_LOG.info("dump_database_to_json: tags")
 	tags_cache = _build_uuid_map(session, objects.Tag)
@@ -380,12 +378,12 @@ def _dump_tags(session, notify_cb):
 				'bg_color': obj.bg_color or _DEFAULT_BG_COLOR,
 				'visible': obj.visible}
 		tags.append(folder)
-	notify_cb(74, _("Saved %d tags") % len(tags))
+	notify_cb(59, _("Saved %d tags") % len(tags))
 	return tags, tags_cache
 
 
 def _dump_task_notes(session, notify_cb, tasks_cache):
-	notify_cb(75, _("Saving task notes"))
+	notify_cb(60, _("Saving task notes"))
 	# tasknotes
 	_LOG.info("dump_database_to_json: tasknotes")
 	tasknotes_cache = _build_uuid_map(session, objects.Tasknote)
@@ -401,12 +399,12 @@ def _dump_task_notes(session, notify_cb, tasks_cache):
 				'bg_color': obj.bg_color or "FFEFFF00",
 				'visible': obj.visible}
 		tasknotes.append(folder)
-	notify_cb(79, _("Saved %d task notes") % len(tasknotes))
+	notify_cb(64, _("Saved %d task notes") % len(tasknotes))
 	return tasknotes
 
 
 def _dump_task_tags(session, notify_cb, tasks_cache, tags_cache):
-	notify_cb(80, _("Saving task tags"))
+	notify_cb(65, _("Saving task tags"))
 	tasktags = []
 	for obj in session.query(objects.TaskTag):  # pylint: disable=E1101
 		ttag = {'task_id': tasks_cache[obj.task_uuid],
@@ -414,12 +412,12 @@ def _dump_task_tags(session, notify_cb, tasks_cache, tags_cache):
 				'created': fmt_date(obj.created),
 				'modified': fmt_date(obj.modified or obj.created)}
 		tasktags.append(ttag)
-	notify_cb(84, _("Saved %d task tags") % len(tasktags))
+	notify_cb(69, _("Saved %d task tags") % len(tasktags))
 	return tasktags
 
 
 def _dump_synclog(session, notify_cb):
-	notify_cb(85, _("Sync log"))
+	notify_cb(78, _("Sync log"))
 	# synclog
 	sync_logs = []
 	device_id = session.query(objects.Conf).filter_by(
@@ -443,7 +441,7 @@ def _dump_synclog(session, notify_cb):
 
 
 def _dump_notebooks(session, notify_cb, folders_cache):
-	notify_cb(16, _("Saving notebooks..."))
+	notify_cb(70, _("Saving notebooks..."))
 	_LOG.info("dump_database_to_json: notebooks")
 	notebooks_cache = _build_uuid_map(session, objects.NotebookPage)
 	notebooks = []
@@ -468,6 +466,6 @@ def _dump_notebooks(session, notify_cb, folders_cache):
 					'modified': fmt_date(notebook.modified or notebook.created)})
 	res = {'notebook': notebooks,
 			'notebook_folder': notebook_folders}
-	notify_cb(65, _("Saved %d notebooks") % len(notebooks))
-	notify_cb(67, _("Saved %d notebook folders") % len(notebook_folders))
+	notify_cb(76, _("Saved %d notebooks") % len(notebooks))
+	notify_cb(77, _("Saved %d notebook folders") % len(notebook_folders))
 	return res

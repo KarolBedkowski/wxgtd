@@ -63,7 +63,7 @@ class DlgSyncProggress(BaseDialog):
 
 	def run(self, *_args, **_kwargs):
 		self._wnd.Show()
-		self._wnd.Raise()
+		wx.Yield()
 
 	def _load_controls(self, wnd):
 		BaseDialog._load_controls(self, wnd)

@@ -57,13 +57,14 @@ def _notify_progress(progress, msg):
 			data=(progress, msg))
 
 
-def sync(filename):
+def sync(filename, load_only=False):
 	""" Sync data from/to given file.
 
 	Notify progress by Publisher().
 
 	Args:
 		filename: full path to file
+		load_only: only load, not write data
 
 	Raises:
 		SyncLockedError when source file is locked.
@@ -76,8 +77,9 @@ def sync(filename):
 		try:
 			if loader.load_from_file(filename,
 					_notify_loading_progress):
-				exporter.save_to_file(filename,
-						_notify_exporting_progress)
+				if not load_only:
+					exporter.save_to_file(filename,
+							_notify_exporting_progress)
 		except Exception as err:
 			_LOG.exception("file sync error")
 			raise OtherSyncError(err)

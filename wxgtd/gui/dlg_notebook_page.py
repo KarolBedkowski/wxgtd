@@ -58,6 +58,7 @@ class DlgNotebookPage(BaseDialog):
 			if not folder_uuid or folder_uuid == '-':
 				folder_uuid = None
 			self._page = OBJ.NotebookPage(folder_uuid=folder_uuid)
+		self._original_page = self._page.clone(cleanup=False)
 		cb_folder = self['c_folder']
 		cb_folder.Append(_("No Folder"), None)
 		for folder in self._session.query(OBJ.Folder).all():
@@ -85,3 +86,8 @@ class DlgNotebookPage(BaseDialog):
 			Publisher().sendMessage('notebook.delete',
 					data={'notebook_uuid': uuid})
 			BaseDialog._on_close(self, evt)
+
+	def _data_changed(self):
+		if not self._wnd.TransferDataFromWindow():
+			return False
+		return not self._original_page.compare(self._page)

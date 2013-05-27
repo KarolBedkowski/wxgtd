@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """ Licence and version informations.
 
-Copyright (c) Karol Będkowski, 2004-2013
+Copyright (c) Karol Będkowski, 2013
 
 This file is part of wxGTD
 Licence: GPLv2+
@@ -17,9 +17,9 @@ _ = gettext.gettext
 
 SHORTNAME = 'wxgtd'
 NAME = _("wxGTD")
-VERSION = '0.6.2'
-VERSION_INFO = (0, 6, 2, 'alpha', 1)
-RELEASE = '2013-05-25'
+VERSION = '0.7.20'
+VERSION_INFO = (0, 7, 0, 'alpha', 1)
+RELEASE = '2013-05-27'
 DESCRIPTION = _('''wxGTD''')
 DEVELOPERS = u'''Karol Będkowski'''
 TRANSLATORS = u'''Karol Będkowski'''

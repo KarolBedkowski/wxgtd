@@ -58,6 +58,7 @@ class DlgRemindSettings(BaseDialog):
 		self['tc_time'].BindSpinButton(self['sb_time'])
 
 		c_before = self['c_before']
+		c_before.Clear()
 		for rem_key, rem_name in enums.REMIND_PATTERNS_LIST:
 			c_before.Append(rem_name, rem_key)
 

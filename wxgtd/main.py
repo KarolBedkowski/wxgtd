@@ -140,6 +140,7 @@ def run():
 	# splash screen
 	from wxgtd.gui.splash import Splash
 	Splash().Show()
+	wx.Yield()
 
 	# program
 	from wxgtd.gui.frame_main import FrameMain

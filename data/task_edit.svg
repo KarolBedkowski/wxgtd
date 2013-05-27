@@ -16,8 +16,8 @@
    height="22"
    sodipodi:docname="task_edit.svg"
    inkscape:export-filename="/home/k/jp/wxgtd/data/task_edit.png"
-   inkscape:export-xdpi="94.298561"
-   inkscape:export-ydpi="94.298561">
+   inkscape:export-xdpi="90"
+   inkscape:export-ydpi="90">
   <metadata
      id="metadata8">
     <rdf:RDF>
@@ -26,7 +26,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title />
+        <dc:title></dc:title>
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -79,15 +79,15 @@
      inkscape:bbox-nodes="true"
      inkscape:snap-bbox-edge-midpoints="true"
      inkscape:object-nodes="true"
-     inkscape:zoom="15.170655"
-     inkscape:cx="-7.7907408"
-     inkscape:cy="8.4231008"
+     inkscape:zoom="12.738636"
+     inkscape:cx="-13.343319"
+     inkscape:cy="0.51935754"
      inkscape:window-x="0"
      inkscape:window-y="0"
      inkscape:window-maximized="1"
      inkscape:current-layer="svg2" />
   <g
-     transform="matrix(0.94149803,0,0,0.85884698,0.75586585,1.5833876)"
+     transform="matrix(1.1141044,0,0,1.0163008,-1.122208,-0.14297529)"
      id="g3903">
     <rect
        style="fill:#ffffff;stroke:#000000;stroke-width:0.34930554;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
@@ -136,7 +136,7 @@
   </g>
   <g
      id="g3955"
-     transform="matrix(0.84662379,0,0,0.84662379,3.0881415,3.291923)">
+     transform="matrix(0.84662379,0,0,0.84662379,2.8691873,3.7895828)">
     <g
        style="fill:#000000;stroke:#000000;stroke-width:0.13008901;stroke-miterlimit:4;stroke-dasharray:none;filter:url(#filter9453)"
        id="g8927"

@@ -60,5 +60,6 @@ class DlgChecklistitem(BaseTaskDialog):
 
 	def _setup_comboboxes(self):
 		cb_checklist = self['cb_checklist']
+		cb_checklist.Clear()
 		for checklist in OBJ.Task.all_checklists():
 			cb_checklist.Append(checklist.title, checklist.uuid)

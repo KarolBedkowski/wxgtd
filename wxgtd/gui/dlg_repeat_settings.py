@@ -105,16 +105,21 @@ class DlgRepeatSettings(BaseDialog):
 
 	def _setup_comboboxes(self):
 		c_every = self['c_every']
+		c_every.Clear()
 		for rem_key, rem_name in enums.REPEAT_PATTERN_LIST:
 			c_every.Append(rem_name, rem_key)
 		c_every.Select(0)
+
 		c_everyxt_period = self['c_everyxt_period']
+		c_everyxt_period.Clear()
 		c_everyxt_period.Append(_("days"), "Day")
 		c_everyxt_period.Append(_("weeks"), "Week")
 		c_everyxt_period.Append(_("months"), "Month")
 		c_everyxt_period.Append(_("years"), "Year")
 		c_everyxt_period.Select(0)
+
 		cb_xdm_num_wday = self['cb_xdm_num_wday']
+		cb_xdm_num_wday.Clear()
 		cb_xdm_num_wday.Append(_("first"), 'first')
 		cb_xdm_num_wday.Append(_("second"), 'second')
 		cb_xdm_num_wday.Append(_("third"), 'third')
@@ -122,7 +127,9 @@ class DlgRepeatSettings(BaseDialog):
 		cb_xdm_num_wday.Append(_("fifth"), 'fifth')
 		cb_xdm_num_wday.Append(_("last"), 'last')
 		cb_xdm_num_wday.Select(0)
+
 		c_xdm_weekday = self['c_xdm_weekday']
+		c_xdm_weekday.Clear()
 		c_xdm_weekday.Append(_("Monday"), "Mon")
 		c_xdm_weekday.Append(_("Tuesday"), "Tue")
 		c_xdm_weekday.Append(_("Wednesday"), "Wed")
