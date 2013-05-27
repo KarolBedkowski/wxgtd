@@ -1,4 +1,10 @@
-wxgtd 0.621 2013-05-25
+wxgtd 0.7.0 2013-05-27
+
+	* fix projects
+	* gui: improvements
+	* bugfixes
+
+wxgtd 0.6.2 2013-05-25
 
 	* fix synchronisation
 
