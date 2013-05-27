@@ -626,7 +626,12 @@ class FrameMain(BaseFrame):
 		elif group_id == 3:  # basket
 			# no status, no context
 			params['contexts'] = [None]
-			params['statuses'] = [None]
+			params['statuses'] = [0]
+			params['goals'] = [None]
+			params['folders'] = [None]
+			params['tags'] = [None]
+			params['finished'] = False
+			params['no_due_date'] = True
 		elif group_id == 4:  # finished
 			params['finished'] = True
 		elif group_id == 5 and not parent:  # projects
