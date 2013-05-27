@@ -38,13 +38,21 @@ def _show_version(*_args, **_kwargs):
 def _parse_opt():
 	""" Parse cli options. """
 	optp = optparse.OptionParser()
-	optp.add_option('--debug', '-d', action="store_true", default=False,
-			help='enable debug messages')
-	optp.add_option('--debug-sql', action="store_true", default=False,
-			help='enable sql debug messages')
 	optp.add_option('--version', action="callback", callback=_show_version,
 		help='show information about application version')
-	optp.add_option('--wx-inspection', action="store_true", default=False)
+	group = optparse.OptionGroup(optp, "Creating tasks")
+	group.add_option('--quick-task', '-q', action="callback", callback=quicktask,
+			help='add quickly task', type="string")
+	group.add_option('--quick-task-dialog', action="store_true", default=False,
+			help='enable debug messages', dest="quick_task_dialog")
+	optp.add_option_group(group)
+	group = optparse.OptionGroup(optp, "Debug options")
+	group.add_option('--debug', '-d', action="store_true", default=False,
+			help='enable debug messages')
+	group.add_option('--debug-sql', action="store_true", default=False,
+			help='enable sql debug messages')
+	group.add_option('--wx-inspection', action="store_true", default=False)
+	optp.add_option_group(group)
 	return optp.parse_args()[0]
 
 
@@ -138,14 +146,13 @@ def run():
 	wx.InitAllImageHandlers()
 
 	# splash screen
-	from wxgtd.gui.splash import Splash
-	Splash().Show()
-	wx.Yield()
+	if not options.quick_task_dialog:
+		from wxgtd.gui.splash import Splash
+		Splash().Show()
+		wx.Yield()
 
 	# program
-	from wxgtd.gui.frame_main import FrameMain
 	from wxgtd.model import db
-	from wxgtd.wxtools import iconprovider
 
 	# find database file.
 	db_filename = _find_db_file(config)
@@ -157,24 +164,63 @@ def run():
 		wx.Locale.AddCatalogLookupPathPrefix(config.locales_dir)
 		wx.Locale(wx.LANGUAGE_DEFAULT).AddCatalog('wxstd')
 
-	# init icons
-	iconprovider.init_icon_cache(None, config.data_dir)
-
 	# connect to databse
 	db.connect(db_filename, options.debug_sql)
 
-	# show main window
-	main_frame = FrameMain()
-	app.SetTopWindow(main_frame.wnd)
-	if not config.get('gui', 'hide_on_start'):
-		main_frame.wnd.Show()
+	if options.quick_task_dialog:
+		from wxgtd.gui import quicktask
+		quicktask.quick_task(None)
+	else:
+		# init icons
+		from wxgtd.wxtools import iconprovider
+		iconprovider.init_icon_cache(None, config.data_dir)
 
-	# optionally show inspection tool
-	if options.wx_inspection:
-		import wx.lib.inspection
-		wx.lib.inspection.InspectionTool().Show()
+		# show main window
+		from wxgtd.gui.frame_main import FrameMain
+		main_frame = FrameMain()
+		app.SetTopWindow(main_frame.wnd)
+		if not config.get('gui', 'hide_on_start'):
+			main_frame.wnd.Show()
 
-	app.MainLoop()
+		# optionally show inspection tool
+		if options.wx_inspection:
+			import wx.lib.inspection
+			wx.lib.inspection.InspectionTool().Show()
+
+		app.MainLoop()
 
 	# app closed; save config
 	config.save()
+
+
+def quicktask(option, opt_str, value, parser, *args, **kwargs):
+	if not value:
+		raise optparse.OptionValueError()
+
+	# app config
+	from wxgtd.lib import appconfig
+
+	# logowanie
+	from wxgtd.lib.logging_setup import logging_setup
+	logging_setup('wxgtd.log', False, False)
+
+	# konfiguracja
+	config = appconfig.AppConfig('wxgtd.cfg', 'wxgtd')
+	config.load_defaults(config.get_data_file('defaults.cfg'))
+	config.load()
+	config.debug = False
+
+	# locale
+	_setup_locale(config)
+
+	# database
+	from wxgtd.model import db
+	db_filename = _find_db_file(config)
+	_create_file_dir(db_filename)
+	# connect to databse
+	db.connect(db_filename, False)
+
+	from wxgtd.gui import quicktask
+	quicktask.create_quicktask(value)
+	config.save()
+	exit(0)
