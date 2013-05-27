@@ -14,6 +14,7 @@ __version__ = "2013-04-27"
 import wx
 from wx import xrc
 
+from wxgtd.gui import message_boxes as mbox
 from wxgtd.lib.appconfig import AppConfig
 from wxgtd.wxtools import iconprovider
 from wxgtd.wxtools import wxresources
@@ -156,6 +157,10 @@ class BaseDialog:
 		wnd.Bind(wx.EVT_BUTTON, self._on_ok, id=wx.ID_OK)
 		wnd.Bind(wx.EVT_BUTTON, self._on_cancel, id=wx.ID_CANCEL)
 
+	def _data_changed(self):
+		""" Before close check is changed. """
+		return False
+
 	def _on_close(self, _evt):
 		""" Action launched on close event. """
 		if self._save_pos:
@@ -171,6 +176,8 @@ class BaseDialog:
 
 	def _on_cancel(self, _evt):
 		""" Action for cancel - close window. """
+		if self._data_changed() and not self._confirm_close():
+			return
 		if self._wnd.IsModal():
 			self._wnd.EndModal(wx.ID_CLOSE)
 		else:
@@ -186,6 +193,14 @@ class BaseDialog:
 	def _on_save(self, evt):
 		""" Action for save action. Default - use _on_ok action. """
 		self._on_ok(evt)
+
+	def _confirm_close(self):
+		res = mbox.message_box_not_save_confirm(self._wnd, None)
+		if res == wx.ID_NO:
+			return True
+		if res == wx.ID_YES:
+			self._on_save(None)
+		return False
 
 
 def _fix_panels(wnd):
