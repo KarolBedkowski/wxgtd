@@ -55,20 +55,34 @@ class BaseModelMixin(object):
 			if hasattr(self, key):
 				setattr(self, key, val)
 
-	def clone(self):
-		""" Clone current object. """
+	def clone(self, cleanup=True):
+		""" Clone current object.
+
+		Args:
+			cleanup: clean specific to instance values.
+		"""
 		newobj = type(self)()
 		for prop in orm.object_mapper(self).iterate_properties:
 			if isinstance(prop, orm.ColumnProperty) or \
 					(isinstance(prop, orm.RelationshipProperty)
 							and prop.secondary):
 				setattr(newobj, prop.key, getattr(self, prop.key))
-		if hasattr(newobj, 'uuid'):
+		if hasattr(newobj, 'uuid') and cleanup:
 			newobj.uuid = None
 		if hasattr(self, 'children'):
 			for child in self.children:
 				newobj.children.append(child.clone())
 		return newobj
+
+	def compare(self, obj):
+		""" Compare objects. """
+		for prop in orm.object_mapper(self).iterate_properties:
+			if isinstance(prop, orm.ColumnProperty) or \
+					(isinstance(prop, orm.RelationshipProperty)
+							and prop.secondary):
+				if getattr(obj, prop.key) != getattr(self, prop.key):
+					return False
+		return True
 
 	def update_modify_time(self):
 		if hasattr(self, 'modified'):
@@ -318,9 +332,9 @@ class Task(BaseModelMixin, Base):
 		return orm.object_session(self).scalar(select([func.count(Task.uuid)])
 				.where(Task.parent_uuid == self.uuid))
 
-	def clone(self):
+	def clone(self, cleanup=True):
 		""" Clone current object. """
-		newobj = BaseModelMixin.clone(self)
+		newobj = BaseModelMixin.clone(self, cleanup)
 		# clone tags
 		for tasktag in self.tags:
 			ntasktag = TaskTag()
@@ -329,7 +343,8 @@ class Task(BaseModelMixin, Base):
 		# clone notes
 		for note in self.notes:
 			newobj.notes.append(note.clone())
-		newobj.completed = None
+		if cleanup:
+			newobj.completed = None
 		return newobj
 
 
