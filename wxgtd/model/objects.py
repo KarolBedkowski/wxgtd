@@ -149,7 +149,7 @@ class Task(BaseModelMixin, Base):
 	ordinal = Column(Integer, default=0)
 	title = Column(String, index=True)
 	note = Column(String)
-	type = Column(Integer, nullable=False)
+	type = Column(Integer, nullable=False, default=enums.TYPE_TASK)
 	starred = Column(Integer, default=0)
 	status = Column(Integer, default=0)
 	priority = Column(Integer, default=0)
@@ -273,6 +273,8 @@ class Task(BaseModelMixin, Base):
 					Task.hide_until <= now))
 		if params.get('max_due_date'):
 			query = query.filter(Task.due_date.isnot(None))
+		elif params.get('no_due_date'):
+			query = query.filter(Task.due_date.is_(None))
 		query = _quert_add_filter_by_hotlist(query, params, now)
 		query = _query_add_filter_by_finished(query, params.get('finished'))
 		query = _query_add_filter_by_parent(query, params.get('parent_uuid'))

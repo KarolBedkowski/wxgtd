@@ -38,6 +38,7 @@ from wxgtd.gui import _fmt as fmt
 from wxgtd.gui import _infobox as infobox
 from wxgtd.gui import message_boxes as mbox
 from wxgtd.gui import _tasklistctrl as TLC
+from wxgtd.gui import quicktask
 from wxgtd.gui._base_frame import BaseFrame
 from wxgtd.gui._filtertreectrl import FilterTreeCtrl
 from wxgtd.gui._taskbaricon import TaskBarIcon
@@ -118,6 +119,7 @@ class FrameMain(BaseFrame):
 				self._on_menu_file_preferences)
 		self._create_menu_bind('menu_help_about', self._on_menu_help_about)
 		self._create_menu_bind('menu_task_new', self._on_menu_task_new)
+		self._create_menu_bind('menu_task_quick', self._on_menu_task_quick)
 		self._create_menu_bind('menu_task_edit', self._on_menu_task_edit)
 		self._create_menu_bind('menu_task_delete', self._on_menu_task_delete)
 		self._create_menu_bind('menu_task_clone', self._on_menu_task_clone)
@@ -149,6 +151,11 @@ class FrameMain(BaseFrame):
 				iconprovider.get_image("task_new"),
 				shortHelp=_('Add new task'))
 		self.wnd.Bind(wx.EVT_TOOL, self._on_btn_new_task, id=tbi.GetId())
+
+		tbi = toolbar.AddLabelTool(-1, _('Quick Task'),
+				iconprovider.get_image("task_quick"),
+				shortHelp=_('Add quick new task'))
+		self.wnd.Bind(wx.EVT_TOOL, self._on_btn_quick_task, id=tbi.GetId())
 
 		tbi = toolbar.AddLabelTool(-1, _('Edit Task'),
 				iconprovider.get_image('task_edit'),
@@ -343,12 +350,18 @@ class FrameMain(BaseFrame):
 	def _on_btn_new_task(self, _evt):
 		self._new_task()
 
+	def _on_btn_quick_task(self, _evt):
+		quicktask.quick_task(self.wnd)
+
 	def _on_menu_help_about(self, _evt):
 		""" Show about dialog """
 		dlg_about.show_about_box(self.wnd)
 
 	def _on_menu_task_new(self, _evt):
 		self._new_task()
+
+	def _on_menu_task_quick(self, _evt):
+		quicktask.quick_task(self.wnd)
 
 	def _on_menu_task_delete(self, _evt):
 		self._delete_selected_task()
@@ -626,7 +639,12 @@ class FrameMain(BaseFrame):
 		elif group_id == 3:  # basket
 			# no status, no context
 			params['contexts'] = [None]
-			params['statuses'] = [None]
+			params['statuses'] = [0]
+			params['goals'] = [None]
+			params['folders'] = [None]
+			params['tags'] = [None]
+			params['finished'] = False
+			params['no_due_date'] = True
 		elif group_id == 4:  # finished
 			params['finished'] = True
 		elif group_id == 5 and not parent:  # projects
