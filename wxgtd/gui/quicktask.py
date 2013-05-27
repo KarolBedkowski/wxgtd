@@ -28,12 +28,20 @@ _LOG = logging.getLogger(__name__)
 
 
 def quick_task(self, parent_wnd=None):
+	""" Show dialog for quickly adding task. """
 	dlg = wx.TextEntryDialog(parent_wnd, _("Enter task title"),
 			_("wxGTD Quick Task"), "")
 	if dlg.ShowModal() == wx.ID_OK and dlg.GetValue().strip():
-		session = OBJ.Session()
-		task = OBJ.Task(title=dlg.GetValue().strip(), priority=-1)
-		session.add(task)
-		session.commit()
+		task = create_quicktask(dlg.GetValue().strip())
 		Publisher().sendMessage('task.update', data={'task_uuid': task.uuid})
 	dlg.Destroy()
+
+
+def create_quicktask(title):
+	""" Create quick task from given title. """
+	session = OBJ.Session()
+	task = OBJ.Task(title=title, priority=-1)
+	session.add(task)
+	session.commit()
+	_LOG.info("create_quicktask: ok")
+	return task
