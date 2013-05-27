@@ -149,7 +149,7 @@ class Task(BaseModelMixin, Base):
 	ordinal = Column(Integer, default=0)
 	title = Column(String, index=True)
 	note = Column(String)
-	type = Column(Integer, nullable=False)
+	type = Column(Integer, nullable=False, default=enums.TYPE_TASK)
 	starred = Column(Integer, default=0)
 	status = Column(Integer, default=0)
 	priority = Column(Integer, default=0)
