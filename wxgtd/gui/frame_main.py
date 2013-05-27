@@ -493,62 +493,14 @@ class FrameMain(BaseFrame):
 			DlgReminders.check(self.wnd, self._session)
 
 	def _refresh_list(self):
-		# TODO: refactor, pylint: disable=R0912, R0915
-		group_id = self['rb_show_selection'].GetSelection()
-		tmodel = self._filter_tree_ctrl.model
-		params = {'starred': False, 'finished': None, 'min_priority': None,
-				'max_due_date': None, 'tags': None, 'types': None}
-		params['contexts'] = list(tmodel.checked_items_by_parent("CONTEXTS"))
-		params['folders'] = list(tmodel.checked_items_by_parent("FOLDERS"))
-		params['goals'] = list(tmodel.checked_items_by_parent("GOALS"))
-		params['statuses'] = list(tmodel.checked_items_by_parent("STATUSES"))
-		params['parent_uuid'] = parent = self._items_path[-1].uuid \
-				if self._items_path else None
-		params['tags'] = list(tmodel.checked_items_by_parent("TAGS"))
-		if not self._btn_show_finished.GetValue():
-			params['finished'] = False
-		params['hide_until'] = self._btn_hide_until.GetValue()
-		params['search_str'] = self._searchbox.GetValue()
-		if not parent:
-			if not self._btn_show_subtasks.GetValue():
-				# tylko nadrzędne
-				params['parent_uuid'] = 0
-		if group_id == 0:  # all
-			pass
-		elif group_id == 1:  # hot
-			if not params['parent_uuid']:
-				# ignore hotlist settings when showing subtasks
-				_get_hotlist_settings(params, self._appconfig)
-		elif group_id == 2:  # stared
-			if not params['parent_uuid']:
-				# ignore starred when showing subtasks
-				params['starred'] = True
-		elif group_id == 3:  # basket
-			# no status, no context
-			params['contexts'] = [None]
-			params['statuses'] = [None]
-		elif group_id == 4:  # finished
-			params['finished'] = True
-		elif group_id == 5:  # projects
-			if not parent:
-				params['types'] = [enums.TYPE_PROJECT]
-		elif group_id == 6:  # checklists
-			if parent:
-				params['types'] = [enums.TYPE_CHECKLIST, enums.TYPE_CHECKLIST_ITEM]
-			else:
-				params['types'] = [enums.TYPE_CHECKLIST]
-		elif group_id == 7:  # future alarms
-			params['active_alarm'] = True
-			params['finished'] = (None if self._btn_show_finished.GetValue()
-					else False)
-		_LOG.debug("FrameMain._refresh_list; params=%r", params)
 		wx.SetCursor(wx.HOURGLASS_CURSOR)
+		params = self._get_params_for_list()
+		_LOG.debug("FrameMain._refresh_list; params=%r", params)
 		self._session.expire_all()  # pylint: disable=E1101
 		tasks = OBJ.Task.select_by_filters(params, session=self._session)
-		items_list = self._items_list_ctrl
-		active_only = not self._btn_show_finished.GetValue()
+		active_only = params['finished'] is not None and not params['finished']
 		self._items_list_ctrl.fill(tasks, active_only=active_only)
-		showed = items_list.GetItemCount()
+		showed = self._items_list_ctrl.GetItemCount()
 		self.wnd.SetStatusText(ngettext("%d item", "%d items", showed) % showed, 1)
 		self._show_parent_info(active_only)
 		wx.SetCursor(wx.STANDARD_CURSOR)
@@ -644,6 +596,51 @@ class FrameMain(BaseFrame):
 		panel_parent_icons.Refresh()
 		panel_parent_icons.Update()
 		self['panel_parent'].GetSizer().Layout()
+
+	def _get_params_for_list(self):
+		""" Build params for database query """
+		group_id = self['rb_show_selection'].GetSelection()
+		parent = self._items_path[-1].uuid if self._items_path else None
+		_LOG.debug('_get_params_for_list: group_id=%r, parent=%r', group_id, parent)
+		tmodel = self._filter_tree_ctrl.model
+		params = {'starred': False, 'min_priority': None,
+				'max_due_date': None, 'types': None,
+				'contexts': list(tmodel.checked_items_by_parent("CONTEXTS")),
+				'folders': list(tmodel.checked_items_by_parent("FOLDERS")),
+				'goals': list(tmodel.checked_items_by_parent("GOALS")),
+				'statuses': list(tmodel.checked_items_by_parent("STATUSES")),
+				'tags': list(tmodel.checked_items_by_parent("TAGS")),
+				'hide_until': self._btn_hide_until.GetValue(),
+				'search_str': self._searchbox.GetValue(),
+				'parent_uuid': parent}
+		params['finished'] = None if self._btn_show_finished.GetValue() else False
+		if not parent and not self._btn_show_subtasks.GetValue():
+			# tylko nadrzędne
+			params['parent_uuid'] = 0
+		if group_id == 1 and not parent:  # hot
+			# ignore hotlist settings when showing subtasks
+			_get_hotlist_settings(params, self._appconfig)
+		elif group_id == 2 and not parent:  # stared
+			# ignore starred when showing subtasks
+			params['starred'] = True
+		elif group_id == 3:  # basket
+			# no status, no context
+			params['contexts'] = [None]
+			params['statuses'] = [None]
+		elif group_id == 4:  # finished
+			params['finished'] = True
+		elif group_id == 5 and not parent:  # projects
+			params['types'] = [enums.TYPE_PROJECT]
+		elif group_id == 6:  # checklists
+			if parent:
+				params['types'] = [enums.TYPE_CHECKLIST, enums.TYPE_CHECKLIST_ITEM]
+			else:
+				params['types'] = [enums.TYPE_CHECKLIST]
+		elif group_id == 7:  # future alarms
+			params['active_alarm'] = True
+			params['finished'] = (None if self._btn_show_finished.GetValue()
+					else False)
+		return params
 
 
 def _get_hotlist_settings(params, conf):
