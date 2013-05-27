@@ -185,7 +185,8 @@ class Task(BaseModelMixin, Base):
 
 	def _set_task_completed(self, value):
 		if value:
-			self.completed = datetime.datetime.utcnow()
+			if not self.completed:
+				self.completed = datetime.datetime.utcnow()
 		else:
 			self.completed = None
 
