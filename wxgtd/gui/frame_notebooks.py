@@ -57,6 +57,8 @@ class FrameNotebook(BaseFrame):
 
 	def _setup(self):
 		self._pages_uuid = {}
+		self._current_sort_col = None
+		self._current_sort_ord = 1
 		self._session = OBJ.Session()
 		self._lb_pages.InsertColumn(0, _("Title"))
 		self._lb_pages.InsertColumn(1, _("Created"))
@@ -81,7 +83,7 @@ class FrameNotebook(BaseFrame):
 		wnd.Bind(wx.EVT_LISTBOX, self._on_folders_listbox, self._lb_folders)
 		wnd.Bind(wx.EVT_LIST_ITEM_ACTIVATED, self._on_pages_list_activated,
 				self._lb_pages)
-
+		wnd.Bind(wx.EVT_LIST_COL_CLICK, self._on_pages_list_col_click)
 		Publisher().subscribe(self._on_notebook_update, ('notebook', 'update'))
 		Publisher().subscribe(self._on_notebook_update, ('notebook', 'delete'))
 
@@ -162,6 +164,15 @@ class FrameNotebook(BaseFrame):
 		DlgNotebookPage.create(uuid, self.wnd, self._session, uuid,
 				self.selected_folder_uuid).run(False)
 
+	def _on_pages_list_col_click(self, evt):
+		m_col = evt.m_col
+		if self._current_sort_col == m_col:
+			self._current_sort_ord = -self._current_sort_ord
+		else:
+			self._current_sort_col = m_col
+			self._current_sort_ord = 1
+		self._refresh_pages()
+
 	@property
 	def selected_folder_uuid(self):
 		return self._lb_folders.GetClientData(self._lb_folders.GetSelection())
@@ -204,14 +215,19 @@ class FrameNotebook(BaseFrame):
 		self._lb_pages.DeleteAllItems()
 		self._pages_uuid.clear()
 		query = self._session.query(OBJ.NotebookPage)\
-				.filter(OBJ.NotebookPage.deleted.is_(None))\
-				.order_by(OBJ.NotebookPage.ordinal, OBJ.NotebookPage.title)
+				.filter(OBJ.NotebookPage.deleted.is_(None))
 		if sel_folder is None:
 			query = query.filter(OBJ.NotebookPage.folder_uuid.is_(None))
 		elif sel_folder != '-':
 			query = query.filter(OBJ.NotebookPage.folder_uuid == sel_folder)
+		col = [OBJ.NotebookPage.title, OBJ.NotebookPage.created,
+				OBJ.NotebookPage.modified][self._current_sort_col or 0]
+		if self._current_sort_ord == 1:
+			query = query.order_by(col.asc())
+		else:
+			query = query.order_by(col.desc())
 		idx = 0
-		for idx, page in enumerate(query.all()):
+		for idx, page in enumerate(query):
 			self._lb_pages.InsertStringItem(idx, page.title)
 			self._lb_pages.SetStringItem(idx, 1,
 					fmt.format_timestamp(page.created))
