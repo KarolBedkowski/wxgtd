@@ -16,13 +16,10 @@ import gettext
 import logging
 
 import wx
-#try:
-	#from wx.lib.pubsub.pub import Publisher
-#except ImportError:
-	#from wx.lib.pubsub import Publisher
 
 from wxgtd.wxtools import iconprovider
 from wxgtd.gui.frame_notebooks import FrameNotebook
+from wxgtd.gui import quicktask
 
 _ = gettext.gettext
 _LOG = logging.getLogger(__name__)
@@ -32,6 +29,7 @@ class TaskBarIcon(wx.TaskBarIcon):
 	TBMENU_RESTORE = wx.NewId()
 	TBMENU_CLOSE = wx.NewId()
 	TBMENU_SHOW_NOTEBOOK = wx.NewId()
+	TBMENU_QUICK_TASK = wx.NewId()
 
 	def __init__(self, parent_frame):
 		wx.TaskBarIcon.__init__(self)
@@ -52,6 +50,8 @@ class TaskBarIcon(wx.TaskBarIcon):
 		menu.Append(self.TBMENU_RESTORE, _("Restore wxGTD"))
 		menu.Append(self.TBMENU_SHOW_NOTEBOOK, _("Show notebook"))
 		menu.AppendSeparator()
+		menu.Append(self.TBMENU_QUICK_TASK, _("Quick task..."))
+		menu.AppendSeparator()
 		menu.Append(self.TBMENU_CLOSE,  _("Close wxGTD"))
 		return menu
 
@@ -62,6 +62,7 @@ class TaskBarIcon(wx.TaskBarIcon):
 		self.Bind(wx.EVT_MENU, self._on_menu_app_close, id=self.TBMENU_CLOSE)
 		self.Bind(wx.EVT_MENU, self._on_menu_show_notebook,
 				id=self.TBMENU_SHOW_NOTEBOOK)
+		self.Bind(wx.EVT_MENU, self._on_menu_quick_task, id=self.TBMENU_QUICK_TASK)
 
 	def _on_icon_activate(self, _evt):
 		if self._frame.IsIconized():
@@ -75,3 +76,6 @@ class TaskBarIcon(wx.TaskBarIcon):
 
 	def _on_menu_show_notebook(self, _evt):  # pylint: disable=R0201
 		FrameNotebook.run()
+
+	def _on_menu_quick_task(self, _evt):
+		quicktask.quick_task()
