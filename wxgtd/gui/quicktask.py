@@ -21,7 +21,7 @@ try:
 except ImportError:
 	from wx.lib.pubsub import Publisher  # pylint: disable=E0611
 
-from wxgtd.model import objects as OBJ
+from wxgtd.logic import quicktask
 
 _ = gettext.gettext
 _LOG = logging.getLogger(__name__)
@@ -32,16 +32,6 @@ def quick_task(parent_wnd=None):
 	dlg = wx.TextEntryDialog(parent_wnd, _("Enter task title"),
 			_("wxGTD Quick Task"), "")
 	if dlg.ShowModal() == wx.ID_OK and dlg.GetValue().strip():
-		task = create_quicktask(dlg.GetValue().strip())
+		task = quicktask.create_quicktask(dlg.GetValue().strip())
 		Publisher().sendMessage('task.update', data={'task_uuid': task.uuid})
 	dlg.Destroy()
-
-
-def create_quicktask(title):
-	""" Create quick task from given title. """
-	session = OBJ.Session()
-	task = OBJ.Task(title=title, priority=-1)
-	session.add(task)
-	session.commit()
-	_LOG.info("create_quicktask: ok")
-	return task

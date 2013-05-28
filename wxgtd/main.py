@@ -221,7 +221,7 @@ def create_quicktask(_option, _opt_str, value, _parser, *_args, **_kwargs):
 	# connect to databse
 	db.connect(db_filename, False)
 
-	from wxgtd.gui import quicktask
-	quicktask.create_quicktask(value)
+	from wxgtd.logic import quicktask as quicktask_logic
+	quicktask_logic.create_quicktask(value)
 	config.save()
 	exit(0)
