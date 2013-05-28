@@ -49,6 +49,9 @@ class _FTask(object):
 				return False
 		return True
 
+	def update_modify_time(self):
+		pass
+
 
 class TestLogicUpdateTaskAlarm(TestCase):
 	def test_01_empty(self):
