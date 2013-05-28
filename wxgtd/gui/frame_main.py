@@ -466,9 +466,7 @@ class FrameMain(BaseFrame):
 		task_uuid = self._items_list_ctrl.get_item_uuid(None)
 		if task_uuid is None:  # not selected
 			return
-		if task_logic.toggle_task_complete(task_uuid, self.wnd, self._session):
-			Publisher().sendMessage('task.update', data={'task_uuid': task_uuid})
-			self._refresh_list()
+		task_logic.toggle_task_complete(task_uuid, self.wnd, self._session)
 
 	def _on_btn_edit_parent(self, _evt):
 		if not self._items_path:
@@ -527,8 +525,7 @@ class FrameMain(BaseFrame):
 	def _delete_selected_task(self):
 		task_uuid = self._items_list_ctrl.get_item_uuid(None)
 		if task_uuid:
-			if task_logic.delete_task(task_uuid, self.wnd):
-				Publisher().sendMessage('task.delete', data={'task_uuid': task_uuid})
+			task_logic.delete_task(task_uuid, self.wnd)
 
 	def _new_task(self):
 		parent_uuid = None
@@ -560,10 +557,7 @@ class FrameMain(BaseFrame):
 		if not mbox.message_box_question_yesno(self.wnd,
 				_("Clone task with all subtasks?")):
 			return
-		new_task_uuid = task_logic.clone_task(task_uuid)
-		if new_task_uuid:
-			Publisher().sendMessage('task.update',
-					data={'task_uuid': new_task_uuid})
+		task_logic.clone_task(task_uuid)
 
 	def _show_parent_info(self, active_only):
 		panel_parent_icons = self._panel_parent_icons

@@ -19,6 +19,11 @@ import re
 
 from dateutil.relativedelta import relativedelta
 
+try:
+	from wx.lib.pubsub.pub import Publisher
+except ImportError:
+	from wx.lib.pubsub import Publisher  # pylint: disable=E0611
+
 from wxgtd.gui import message_boxes as mbox
 from wxgtd.model import objects as OBJ
 from wxgtd.model import enums
@@ -364,6 +369,7 @@ def delete_task(task_uuid, parent_wnd=None, session=None):
 
 	session.delete(task)
 	session.commit()
+	Publisher().sendMessage('task.delete', data={'task_uuid': task_uuid})
 	return True
 
 
@@ -411,9 +417,7 @@ def toggle_task_complete(task_uuid, parent_wnd, session=None):
 			return False
 	else:
 		task.task_completed = False
-	task.update_modify_time()
-	session.commit()  # pylint: disable=E1101
-	return True
+	return save_modified_task(task, session)
 
 
 _PERIOD_PL = {'Week': "Weeks", "Day": "Days", "Month": "Months",
@@ -522,7 +526,25 @@ def clone_task(task_uuid, session=None):
 		_LOG.warn("_clone_selected_task; missing task %r", task_uuid)
 		return None
 	new_task = task.clone()
-	new_task.update_modify_time()
-	session.add(new_task)
-	session.commit()
+	save_modified_task(new_task, session)
+	Publisher().sendMessage('task.update', data={'task_uuid': new_task.uuid})
 	return new_task.uuid
+
+
+def save_modified_task(task, session=None):
+	""" Save modified task.
+	Update required fields.
+
+	Args:
+		task: task to save
+		session: optional SqlAlchemy session
+	Returns:
+		True if ok.
+	"""
+	session = session or OBJ.Session()
+	update_project_due_date(task)
+	task.update_modify_time()
+	session.add(task)
+	session.commit()  # pylint: disable=E1101
+	Publisher().sendMessage('task.update', data={'task_uuid': task.uuid})
+	return True
