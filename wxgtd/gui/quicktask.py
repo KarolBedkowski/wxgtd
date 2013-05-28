@@ -27,7 +27,7 @@ _ = gettext.gettext
 _LOG = logging.getLogger(__name__)
 
 
-def quick_task(self, parent_wnd=None):
+def quick_task(parent_wnd=None):
 	""" Show dialog for quickly adding task. """
 	dlg = wx.TextEntryDialog(parent_wnd, _("Enter task title"),
 			_("wxGTD Quick Task"), "")

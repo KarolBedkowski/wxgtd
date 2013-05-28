@@ -41,7 +41,8 @@ def _parse_opt():
 	optp.add_option('--version', action="callback", callback=_show_version,
 		help='show information about application version')
 	group = optparse.OptionGroup(optp, "Creating tasks")
-	group.add_option('--quick-task', '-q', action="callback", callback=quicktask,
+	group.add_option('--quick-task', '-q', action="callback",
+			callback=create_quicktask,
 			help='add quickly task', type="string")
 	group.add_option('--quick-task-dialog', action="store_true", default=False,
 			help='enable debug messages', dest="quick_task_dialog")
@@ -193,7 +194,7 @@ def run():
 	config.save()
 
 
-def quicktask(option, opt_str, value, parser, *args, **kwargs):
+def create_quicktask(_option, _opt_str, value, _parser, *_args, **_kwargs):
 	if not value:
 		raise optparse.OptionValueError()
 
