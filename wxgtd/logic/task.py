@@ -393,6 +393,29 @@ def complete_task(task, parent_wnd=None, session=None):
 	return True
 
 
+def toggle_task_complete(task_uuid, parent_wnd, session=None):
+	""" Togle task complete flag.
+
+	Args:
+		task_uuid: UUID of task to change
+		parent_wnd: parent wxwidget window
+		session: optional SqlAlchemy session
+	Returns:
+		True if ok
+	"""
+	session = session or OBJ.Session()
+	task = session.query(  # pylint: disable=E1101
+			OBJ.Task).filter_by(uuid=task_uuid).first()
+	if not task.task_completed:
+		if not complete_task(task, parent_wnd, session):
+			return False
+	else:
+		task.task_completed = False
+	task.update_modify_time()
+	session.commit()  # pylint: disable=E1101
+	return True
+
+
 _PERIOD_PL = {'Week': "Weeks", "Day": "Days", "Month": "Months",
 		"Year": "Years"}
 
@@ -482,3 +505,24 @@ def update_project_due_date(task):
 		if task.parent.due_date > task.due_date:
 			task.parent.due_date = task.due_date
 			task.parent.due_time_set = task.due_time_set
+
+
+def clone_task(task_uuid, session=None):
+	""" Clone task.
+
+	Args:
+		task_uuid: task to clone
+		session: optional SqlAlchemy session
+	Returns:
+		Cloned task UUID or None when error.
+	"""
+	session = session or OBJ.Session()
+	task = session.query(OBJ.Task).filter_by(uuid=task_uuid).first()
+	if not task:
+		_LOG.warn("_clone_selected_task; missing task %r", task_uuid)
+		return None
+	new_task = task.clone()
+	new_task.update_modify_time()
+	session.add(new_task)
+	session.commit()
+	return new_task.uuid

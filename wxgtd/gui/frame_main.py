@@ -466,18 +466,9 @@ class FrameMain(BaseFrame):
 		task_uuid = self._items_list_ctrl.get_item_uuid(None)
 		if task_uuid is None:  # not selected
 			return
-		session = self._session
-		task = session.query(  # pylint: disable=E1101
-				OBJ.Task).filter_by(uuid=task_uuid).first()
-		if not task.task_completed:
-			if not task_logic.complete_task(task, self.wnd, session):
-				return
-		else:
-			task.task_completed = False
-		task.update_modify_time()
-		session.commit()  # pylint: disable=E1101
-		Publisher().sendMessage('task.update', data={'task_uuid': task_uuid})
-		self._refresh_list()
+		if task_logic.toggle_task_complete(task_uuid, self.wnd, self._session):
+			Publisher().sendMessage('task.update', data={'task_uuid': task_uuid})
+			self._refresh_list()
 
 	def _on_btn_edit_parent(self, _evt):
 		if not self._items_path:
@@ -569,15 +560,10 @@ class FrameMain(BaseFrame):
 		if not mbox.message_box_question_yesno(self.wnd,
 				_("Clone task with all subtasks?")):
 			return
-		task = self._session.query(OBJ.Task).filter_by(uuid=task_uuid).first()
-		if not task:
-			_LOG.warn("_clone_selected_task; missing task %r", task_uuid)
-			return
-		new_task = task.clone()
-		new_task.update_modify_time()
-		self._session.add(new_task)
-		self._session.commit()
-		Publisher().sendMessage('task.update', data={'task_uuid': new_task.uuid})
+		new_task_uuid = task_logic.clone_task(task_uuid)
+		if new_task_uuid:
+			Publisher().sendMessage('task.update',
+					data={'task_uuid': new_task_uuid})
 
 	def _show_parent_info(self, active_only):
 		panel_parent_icons = self._panel_parent_icons
