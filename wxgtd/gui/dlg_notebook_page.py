@@ -23,7 +23,7 @@ except ImportError:
 from wxgtd.wxtools.validators import Validator, ValidatorDv
 from wxgtd.wxtools.validators import v_length as LVALID
 from wxgtd.model import objects as OBJ
-from wxgtd.model import logic
+from wxgtd.logic import task as task_logic
 
 from ._base_dialog import BaseDialog
 
@@ -82,7 +82,7 @@ class DlgNotebookPage(BaseDialog):
 
 	def _on_delete(self, evt):
 		uuid = self._page.uuid
-		if logic.delete_notebook_page(uuid, self.wnd, self._session):
+		if task_logic.delete_notebook_page(uuid, self.wnd, self._session):
 			Publisher().sendMessage('notebook.delete',
 					data={'notebook_uuid': uuid})
 			BaseDialog._on_close(self, evt)

@@ -17,7 +17,7 @@ import gettext
 import wx
 
 from wxgtd.model import enums
-from wxgtd.model import logic
+from wxgtd.logic import task as task_logic
 
 from ._base_dialog import BaseDialog
 
@@ -73,7 +73,7 @@ class DlgRepeatSettings(BaseDialog):
 			if _choice_select_by_data(self['c_every'], pattern):
 				self['rb_every'].SetValue(True)
 				return
-			m_repeat_xt = logic.RE_REPEAT_XT.match(pattern)
+			m_repeat_xt = task_logic.RE_REPEAT_XT.match(pattern)
 			if m_repeat_xt:
 				self['sc_everyxt_num'].SetValue(int(m_repeat_xt.group(1)))
 				period = m_repeat_xt.group(2)
@@ -82,7 +82,7 @@ class DlgRepeatSettings(BaseDialog):
 				if _choice_select_by_data(self['c_everyxt_period'], period):
 					self['rb_everyxt'].SetValue(True)
 					return
-			if logic.RE_REPEAT_EVERYW.match(pattern):
+			if task_logic.RE_REPEAT_EVERYW.match(pattern):
 				pattern = pattern.lower()
 				self['cb_mon'].SetValue('mon' in pattern)
 				self['cb_thu'].SetValue('thu' in pattern)
@@ -144,12 +144,12 @@ class DlgRepeatSettings(BaseDialog):
 		if self['rb_never'].GetValue():
 			self._data['pattern'] = None
 		elif self['rb_everyxt'].GetValue():
-			pattern = logic.build_repeat_pattern_every_xt(
+			pattern = task_logic.build_repeat_pattern_every_xt(
 					self['sc_everyxt_num'].GetValue(),
 					_get_choice_selected(self['c_everyxt_period']))
 			self._data['pattern'] = pattern
 		elif self['rb_everyw'].GetValue():
-			pattern = logic.build_repeat_pattern_every_w(
+			pattern = task_logic.build_repeat_pattern_every_w(
 					self['cb_mon'].GetValue(),
 					self['cb_tue'].GetValue(),
 					self['cb_wed'].GetValue(),
@@ -159,7 +159,7 @@ class DlgRepeatSettings(BaseDialog):
 					self['cb_sun'].GetValue())
 			self._data['pattern'] = pattern
 		elif self['rb_xdm'].GetValue():
-			pattern = logic.build_repeat_pattern_every_xdm(
+			pattern = task_logic.build_repeat_pattern_every_xdm(
 					_get_choice_selected(self['cb_xdm_num_wday']),
 					_get_choice_selected(self['c_xdm_weekday']),
 					self['sc_xdm_months'].GetValue())

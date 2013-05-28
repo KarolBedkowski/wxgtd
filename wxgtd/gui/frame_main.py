@@ -32,7 +32,7 @@ from wxgtd.model import loader
 from wxgtd.model import exporter
 from wxgtd.model import sync
 from wxgtd.model import enums
-from wxgtd.model import logic
+from wxgtd.logic import task as task_logic
 from wxgtd.gui import dlg_about
 from wxgtd.gui import _fmt as fmt
 from wxgtd.gui import _infobox as infobox
@@ -470,7 +470,7 @@ class FrameMain(BaseFrame):
 		task = session.query(  # pylint: disable=E1101
 				OBJ.Task).filter_by(uuid=task_uuid).first()
 		if not task.task_completed:
-			if not logic.complete_task(task, self.wnd, session):
+			if not task_logic.complete_task(task, self.wnd, session):
 				return
 		else:
 			task.task_completed = False
@@ -536,7 +536,7 @@ class FrameMain(BaseFrame):
 	def _delete_selected_task(self):
 		task_uuid = self._items_list_ctrl.get_item_uuid(None)
 		if task_uuid:
-			if logic.delete_task(task_uuid, self.wnd):
+			if task_logic.delete_task(task_uuid, self.wnd):
 				Publisher().sendMessage('task.delete', data={'task_uuid': task_uuid})
 
 	def _new_task(self):

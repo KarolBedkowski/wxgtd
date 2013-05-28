@@ -24,7 +24,7 @@ except ImportError:
 from wxgtd.wxtools import iconprovider
 from wxgtd.wxtools import wxutils
 from wxgtd.model import objects as OBJ
-from wxgtd.model import logic
+from wxgtd.logic import task as task_logic
 from wxgtd.gui import _fmt as fmt
 from wxgtd.gui._base_frame import BaseFrame
 from wxgtd.gui.dlg_notebook_page import DlgNotebookPage
@@ -148,7 +148,7 @@ class FrameNotebook(BaseFrame):
 		uuid = self.selected_page_uuid
 		if not uuid:
 			return
-		if logic.delete_notebook_page(uuid, self.wnd, self._session):
+		if task_logic.delete_notebook_page(uuid, self.wnd, self._session):
 			Publisher().sendMessage('notebook.delete',
 					data={'notebook_uuid': uuid})
 

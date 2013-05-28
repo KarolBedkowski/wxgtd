@@ -21,10 +21,9 @@ try:
 except ImportError:
 	from wx.lib.pubsub import Publisher  # pylint: disable=E0611
 
+from wxgtd.logic import task as task_logic
 from wxgtd.model import enums
-from wxgtd.model import logic
 from wxgtd.model import objects as OBJ
-
 from wxgtd.gui.dlg_task import DlgTask
 from wxgtd.gui.dlg_checklistitem import DlgChecklistitem
 from . import _tasklistctrl as tlc
@@ -119,7 +118,7 @@ class DlgReminders(BaseDialog):
 		if dlg.ShowModal() == wx.ID_OK:
 			pattern = enums.SNOOZE_PATTERNS[dlg.GetSelection()][0]
 			task = OBJ.Task.get(self._session, uuid=task_uuid)
-			task.alarm = datetime.utcnow() + logic.alarm_pattern_to_time(pattern)
+			task.alarm = datetime.utcnow() + task_logic.alarm_pattern_to_time(pattern)
 			task.update_modify_time()
 			self._session.commit()
 			Publisher().sendMessage('task.update', data={'task_uuid': task.uuid})

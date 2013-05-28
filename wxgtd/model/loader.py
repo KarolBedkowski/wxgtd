@@ -31,7 +31,7 @@ from dateutil import parser, tz
 
 from wxgtd.model import objects
 from wxgtd.model import enums
-from wxgtd.model import logic
+from wxgtd.logic import task as task_logic
 
 _LOG = logging.getLogger(__name__)
 _ = gettext.gettext
@@ -428,7 +428,7 @@ def _load_tasks(data, session, notify_cb):
 		task["folder_uuid"] = None
 		task["goal_uuid"] = None
 		task_obj = _create_or_update(session, objects.Task, task)
-		logic.update_task_hide(task_obj)
+		task_logic.update_task_hide(task_obj)
 	if tasks:
 		del data["task"]
 	notify_cb(29, _("Loaded %d tasks") % len(tasks_cache))
@@ -464,7 +464,7 @@ def _load_alarms(data, session, tasks_cache, notify_cb):
 				objects.Task).filter_by(uuid=task_uuid).first()
 		if task.modified <= alarm["modified"]:
 			task.alarm = alarm["alarm"]
-			logic.update_task_alarm(task)
+			task_logic.update_task_alarm(task)
 		else:
 			_LOG.debug("skip %r", alarm)
 	if alarms:
@@ -650,7 +650,7 @@ def _update_all_tasks(session):
 	1. update due dates in projects
 	"""
 	for task in session.query(objects.Task).filter_by(type=enums.TYPE_PROJECT):
-		logic.update_project_due_date(task)
+		task_logic.update_project_due_date(task)
 
 
 def test():

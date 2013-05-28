@@ -22,7 +22,7 @@ except ImportError:
 
 from wxgtd.model import objects as OBJ
 from wxgtd.model import enums
-from wxgtd.model import logic
+from wxgtd.logic import task as task_logic
 from wxgtd.lib import datetimeutils as DTU
 from wxgtd.wxtools.validators import Validator, ValidatorDv
 
@@ -98,7 +98,7 @@ class DlgTask(BaseTaskDialog):
 	def _create_task(self, parent_uuid):
 		task = OBJ.Task(parent_uuid=parent_uuid, priority=0,
 				type=(self._task_type or enums.TYPE_TASK))
-		logic.update_task_from_parent(task, parent_uuid, self._session,
+		task_logic.update_task_from_parent(task, parent_uuid, self._session,
 					self._appconfig)
 		return task
 
@@ -141,9 +141,9 @@ class DlgTask(BaseTaskDialog):
 				self._data['duration_h'] * 60 + self._data['duration_m']
 		if not self._data['prev_completed'] and self._task.completed:
 			# zakonczono zadanie
-			if not logic.complete_task(self._task, self._wnd, self._session):
+			if not task_logic.complete_task(self._task, self._wnd, self._session):
 				return
-		logic.update_project_due_date(self._task)
+		task_logic.update_project_due_date(self._task)
 		self._task.update_modify_time()
 		self._session.commit()  # pylint: disable=E1101
 		Publisher().sendMessage('task.update', data={'task_uuid': self._task.uuid})
@@ -171,7 +171,7 @@ class DlgTask(BaseTaskDialog):
 			else:
 				task.alarm = None
 				task.alarm_pattern = dlg.alarm_pattern
-			logic.update_task_alarm(task)
+			task_logic.update_task_alarm(task)
 			self._refresh_static_texts()
 
 	def _on_btn_hide_until_set(self, _evt):
@@ -186,7 +186,7 @@ class DlgTask(BaseTaskDialog):
 			else:
 				task.hide_until = None
 			task.hide_pattern = dlg.pattern
-			logic.update_task_hide(task)
+			task_logic.update_task_hide(task)
 			self._refresh_static_texts()
 
 	def _on_btn_repeat_set(self, _evt):
@@ -218,7 +218,7 @@ class DlgTask(BaseTaskDialog):
 	def _on_btn_delete(self, _evt):
 		tuuid = self._task.uuid
 		if tuuid:
-			if logic.delete_task(tuuid, self.wnd, self._session):
+			if task_logic.delete_task(tuuid, self.wnd, self._session):
 				Publisher().sendMessage('task.delete', data={'task_uuid': tuuid})
 				self._on_ok(None)
 
