@@ -93,6 +93,17 @@ class BaseTaskDialog(BaseDialog):
 		task_logic.save_modified_task(self._task, self._session)
 		self._on_ok(evt)
 
+	def _on_cancel(self, evt):
+		if self._data_changed() and not self._confirm_close():
+			_LOG.debig('data changed')
+			return
+		self._session.rollback()
+		self._wnd.Close()
+
+	def _on_close(self, evt):
+		self._session.close()
+		BaseDialog._on_close(self, evt)
+
 	def _on_lb_notes_list(self, _evt):
 		sel = self['lb_notes_list'].GetSelection()
 		if sel < 0:
