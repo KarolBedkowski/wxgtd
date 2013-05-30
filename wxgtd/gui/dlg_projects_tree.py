@@ -35,9 +35,9 @@ class DlgProjectTree(BaseDialog):
 		timeset: boolean - is time is set.
 	"""
 
-	def __init__(self, parent, session):
+	def __init__(self, parent):
 		BaseDialog.__init__(self, parent, 'dlg_projects_tree', save_pos=True)
-		self._setup(session)
+		self._setup()
 
 	@property
 	def selected(self):
@@ -45,6 +45,7 @@ class DlgProjectTree(BaseDialog):
 		return self._tc_tree.GetPyData(sel) if sel else None
 
 	def _load_controls(self, wnd):
+		# pylint: disable=W0201
 		BaseDialog._load_controls(self, wnd)
 		self._tc_tree = self['tc_projects']
 		self._icons = iconprovider.IconProvider()
@@ -54,13 +55,17 @@ class DlgProjectTree(BaseDialog):
 	def _create_bindings(self, wnd):
 		BaseDialog._create_bindings(self, wnd)
 
-	def _setup(self, session):
-		self._session = session
+	def _setup(self):
+		self._session = OBJ.Session()
 		self._fill_projects()
 
 	def _on_ok(self, evt):
 		if self._tc_tree.GetSelection():
 			BaseDialog._on_ok(self, evt)
+
+	def _on_close(self, evt):
+		self._session.close()
+		BaseDialog._on_close(self, evt)
 
 	def _fill_projects(self):
 		tc_tree = self._tc_tree

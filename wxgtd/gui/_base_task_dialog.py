@@ -131,7 +131,7 @@ class BaseTaskDialog(BaseDialog):
 		self._refresh_static_texts()
 
 	def _on_btn_change_project(self, _evt):
-		dlg = DlgProjectTree(self.wnd, self._session)
+		dlg = DlgProjectTree(self.wnd)
 		if dlg.run(modal=True):
 			parent_uuid = dlg.selected
 			parent = None
