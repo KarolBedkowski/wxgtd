@@ -297,6 +297,17 @@ class Task(BaseModelMixin, Base):
 		return Session().query(cls).filter_by(type=enums.TYPE_CHECKLIST).all()
 
 	@classmethod
+	def root_projects_checklists(cls, session=None):
+		""" Get root projects and checklists. """
+		session = session or Session()
+		return (session.query(Task)
+				.filter(Task.parent_uuid.is_(None),
+						or_(Task.type == enums.TYPE_CHECKLIST,
+						Task.type == enums.TYPE_PROJECT))
+				.order_by(Task.title)
+				.all())
+
+	@classmethod
 	def select_reminders(cls, since=None, session=None):
 		""" Get all not completed task with alarms from since (if given) to now.
 
@@ -326,13 +337,31 @@ class Task(BaseModelMixin, Base):
 		""" Find maximal importance in childs of given task."""
 		return (session or Session()).scalar(
 				select([func.max(Task.importance)]).where(
-						Task.parent_uuid == parent_uuid))
+						Task.parent_uuid == parent_uuid)) or 0
 
 	@property
 	def child_count(self):
 		"""  Count subtask. """
 		return orm.object_session(self).scalar(select([func.count(Task.uuid)])
 				.where(Task.parent_uuid == self.uuid))
+
+	@property
+	def sub_projects(self):
+		return Session.object_session(self).query(Task).with_parent(self)\
+				.filter_by(type=enums.TYPE_PROJECT).all()
+
+	@property
+	def sub_checklists(self):
+		return Session.object_session(self).query(Task).with_parent(self)\
+				.filter_by(type=enums.TYPE_CHECKLIST).all()
+
+	@property
+	def sub_project_or_checklists(self):
+		return (Session.object_session(self).query(Task).with_parent(self)
+				.filter(or_(Task.type == enums.TYPE_CHECKLIST,
+						Task.type == enums.TYPE_PROJECT))
+				.order_by(Task.title)
+				.all())
 
 	def clone(self, cleanup=True):
 		""" Clone current object. """
