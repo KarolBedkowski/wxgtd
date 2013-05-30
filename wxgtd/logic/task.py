@@ -541,6 +541,11 @@ def adjust_task_type(task, session):
 		# elementy checlisty tylko w checklistach
 		task.type = enums.TYPE_TASK
 	if task.children:
-		for subtask in task.children:
-			adjust_task_type(subtask, session)
+		if task.type in (enums.TYPE_CHECKLIST, enums.TYPE_PROJECT):
+			for subtask in task.children:
+				adjust_task_type(subtask, session)
+		else:
+			# jeżeli to nie projakt ani checliksta to nie powinna mieć podzadań
+			for subtask in task.children:
+				subtask.parent = task.parent
 	return True
