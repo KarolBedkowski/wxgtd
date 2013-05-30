@@ -515,8 +515,32 @@ def save_modified_task(task, session=None):
 	"""
 	session = session or OBJ.Session()
 	update_project_due_date(task)
+	adjust_task_type(task, session)
 	task.update_modify_time()
 	session.add(task)
 	session.commit()  # pylint: disable=E1101
 	Publisher().sendMessage('task.update', data={'task_uuid': task.uuid})
+	return True
+
+
+def adjust_task_type(task, session):
+	""" Update task type when moving task to project/change type.
+	Args:
+		task: task to save
+		session: SqlAlchemy session
+	Returns:
+		True if ok.
+	"""
+	if task.parent:
+		if task.parent.type == enums.TYPE_CHECKLIST:
+			task.type = enums.TYPE_CHECKLIST_ITEM
+		elif task.parent.type == enums.TYPE_PROJECT and \
+				task.type == enums.TYPE_CHECKLIST_ITEM:
+			task.type = enums.TYPE_TASK
+	elif task.type == enums.TYPE_CHECKLIST_ITEM:
+		# elementy checlisty tylko w checklistach
+		task.type = enums.TYPE_TASK
+	if task.children:
+		for subtask in task.children:
+			adjust_task_type(subtask, session)
 	return True
