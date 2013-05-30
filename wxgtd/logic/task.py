@@ -535,8 +535,7 @@ def adjust_task_type(task, session):
 	if task.parent:
 		if task.parent.type == enums.TYPE_CHECKLIST:
 			task.type = enums.TYPE_CHECKLIST_ITEM
-		elif task.parent.type == enums.TYPE_PROJECT and \
-				task.type == enums.TYPE_CHECKLIST_ITEM:
+		elif task.type == enums.TYPE_CHECKLIST_ITEM:
 			task.type = enums.TYPE_TASK
 	elif task.type == enums.TYPE_CHECKLIST_ITEM:
 		# elementy checlisty tylko w checklistach
