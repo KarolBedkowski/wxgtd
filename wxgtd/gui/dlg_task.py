@@ -122,11 +122,11 @@ class DlgTask(BaseTaskDialog):
 		cb_goal.Clear()
 		for goal in OBJ.Goal.all():
 			cb_goal.Append(goal.title, goal.uuid)
-		cb_project = self['cb_project']
-		cb_project.Clear()
-		for project in OBJ.Task.all_projects():
-			# projects
-			cb_project.Append(project.title, project.uuid)
+#		cb_project = self['cb_project']
+#		cb_project.Clear()
+#		for project in OBJ.Task.all_projects():
+#			# projects
+#			cb_project.Append(project.title, project.uuid)
 
 	def _on_save(self, evt):
 		if not self._wnd.Validate():

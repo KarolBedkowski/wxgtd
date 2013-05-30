@@ -29,6 +29,7 @@ from ._base_dialog import BaseDialog
 from . import _fmt as fmt
 from . import dialogs
 from . import message_boxes as mbox
+from .dlg_projects_tree import DlgProjectTree
 
 _ = gettext.gettext
 _LOG = logging.getLogger(__name__)
@@ -55,6 +56,8 @@ class BaseTaskDialog(BaseDialog):
 		self['lb_notes_list'].Bind(wx.EVT_LISTBOX_DCLICK, self._on_lb_notes_list)
 		wnd.Bind(wx.EVT_BUTTON, self._on_btn_new_note, id=wx.ID_ADD)
 		self['btn_del_note'].Bind(wx.EVT_BUTTON, self._on_btn_del_note)
+		self['btn_change_project'].Bind(wx.EVT_BUTTON,
+				self._on_btn_change_project)
 
 	def _setup(self, task_uuid, parent_uuid):
 		_LOG.debug("BaseTaskDialog.setup(%r, %r)", task_uuid, parent_uuid)
@@ -131,6 +134,16 @@ class BaseTaskDialog(BaseDialog):
 		del self._task.notes[sel]
 		self._refresh_static_texts()
 
+	def _on_btn_change_project(self, _evt):
+		dlg = DlgProjectTree(self.wnd, self._session)
+		if dlg.run(modal=True):
+			parent_uuid = dlg.selected
+			parent = None
+			if parent_uuid:
+				parent = OBJ.Task.get(self._session, uuid=parent_uuid)
+			self._task.parent = parent
+			self._refresh_static_texts()
+
 	def _refresh_static_texts(self):
 		""" Odświeżenie pól dat na dlg """
 		task = self._task
@@ -138,6 +151,7 @@ class BaseTaskDialog(BaseDialog):
 		lb_notes_list.Clear()
 		for note in task.notes:
 			lb_notes_list.Append(note.title[:50], note.uuid)
+		self['l_project'].SetLabel(task.parent.title if task.parent else '')
 		if task.completed:
 			self['l_completed_date'].SetLabel(fmt.format_timestamp(task.completed,
 					True))

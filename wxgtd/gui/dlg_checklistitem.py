@@ -17,7 +17,6 @@ import gettext
 
 from wxgtd.model import objects as OBJ
 from wxgtd.model import enums
-from wxgtd.wxtools.validators import ValidatorDv
 
 from ._base_task_dialog import BaseTaskDialog
 
@@ -44,11 +43,6 @@ class DlgChecklistitem(BaseTaskDialog):
 		return self._session.query(  # pylint: disable=E1101
 				OBJ.Task).filter_by(uuid=task_uuid).first()
 
-	def _setup(self, task_uuid, parent_uuid):
-		BaseTaskDialog._setup(self, task_uuid, parent_uuid)
-		task = self._task
-		self['cb_checklist'].SetValidator(ValidatorDv(task, 'parent_uuid'))
-
 	def _create_task(self, parent_uuid):
 		# find last importance in this checlist
 		importance = OBJ.Task.find_max_importance(parent_uuid, self._session)
@@ -57,9 +51,3 @@ class DlgChecklistitem(BaseTaskDialog):
 					importance=importance + 1)
 		self._session.add(task)  # pylint: disable=E1101
 		return task
-
-	def _setup_comboboxes(self):
-		cb_checklist = self['cb_checklist']
-		cb_checklist.Clear()
-		for checklist in OBJ.Task.all_checklists():
-			cb_checklist.Append(checklist.title, checklist.uuid)
