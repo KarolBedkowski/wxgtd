@@ -54,7 +54,6 @@ class DlgTask(BaseTaskDialog):
 		BaseTaskDialog._create_bindings(self, wnd)
 		self['btn_due_date_set'].Bind(wx.EVT_BUTTON, self._on_btn_due_date_set)
 		self['btn_start_date_set'].Bind(wx.EVT_BUTTON, self._on_btn_start_date_set)
-		wnd.Bind(wx.EVT_BUTTON, self._on_btn_delete, id=wx.ID_DELETE)
 		self['btn_remind_set'].Bind(wx.EVT_BUTTON, self._on_btn_remiand_set)
 		self['btn_hide_until_set'].Bind(wx.EVT_BUTTON, self._on_btn_hide_until_set)
 		self['btn_repeat_set'].Bind(wx.EVT_BUTTON, self._on_btn_repeat_set)
@@ -207,12 +206,6 @@ class DlgTask(BaseTaskDialog):
 						OBJ.Tag).filter_by(uuid=tag_uuid).first()
 				task.tags.append(tasktag)  # pylint: disable=E1103
 			self._refresh_static_texts()
-
-	def _on_btn_delete(self, _evt):
-		tuuid = self._task.uuid
-		if tuuid:
-			if task_logic.delete_task(tuuid, self.wnd, self._session):
-				self._on_ok(None)
 
 	def _on_sl_priority(self, _evt):
 		self['l_prio'].SetLabel(enums.PRIORITIES[self['sl_priority'].GetValue()])

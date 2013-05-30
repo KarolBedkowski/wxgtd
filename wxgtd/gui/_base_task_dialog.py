@@ -16,12 +16,9 @@ import logging
 import gettext
 
 import wx
-try:
-	from wx.lib.pubsub.pub import Publisher
-except ImportError:
-	from wx.lib.pubsub import Publisher  # pylint: disable=E0611
 
 from wxgtd.model import objects as OBJ
+from wxgtd.logic import task as task_logic
 from wxgtd.wxtools.validators import Validator
 from wxgtd.wxtools.validators import v_length as LVALID
 
@@ -54,6 +51,7 @@ class BaseTaskDialog(BaseDialog):
 	def _create_bindings(self, wnd):
 		BaseDialog._create_bindings(self, wnd)
 		self['lb_notes_list'].Bind(wx.EVT_LISTBOX_DCLICK, self._on_lb_notes_list)
+		wnd.Bind(wx.EVT_BUTTON, self._on_btn_delete, id=wx.ID_DELETE)
 		wnd.Bind(wx.EVT_BUTTON, self._on_btn_new_note, id=wx.ID_ADD)
 		self['btn_del_note'].Bind(wx.EVT_BUTTON, self._on_btn_del_note)
 		self['btn_change_project'].Bind(wx.EVT_BUTTON,
@@ -92,9 +90,7 @@ class BaseTaskDialog(BaseDialog):
 			return
 		if not self._wnd.TransferDataFromWindow():
 			return
-		self._task.update_modify_time()
-		self._session.commit()  # pylint: disable=E1101
-		Publisher().sendMessage('task.update', data={'task_uuid': self._task.uuid})
+		task_logic.save_modified_task(self._task, self._session)
 		self._on_ok(evt)
 
 	def _on_lb_notes_list(self, _evt):
@@ -143,6 +139,12 @@ class BaseTaskDialog(BaseDialog):
 				parent = OBJ.Task.get(self._session, uuid=parent_uuid)
 			self._task.parent = parent
 			self._refresh_static_texts()
+
+	def _on_btn_delete(self, _evt):
+		tuuid = self._task.uuid
+		if tuuid:
+			if task_logic.delete_task(tuuid, self.wnd, self._session):
+				self._on_ok(None)
 
 	def _refresh_static_texts(self):
 		""" Odświeżenie pól dat na dlg """

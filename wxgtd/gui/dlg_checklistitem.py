@@ -49,5 +49,4 @@ class DlgChecklistitem(BaseTaskDialog):
 		task = OBJ.Task(type=enums.TYPE_CHECKLIST_ITEM,
 					parent_uuid=parent_uuid,
 					importance=importance + 1)
-		self._session.add(task)  # pylint: disable=E1101
 		return task
