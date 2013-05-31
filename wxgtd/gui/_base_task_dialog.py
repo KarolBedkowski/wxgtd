@@ -145,11 +145,9 @@ class BaseTaskDialog(BaseDialog):
 		dlg = DlgProjectTree(self.wnd)
 		if dlg.run(modal=True):
 			parent_uuid = dlg.selected
-			parent = None
-			if parent_uuid:
-				parent = OBJ.Task.get(self._session, uuid=parent_uuid)
-			self._task.parent = parent
-			self._refresh_static_texts()
+			if task_logic.change_task_parent(self._task, parent_uuid,
+					self._session, self.wnd):
+				self._refresh_static_texts()
 
 	def _on_btn_delete(self, _evt):
 		tuuid = self._task.uuid

@@ -549,3 +549,39 @@ def adjust_task_type(task, session):
 			for subtask in task.children:
 				subtask.parent = task.parent
 	return True
+
+
+def change_task_parent(task, parent_uuid, session, wnd):
+	parent = None
+	if parent_uuid:
+		parent = OBJ.Task.get(session, uuid=parent_uuid)
+	if not _confirm_change_task_parent(task, parent, wnd):
+		return False
+	task.parent = parent
+	adjust_task_type(task, session)
+	return True
+
+
+def _confirm_change_task_parent(task, parent, wnd):
+	curr_type = task.type
+	if parent:  # nowy parent
+		if (parent.type == enums.TYPE_CHECKLIST and
+				curr_type != enums.TYPE_CHECKLIST_ITEM) or (
+				parent.type != enums.TYPE_CHECKLIST and
+				curr_type == enums.TYPE_CHECKLIST_ITEM):
+			if not mbox.message_box_warning_yesno(wnd,
+				_("This operation change task and subtasks type.\n"
+					"Are you sure?")):
+				return False
+	else:  # brak nowego parenta
+		if curr_type in (enums.TYPE_CHECKLIST, enums.TYPE_PROJECT):
+			if not mbox.message_box_warning_yesno(wnd,
+					_("This operation change all subtasks to simple"
+						" tasks\nAre you sure?")):
+				return False
+		elif curr_type == enums.TYPE_CHECKLIST_ITEM:
+			if not mbox.message_box_warning_yesno(wnd,
+				_("This operation change task and subtasks type.\n"
+					"Are you sure?")):
+				return False
+	return True
