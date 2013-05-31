@@ -58,6 +58,7 @@ class DlgTask(BaseTaskDialog):
 		self['btn_hide_until_set'].Bind(wx.EVT_BUTTON, self._on_btn_hide_until_set)
 		self['btn_repeat_set'].Bind(wx.EVT_BUTTON, self._on_btn_repeat_set)
 		self['btn_select_tags'].Bind(wx.EVT_BUTTON, self._on_btn_select_tags)
+		self['btn_change_type'].Bind(wx.EVT_BUTTON, self._on_btn_change_type)
 		self['sl_priority'].Bind(wx.EVT_SCROLL, self._on_sl_priority)
 
 	def _setup(self, task_uuid, parent_uuid):
@@ -77,14 +78,10 @@ class DlgTask(BaseTaskDialog):
 		self['cb_context'].SetValidator(ValidatorDv(task, 'context_uuid'))
 		self['cb_folder'].SetValidator(ValidatorDv(task, 'folder_uuid'))
 		self['cb_goal'].SetValidator(ValidatorDv(task, 'goal_uuid'))
-		self['cb_type'].SetValidator(ValidatorDv(task, 'type'))
 		self['sl_priority'].SetValidator(Validator(task, 'priority'))
 		self['sc_duration_d'].SetValidator(Validator(self._data, 'duration_d'))
 		self['sc_duration_h'].SetValidator(Validator(self._data, 'duration_h'))
 		self['sc_duration_m'].SetValidator(Validator(self._data, 'duration_m'))
-		# lock type change if there are subtasks
-		if task_uuid and self._task.child_count > 0:
-			self['cb_type'].Enable(False)
 
 	def _load_task(self, task_uuid):
 		return self._session.query(  # pylint: disable=E1101
@@ -103,12 +100,6 @@ class DlgTask(BaseTaskDialog):
 		cb_status.Clear()
 		for key, status in sorted(enums.STATUSES.iteritems()):
 			cb_status.Append(status, key)
-		cb_types = self['cb_type']
-		cb_types.Clear()
-		for key, typename in sorted(enums.TYPES.iteritems()):
-			if key != enums.TYPE_CHECKLIST_ITEM:
-				# nie można utworzyć checklist item bez checlisty jako parenta
-				cb_types.Append(typename, key)
 		cb_context = self['cb_context']
 		cb_context.Clear()
 		for context in OBJ.Context.all():
@@ -121,11 +112,6 @@ class DlgTask(BaseTaskDialog):
 		cb_goal.Clear()
 		for goal in OBJ.Goal.all():
 			cb_goal.Append(goal.title, goal.uuid)
-#		cb_project = self['cb_project']
-#		cb_project.Clear()
-#		for project in OBJ.Task.all_projects():
-#			# projects
-#			cb_project.Append(project.title, project.uuid)
 
 	def _on_save(self, evt):
 		if not self._wnd.Validate():
@@ -207,6 +193,23 @@ class DlgTask(BaseTaskDialog):
 				task.tags.append(tasktag)  # pylint: disable=E1103
 			self._refresh_static_texts()
 
+	def _on_btn_change_type(self, _evt):
+		parent_type = self._task.parent.type if self._task.parent else None
+		if parent_type == enums.TYPE_CHECKLIST:
+			# nie można zmienić typu z TYPE_CHECKLIST_ITEM
+			self.type = enums.TYPE_CHECKLIST_ITEM
+			return
+		values = [enums.TYPE_TASK, enums.TYPE_CALL, enums.TYPE_EMAIL,
+				enums.TYPE_SMS, enums.TYPE_RETURN_CALL, enums.TYPE_PROJECT,
+				enums.TYPE_CHECKLIST]
+		choices = [enums.TYPES[val] for val in values]
+		dlg = wx.SingleChoiceDialog(self.wnd, _("Change task type to:"),
+				_("Task"), choices, wx.CHOICEDLG_STYLE)
+		if dlg.ShowModal() == wx.ID_OK:
+			self._task.type = values[dlg.GetSelection()]
+			self._refresh_static_texts()
+		dlg.Destroy()
+
 	def _on_sl_priority(self, _evt):
 		self['l_prio'].SetLabel(enums.PRIORITIES[self['sl_priority'].GetValue()])
 
@@ -236,6 +239,8 @@ class DlgTask(BaseTaskDialog):
 		self['l_repeat'].SetLabel(enums.REPEAT_PATTERN.get(task.repeat_pattern,
 				task.repeat_pattern or ""))
 		self['l_prio'].SetLabel(enums.PRIORITIES[task.priority])
+		self['l_type'].SetLabel(enums.TYPES[task.type or enums.TYPE_TASK])
+		self['btn_change_type'].Enable(task.type != enums.TYPE_CHECKLIST_ITEM)
 
 	def _set_date(self, attr_date, attr_time_set):
 		""" Wyśweitlenie dlg wyboru daty dla danego atrybutu """
