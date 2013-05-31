@@ -93,9 +93,9 @@ class BaseTaskDialog(BaseDialog):
 		task_logic.save_modified_task(self._task, self._session)
 		self._on_ok(evt)
 
-	def _on_cancel(self, evt):
+	def _on_cancel(self, _evt):
 		if self._data_changed() and not self._confirm_close():
-			_LOG.debig('data changed')
+			_LOG.debug('data changed')
 			return
 		self._session.rollback()
 		self._wnd.Close()
