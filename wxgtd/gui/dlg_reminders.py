@@ -24,8 +24,7 @@ except ImportError:
 from wxgtd.logic import task as task_logic
 from wxgtd.model import enums
 from wxgtd.model import objects as OBJ
-from wxgtd.gui.dlg_task import DlgTask
-from wxgtd.gui.dlg_checklistitem import DlgChecklistitem
+from wxgtd.gui.task_controller import TaskDialogControler
 from . import _tasklistctrl as tlc
 from ._base_dialog import BaseDialog
 
@@ -137,13 +136,8 @@ class DlgReminders(BaseDialog):
 		if task_type in (enums.TYPE_PROJECT, enums.TYPE_CHECKLIST):
 			# nie powinno być
 			return
-		if not task_uuid:
-			return
-		if task_type == enums.TYPE_CHECKLIST_ITEM:
-			dlg = DlgChecklistitem.create(task_uuid, self.wnd, task_uuid)
-		else:
-			dlg = DlgTask.create(task_uuid, self.wnd, task_uuid)
-		dlg.run()
+		if task_uuid:
+			TaskDialogControler.open_task(self.wnd, task_uuid)
 
 	def _on_tasks_update(self, args):
 		_LOG.debug('DlgReminders._on_tasks_update(%r)', args)

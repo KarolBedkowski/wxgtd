@@ -478,7 +478,8 @@ def update_project_due_date(task):
 				task.due_date = subtask.due_date
 				task.due_time_set = subtask.due_time_set
 	elif task.due_date and task.parent and task.parent.type == enums.TYPE_PROJECT:
-		if task.parent.due_date > task.due_date:
+		if not task.parent.due_date or (task.due_date and task.parent.due_date >
+				task.due_date):
 			task.parent.due_date = task.due_date
 			task.parent.due_time_set = task.due_time_set
 
@@ -515,8 +516,72 @@ def save_modified_task(task, session=None):
 	"""
 	session = session or OBJ.Session()
 	update_project_due_date(task)
+	adjust_task_type(task, session)
 	task.update_modify_time()
 	session.add(task)
 	session.commit()  # pylint: disable=E1101
 	Publisher().sendMessage('task.update', data={'task_uuid': task.uuid})
+	return True
+
+
+def adjust_task_type(task, session):
+	""" Update task type when moving task to project/change type.
+	Args:
+		task: task to save
+		session: SqlAlchemy session
+	Returns:
+		True if ok.
+	"""
+	if task.parent:
+		if task.parent.type == enums.TYPE_CHECKLIST:
+			task.type = enums.TYPE_CHECKLIST_ITEM
+		elif task.type == enums.TYPE_CHECKLIST_ITEM:
+			task.type = enums.TYPE_TASK
+	elif task.type == enums.TYPE_CHECKLIST_ITEM:
+		# elementy checlisty tylko w checklistach
+		task.type = enums.TYPE_TASK
+	if task.children:
+		if task.type in (enums.TYPE_CHECKLIST, enums.TYPE_PROJECT):
+			for subtask in task.children:
+				adjust_task_type(subtask, session)
+		else:
+			# jeżeli to nie projakt ani checliksta to nie powinna mieć podzadań
+			for subtask in task.children:
+				subtask.parent = task.parent
+	return True
+
+
+def change_task_parent(task, parent_uuid, session, wnd):
+	parent = None
+	if parent_uuid:
+		parent = OBJ.Task.get(session, uuid=parent_uuid)
+	if not _confirm_change_task_parent(task, parent, wnd):
+		return False
+	task.parent = parent
+	adjust_task_type(task, session)
+	return True
+
+
+def _confirm_change_task_parent(task, parent, wnd):
+	curr_type = task.type
+	if parent:  # nowy parent
+		if (parent.type == enums.TYPE_CHECKLIST and
+				curr_type != enums.TYPE_CHECKLIST_ITEM) or (
+				parent.type != enums.TYPE_CHECKLIST and
+				curr_type == enums.TYPE_CHECKLIST_ITEM):
+			if not mbox.message_box_warning_yesno(wnd,
+				_("This operation change task and subtasks type.\n"
+					"Are you sure?")):
+				return False
+	else:  # brak nowego parenta
+		if curr_type in (enums.TYPE_CHECKLIST, enums.TYPE_PROJECT):
+			if not mbox.message_box_warning_yesno(wnd,
+					_("This operation change all subtasks to simple"
+						" tasks\nAre you sure?")):
+				return False
+		elif curr_type == enums.TYPE_CHECKLIST_ITEM:
+			if not mbox.message_box_warning_yesno(wnd,
+				_("This operation change task and subtasks type.\n"
+					"Are you sure?")):
+				return False
 	return True
