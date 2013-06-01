@@ -40,15 +40,15 @@ class DlgTask(BaseTaskDialog):
 	WARRNING: non-modal dialog
 
 	Args:
-		parent: parent windows
-		task_uuid: uuid task to edit; if none create new task
-		parent_uuid: optional uuid of parent task
-		task_type: optional task type to create
+		parent: parent windows.
+		task: task to edit.
+		session: SqlAlchemy session.
+		controller: TaskDialogControler associated to task.
 	"""
 
-	def __init__(self, parent, task_uuid, parent_uuid=None, task_type=None):
-		self._task_type = task_type
-		BaseTaskDialog.__init__(self, parent, 'dlg_task', task_uuid, parent_uuid)
+	def __init__(self, parent, task, session, controller):
+		BaseTaskDialog.__init__(self, parent, 'dlg_task', task, session,
+				controller)
 
 	def _create_bindings(self, wnd):
 		BaseTaskDialog._create_bindings(self, wnd)
@@ -61,11 +61,10 @@ class DlgTask(BaseTaskDialog):
 		self['btn_change_type'].Bind(wx.EVT_BUTTON, self._on_btn_change_type)
 		self['sl_priority'].Bind(wx.EVT_SCROLL, self._on_sl_priority)
 
-	def _setup(self, task_uuid, parent_uuid):
-		_LOG.debug("DlgTask(%r)", (task_uuid, parent_uuid))
-		BaseTaskDialog._setup(self, task_uuid, parent_uuid)
-		self[wx.ID_DELETE].Enable(bool(task_uuid))
-		task = self._task
+	def _setup(self, task):
+		_LOG.debug("DlgTask(%r)", task.uuid)
+		BaseTaskDialog._setup(self, task)
+		self[wx.ID_DELETE].Enable(bool(task.uuid))
 		self._data['duration_d'] = self._data['duration_h'] = \
 				self._data['duration_m'] = 0
 		if task.duration:
@@ -82,17 +81,6 @@ class DlgTask(BaseTaskDialog):
 		self['sc_duration_d'].SetValidator(Validator(self._data, 'duration_d'))
 		self['sc_duration_h'].SetValidator(Validator(self._data, 'duration_h'))
 		self['sc_duration_m'].SetValidator(Validator(self._data, 'duration_m'))
-
-	def _load_task(self, task_uuid):
-		return self._session.query(  # pylint: disable=E1101
-				OBJ.Task).filter_by(uuid=task_uuid).first()
-
-	def _create_task(self, parent_uuid):
-		task = OBJ.Task(parent_uuid=parent_uuid, priority=0,
-				type=(self._task_type or enums.TYPE_TASK))
-		task_logic.update_task_from_parent(task, parent_uuid, self._session,
-					self._appconfig)
-		return task
 
 	def _setup_comboboxes(self):
 		BaseTaskDialog._setup_comboboxes(self)
@@ -113,19 +101,10 @@ class DlgTask(BaseTaskDialog):
 		for goal in OBJ.Goal.all():
 			cb_goal.Append(goal.title, goal.uuid)
 
-	def _on_save(self, evt):
-		if not self._wnd.Validate():
-			return
-		if not self._wnd.TransferDataFromWindow():
-			return
+	def _transfer_data_from_window(self):
 		self._task.duration = self._data['duration_d'] * 1440 + \
 				self._data['duration_h'] * 60 + self._data['duration_m']
-		if not self._data['prev_completed'] and self._task.completed:
-			# zakonczono zadanie
-			if not task_logic.complete_task(self._task, self._wnd, self._session):
-				return
-		task_logic.save_modified_task(self._task, self._session)
-		self._on_ok(evt)
+		return BaseTaskDialog._transfer_data_from_window(self)
 
 	def _on_btn_due_date_set(self, _evt):
 		if self._task.type == enums.TYPE_PROJECT:
@@ -197,7 +176,7 @@ class DlgTask(BaseTaskDialog):
 		parent_type = self._task.parent.type if self._task.parent else None
 		if parent_type == enums.TYPE_CHECKLIST:
 			# nie można zmienić typu z TYPE_CHECKLIST_ITEM
-			self.type = enums.TYPE_CHECKLIST_ITEM
+			self._task.type = enums.TYPE_CHECKLIST_ITEM
 			return
 		values = [enums.TYPE_TASK, enums.TYPE_CALL, enums.TYPE_EMAIL,
 				enums.TYPE_SMS, enums.TYPE_RETURN_CALL, enums.TYPE_PROJECT,
@@ -208,6 +187,7 @@ class DlgTask(BaseTaskDialog):
 		if dlg.ShowModal() == wx.ID_OK:
 			self._task.type = values[dlg.GetSelection()]
 			self._refresh_static_texts()
+			self._on_task_type_change()
 		dlg.Destroy()
 
 	def _on_sl_priority(self, _evt):

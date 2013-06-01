@@ -42,8 +42,6 @@ from wxgtd.gui import quicktask
 from wxgtd.gui._base_frame import BaseFrame
 from wxgtd.gui._filtertreectrl import FilterTreeCtrl
 from wxgtd.gui._taskbaricon import TaskBarIcon
-from wxgtd.gui.dlg_task import DlgTask
-from wxgtd.gui.dlg_checklistitem import DlgChecklistitem
 from wxgtd.gui.dlg_preferences import DlgPreferences
 from wxgtd.gui.dlg_sync_progress import DlgSyncProggress
 from wxgtd.gui.dlg_tags import DlgTags
@@ -51,6 +49,7 @@ from wxgtd.gui.dlg_goals import DlgGoals
 from wxgtd.gui.dlg_folders import DlgFolders
 from wxgtd.gui.dlg_reminders import DlgReminders
 from wxgtd.gui.frame_notebooks import FrameNotebook
+from wxgtd.gui.task_controller import TaskDialogControler
 
 _ = gettext.gettext
 ngettext = gettext.ngettext  # pylint: disable=C0103
@@ -408,13 +407,8 @@ class FrameMain(BaseFrame):
 			self._items_path.append(task)
 			self._refresh_list()
 			return
-		if not task_uuid:
-			return
-		if task_type == enums.TYPE_CHECKLIST_ITEM:
-			dlg = DlgChecklistitem.create(task_uuid, self.wnd, task_uuid)
-		else:
-			dlg = DlgTask.create(task_uuid, self.wnd, task_uuid)
-		dlg.run()
+		if task_uuid:
+			TaskDialogControler.open_task(self.wnd, task_uuid)
 
 	def _on_item_drag(self, evt):
 		s_index = evt.start
@@ -473,8 +467,7 @@ class FrameMain(BaseFrame):
 			return
 		task_uuid = self._items_path[-1].uuid
 		if task_uuid:
-			dlg = DlgTask.create(task_uuid, self.wnd, task_uuid)
-			dlg.run()
+			TaskDialogControler.open_task(self.wnd, task_uuid)
 
 	def _on_btn_reminders(self, _evt):
 		if not DlgReminders.check(self.wnd, self._session):
@@ -529,26 +522,25 @@ class FrameMain(BaseFrame):
 
 	def _new_task(self):
 		parent_uuid = None
+		task_type = None
 		if self._items_path:
 			parent_uuid = self._items_path[-1].uuid
 			if self._items_path[-1].type == enums.TYPE_CHECKLIST:
-				dlg = DlgChecklistitem(self.wnd, None, parent_uuid)
-				dlg.run()
-				return
-		group_id = self['rb_show_selection'].GetSelection()
-		task_type = enums.TYPE_TASK
-		if group_id == 5 and not self._items_path:
-			task_type = enums.TYPE_PROJECT
-		elif group_id == 6 and not self._items_path:
-			task_type = enums.TYPE_CHECKLIST
-		dlg = DlgTask(self.wnd, None, parent_uuid, task_type)
-		dlg.run()
+				task_type = enums.TYPE_CHECKLIST_ITEM
+		if not task_type:
+			group_id = self['rb_show_selection'].GetSelection()
+			task_type = enums.TYPE_TASK
+			if group_id == 5 and not self._items_path:
+				task_type = enums.TYPE_PROJECT
+			elif group_id == 6 and not self._items_path:
+				task_type = enums.TYPE_CHECKLIST
+		TaskDialogControler.new_task(self.wnd, task_type or enums.TYPE_TASK,
+				parent_uuid)
 
 	def _edit_selected_task(self):
 		task_uuid = self._items_list_ctrl.get_item_uuid(None)
 		if task_uuid:
-			dlg = DlgTask.create(task_uuid, self.wnd, task_uuid)
-			dlg.run()
+			TaskDialogControler.open_task(self.wnd, task_uuid)
 
 	def _clone_selected_task(self):
 		task_uuid = self._items_list_ctrl.get_item_uuid(None)
