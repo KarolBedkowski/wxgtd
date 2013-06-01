@@ -1,3 +1,10 @@
+wxgtd 0.8.0 2013-06-01
+
+	* basic CLI commands (adding tasks)
+	* quick tasks
+	* gui: improvements
+	* bugfixes
+
 wxgtd 0.7.0 2013-05-27
 
 	* fix projects
