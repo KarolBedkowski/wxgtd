@@ -15,10 +15,6 @@ __version__ = "2013-04-28"
 import logging
 import gettext
 
-from wxgtd.model import objects as OBJ
-from wxgtd.model import enums
-from wxgtd.wxtools.validators import ValidatorDv
-
 from ._base_task_dialog import BaseTaskDialog
 
 _ = gettext.gettext
@@ -26,40 +22,17 @@ _LOG = logging.getLogger(__name__)
 
 
 class DlgChecklistitem(BaseTaskDialog):
-	""" Edit checllist item dialog class.
+	""" Edit checklist item dialog class.
 
 	WARRNING: non-modal window.
 
 	Args:
-		parent: parent window
-		task_uuid: uuid task for edit; if empty - create new task
-		parent_uuid: parent task uuid.
+		parent: parent windows.
+		task: task to edit.
+		session: SqlAlchemy session.
+		controller: TaskDialogControler associated to task.
 	"""
 
-	def __init__(self, parent, task_uuid, parent_uuid=None):
-		BaseTaskDialog.__init__(self, parent, 'dlg_checklistitem',
-				task_uuid, parent_uuid)
-
-	def _load_task(self, task_uuid):
-		return self._session.query(  # pylint: disable=E1101
-				OBJ.Task).filter_by(uuid=task_uuid).first()
-
-	def _setup(self, task_uuid, parent_uuid):
-		BaseTaskDialog._setup(self, task_uuid, parent_uuid)
-		task = self._task
-		self['cb_checklist'].SetValidator(ValidatorDv(task, 'parent_uuid'))
-
-	def _create_task(self, parent_uuid):
-		# find last importance in this checlist
-		importance = OBJ.Task.find_max_importance(parent_uuid, self._session)
-		task = OBJ.Task(type=enums.TYPE_CHECKLIST_ITEM,
-					parent_uuid=parent_uuid,
-					importance=importance + 1)
-		self._session.add(task)  # pylint: disable=E1101
-		return task
-
-	def _setup_comboboxes(self):
-		cb_checklist = self['cb_checklist']
-		cb_checklist.Clear()
-		for checklist in OBJ.Task.all_checklists():
-			cb_checklist.Append(checklist.title, checklist.uuid)
+	def __init__(self, parent, task, session, controller):
+		BaseTaskDialog.__init__(self, parent, 'dlg_checklistitem', task,
+				session, controller)

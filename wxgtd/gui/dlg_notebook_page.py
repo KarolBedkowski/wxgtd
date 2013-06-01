@@ -15,15 +15,11 @@ import logging
 import gettext
 
 import wx
-try:
-	from wx.lib.pubsub.pub import Publisher
-except ImportError:
-	from wx.lib.pubsub import Publisher  # pylint: disable=E0611
 
 from wxgtd.wxtools.validators import Validator, ValidatorDv
 from wxgtd.wxtools.validators import v_length as LVALID
 from wxgtd.model import objects as OBJ
-from wxgtd.model import logic
+from wxgtd.logic import notebook as notebook_logic
 
 from ._base_dialog import BaseDialog
 
@@ -73,18 +69,12 @@ class DlgNotebookPage(BaseDialog):
 			return
 		if not self._wnd.TransferDataFromWindow():
 			return
-		self._page.update_modify_time()
-		self._session.add(self._page)
-		self._session.commit()
-		Publisher().sendMessage('notebook.update',
-				data={'notebook_uuid': self._page.uuid})
-		BaseDialog._on_ok(self, evt)
+		if notebook_logic.save_modified_page(self._page, self._session):
+			BaseDialog._on_ok(self, evt)
 
 	def _on_delete(self, evt):
 		uuid = self._page.uuid
-		if logic.delete_notebook_page(uuid, self.wnd, self._session):
-			Publisher().sendMessage('notebook.delete',
-					data={'notebook_uuid': uuid})
+		if notebook_logic.delete_notebook_page(uuid, self.wnd, self._session):
 			BaseDialog._on_close(self, evt)
 
 	def _data_changed(self):

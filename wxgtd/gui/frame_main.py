@@ -32,17 +32,16 @@ from wxgtd.model import loader
 from wxgtd.model import exporter
 from wxgtd.model import sync
 from wxgtd.model import enums
-from wxgtd.model import logic
+from wxgtd.logic import task as task_logic
 from wxgtd.gui import dlg_about
 from wxgtd.gui import _fmt as fmt
 from wxgtd.gui import _infobox as infobox
 from wxgtd.gui import message_boxes as mbox
 from wxgtd.gui import _tasklistctrl as TLC
+from wxgtd.gui import quicktask
 from wxgtd.gui._base_frame import BaseFrame
 from wxgtd.gui._filtertreectrl import FilterTreeCtrl
 from wxgtd.gui._taskbaricon import TaskBarIcon
-from wxgtd.gui.dlg_task import DlgTask
-from wxgtd.gui.dlg_checklistitem import DlgChecklistitem
 from wxgtd.gui.dlg_preferences import DlgPreferences
 from wxgtd.gui.dlg_sync_progress import DlgSyncProggress
 from wxgtd.gui.dlg_tags import DlgTags
@@ -50,6 +49,7 @@ from wxgtd.gui.dlg_goals import DlgGoals
 from wxgtd.gui.dlg_folders import DlgFolders
 from wxgtd.gui.dlg_reminders import DlgReminders
 from wxgtd.gui.frame_notebooks import FrameNotebook
+from wxgtd.gui.task_controller import TaskDialogControler
 
 _ = gettext.gettext
 ngettext = gettext.ngettext  # pylint: disable=C0103
@@ -118,6 +118,7 @@ class FrameMain(BaseFrame):
 				self._on_menu_file_preferences)
 		self._create_menu_bind('menu_help_about', self._on_menu_help_about)
 		self._create_menu_bind('menu_task_new', self._on_menu_task_new)
+		self._create_menu_bind('menu_task_quick', self._on_menu_task_quick)
 		self._create_menu_bind('menu_task_edit', self._on_menu_task_edit)
 		self._create_menu_bind('menu_task_delete', self._on_menu_task_delete)
 		self._create_menu_bind('menu_task_clone', self._on_menu_task_clone)
@@ -149,6 +150,11 @@ class FrameMain(BaseFrame):
 				iconprovider.get_image("task_new"),
 				shortHelp=_('Add new task'))
 		self.wnd.Bind(wx.EVT_TOOL, self._on_btn_new_task, id=tbi.GetId())
+
+		tbi = toolbar.AddLabelTool(-1, _('Quick Task'),
+				iconprovider.get_image("task_quick"),
+				shortHelp=_('Add quick new task'))
+		self.wnd.Bind(wx.EVT_TOOL, self._on_btn_quick_task, id=tbi.GetId())
 
 		tbi = toolbar.AddLabelTool(-1, _('Edit Task'),
 				iconprovider.get_image('task_edit'),
@@ -343,12 +349,18 @@ class FrameMain(BaseFrame):
 	def _on_btn_new_task(self, _evt):
 		self._new_task()
 
+	def _on_btn_quick_task(self, _evt):
+		quicktask.quick_task(self.wnd)
+
 	def _on_menu_help_about(self, _evt):
 		""" Show about dialog """
 		dlg_about.show_about_box(self.wnd)
 
 	def _on_menu_task_new(self, _evt):
 		self._new_task()
+
+	def _on_menu_task_quick(self, _evt):
+		quicktask.quick_task(self.wnd)
 
 	def _on_menu_task_delete(self, _evt):
 		self._delete_selected_task()
@@ -395,13 +407,8 @@ class FrameMain(BaseFrame):
 			self._items_path.append(task)
 			self._refresh_list()
 			return
-		if not task_uuid:
-			return
-		if task_type == enums.TYPE_CHECKLIST_ITEM:
-			dlg = DlgChecklistitem.create(task_uuid, self.wnd, task_uuid)
-		else:
-			dlg = DlgTask.create(task_uuid, self.wnd, task_uuid)
-		dlg.run()
+		if task_uuid:
+			TaskDialogControler.open_task(self.wnd, task_uuid)
 
 	def _on_item_drag(self, evt):
 		s_index = evt.start
@@ -453,26 +460,14 @@ class FrameMain(BaseFrame):
 		task_uuid = self._items_list_ctrl.get_item_uuid(None)
 		if task_uuid is None:  # not selected
 			return
-		session = self._session
-		task = session.query(  # pylint: disable=E1101
-				OBJ.Task).filter_by(uuid=task_uuid).first()
-		if not task.task_completed:
-			if not logic.complete_task(task, self.wnd, session):
-				return
-		else:
-			task.task_completed = False
-		task.update_modify_time()
-		session.commit()  # pylint: disable=E1101
-		Publisher().sendMessage('task.update', data={'task_uuid': task_uuid})
-		self._refresh_list()
+		task_logic.toggle_task_complete(task_uuid, self.wnd, self._session)
 
 	def _on_btn_edit_parent(self, _evt):
 		if not self._items_path:
 			return
 		task_uuid = self._items_path[-1].uuid
 		if task_uuid:
-			dlg = DlgTask.create(task_uuid, self.wnd, task_uuid)
-			dlg.run()
+			TaskDialogControler.open_task(self.wnd, task_uuid)
 
 	def _on_btn_reminders(self, _evt):
 		if not DlgReminders.check(self.wnd, self._session):
@@ -523,31 +518,29 @@ class FrameMain(BaseFrame):
 	def _delete_selected_task(self):
 		task_uuid = self._items_list_ctrl.get_item_uuid(None)
 		if task_uuid:
-			if logic.delete_task(task_uuid, self.wnd):
-				Publisher().sendMessage('task.delete', data={'task_uuid': task_uuid})
+			task_logic.delete_task(task_uuid, self.wnd)
 
 	def _new_task(self):
 		parent_uuid = None
+		task_type = None
 		if self._items_path:
 			parent_uuid = self._items_path[-1].uuid
 			if self._items_path[-1].type == enums.TYPE_CHECKLIST:
-				dlg = DlgChecklistitem(self.wnd, None, parent_uuid)
-				dlg.run()
-				return
-		group_id = self['rb_show_selection'].GetSelection()
-		task_type = enums.TYPE_TASK
-		if group_id == 5 and not self._items_path:
-			task_type = enums.TYPE_PROJECT
-		elif group_id == 6 and not self._items_path:
-			task_type = enums.TYPE_CHECKLIST
-		dlg = DlgTask(self.wnd, None, parent_uuid, task_type)
-		dlg.run()
+				task_type = enums.TYPE_CHECKLIST_ITEM
+		if not task_type:
+			group_id = self['rb_show_selection'].GetSelection()
+			task_type = enums.TYPE_TASK
+			if group_id == 5 and not self._items_path:
+				task_type = enums.TYPE_PROJECT
+			elif group_id == 6 and not self._items_path:
+				task_type = enums.TYPE_CHECKLIST
+		TaskDialogControler.new_task(self.wnd, task_type or enums.TYPE_TASK,
+				parent_uuid)
 
 	def _edit_selected_task(self):
 		task_uuid = self._items_list_ctrl.get_item_uuid(None)
 		if task_uuid:
-			dlg = DlgTask.create(task_uuid, self.wnd, task_uuid)
-			dlg.run()
+			TaskDialogControler.open_task(self.wnd, task_uuid)
 
 	def _clone_selected_task(self):
 		task_uuid = self._items_list_ctrl.get_item_uuid(None)
@@ -556,15 +549,7 @@ class FrameMain(BaseFrame):
 		if not mbox.message_box_question_yesno(self.wnd,
 				_("Clone task with all subtasks?")):
 			return
-		task = self._session.query(OBJ.Task).filter_by(uuid=task_uuid).first()
-		if not task:
-			_LOG.warn("_clone_selected_task; missing task %r", task_uuid)
-			return
-		new_task = task.clone()
-		new_task.update_modify_time()
-		self._session.add(new_task)
-		self._session.commit()
-		Publisher().sendMessage('task.update', data={'task_uuid': new_task.uuid})
+		task_logic.clone_task(task_uuid)
 
 	def _show_parent_info(self, active_only):
 		panel_parent_icons = self._panel_parent_icons
@@ -626,7 +611,12 @@ class FrameMain(BaseFrame):
 		elif group_id == 3:  # basket
 			# no status, no context
 			params['contexts'] = [None]
-			params['statuses'] = [None]
+			params['statuses'] = [0]
+			params['goals'] = [None]
+			params['folders'] = [None]
+			params['tags'] = [None]
+			params['finished'] = False
+			params['no_due_date'] = True
 		elif group_id == 4:  # finished
 			params['finished'] = True
 		elif group_id == 5 and not parent:  # projects

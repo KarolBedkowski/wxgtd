@@ -19,6 +19,11 @@ import re
 
 from dateutil.relativedelta import relativedelta
 
+try:
+	from wx.lib.pubsub.pub import Publisher
+except ImportError:
+	from wx.lib.pubsub import Publisher  # pylint: disable=E0611
+
 from wxgtd.gui import message_boxes as mbox
 from wxgtd.model import objects as OBJ
 from wxgtd.model import enums
@@ -364,6 +369,7 @@ def delete_task(task_uuid, parent_wnd=None, session=None):
 
 	session.delete(task)
 	session.commit()
+	Publisher().sendMessage('task.delete', data={'task_uuid': task_uuid})
 	return True
 
 
@@ -391,6 +397,27 @@ def complete_task(task, parent_wnd=None, session=None):
 	if repeated_task is not None:
 		session.add(repeated_task)
 	return True
+
+
+def toggle_task_complete(task_uuid, parent_wnd, session=None):
+	""" Togle task complete flag.
+
+	Args:
+		task_uuid: UUID of task to change
+		parent_wnd: parent wxwidget window
+		session: optional SqlAlchemy session
+	Returns:
+		True if ok
+	"""
+	session = session or OBJ.Session()
+	task = session.query(  # pylint: disable=E1101
+			OBJ.Task).filter_by(uuid=task_uuid).first()
+	if not task.task_completed:
+		if not complete_task(task, parent_wnd, session):
+			return False
+	else:
+		task.task_completed = False
+	return save_modified_task(task, session)
 
 
 _PERIOD_PL = {'Week': "Weeks", "Day": "Days", "Month": "Months",
@@ -431,34 +458,6 @@ def build_repeat_pattern_every_xdm(num_weekday, weekday, num_months):
 			mname)
 
 
-def delete_notebook_page(page_uuid, parent_wnd=None, session=None):
-	""" Delete given notebook page.
-
-	Show confirmation and delete page from database.
-
-	Args:
-		page_uuid: notebook page for delete
-		parent_wnd: current wxWindow
-		session: sqlalchemy session
-
-	Returns:
-		True = task deleted
-	"""
-	if not mbox.message_box_delete_confirm(parent_wnd,
-			_("notebook page")):
-		return False
-
-	session = session or OBJ.Session()
-	page = session.query(OBJ.NotebookPage).filter_by(uuid=page_uuid).first()
-	if not page:
-		_LOG.warning("delete_notebook_page: missing page %r", page_uuid)
-		return False
-
-	session.delete(page)
-	session.commit()
-	return True
-
-
 def update_project_due_date(task):
 	""" Update project due date.
 
@@ -479,6 +478,110 @@ def update_project_due_date(task):
 				task.due_date = subtask.due_date
 				task.due_time_set = subtask.due_time_set
 	elif task.due_date and task.parent and task.parent.type == enums.TYPE_PROJECT:
-		if task.parent.due_date > task.due_date:
+		if not task.parent.due_date or (task.due_date and task.parent.due_date >
+				task.due_date):
 			task.parent.due_date = task.due_date
 			task.parent.due_time_set = task.due_time_set
+
+
+def clone_task(task_uuid, session=None):
+	""" Clone task.
+
+	Args:
+		task_uuid: task to clone
+		session: optional SqlAlchemy session
+	Returns:
+		Cloned task UUID or None when error.
+	"""
+	session = session or OBJ.Session()
+	task = session.query(OBJ.Task).filter_by(uuid=task_uuid).first()
+	if not task:
+		_LOG.warn("_clone_selected_task; missing task %r", task_uuid)
+		return None
+	new_task = task.clone()
+	save_modified_task(new_task, session)
+	Publisher().sendMessage('task.update', data={'task_uuid': new_task.uuid})
+	return new_task.uuid
+
+
+def save_modified_task(task, session=None):
+	""" Save modified task.
+	Update required fields.
+
+	Args:
+		task: task to save
+		session: optional SqlAlchemy session
+	Returns:
+		True if ok.
+	"""
+	session = session or OBJ.Session()
+	update_project_due_date(task)
+	adjust_task_type(task, session)
+	task.update_modify_time()
+	session.add(task)
+	session.commit()  # pylint: disable=E1101
+	Publisher().sendMessage('task.update', data={'task_uuid': task.uuid})
+	return True
+
+
+def adjust_task_type(task, session):
+	""" Update task type when moving task to project/change type.
+	Args:
+		task: task to save
+		session: SqlAlchemy session
+	Returns:
+		True if ok.
+	"""
+	if task.parent:
+		if task.parent.type == enums.TYPE_CHECKLIST:
+			task.type = enums.TYPE_CHECKLIST_ITEM
+		elif task.type == enums.TYPE_CHECKLIST_ITEM:
+			task.type = enums.TYPE_TASK
+	elif task.type == enums.TYPE_CHECKLIST_ITEM:
+		# elementy checlisty tylko w checklistach
+		task.type = enums.TYPE_TASK
+	if task.children:
+		if task.type in (enums.TYPE_CHECKLIST, enums.TYPE_PROJECT):
+			for subtask in task.children:
+				adjust_task_type(subtask, session)
+		else:
+			# jeżeli to nie projakt ani checliksta to nie powinna mieć podzadań
+			for subtask in task.children:
+				subtask.parent = task.parent
+	return True
+
+
+def change_task_parent(task, parent_uuid, session, wnd):
+	parent = None
+	if parent_uuid:
+		parent = OBJ.Task.get(session, uuid=parent_uuid)
+	if not _confirm_change_task_parent(task, parent, wnd):
+		return False
+	task.parent = parent
+	adjust_task_type(task, session)
+	return True
+
+
+def _confirm_change_task_parent(task, parent, wnd):
+	curr_type = task.type
+	if parent:  # nowy parent
+		if (parent.type == enums.TYPE_CHECKLIST and
+				curr_type != enums.TYPE_CHECKLIST_ITEM) or (
+				parent.type != enums.TYPE_CHECKLIST and
+				curr_type == enums.TYPE_CHECKLIST_ITEM):
+			if not mbox.message_box_warning_yesno(wnd,
+				_("This operation change task and subtasks type.\n"
+					"Are you sure?")):
+				return False
+	else:  # brak nowego parenta
+		if curr_type in (enums.TYPE_CHECKLIST, enums.TYPE_PROJECT):
+			if not mbox.message_box_warning_yesno(wnd,
+					_("This operation change all subtasks to simple"
+						" tasks\nAre you sure?")):
+				return False
+		elif curr_type == enums.TYPE_CHECKLIST_ITEM:
+			if not mbox.message_box_warning_yesno(wnd,
+				_("This operation change task and subtasks type.\n"
+					"Are you sure?")):
+				return False
+	return True

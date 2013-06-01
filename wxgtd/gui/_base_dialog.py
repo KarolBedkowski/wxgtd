@@ -157,7 +157,7 @@ class BaseDialog:
 		wnd.Bind(wx.EVT_BUTTON, self._on_ok, id=wx.ID_OK)
 		wnd.Bind(wx.EVT_BUTTON, self._on_cancel, id=wx.ID_CANCEL)
 
-	def _data_changed(self):
+	def _data_changed(self):  # pylint: disable=R0201
 		""" Before close check is changed. """
 		return False
 

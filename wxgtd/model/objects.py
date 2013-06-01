@@ -149,7 +149,7 @@ class Task(BaseModelMixin, Base):
 	ordinal = Column(Integer, default=0)
 	title = Column(String, index=True)
 	note = Column(String)
-	type = Column(Integer, nullable=False)
+	type = Column(Integer, nullable=False, default=enums.TYPE_TASK)
 	starred = Column(Integer, default=0)
 	status = Column(Integer, default=0)
 	priority = Column(Integer, default=0)
@@ -273,6 +273,8 @@ class Task(BaseModelMixin, Base):
 					Task.hide_until <= now))
 		if params.get('max_due_date'):
 			query = query.filter(Task.due_date.isnot(None))
+		elif params.get('no_due_date'):
+			query = query.filter(Task.due_date.is_(None))
 		query = _quert_add_filter_by_hotlist(query, params, now)
 		query = _query_add_filter_by_finished(query, params.get('finished'))
 		query = _query_add_filter_by_parent(query, params.get('parent_uuid'))
@@ -293,6 +295,17 @@ class Task(BaseModelMixin, Base):
 		""" Get all checklists from database. """
 		# pylint: disable=E1101
 		return Session().query(cls).filter_by(type=enums.TYPE_CHECKLIST).all()
+
+	@classmethod
+	def root_projects_checklists(cls, session=None):
+		""" Get root projects and checklists. """
+		session = session or Session()
+		return (session.query(Task)
+				.filter(Task.parent_uuid.is_(None),
+						or_(Task.type == enums.TYPE_CHECKLIST,
+						Task.type == enums.TYPE_PROJECT))
+				.order_by(Task.title)
+				.all())
 
 	@classmethod
 	def select_reminders(cls, since=None, session=None):
@@ -324,13 +337,31 @@ class Task(BaseModelMixin, Base):
 		""" Find maximal importance in childs of given task."""
 		return (session or Session()).scalar(
 				select([func.max(Task.importance)]).where(
-						Task.parent_uuid == parent_uuid))
+						Task.parent_uuid == parent_uuid)) or 0
 
 	@property
 	def child_count(self):
 		"""  Count subtask. """
 		return orm.object_session(self).scalar(select([func.count(Task.uuid)])
 				.where(Task.parent_uuid == self.uuid))
+
+	@property
+	def sub_projects(self):
+		return Session.object_session(self).query(Task).with_parent(self)\
+				.filter_by(type=enums.TYPE_PROJECT).all()
+
+	@property
+	def sub_checklists(self):
+		return Session.object_session(self).query(Task).with_parent(self)\
+				.filter_by(type=enums.TYPE_CHECKLIST).all()
+
+	@property
+	def sub_project_or_checklists(self):
+		return (Session.object_session(self).query(Task).with_parent(self)
+				.filter(or_(Task.type == enums.TYPE_CHECKLIST,
+						Task.type == enums.TYPE_PROJECT))
+				.order_by(Task.title)
+				.all())
 
 	def clone(self, cleanup=True):
 		""" Clone current object. """

@@ -16,19 +16,18 @@ import logging
 import gettext
 
 import wx
-try:
-	from wx.lib.pubsub.pub import Publisher
-except ImportError:
-	from wx.lib.pubsub import Publisher  # pylint: disable=E0611
 
 from wxgtd.model import objects as OBJ
+from wxgtd.logic import task as task_logic
 from wxgtd.wxtools.validators import Validator
 from wxgtd.wxtools.validators import v_length as LVALID
+from wxgtd.wxtools import wxutils
 
 from ._base_dialog import BaseDialog
 from . import _fmt as fmt
 from . import dialogs
 from . import message_boxes as mbox
+from .dlg_projects_tree import DlgProjectTree
 
 _ = gettext.gettext
 _LOG = logging.getLogger(__name__)
@@ -38,33 +37,40 @@ class BaseTaskDialog(BaseDialog):
 	""" Base class for all task dialogs.
 
 	Args:
-		parent: parent window
+		parent: parent windows.
 		dialog_name: name of dialog in xrc file
-		task_uuid: uuid task for edit; if empty - create new task
-		parent_uuid: optional parent task uuid.
+		task: task to edit.
+		session: SqlAlchemy session.
+		controller: TaskDialogControler associated to task.
 	"""
 
-	def __init__(self, parent, dialog_name, task_uuid, parent_uuid=None):
+	def __init__(self, parent, dialog_name, task, session, controller):
 		BaseDialog.__init__(self, parent, dialog_name)
+		self._session = session
+		self._task = task
+		self._controller = controller
 		self._setup_comboboxes()
-		self._setup(task_uuid, parent_uuid)
+		self._setup(task)
 		self._refresh_static_texts()
+
+	def run(self, _dummy=False):
+		""" Run (show) dialog.  """
+		self._wnd.Show()
+
+	def close(self):
+		self._wnd.Destroy()
 
 	def _create_bindings(self, wnd):
 		BaseDialog._create_bindings(self, wnd)
 		self['lb_notes_list'].Bind(wx.EVT_LISTBOX_DCLICK, self._on_lb_notes_list)
+		wnd.Bind(wx.EVT_BUTTON, self._on_btn_delete, id=wx.ID_DELETE)
 		wnd.Bind(wx.EVT_BUTTON, self._on_btn_new_note, id=wx.ID_ADD)
 		self['btn_del_note'].Bind(wx.EVT_BUTTON, self._on_btn_del_note)
+		self['btn_change_project'].Bind(wx.EVT_BUTTON,
+				self._on_btn_change_project)
 
-	def _setup(self, task_uuid, parent_uuid):
-		_LOG.debug("BaseTaskDialog.setup(%r, %r)", task_uuid, parent_uuid)
-		self._session = OBJ.Session()
-		if task_uuid:
-			self._task = self._load_task(task_uuid)
-		else:
-			self._task = self._create_task(parent_uuid)
-			self._session.add(self._task)  # pylint: disable=E1101
-		task = self._task
+	def _setup(self, task):
+		_LOG.debug("BaseTaskDialog.setup(%r)", task.uuid)
 		self._original_task = task.clone(cleanup=False)
 		self._data = {'prev_completed': task.completed}
 		self['tc_title'].SetValidator(Validator(task, 'title',
@@ -78,21 +84,28 @@ class BaseTaskDialog(BaseDialog):
 	def _setup_comboboxes(self):  # pylint: disable=R0201
 		pass
 
-	def _load_task(self, _task_uuid):  # pylint: disable=R0201
-		return None
-
-	def _create_task(self, _parent_uuid):  # pylint: disable=R0201
-		return None
-
 	def _on_save(self, evt):
-		if not self._wnd.Validate():
+		if not self._validate():
 			return
-		if not self._wnd.TransferDataFromWindow():
+		if not self._transfer_data_from_window():
 			return
-		self._task.update_modify_time()
-		self._session.commit()  # pylint: disable=E1101
-		Publisher().sendMessage('task.update', data={'task_uuid': self._task.uuid})
+		if not self._data['prev_completed'] and self._task.completed:
+			# zakonczono zadanie
+			if not task_logic.complete_task(self._task, self._wnd, self._session):
+				return
+		task_logic.save_modified_task(self._task, self._session)
 		self._on_ok(evt)
+
+	def _on_cancel(self, _evt):
+		if self._data_changed() and not self._confirm_close():
+			_LOG.debug('data changed')
+			return
+		self._session.rollback()
+		self._wnd.Close()
+
+	def _on_close(self, evt):
+		self._controller.close()
+		BaseDialog._on_close(self, evt)
 
 	def _on_lb_notes_list(self, _evt):
 		sel = self['lb_notes_list'].GetSelection()
@@ -131,6 +144,21 @@ class BaseTaskDialog(BaseDialog):
 		del self._task.notes[sel]
 		self._refresh_static_texts()
 
+	def _on_btn_change_project(self, _evt):
+		dlg = DlgProjectTree(self.wnd)
+		if dlg.run(modal=True):
+			parent_uuid = dlg.selected
+			if task_logic.change_task_parent(self._task, parent_uuid,
+					self._session, self.wnd):
+				self._refresh_static_texts()
+				self._on_task_type_change()
+
+	def _on_btn_delete(self, _evt):
+		tuuid = self._task.uuid
+		if tuuid:
+			if task_logic.delete_task(tuuid, self.wnd, self._session):
+				self._on_ok(None)
+
 	def _refresh_static_texts(self):
 		""" Odświeżenie pól dat na dlg """
 		task = self._task
@@ -138,6 +166,7 @@ class BaseTaskDialog(BaseDialog):
 		lb_notes_list.Clear()
 		for note in task.notes:
 			lb_notes_list.Append(note.title[:50], note.uuid)
+		self['l_project'].SetLabel(task.parent.title if task.parent else '')
 		if task.completed:
 			self['l_completed_date'].SetLabel(fmt.format_timestamp(task.completed,
 					True))
@@ -145,6 +174,28 @@ class BaseTaskDialog(BaseDialog):
 			self['l_completed_date'].SetLabel('')
 
 	def _data_changed(self):
-		if not self._wnd.TransferDataFromWindow():
+		if not self._transfer_data_from_window():
 			return False
 		return not self._original_task.compare(self._task)
+
+	def _validate(self):
+		""" Validate values entered in dialog.
+
+		Returns:
+			True = no error.
+		"""
+		return self._wnd.Validate()
+
+	def _transfer_data_from_window(self):
+		""" Transfer values from widgets to objects.
+
+		Returns:
+			True = no error.
+		"""
+		return self.wnd.TransferDataFromWindow()
+
+	@wxutils.call_after
+	def _on_task_type_change(self):
+		""" Called after task type change. """
+		self._transfer_data_from_window()
+		self._controller.change_task_type()
