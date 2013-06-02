@@ -15,7 +15,6 @@ import sys
 import os
 import gettext
 import logging
-import datetime
 import traceback
 
 import wx
@@ -32,6 +31,7 @@ from wxgtd.model import loader
 from wxgtd.model import exporter
 from wxgtd.model import sync
 from wxgtd.model import enums
+from wxgtd.model import queries
 from wxgtd.logic import task as task_logic
 from wxgtd.gui import dlg_about
 from wxgtd.gui import _fmt as fmt
@@ -588,61 +588,26 @@ class FrameMain(BaseFrame):
 		parent = self._items_path[-1].uuid if self._items_path else None
 		_LOG.debug('_get_params_for_list: group_id=%r, parent=%r', group_id, parent)
 		tmodel = self._filter_tree_ctrl.model
-		params = {'starred': False, 'min_priority': None,
-				'max_due_date': None, 'types': None,
-				'contexts': list(tmodel.checked_items_by_parent("CONTEXTS")),
-				'folders': list(tmodel.checked_items_by_parent("FOLDERS")),
-				'goals': list(tmodel.checked_items_by_parent("GOALS")),
-				'statuses': list(tmodel.checked_items_by_parent("STATUSES")),
-				'tags': list(tmodel.checked_items_by_parent("TAGS")),
-				'hide_until': self._btn_hide_until.GetValue(),
-				'search_str': self._searchbox.GetValue(),
-				'parent_uuid': parent}
-		params['finished'] = None if self._btn_show_finished.GetValue() else False
-		if not parent and not self._btn_show_subtasks.GetValue():
-			# tylko nadrzędne
-			params['parent_uuid'] = 0
-		if group_id == 1 and not parent:  # hot
-			# ignore hotlist settings when showing subtasks
-			_get_hotlist_settings(params, self._appconfig)
-		elif group_id == 2 and not parent:  # stared
-			# ignore starred when showing subtasks
-			params['starred'] = True
-		elif group_id == 3:  # basket
-			# no status, no context
-			params['contexts'] = [None]
-			params['statuses'] = [0]
-			params['goals'] = [None]
-			params['folders'] = [None]
-			params['tags'] = [None]
-			params['finished'] = False
-			params['no_due_date'] = True
-		elif group_id == 4:  # finished
-			params['finished'] = True
-		elif group_id == 5 and not parent:  # projects
-			params['types'] = [enums.TYPE_PROJECT]
-		elif group_id == 6:  # checklists
-			if parent:
-				params['types'] = [enums.TYPE_CHECKLIST, enums.TYPE_CHECKLIST_ITEM]
-			else:
-				params['types'] = [enums.TYPE_CHECKLIST]
-		elif group_id == 7:  # future alarms
-			params['active_alarm'] = True
-			params['finished'] = (None if self._btn_show_finished.GetValue()
-					else False)
+		options = 0
+		if self._btn_show_finished.GetValue():
+			options |= queries.OPT_SHOW_FINISHED
+		if self._btn_show_subtasks.GetValue():
+			options |= queries.OPT_SHOW_SUBTASKS
+		if self._btn_hide_until.GetValue():
+			options |= queries.OPT_HIDE_UNTIL
+		params = queries.build_query_params(group_id, options, parent,
+				self._searchbox.GetValue())
+		queries.query_params_append_contexts(params,
+				tmodel.checked_items_by_parent("CONTEXTS"))
+		queries.query_params_append_folders(params,
+				tmodel.checked_items_by_parent("FOLDERS"))
+		queries.query_params_append_goals(params,
+				tmodel.checked_items_by_parent("GOALS"))
+		queries.query_params_append_statuses(params,
+				tmodel.checked_items_by_parent("STATUSES"))
+		queries.query_params_append_tags(params,
+				tmodel.checked_items_by_parent("TAGS"))
 		return params
-
-
-def _get_hotlist_settings(params, conf):
-	now = datetime.datetime.utcnow()
-	params['filter_operator'] = 'or' if conf.get('hotlist', 'cond', True) \
-			else 'and'
-	params['max_due_date'] = now + datetime.timedelta(days=conf.get('hotlist',
-			'due', 0))
-	params['min_priority'] = conf.get('hotlist', 'priority', 3)
-	params['starred'] = conf.get('hotlist', 'starred', False)
-	params['next_action'] = conf.get('hotlist', 'next_action', False)
-	params['started'] = conf.get('hotlist', 'started', False)
 
 
 # additional strings to translate
