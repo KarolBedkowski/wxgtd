@@ -87,8 +87,7 @@ class TaskDialogControler:
 		contr = TaskDialogControler(parent_wnd, session, task)
 		contr.open_dialog()
 
-	@classmethod
-	def task_change_due_date(cls, parent_wnd, task):
+	def task_change_due_date(self):
 		""" Show dialog and change task due date.
 
 		Args:
@@ -97,14 +96,12 @@ class TaskDialogControler:
 		Returns:
 			True if date was changed.
 		"""
-		if task.type == enums.TYPE_PROJECT:
-			return cls._set_date(parent_wnd, task, 'due_date_project',
-					'due_time_set')
+		if self._task.type == enums.TYPE_PROJECT:
+			return self._set_date('due_date_project', 'due_time_set')
 		else:
-			return cls._set_date(parent_wnd, task, 'due_date', 'due_time_set')
+			return self._set_date('due_date', 'due_time_set')
 
-	@classmethod
-	def task_change_start_date(cls, parent_wnd, task):
+	def task_change_start_date(self):
 		""" Show dialog and change task start date.
 
 		Args:
@@ -113,22 +110,19 @@ class TaskDialogControler:
 		Returns:
 			True if date was changed.
 		"""
-		return cls._set_date(parent_wnd, task, 'start_date', 'start_time_set')
+		return self._set_date('start_date', 'start_time_set')
 
-	@classmethod
-	def task_change_remind(cls, parent_wnd, task):
+	def task_change_remind(self):
 		""" Show dialog and change task start date.
 
-		Args:
-			parent_wnd: parent wx window
-			task: task to modify
 		Returns:
 			True if date was changed.
 		"""
+		task = self._task
 		alarm = None
 		if task.alarm:
 			alarm = DTU.datetime2timestamp(task.alarm)
-		dlg = DlgRemindSettings(parent_wnd, alarm, task.alarm_pattern)
+		dlg = DlgRemindSettings(self._parent_wnd, alarm, task.alarm_pattern)
 		if dlg.run(True):
 			if dlg.alarm:
 				task.alarm = DTU.timestamp2datetime(dlg.alarm)
@@ -140,20 +134,17 @@ class TaskDialogControler:
 			return True
 		return False
 
-	@classmethod
-	def task_change_hide_until(cls, parent_wnd, task):
+	def task_change_hide_until(self):
 		""" Show dialog and change task show settings.
 
-		Args:
-			parent_wnd: parent wx window
-			task: task to modify
 		Returns:
 			True if date was changed.
 		"""
+		task = self._task
 		date_time = None
 		if task.hide_until:
 			date_time = DTU.datetime2timestamp(task.hide_until)
-		dlg = DlgShowSettings(parent_wnd, date_time, task.hide_pattern)
+		dlg = DlgShowSettings(self._parent_wnd, date_time, task.hide_pattern)
 		if dlg.run(True):
 			if dlg.datetime:
 				task.hide_until = DTU.timestamp2datetime(dlg.datetime)
@@ -164,19 +155,15 @@ class TaskDialogControler:
 			return True
 		return False
 
-	@classmethod
-	def task_change_tags(cls, parent_wnd, task, session):
+	def task_change_tags(self):
 		""" Show dialog and change task's tags.
 
-		Args:
-			parent_wnd: parent wx window
-			task: task to modify
-			session: current SqlAlchemy session
 		Returns:
 			True if tags was changed.
 		"""
+		task = self._task
 		tags_uuids = [tasktag.tag_uuid for tasktag in task.tags]
-		dlg = DlgSelectTags(parent_wnd, tags_uuids)
+		dlg = DlgSelectTags(self._parent_wnd, tags_uuids)
 		if dlg.run(True):
 			new_tags = dlg.selected_tags
 			for tasktag in list(task.tags):
@@ -186,36 +173,34 @@ class TaskDialogControler:
 					new_tags.remove(tasktag.tag_uuid)
 			for tag_uuid in new_tags:
 				tasktag = OBJ.TaskTag()
-				tasktag.tag = session.query(  # pylint: disable=E1101
+				tasktag.tag = self._session.query(  # pylint: disable=E1101
 						OBJ.Tag).filter_by(uuid=tag_uuid).first()
 				task.tags.append(tasktag)  # pylint: disable=E1103
 			return True
 		return False
 
-	@classmethod
-	def task_change_repeat(cls, parent_wnd, task):
+	def task_change_repeat(self):
 		""" Show dialog and change task's repeat settings.
 
-		Args:
-			parent_wnd: parent wx window
-			task: task to modify
 		Returns:
 			True if task was changed.
 		"""
-		dlg = DlgRepeatSettings(parent_wnd, task.repeat_pattern, task.repeat_from)
+		task = self._task
+		dlg = DlgRepeatSettings(self._parent_wnd, task.repeat_pattern,
+				task.repeat_from)
 		if dlg.run(True):
 			task.repeat_from = dlg.repeat_from
 			task.repeat_pattern = dlg.pattern
 			return True
 		return False
 
-	@classmethod
-	def _set_date(cls, parent_wnd, task, attr_date, attr_time_set):
+	def _set_date(self, attr_date, attr_time_set):
 		""" Wyśweitlenie dlg wyboru daty dla danego atrybutu """
+		task = self._task
 		value = getattr(task, attr_date)
 		if value:
 			value = DTU.datetime2timestamp(value)
-		dlg = DlgDateTime(parent_wnd, value, getattr(task, attr_time_set))
+		dlg = DlgDateTime(self._parent_wnd, value, getattr(task, attr_time_set))
 		if dlg.run(True):
 			date = None
 			if dlg.timestamp:

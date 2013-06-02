@@ -100,28 +100,27 @@ class DlgTask(BaseTaskDialog):
 		return BaseTaskDialog._transfer_data_from_window(self)
 
 	def _on_btn_due_date_set(self, _evt):
-		if self._controller.task_change_due_date(self.wnd, self._task):
+		if self._controller.task_change_due_date():
 			self._refresh_static_texts()
 
 	def _on_btn_start_date_set(self, _evt):
-		if self._controller.task_change_start_date(self.wnd, self._task):
+		if self._controller.task_change_start_date():
 			self._refresh_static_texts()
 
 	def _on_btn_remiand_set(self, _evt):
-		if self._controller.task_change_remind(self.wnd, self._task):
+		if self._controller.task_change_remind():
 			self._refresh_static_texts()
 
 	def _on_btn_hide_until_set(self, _evt):
-		if self._controller.task_change_hide_until(self.wnd, self._task):
+		if self._controller.task_change_hide_until():
 			self._refresh_static_texts()
 
 	def _on_btn_repeat_set(self, _evt):
-		if self._controller.task_change_repeat(self.wnd, self._task):
+		if self._controller.task_change_repeat():
 			self._refresh_static_texts()
 
 	def _on_btn_select_tags(self, _evt):
-		if self._controller.task_change_tags(self.wnd, self._task,
-				self._session):
+		if self._controller.task_change_tags():
 			self._refresh_static_texts()
 
 	def _on_btn_change_type(self, _evt):
