@@ -174,6 +174,9 @@ class FilterTreeCtrl(treemixin.VirtualTree, treemixin.ExpansionState,
 	""" TreeControl with checboxes allows to filter elements to show. """
 	# pylint: disable=R0901
 
+	_menu_show_only_id = wx.NewId()
+	_menu_show_except_id = wx.NewId()
+
 	def __init__(self, *args, **kwargs):
 		self._model = FilterTreeModel()
 		kwargs['style'] = wx.TR_HIDE_ROOT | \
@@ -182,6 +185,11 @@ class FilterTreeCtrl(treemixin.VirtualTree, treemixin.ExpansionState,
 		super(FilterTreeCtrl, self).__init__(*args, **kwargs)
 
 		self.Bind(CT.EVT_TREE_ITEM_CHECKED, self._on_item_checked)
+		self.Bind(wx.EVT_RIGHT_UP, self._on_right_up)
+		self.Bind(wx.EVT_MENU, self._on_menu_show_only,
+				id=self._menu_show_only_id)
+		self.Bind(wx.EVT_MENU, self._on_menu_show_except,
+				id=self._menu_show_except_id)
 		wx.CallAfter(self.refresh)
 
 	@property
@@ -236,3 +244,44 @@ class FilterTreeCtrl(treemixin.VirtualTree, treemixin.ExpansionState,
 		appcfg.set('last_filter', 'goals', ','.join(map(str, goals)))
 		tags = self._model.checked_items_by_parent("TAGS")
 		appcfg.set('last_filter', 'tags', ','.join(map(str, tags)))
+
+	def _on_right_up(self, evt):
+		item = self.GetSelection()
+		indices = self.GetIndexOfItem(item)
+		if len(indices) == 2:
+			menu = wx.Menu()
+			menu.Append(self._menu_show_only_id, _("Select only this item"))
+			menu.Append(self._menu_show_except_id, _("Select only this item"))
+			self.PopupMenu(menu)
+			menu.Destroy()
+		evt.Skip()
+
+	def _on_menu_show_only(self, _evt):
+		item = self.GetSelection()
+		indices = self.GetIndexOfItem(item)
+		if len(indices) != 2:
+			return
+		self._model.get_item(indices[:-1]).checked = False
+		self._model.get_item(indices[:-1]).set_child_check(False)
+		self._model.get_item(indices).checked = True
+		parent = item.GetParent()
+		parent.Check(False)
+		for child in parent.GetChildren():
+			child.Check(False)
+		self.CheckItem(item, True)  # send event
+		self.RefreshSubtree(parent)
+
+	def _on_menu_show_except(self, _evt):
+		item = self.GetSelection()
+		indices = self.GetIndexOfItem(item)
+		if len(indices) != 2:
+			return
+		self._model.get_item(indices[:-1]).checked = True
+		self._model.get_item(indices[:-1]).set_child_check(True)
+		self._model.get_item(indices).checked = False
+		parent = item.GetParent()
+		parent.Check(True)
+		for child in parent.GetChildren():
+			child.Check(True)
+		self.CheckItem(item, False)
+		self.RefreshSubtree(parent)
