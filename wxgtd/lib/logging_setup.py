@@ -60,7 +60,8 @@ def logging_setup(filename, debug=False, debug_sql=False):
 		filename = spfname[0] + "_" + str(int(time.time())) + spfname[1]
 		log_fullpath = os.path.join(tempfile.gettempdir(), filename)
 
-	print 'Logging to %s' % log_fullpath
+	if debug:
+		print >> sys.stderr, 'Logging to %s' % log_fullpath
 
 	if debug:
 		level_console = logging.DEBUG
