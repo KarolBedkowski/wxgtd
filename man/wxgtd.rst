@@ -7,9 +7,9 @@ wxgtd
 -----------------------------------
 
 :Author: Karol Będkowski
-:Date:   2013-05-07
+:Date:   2013-06-02
 :Copyright: Copyright(c) Karol Będkowski, 2013
-:Version: 0.3.x
+:Version: 0.x
 :Manual section: 1
 :Manual group: wxGTD Manual Pages
 
@@ -31,9 +31,20 @@ Support synchronisation data via sync file by Dropbox.
 OPTIONS
 =======
 
--d, --debug  Enable debug messages
--h, --help   Show help message and exit
---version    Show information about application version
+--version             Show program's version number and exit
+-h, --help            Show this help message and exit
+
+Creating tasks
+--------------
+  --quick-task-dialog
+                      enable debug messages
+
+Debug options
+-------------
+  -d, --debug         enable debug messages
+  --debug-sql         enable sql debug messages
+  --wx-inspection     run wx windows inspector
+
 
 FILES
 =======
