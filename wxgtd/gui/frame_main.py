@@ -157,6 +157,14 @@ class FrameMain(BaseFrame):
 				id=self._tasks_popup_menu.toggle_task_complete_id)
 		wnd.Bind(wx.EVT_MENU, self._on_menu_task_clone,
 				id=self._tasks_popup_menu.task_clone_id)
+		wnd.Bind(wx.EVT_MENU, self._on_menu_task_change_due,
+				id=self._tasks_popup_menu.task_change_due_id)
+		wnd.Bind(wx.EVT_MENU, self._on_menu_task_change_start,
+				id=self._tasks_popup_menu.task_change_start_id)
+		wnd.Bind(wx.EVT_MENU, self._on_menu_task_change_remind,
+				id=self._tasks_popup_menu.task_change_remind_id)
+		wnd.Bind(wx.EVT_MENU, self._on_menu_task_change_hide_until,
+				id=self._tasks_popup_menu.task_change_hide_until_id)
 
 	def _create_toolbar(self):
 		toolbar = self.wnd.CreateToolBar()
@@ -389,6 +397,38 @@ class FrameMain(BaseFrame):
 		task_uuid = self._items_list_ctrl.get_item_uuid(None)
 		if task_uuid:
 			task_logic.toggle_task_complete(task_uuid, self.wnd, self._session)
+
+	def _on_menu_task_change_due(self, _evt):
+		task_uuid = self._items_list_ctrl.get_item_uuid(None)
+		if not task_uuid:
+			return
+		task = OBJ.Task.get(self._session, uuid=task_uuid)
+		if TaskDialogControler.task_change_due_date(self.wnd, task):
+			task_logic.save_modified_task(task, self._session)
+
+	def _on_menu_task_change_start(self, _evt):
+		task_uuid = self._items_list_ctrl.get_item_uuid(None)
+		if not task_uuid:
+			return
+		task = OBJ.Task.get(self._session, uuid=task_uuid)
+		if TaskDialogControler.task_change_start_date(self.wnd, task):
+			task_logic.save_modified_task(task, self._session)
+
+	def _on_menu_task_change_remind(self, _evt):
+		task_uuid = self._items_list_ctrl.get_item_uuid(None)
+		if not task_uuid:
+			return
+		task = OBJ.Task.get(self._session, uuid=task_uuid)
+		if TaskDialogControler.task_change_remind(self.wnd, task):
+			task_logic.save_modified_task(task, self._session)
+
+	def _on_menu_task_change_hide_until(self, _evt):
+		task_uuid = self._items_list_ctrl.get_item_uuid(None)
+		if not task_uuid:
+			return
+		task = OBJ.Task.get(self._session, uuid=task_uuid)
+		if TaskDialogControler.task_change_hide_until(self.wnd, task):
+			task_logic.save_modified_task(task, self._session)
 
 	def _on_menu_task_notebook(self, _evt):  # pylint: disable=R0201
 		FrameNotebook.run()
@@ -653,6 +693,10 @@ class _TasksPopupMenu:
 		self.task_edit_id = wx.NewId()
 		self.task_clone_id = wx.NewId()
 		self.task_delete_id = wx.NewId()
+		self.task_change_due_id = wx.NewId()
+		self.task_change_start_id = wx.NewId()
+		self.task_change_remind_id = wx.NewId()
+		self.task_change_hide_until_id = wx.NewId()
 
 	def build(self):
 		menu = wx.Menu()
@@ -661,4 +705,9 @@ class _TasksPopupMenu:
 		menu.Append(self.task_edit_id, _('Edit Task'))
 		menu.Append(self.task_clone_id, _('Clone Task'))
 		menu.Append(self.task_delete_id, _('Delete Task'))
+		menu.AppendSeparator()
+		menu.Append(self.task_change_due_id, _('Change Due Date'))
+		menu.Append(self.task_change_start_id, _('Change Start Date'))
+		menu.Append(self.task_change_remind_id, _('Change Remind Date'))
+		menu.Append(self.task_change_hide_until_id, _('Change Show Settings'))
 		return menu
