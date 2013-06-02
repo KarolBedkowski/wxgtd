@@ -36,10 +36,6 @@ from wxgtd.model import queries
 def _parse_opt():
 	""" Parse cli options. """
 	optp = optparse.OptionParser(version=version.NAME + " " + version.VERSION)
-	group = optparse.OptionGroup(optp, "Creating tasks")
-	group.add_option('--quick-task', '-q', dest="quick_task_title",
-			help='add quickly task', type="string")
-	optp.add_option_group(group)
 
 	group = optparse.OptionGroup(optp, "List tasks")
 	group.add_option('--tasks', '-t', action="store_const",
@@ -68,6 +64,11 @@ def _parse_opt():
 			dest="query_group", help='show task with alarms in future')
 	optp.add_option_group(group)
 
+	group = optparse.OptionGroup(optp, "Task operations")
+	group.add_option('--quick-task', '-q', dest="quick_task_title",
+			help='add quickly task', type="string")
+	optp.add_option_group(group)
+
 	group = optparse.OptionGroup(optp, "List tasks options")
 	group.add_option('--show-finished', action="store_true",
 			dest="query_show_finished", help='show finished tasks')
@@ -81,6 +82,8 @@ def _parse_opt():
 			help='search for title/note')
 	group.add_option('--verbose', '-v', action="count",
 			dest="verbose", help='show more information')
+	group.add_option('--output-csv', action="store_true",
+			dest="output_csv", help='show result as csv file')
 	optp.add_option_group(group)
 
 	group = optparse.OptionGroup(optp, "Debug options")
@@ -185,6 +188,10 @@ def run():
 	exit(0)
 
 
+from wxgtd.gui import _fmt as fmt
+from wxgtd.model import enums
+
+
 def _list_tasks(options, _args):
 	from wxgtd.model import objects as OBJ
 	group_id = options.query_group
@@ -199,12 +206,13 @@ def _list_tasks(options, _args):
 			options.parent_uuid, options.search_text or '')
 
 	tasks = OBJ.Task.select_by_filters(params)
-	_print_simple_tasks_list(tasks, options.verbose)
+	if options.output_csv:
+		_print_csv_tasks_list(tasks, options.verbose)
+	else:
+		_print_simple_tasks_list(tasks, options.verbose)
 
 
 def _print_simple_tasks_list(tasks, verbose):
-	from wxgtd.gui import _fmt as fmt
-	from wxgtd.model import enums
 	types = {enums.TYPE_PROJECT: 'P',
 			enums.TYPE_CHECKLIST: 'C',
 			enums.TYPE_CHECKLIST_ITEM: '-',
@@ -231,3 +239,43 @@ def _print_simple_tasks_list(tasks, verbose):
 		if verbose > 1:
 			print task.uuid,
 		print
+
+
+def _print_csv_tasks_list(tasks, verbose):
+	import csv
+	fields = []
+	if verbose > 0:
+		fields = ['starred', 'type', 'priority']
+	fields.append('title')
+	fields.append('completed')
+	fields.append('due date')
+	fields.append('start date')
+	if verbose > 0:
+		fields.append('alarm')
+		fields.append('repeat')
+		fields.append('note')
+	if verbose > 1:
+		fields.append('task uuid')
+	writer = csv.writer(sys.stdout, fields, delimiter=';')
+	types = {enums.TYPE_PROJECT: 'project',
+			enums.TYPE_CHECKLIST: 'checklist',
+			enums.TYPE_CHECKLIST_ITEM: 'checklist item',
+			enums.TYPE_CALL: 'call',
+			enums.TYPE_RETURN_CALL: 'return call',
+			enums.TYPE_EMAIL: 'email',
+			enums.TYPE_SMS: 'sms'}
+	for task in tasks:
+		row = [task.title,
+				fmt.format_timestamp(task.completed, True),
+				fmt.format_timestamp(task.due_date, task.due_time_set),
+				fmt.format_timestamp(task.start_date, task.start_time_set)]
+		if verbose > 0:
+			row.append('*' if task.starred else '')
+			row.append(types.get(task.type, 'task'))
+			row.append(str(task.priority) if task.priority >= 0 else '')
+			row.append(fmt.format_timestamp(task.alarm, True))
+			row.append(task.repeat_pattern or '')
+			row.append(task.note or '')
+		if verbose > 1:
+			row.append(task.uuid)
+		writer.writerow([col.encode('utf-8') for col in row])
