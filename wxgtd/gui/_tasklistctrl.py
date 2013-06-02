@@ -157,8 +157,16 @@ class TaskListControl(ULC.UltimateListCtrl, listmix.ColumnSorterMixin):
 		if idx is None:
 			idx = self.selected
 			if idx < 0:
-				return None, None
+				return None
 		return self._items[self.GetItemData(idx)][0]
+
+	def get_item_type(self, idx):
+		""" Get given or selected (when idx is None) task type. """
+		if idx is None:
+			idx = self.selected
+			if idx < 0:
+				return None
+		return self._items[self.GetItemData(idx)][1]
 
 	def fill(self, tasks, active_only=False):
 		""" Fill the list with tasks.
