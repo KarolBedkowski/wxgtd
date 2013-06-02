@@ -30,6 +30,7 @@ _LOG = logging.getLogger(__name__)
 
 
 from wxgtd import version
+from wxgtd.model import queries
 
 
 def _parse_opt():
@@ -38,9 +39,50 @@ def _parse_opt():
 	group = optparse.OptionGroup(optp, "Creating tasks")
 	group.add_option('--quick-task', '-q', dest="quick_task_title",
 			help='add quickly task', type="string")
-#	group.add_option('--hotlist', action="store_true",
-#			dest="hotlist", help='show task in hotlist')
 	optp.add_option_group(group)
+
+	group = optparse.OptionGroup(optp, "List tasks")
+	group.add_option('--tasks', '-t', action="store_const",
+			const=queries.QUERY_ALL_TASK,
+			dest="query_group", help='show all tasks')
+	group.add_option('--hotlist', action="store_const",
+			const=queries.QUERY_HOTLIST,
+			dest="query_group", help='show task in hotlist')
+	group.add_option('--starred', action="store_const",
+			const=queries.QUERY_STARRED,
+			dest="query_group", help='show starred tasks')
+	group.add_option('--basket', action="store_const",
+			const=queries.QUERY_BASKET,
+			dest="query_group", help='show tasks in basket')
+	group.add_option('--finished', action="store_const",
+			const=queries.QUERY_FINISHED,
+			dest="query_group", help='show finished tasks')
+	group.add_option('--projects', action="store_const",
+			const=queries.QUERY_PROJECTS,
+			dest="query_group", help='show projects')
+	group.add_option('--checklists', action="store_const",
+			const=queries.QUERY_CHECKLISTS,
+			dest="query_group", help='show checklists')
+	group.add_option('--future-alarms', action="store_const",
+			const=queries.QUERY_FUTURE_ALARMS,
+			dest="query_group", help='show task with alarms in future')
+	optp.add_option_group(group)
+
+	group = optparse.OptionGroup(optp, "List tasks options")
+	group.add_option('--show-finished', action="store_true",
+			dest="query_show_finished", help='show finished tasks')
+	group.add_option('--show-subtask', action="store_true",
+			dest="query_show_subtask", help='show subtasks')
+	group.add_option('--dont-hide-until', action="store_true",
+			dest="query_dont_hide_until", help="show hidden task")
+	group.add_option('--parent', dest="parent_uuid",
+			help='set parent UUID for query')
+	group.add_option('--search', '-s', dest="search_text",
+			help='search for title/note')
+	group.add_option('--verbose', '-v', action="count",
+			dest="verbose", help='show more information')
+	optp.add_option_group(group)
+
 	group = optparse.OptionGroup(optp, "Debug options")
 	group.add_option('--debug', '-d', action="store_true", default=False,
 			help='enable debug messages')
@@ -48,7 +90,7 @@ def _parse_opt():
 			help='enable sql debug messages')
 	optp.add_option_group(group)
 	options, args = optp.parse_args()
-	if not options.quick_task_title:
+	if not any((options.quick_task_title, options.query_group >= 0)):
 		optp.print_help()
 		exit(0)
 	return options, args
@@ -136,5 +178,56 @@ def run():
 	if options.quick_task_title:
 		from wxgtd.logic import quicktask as quicktask_logic
 		quicktask_logic.create_quicktask(options.quick_task_title)
-		config.save()
+	elif options.query_group >= 0:
+		_list_tasks(options, args)
+
+	config.save()
 	exit(0)
+
+
+def _list_tasks(options, _args):
+	from wxgtd.model import objects as OBJ
+	group_id = options.query_group
+	query_opt = 0
+	if options.query_show_finished:
+		query_opt |= queries.OPT_SHOW_FINISHED
+	if options.query_show_subtask:
+		query_opt |= queries.OPT_SHOW_SUBTASKS
+	if not options.query_dont_hide_until:
+		query_opt |= queries.OPT_HIDE_UNTIL
+	params = queries.build_query_params(group_id, query_opt,
+			options.parent_uuid, options.search_text or '')
+
+	tasks = OBJ.Task.select_by_filters(params)
+	_print_simple_tasks_list(tasks, options.verbose)
+
+
+def _print_simple_tasks_list(tasks, verbose):
+	from wxgtd.gui import _fmt as fmt
+	from wxgtd.model import enums
+	types = {enums.TYPE_PROJECT: 'P',
+			enums.TYPE_CHECKLIST: 'C',
+			enums.TYPE_CHECKLIST_ITEM: '-',
+			enums.TYPE_CALL: 'c',
+			enums.TYPE_RETURN_CALL: 'r',
+			enums.TYPE_EMAIL: 'e',
+			enums.TYPE_SMS: 's'}
+	for task in tasks:
+		if verbose > 0:
+			print ('*' if task.starred else ' '),
+			print types.get(task.type, ' '),
+			print (task.priority if task.priority >= 0 else ' '),
+			print (' [F] ' if task.completed else '     '),
+		print '%-80s' % task.title[:80],
+		print '%-19s' % fmt.format_timestamp(task.due_date, task.due_time_set),
+		print '%-19s' % fmt.format_timestamp(task.start_date, task.start_time_set),
+		if verbose > 0:
+			flags = ("["
+					+ ("r" if task.repeat_pattern else " ")
+					+ ("a" if task.alarm else " ")
+					+ ("n" if task.note else " ")
+					+ "]")
+			print flags,
+		if verbose > 1:
+			print task.uuid,
+		print
