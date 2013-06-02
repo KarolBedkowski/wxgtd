@@ -106,6 +106,7 @@ class FrameMain(BaseFrame):
 		box = wx.BoxSizer(wx.HORIZONTAL)
 		box.Add(self._panel_parent_icons, 1, wx.EXPAND)
 		ppicons.SetSizer(box)
+		self._tasks_popup_menu = _TasksPopupMenu()
 
 	def _create_bindings(self, wnd):
 		BaseFrame._create_bindings(self, wnd)
@@ -135,6 +136,10 @@ class FrameMain(BaseFrame):
 				self['rb_show_selection'])
 		wnd.Bind(wx.EVT_LIST_ITEM_ACTIVATED, self._on_items_list_activated,
 				self._items_list_ctrl)
+		self._items_list_ctrl.Bind(wx.EVT_COMMAND_RIGHT_CLICK,
+				self._on_items_list_right_click)
+		self._items_list_ctrl.Bind(wx.EVT_RIGHT_UP,
+				self._on_items_list_right_click)
 		wnd.Bind(TLC.EVT_DRAG_TASK, self._on_item_drag, self._items_list_ctrl)
 		wnd.Bind(wx.EVT_BUTTON, self._on_btn_path_back, id=wx.ID_UP)
 		wnd.Bind(wx.EVT_BUTTON, self._on_btn_edit_parent,
@@ -143,6 +148,23 @@ class FrameMain(BaseFrame):
 
 		Publisher().subscribe(self._on_tasks_update, ('task', 'update'))
 		Publisher().subscribe(self._on_tasks_update, ('task', 'delete'))
+
+		wnd.Bind(wx.EVT_MENU, self._on_menu_task_edit,
+				id=self._tasks_popup_menu.task_edit_id)
+		wnd.Bind(wx.EVT_MENU, self._on_menu_task_delete,
+				id=self._tasks_popup_menu.task_delete_id)
+		wnd.Bind(wx.EVT_MENU, self._on_menu_task_toggle_completed,
+				id=self._tasks_popup_menu.toggle_task_complete_id)
+		wnd.Bind(wx.EVT_MENU, self._on_menu_task_clone,
+				id=self._tasks_popup_menu.task_clone_id)
+		wnd.Bind(wx.EVT_MENU, self._on_menu_task_change_due,
+				id=self._tasks_popup_menu.task_change_due_id)
+		wnd.Bind(wx.EVT_MENU, self._on_menu_task_change_start,
+				id=self._tasks_popup_menu.task_change_start_id)
+		wnd.Bind(wx.EVT_MENU, self._on_menu_task_change_remind,
+				id=self._tasks_popup_menu.task_change_remind_id)
+		wnd.Bind(wx.EVT_MENU, self._on_menu_task_change_hide_until,
+				id=self._tasks_popup_menu.task_change_hide_until_id)
 
 	def _create_toolbar(self):
 		toolbar = self.wnd.CreateToolBar()
@@ -371,6 +393,43 @@ class FrameMain(BaseFrame):
 	def _on_menu_task_clone(self, _evt):
 		self._clone_selected_task()
 
+	def _on_menu_task_toggle_completed(self, _evt):
+		task_uuid = self._items_list_ctrl.get_item_uuid(None)
+		if task_uuid:
+			task_logic.toggle_task_complete(task_uuid, self.wnd, self._session)
+
+	def _on_menu_task_change_due(self, _evt):
+		task_uuid = self._items_list_ctrl.get_item_uuid(None)
+		if task_uuid:
+			task = OBJ.Task.get(self._session, uuid=task_uuid)
+			if TaskDialogControler(self.wnd, self._session, task).\
+					task_change_due_date():
+				task_logic.save_modified_task(task, self._session)
+
+	def _on_menu_task_change_start(self, _evt):
+		task_uuid = self._items_list_ctrl.get_item_uuid(None)
+		if task_uuid:
+			task = OBJ.Task.get(self._session, uuid=task_uuid)
+			if TaskDialogControler(self.wnd, self._session, task).\
+					task_change_start_date():
+				task_logic.save_modified_task(task, self._session)
+
+	def _on_menu_task_change_remind(self, _evt):
+		task_uuid = self._items_list_ctrl.get_item_uuid(None)
+		if task_uuid:
+			task = OBJ.Task.get(self._session, uuid=task_uuid)
+			if TaskDialogControler(self.wnd, self._session, task).\
+					task_change_remind():
+				task_logic.save_modified_task(task, self._session)
+
+	def _on_menu_task_change_hide_until(self, _evt):
+		task_uuid = self._items_list_ctrl.get_item_uuid(None)
+		if task_uuid:
+			task = OBJ.Task.get(self._session, uuid=task_uuid)
+			if TaskDialogControler(self.wnd, self._session, task).\
+					task_change_hide_until():
+				task_logic.save_modified_task(task, self._session)
+
 	def _on_menu_task_notebook(self, _evt):  # pylint: disable=R0201
 		FrameNotebook.run()
 
@@ -432,6 +491,13 @@ class FrameMain(BaseFrame):
 			item.update_modify_time()
 		self._session.commit()
 		self._refresh_list()
+
+	def _on_items_list_right_click(self, _evt):
+		task_type = self._items_list_ctrl.get_item_type(None)
+		if task_type is not None:
+			menu = self._tasks_popup_menu.build(task_type)
+			self.wnd.PopupMenu(menu)
+			menu.Destroy()
 
 	def _on_btn_path_back(self, _evt):
 		if self._items_path:
@@ -619,3 +685,33 @@ def _fake_strings():
 	_('Finished')
 	_('Projects')
 	_('Checklists')
+
+
+class _TasksPopupMenu:
+	""" Popup menu for tasks list. """
+	# pylint: disable=R0902,R0903
+
+	def __init__(self):
+		self.toggle_task_complete_id = wx.NewId()
+		self.task_edit_id = wx.NewId()
+		self.task_clone_id = wx.NewId()
+		self.task_delete_id = wx.NewId()
+		self.task_change_due_id = wx.NewId()
+		self.task_change_start_id = wx.NewId()
+		self.task_change_remind_id = wx.NewId()
+		self.task_change_hide_until_id = wx.NewId()
+
+	def build(self, task_type):
+		menu = wx.Menu()
+		menu.Append(self.toggle_task_complete_id, _('Toggle Task Completed'))
+		menu.AppendSeparator()
+		menu.Append(self.task_edit_id, _('Edit Task'))
+		menu.Append(self.task_clone_id, _('Clone Task'))
+		menu.Append(self.task_delete_id, _('Delete Task'))
+		if task_type not in (enums.TYPE_CHECKLIST, enums.TYPE_CHECKLIST_ITEM):
+			menu.AppendSeparator()
+			menu.Append(self.task_change_due_id, _('Change Due Date'))
+			menu.Append(self.task_change_start_id, _('Change Start Date'))
+			menu.Append(self.task_change_remind_id, _('Change Remind Date'))
+			menu.Append(self.task_change_hide_until_id, _('Change Show Settings'))
+		return menu

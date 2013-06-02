@@ -16,12 +16,18 @@ import gettext
 
 
 from wxgtd.lib.appconfig import AppConfig
+from wxgtd.lib import datetimeutils as DTU
 from wxgtd.model import objects as OBJ
 from wxgtd.model import enums
 from wxgtd.logic import task as task_logic
 
 from .dlg_task import DlgTask
 from .dlg_checklistitem import DlgChecklistitem
+from .dlg_datetime import DlgDateTime
+from .dlg_remind_settings import DlgRemindSettings
+from .dlg_show_settings import DlgShowSettings
+from .dlg_select_tags import DlgSelectTags
+from .dlg_repeat_settings import DlgRepeatSettings
 
 _ = gettext.gettext
 _LOG = logging.getLogger(__name__)
@@ -80,3 +86,126 @@ class TaskDialogControler:
 					AppConfig())
 		contr = TaskDialogControler(parent_wnd, session, task)
 		contr.open_dialog()
+
+	def task_change_due_date(self):
+		""" Show dialog and change task due date.
+
+		Args:
+			parent_wnd: parent wx window
+			task: task to modify
+		Returns:
+			True if date was changed.
+		"""
+		if self._task.type == enums.TYPE_PROJECT:
+			return self._set_date('due_date_project', 'due_time_set')
+		else:
+			return self._set_date('due_date', 'due_time_set')
+
+	def task_change_start_date(self):
+		""" Show dialog and change task start date.
+
+		Args:
+			parent_wnd: parent wx window
+			task: task to modify
+		Returns:
+			True if date was changed.
+		"""
+		return self._set_date('start_date', 'start_time_set')
+
+	def task_change_remind(self):
+		""" Show dialog and change task start date.
+
+		Returns:
+			True if date was changed.
+		"""
+		task = self._task
+		alarm = None
+		if task.alarm:
+			alarm = DTU.datetime2timestamp(task.alarm)
+		dlg = DlgRemindSettings(self._parent_wnd, alarm, task.alarm_pattern)
+		if dlg.run(True):
+			if dlg.alarm:
+				task.alarm = DTU.timestamp2datetime(dlg.alarm)
+				task.alarm_pattern = None
+			else:
+				task.alarm = None
+				task.alarm_pattern = dlg.alarm_pattern
+			task_logic.update_task_alarm(task)
+			return True
+		return False
+
+	def task_change_hide_until(self):
+		""" Show dialog and change task show settings.
+
+		Returns:
+			True if date was changed.
+		"""
+		task = self._task
+		date_time = None
+		if task.hide_until:
+			date_time = DTU.datetime2timestamp(task.hide_until)
+		dlg = DlgShowSettings(self._parent_wnd, date_time, task.hide_pattern)
+		if dlg.run(True):
+			if dlg.datetime:
+				task.hide_until = DTU.timestamp2datetime(dlg.datetime)
+			else:
+				task.hide_until = None
+			task.hide_pattern = dlg.pattern
+			task_logic.update_task_hide(task)
+			return True
+		return False
+
+	def task_change_tags(self):
+		""" Show dialog and change task's tags.
+
+		Returns:
+			True if tags was changed.
+		"""
+		task = self._task
+		tags_uuids = [tasktag.tag_uuid for tasktag in task.tags]
+		dlg = DlgSelectTags(self._parent_wnd, tags_uuids)
+		if dlg.run(True):
+			new_tags = dlg.selected_tags
+			for tasktag in list(task.tags):
+				if tasktag.tag_uuid not in new_tags:
+					task.tags.delete(tasktag)  # pylint: disable=E1103
+				else:
+					new_tags.remove(tasktag.tag_uuid)
+			for tag_uuid in new_tags:
+				tasktag = OBJ.TaskTag()
+				tasktag.tag = self._session.query(  # pylint: disable=E1101
+						OBJ.Tag).filter_by(uuid=tag_uuid).first()
+				task.tags.append(tasktag)  # pylint: disable=E1103
+			return True
+		return False
+
+	def task_change_repeat(self):
+		""" Show dialog and change task's repeat settings.
+
+		Returns:
+			True if task was changed.
+		"""
+		task = self._task
+		dlg = DlgRepeatSettings(self._parent_wnd, task.repeat_pattern,
+				task.repeat_from)
+		if dlg.run(True):
+			task.repeat_from = dlg.repeat_from
+			task.repeat_pattern = dlg.pattern
+			return True
+		return False
+
+	def _set_date(self, attr_date, attr_time_set):
+		""" Wyśweitlenie dlg wyboru daty dla danego atrybutu """
+		task = self._task
+		value = getattr(task, attr_date)
+		if value:
+			value = DTU.datetime2timestamp(value)
+		dlg = DlgDateTime(self._parent_wnd, value, getattr(task, attr_time_set))
+		if dlg.run(True):
+			date = None
+			if dlg.timestamp:
+				date = DTU.timestamp2datetime(dlg.timestamp)
+			setattr(task, attr_date, date)
+			setattr(task, attr_time_set, dlg.is_time_set)
+			return True
+		return False
