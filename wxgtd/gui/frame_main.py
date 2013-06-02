@@ -492,7 +492,7 @@ class FrameMain(BaseFrame):
 		self._session.commit()
 		self._refresh_list()
 
-	def _on_items_list_right_click(self, evt):
+	def _on_items_list_right_click(self, _evt):
 		task_type = self._items_list_ctrl.get_item_type(None)
 		if task_type is not None:
 			menu = self._tasks_popup_menu.build(task_type)
@@ -689,6 +689,7 @@ def _fake_strings():
 
 class _TasksPopupMenu:
 	""" Popup menu for tasks list. """
+	# pylint: disable=R0902,R0903
 
 	def __init__(self):
 		self.toggle_task_complete_id = wx.NewId()
