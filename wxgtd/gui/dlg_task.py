@@ -18,16 +18,9 @@ import wx
 
 from wxgtd.model import objects as OBJ
 from wxgtd.model import enums
-from wxgtd.logic import task as task_logic
-from wxgtd.lib import datetimeutils as DTU
 from wxgtd.wxtools.validators import Validator, ValidatorDv
 
 from ._base_task_dialog import BaseTaskDialog
-from .dlg_datetime import DlgDateTime
-from .dlg_remind_settings import DlgRemindSettings
-from .dlg_show_settings import DlgShowSettings
-from .dlg_repeat_settings import DlgRepeatSettings
-from .dlg_select_tags import DlgSelectTags
 from . import _fmt as fmt
 
 _ = gettext.gettext
@@ -107,69 +100,28 @@ class DlgTask(BaseTaskDialog):
 		return BaseTaskDialog._transfer_data_from_window(self)
 
 	def _on_btn_due_date_set(self, _evt):
-		if self._task.type == enums.TYPE_PROJECT:
-			self._set_date('due_date_project', 'due_time_set')
-		else:
-			self._set_date('due_date', 'due_time_set')
+		if self._controller.task_change_due_date(self.wnd, self._task):
+			self._refresh_static_texts()
 
 	def _on_btn_start_date_set(self, _evt):
-		self._set_date('start_date', 'start_time_set')
+		if self._controller.task_change_start_date(self.wnd, self._task):
+			self._refresh_static_texts()
 
 	def _on_btn_remiand_set(self, _evt):
-		task = self._task
-		alarm = None
-		if task.alarm:
-			alarm = DTU.datetime2timestamp(task.alarm)
-		dlg = DlgRemindSettings(self._wnd, alarm, task.alarm_pattern)
-		if dlg.run(True):
-			if dlg.alarm:
-				task.alarm = DTU.timestamp2datetime(dlg.alarm)
-				task.alarm_pattern = None
-			else:
-				task.alarm = None
-				task.alarm_pattern = dlg.alarm_pattern
-			task_logic.update_task_alarm(task)
+		if self._controller.task_change_remind(self.wnd, self._task):
 			self._refresh_static_texts()
 
 	def _on_btn_hide_until_set(self, _evt):
-		task = self._task
-		date_time = None
-		if task.hide_until:
-			date_time = DTU.datetime2timestamp(task.hide_until)
-		dlg = DlgShowSettings(self._wnd, date_time, task.hide_pattern)
-		if dlg.run(True):
-			if dlg.datetime:
-				task.hide_until = DTU.timestamp2datetime(dlg.datetime)
-			else:
-				task.hide_until = None
-			task.hide_pattern = dlg.pattern
-			task_logic.update_task_hide(task)
+		if self._controller.task_change_hide_until(self.wnd, self._task):
 			self._refresh_static_texts()
 
 	def _on_btn_repeat_set(self, _evt):
-		task = self._task
-		dlg = DlgRepeatSettings(self._wnd, task.repeat_pattern, task.repeat_from)
-		if dlg.run(True):
-			task.repeat_from = dlg.repeat_from
-			task.repeat_pattern = dlg.pattern
+		if self._controller.task_change_repeat(self.wnd, self._task):
 			self._refresh_static_texts()
 
 	def _on_btn_select_tags(self, _evt):
-		task = self._task
-		tags_uuids = [tasktag.tag_uuid for tasktag in task.tags]
-		dlg = DlgSelectTags(self._wnd, tags_uuids)
-		if dlg.run(True):
-			new_tags = dlg.selected_tags
-			for tasktag in list(task.tags):
-				if tasktag.tag_uuid not in new_tags:
-					task.tags.delete(tasktag)  # pylint: disable=E1103
-				else:
-					new_tags.remove(tasktag.tag_uuid)
-			for tag_uuid in new_tags:
-				tasktag = OBJ.TaskTag()
-				tasktag.tag = self._session.query(  # pylint: disable=E1101
-						OBJ.Tag).filter_by(uuid=tag_uuid).first()
-				task.tags.append(tasktag)  # pylint: disable=E1103
+		if self._controller.task_change_tags(self.wnd, self._task,
+				self._session):
 			self._refresh_static_texts()
 
 	def _on_btn_change_type(self, _evt):
@@ -221,18 +173,3 @@ class DlgTask(BaseTaskDialog):
 		self['l_prio'].SetLabel(enums.PRIORITIES[task.priority])
 		self['l_type'].SetLabel(enums.TYPES[task.type or enums.TYPE_TASK])
 		self['btn_change_type'].Enable(task.type != enums.TYPE_CHECKLIST_ITEM)
-
-	def _set_date(self, attr_date, attr_time_set):
-		""" Wyśweitlenie dlg wyboru daty dla danego atrybutu """
-		value = getattr(self._task, attr_date)
-		if value:
-			value = DTU.datetime2timestamp(value)
-		dlg = DlgDateTime(self._wnd, value,
-				getattr(self._task, attr_time_set))
-		if dlg.run(True):
-			date = None
-			if dlg.timestamp:
-				date = DTU.timestamp2datetime(dlg.timestamp)
-			setattr(self._task, attr_date, date)
-			setattr(self._task, attr_time_set, dlg.is_time_set)
-			self._refresh_static_texts()
