@@ -493,9 +493,11 @@ class FrameMain(BaseFrame):
 		self._refresh_list()
 
 	def _on_items_list_right_click(self, evt):
-		menu = self._tasks_popup_menu.build()
-		self.wnd.PopupMenu(menu)
-		menu.Destroy()
+		task_type = self._items_list_ctrl.get_item_type(None)
+		if task_type is not None:
+			menu = self._tasks_popup_menu.build(task_type)
+			self.wnd.PopupMenu(menu)
+			menu.Destroy()
 
 	def _on_btn_path_back(self, _evt):
 		if self._items_path:
@@ -698,16 +700,17 @@ class _TasksPopupMenu:
 		self.task_change_remind_id = wx.NewId()
 		self.task_change_hide_until_id = wx.NewId()
 
-	def build(self):
+	def build(self, task_type):
 		menu = wx.Menu()
 		menu.Append(self.toggle_task_complete_id, _('Toggle Task Completed'))
 		menu.AppendSeparator()
 		menu.Append(self.task_edit_id, _('Edit Task'))
 		menu.Append(self.task_clone_id, _('Clone Task'))
 		menu.Append(self.task_delete_id, _('Delete Task'))
-		menu.AppendSeparator()
-		menu.Append(self.task_change_due_id, _('Change Due Date'))
-		menu.Append(self.task_change_start_id, _('Change Start Date'))
-		menu.Append(self.task_change_remind_id, _('Change Remind Date'))
-		menu.Append(self.task_change_hide_until_id, _('Change Show Settings'))
+		if task_type not in (enums.TYPE_CHECKLIST, enums.TYPE_CHECKLIST_ITEM):
+			menu.AppendSeparator()
+			menu.Append(self.task_change_due_id, _('Change Due Date'))
+			menu.Append(self.task_change_start_id, _('Change Start Date'))
+			menu.Append(self.task_change_remind_id, _('Change Remind Date'))
+			menu.Append(self.task_change_hide_until_id, _('Change Show Settings'))
 		return menu
