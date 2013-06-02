@@ -400,35 +400,31 @@ class FrameMain(BaseFrame):
 
 	def _on_menu_task_change_due(self, _evt):
 		task_uuid = self._items_list_ctrl.get_item_uuid(None)
-		if not task_uuid:
-			return
-		task = OBJ.Task.get(self._session, uuid=task_uuid)
-		if TaskDialogControler.task_change_due_date(self.wnd, task):
-			task_logic.save_modified_task(task, self._session)
+		if task_uuid:
+			task = OBJ.Task.get(self._session, uuid=task_uuid)
+			if TaskDialogControler.task_change_due_date(self.wnd, task):
+				task_logic.save_modified_task(task, self._session)
 
 	def _on_menu_task_change_start(self, _evt):
 		task_uuid = self._items_list_ctrl.get_item_uuid(None)
-		if not task_uuid:
-			return
-		task = OBJ.Task.get(self._session, uuid=task_uuid)
-		if TaskDialogControler.task_change_start_date(self.wnd, task):
-			task_logic.save_modified_task(task, self._session)
+		if task_uuid:
+			task = OBJ.Task.get(self._session, uuid=task_uuid)
+			if TaskDialogControler.task_change_start_date(self.wnd, task):
+				task_logic.save_modified_task(task, self._session)
 
 	def _on_menu_task_change_remind(self, _evt):
 		task_uuid = self._items_list_ctrl.get_item_uuid(None)
-		if not task_uuid:
-			return
-		task = OBJ.Task.get(self._session, uuid=task_uuid)
-		if TaskDialogControler.task_change_remind(self.wnd, task):
-			task_logic.save_modified_task(task, self._session)
+		if task_uuid:
+			task = OBJ.Task.get(self._session, uuid=task_uuid)
+			if TaskDialogControler.task_change_remind(self.wnd, task):
+				task_logic.save_modified_task(task, self._session)
 
 	def _on_menu_task_change_hide_until(self, _evt):
 		task_uuid = self._items_list_ctrl.get_item_uuid(None)
-		if not task_uuid:
-			return
-		task = OBJ.Task.get(self._session, uuid=task_uuid)
-		if TaskDialogControler.task_change_hide_until(self.wnd, task):
-			task_logic.save_modified_task(task, self._session)
+		if task_uuid:
+			task = OBJ.Task.get(self._session, uuid=task_uuid)
+			if TaskDialogControler.task_change_hide_until(self.wnd, task):
+				task_logic.save_modified_task(task, self._session)
 
 	def _on_menu_task_notebook(self, _evt):  # pylint: disable=R0201
 		FrameNotebook.run()
