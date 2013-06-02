@@ -29,17 +29,13 @@ except AttributeError:
 _LOG = logging.getLogger(__name__)
 
 
-def _show_version(*_args, **_kwargs):
-	from wxgtd import version
-	print version.INFO
-	exit(0)
+from wxgtd import version
 
 
 def _parse_opt():
 	""" Parse cli options. """
-	optp = optparse.OptionParser()
-	optp.add_option('--version', action="callback", callback=_show_version,
-		help='show information about application version')
+	optp = optparse.OptionParser(version=version.NAME + " (GUI) " +
+			version.VERSION)
 	group = optparse.OptionGroup(optp, "Creating tasks")
 	group.add_option('--quick-task-dialog', action="store_true", default=False,
 			help='enable debug messages', dest="quick_task_dialog")

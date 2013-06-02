@@ -25,7 +25,7 @@ try:
 except AttributeError:
 	sys.setdefaultencoding("utf-8")  # pylint: disable=E1101
 
-
+_ = gettext.gettext
 _LOG = logging.getLogger(__name__)
 
 
@@ -35,7 +35,8 @@ from wxgtd.model import queries
 
 def _parse_opt():
 	""" Parse cli options. """
-	optp = optparse.OptionParser(version=version.NAME + " " + version.VERSION)
+	optp = optparse.OptionParser(version=version.NAME + " (CLI) " +
+			version.VERSION)
 
 	group = optparse.OptionGroup(optp, "List tasks")
 	group.add_option('--tasks', '-t', action="store_const",
@@ -66,7 +67,7 @@ def _parse_opt():
 
 	group = optparse.OptionGroup(optp, "Task operations")
 	group.add_option('--quick-task', '-q', dest="quick_task_title",
-			help='add quickly task', type="string")
+			help='quickly add new task', type="string")
 	optp.add_option_group(group)
 
 	group = optparse.OptionGroup(optp, "List tasks options")
@@ -193,6 +194,7 @@ from wxgtd.model import enums
 
 
 def _list_tasks(options, _args):
+	""" List tasks action. """
 	from wxgtd.model import objects as OBJ
 	group_id = options.query_group
 	query_opt = 0
@@ -213,6 +215,7 @@ def _list_tasks(options, _args):
 
 
 def _print_simple_tasks_list(tasks, verbose):
+	""" Export task list to stdout in human-friendly format. """
 	types = {enums.TYPE_PROJECT: 'P',
 			enums.TYPE_CHECKLIST: 'C',
 			enums.TYPE_CHECKLIST_ITEM: '-',
@@ -242,28 +245,30 @@ def _print_simple_tasks_list(tasks, verbose):
 
 
 def _print_csv_tasks_list(tasks, verbose):
+	""" Export task list to stdout in cvs format. """
 	import csv
 	fields = []
 	if verbose > 0:
-		fields = ['starred', 'type', 'priority']
-	fields.append('title')
-	fields.append('completed')
-	fields.append('due date')
-	fields.append('start date')
+		fields = [_('Starred'), _('Type'), _('Priority')]
+	fields.append(_('Title'))
+	fields.append(_('Completed'))
+	fields.append(_('Due date'))
+	fields.append(_('Start date'))
 	if verbose > 0:
-		fields.append('alarm')
-		fields.append('repeat')
-		fields.append('note')
+		fields.append(_('Alarm'))
+		fields.append(_('Repeat'))
+		fields.append(_('Note'))
 	if verbose > 1:
-		fields.append('task uuid')
-	writer = csv.writer(sys.stdout, fields, delimiter=';')
-	types = {enums.TYPE_PROJECT: 'project',
-			enums.TYPE_CHECKLIST: 'checklist',
-			enums.TYPE_CHECKLIST_ITEM: 'checklist item',
-			enums.TYPE_CALL: 'call',
-			enums.TYPE_RETURN_CALL: 'return call',
-			enums.TYPE_EMAIL: 'email',
-			enums.TYPE_SMS: 'sms'}
+		fields.append(_('Task UUID'))
+	writer = csv.writer(sys.stdout, delimiter=';')
+	writer.writerow([col.encode('utf-8') for col in fields])
+	types = {enums.TYPE_PROJECT: _('project'),
+			enums.TYPE_CHECKLIST: _('checklist'),
+			enums.TYPE_CHECKLIST_ITEM: _('checklist item'),
+			enums.TYPE_CALL: _('call'),
+			enums.TYPE_RETURN_CALL: _('return call'),
+			enums.TYPE_EMAIL: _('email'),
+			enums.TYPE_SMS: _('sms')}
 	for task in tasks:
 		row = [task.title,
 				fmt.format_timestamp(task.completed, True),
