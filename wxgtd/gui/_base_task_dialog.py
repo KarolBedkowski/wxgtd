@@ -91,7 +91,9 @@ class BaseTaskDialog(BaseDialog):
 			return
 		if not self._data['prev_completed'] and self._task.completed:
 			# zakonczono zadanie
-			if not task_logic.complete_task(self._task, self._wnd, self._session):
+			if not self._controller.confirm_set_task_complete():
+				return
+			if not task_logic.complete_task(self._task, self._session):
 				return
 		task_logic.save_modified_task(self._task, self._session)
 		self._on_ok(evt)

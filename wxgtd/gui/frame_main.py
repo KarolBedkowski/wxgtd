@@ -395,9 +395,7 @@ class FrameMain(BaseFrame):
 		self._clone_selected_task()
 
 	def _on_menu_task_toggle_completed(self, _evt):
-		task_uuid = self._items_list_ctrl.get_item_uuid(None)
-		if task_uuid:
-			task_logic.toggle_task_complete(task_uuid, self.wnd, self._session)
+		self._toggle_task_complete()
 
 	def _on_menu_task_change_due(self, _evt):
 		task_uuid = self._items_list_ctrl.get_item_uuid(None)
@@ -432,9 +430,7 @@ class FrameMain(BaseFrame):
 				task_logic.save_modified_task(task, self._session)
 
 	def _on_menu_task_complete(self, _evt):
-		task_uuid = self._items_list_ctrl.get_item_uuid(None)
-		if task_uuid is not None:  # not selected
-			task_logic.toggle_task_complete(task_uuid, self.wnd, self._session)
+		self._toggle_task_complete()
 
 	def _on_menu_notebook_open(self, _evt):  # pylint: disable=R0201
 		FrameNotebook.run()
@@ -529,9 +525,7 @@ class FrameMain(BaseFrame):
 		self._delete_selected_task()
 
 	def _on_btn_complete_task(self, _evt):
-		task_uuid = self._items_list_ctrl.get_item_uuid(None)
-		if task_uuid is not None:  # not selected
-			task_logic.toggle_task_complete(task_uuid, self.wnd, self._session)
+		self._toggle_task_complete()
 
 	def _on_btn_edit_parent(self, _evt):
 		if not self._items_path:
@@ -679,6 +673,15 @@ class FrameMain(BaseFrame):
 		queries.query_params_append_tags(params,
 				tmodel.checked_items_by_parent("TAGS"))
 		return params
+
+	def _toggle_task_complete(self):
+		task_uuid = self._items_list_ctrl.get_item_uuid(None)
+		if task_uuid:
+			task = OBJ.Task.get(self._session, uuid=task_uuid)
+			if not task.completed and not TaskDialogControler(
+					self.wnd, self._session, task).confirm_set_task_complete():
+				return
+			task_logic.toggle_task_complete(task_uuid, self._session)
 
 
 # additional strings to translate

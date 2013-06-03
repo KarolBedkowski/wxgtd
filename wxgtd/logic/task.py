@@ -373,22 +373,18 @@ def delete_task(task_uuid, parent_wnd=None, session=None):
 	return True
 
 
-def complete_task(task, parent_wnd=None, session=None):
+def complete_task(task, session=None):
 	""" Complete task.
 
 	Repeat task if necessary.
 
 	Args:
 		task: Task object
-		parent_wnd: current wxWindow
 		session: sqlalchemy session
 
 	Returns:
 		True if task is completed
 	"""
-	if not mbox.message_box_question(parent_wnd, _("Set task completed?"),
-			None, _("Set complete"), _("Close")):
-		return False
 	# pylint: disable=E1101
 	session = session or OBJ.Session.objects_session(task) or OBJ.Session()
 	task.task_completed = True
@@ -399,12 +395,11 @@ def complete_task(task, parent_wnd=None, session=None):
 	return True
 
 
-def toggle_task_complete(task_uuid, parent_wnd, session=None):
+def toggle_task_complete(task_uuid, session=None):
 	""" Togle task complete flag.
 
 	Args:
 		task_uuid: UUID of task to change
-		parent_wnd: parent wxwidget window
 		session: optional SqlAlchemy session
 	Returns:
 		True if ok
@@ -413,7 +408,7 @@ def toggle_task_complete(task_uuid, parent_wnd, session=None):
 	task = session.query(  # pylint: disable=E1101
 			OBJ.Task).filter_by(uuid=task_uuid).first()
 	if not task.task_completed:
-		if not complete_task(task, parent_wnd, session):
+		if not complete_task(task, session):
 			return False
 	else:
 		task.task_completed = False

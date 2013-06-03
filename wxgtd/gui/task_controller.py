@@ -71,8 +71,7 @@ class TaskDialogControler:
 	@property
 	def wnd(self):
 		""" Get current wx windows. """
-		return (self._dialog and self._dialog.wnd) or (self._parent_wnd and
-				self._parent_wnd.wnd) or None
+		return (self._dialog and self._dialog.wnd) or self._parent_wnd or None
 
 	@classmethod
 	def open_task(cls, parent_wnd, task_uuid):
@@ -93,6 +92,10 @@ class TaskDialogControler:
 					AppConfig())
 		contr = TaskDialogControler(parent_wnd, session, task)
 		contr.open_dialog()
+
+	def confirm_set_task_complete(self):
+		return mbox.message_box_question(self.wnd, _("Set task completed?"),
+				None, _("Set complete"), _("Close"))
 
 	def task_change_due_date(self):
 		""" Show dialog and change task due date.
