@@ -34,9 +34,10 @@ class DlgNotebookPage(BaseDialog):
 		parent: parent window
 	"""
 
-	def __init__(self, parent, session, page_uuid, folder_uuid):
+	def __init__(self, parent, session, page, controller):
 		BaseDialog.__init__(self, parent, 'dlg_notebook_page', save_pos=True)
-		self._setup(session, page_uuid, folder_uuid)
+		self._controller = controller
+		self._setup(session, page)
 
 	def _load_controls(self, wnd):
 		BaseDialog._load_controls(self, wnd)
@@ -45,15 +46,10 @@ class DlgNotebookPage(BaseDialog):
 		BaseDialog._create_bindings(self, wnd)
 		wnd.Bind(wx.EVT_BUTTON, self._on_delete, id=wx.ID_DELETE)
 
-	def _setup(self, session, page_uuid, folder_uuid):
-		_LOG.debug("DlgNotebookPage(%r)", (session, page_uuid, folder_uuid))
+	def _setup(self, session, page):
+		_LOG.debug("DlgNotebookPage(%r)", page)
 		self._session = session
-		if page_uuid:
-			self._page = OBJ.NotebookPage.get(self._session, uuid=page_uuid)
-		else:
-			if not folder_uuid or folder_uuid == '-':
-				folder_uuid = None
-			self._page = OBJ.NotebookPage(folder_uuid=folder_uuid)
+		self._page = page
 		self._original_page = self._page.clone(cleanup=False)
 		cb_folder = self['c_folder']
 		cb_folder.Append(_("No Folder"), None)
@@ -64,6 +60,10 @@ class DlgNotebookPage(BaseDialog):
 		self['tc_note'].SetValidator(Validator(self._page, 'note'))
 		self['c_folder'].SetValidator(ValidatorDv(self._page, 'folder_uuid'))
 
+	def _on_close(self, evt):
+		self._controller.close()
+		BaseDialog._on_close(self, evt)
+
 	def _on_ok(self, evt):
 		if not self._wnd.Validate():
 			return
@@ -73,8 +73,7 @@ class DlgNotebookPage(BaseDialog):
 			BaseDialog._on_ok(self, evt)
 
 	def _on_delete(self, evt):
-		uuid = self._page.uuid
-		if notebook_logic.delete_notebook_page(uuid, self.wnd, self._session):
+		if self._controller.delete_page():
 			BaseDialog._on_close(self, evt)
 
 	def _data_changed(self):

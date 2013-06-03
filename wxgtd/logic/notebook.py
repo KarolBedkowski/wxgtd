@@ -21,30 +21,24 @@ try:
 except ImportError:
 	from wx.lib.pubsub import Publisher  # pylint: disable=E0611
 
-from wxgtd.gui import message_boxes as mbox
 from wxgtd.model import objects as OBJ
 
 _LOG = logging.getLogger(__name__)
 _ = gettext.gettext
 
 
-def delete_notebook_page(page_uuid, parent_wnd=None, session=None):
+def delete_notebook_page(page_uuid, session=None):
 	""" Delete given notebook page.
 
 	Show confirmation and delete page from database.
 
 	Args:
 		page_uuid: notebook page for delete
-		parent_wnd: current wxWindow
 		session: sqlalchemy session
 
 	Returns:
 		True = task deleted
 	"""
-	if not mbox.message_box_delete_confirm(parent_wnd,
-			_("notebook page")):
-		return False
-
 	session = session or OBJ.Session()
 	page = session.query(OBJ.NotebookPage).filter_by(uuid=page_uuid).first()
 	if not page:

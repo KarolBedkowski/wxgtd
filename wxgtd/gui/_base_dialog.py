@@ -88,6 +88,7 @@ class BaseDialog:
 			self._wnd.Destroy()
 			return res
 		self._wnd.Show()
+		self._wnd.Raise()
 
 	def __getitem__(self, key):
 		""" Get dialog element (widget).

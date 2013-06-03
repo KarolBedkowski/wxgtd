@@ -49,7 +49,7 @@ from wxgtd.gui.dlg_goals import DlgGoals
 from wxgtd.gui.dlg_folders import DlgFolders
 from wxgtd.gui.dlg_reminders import DlgReminders
 from wxgtd.gui.frame_notebooks import FrameNotebook
-from wxgtd.gui.task_controller import TaskDialogControler
+from wxgtd.gui.task_controller import TaskController
 
 _ = gettext.gettext
 ngettext = gettext.ngettext  # pylint: disable=C0103
@@ -115,18 +115,19 @@ class FrameMain(BaseFrame):
 		self._create_menu_bind('menu_file_save', self._on_menu_file_save)
 		self._create_menu_bind('menu_file_exit', self._on_menu_file_exit)
 		self._create_menu_bind('menu_file_sync', self._on_menu_file_sync)
-		self._create_menu_bind('menu_file_preferences',
-				self._on_menu_file_preferences)
 		self._create_menu_bind('menu_help_about', self._on_menu_help_about)
 		self._create_menu_bind('menu_task_new', self._on_menu_task_new)
 		self._create_menu_bind('menu_task_quick', self._on_menu_task_quick)
 		self._create_menu_bind('menu_task_edit', self._on_menu_task_edit)
 		self._create_menu_bind('menu_task_delete', self._on_menu_task_delete)
 		self._create_menu_bind('menu_task_clone', self._on_menu_task_clone)
-		self._create_menu_bind('menu_task_notebook', self._on_menu_task_notebook)
+		self._create_menu_bind('menu_notebook_open', self._on_menu_notebook_open)
+		self._create_menu_bind('menu_task_complete', self._on_menu_task_complete)
 		self._create_menu_bind('menu_sett_tags', self._on_menu_sett_tags)
 		self._create_menu_bind('menu_sett_goals', self._on_menu_sett_goals)
 		self._create_menu_bind('menu_sett_folders', self._on_menu_sett_folders)
+		self._create_menu_bind('menu_sett_preferences',
+				self._on_menu_sett_preferences)
 
 		wnd.Bind(wx.EVT_TREE_ITEM_ACTIVATED, self._on_filter_tree_item_activated,
 				self._filter_tree_ctrl)
@@ -259,7 +260,7 @@ class FrameMain(BaseFrame):
 
 		tbi = toolbar.AddLabelTool(-1, _('Notebook'),
 				iconprovider.get_image('notebook'))
-		self.wnd.Bind(wx.EVT_TOOL, self._on_menu_task_notebook, id=tbi.GetId())
+		self.wnd.Bind(wx.EVT_TOOL, self._on_menu_notebook_open, id=tbi.GetId())
 
 		toolbar.Realize()
 
@@ -361,7 +362,7 @@ class FrameMain(BaseFrame):
 			self._filter_tree_ctrl.RefreshItems()
 			Publisher().sendMessage('task.update')
 
-	def _on_menu_file_preferences(self, _evt):
+	def _on_menu_sett_preferences(self, _evt):
 		if DlgPreferences(self.wnd).run(True):
 			self._filter_tree_ctrl.RefreshItems()
 
@@ -394,15 +395,13 @@ class FrameMain(BaseFrame):
 		self._clone_selected_task()
 
 	def _on_menu_task_toggle_completed(self, _evt):
-		task_uuid = self._items_list_ctrl.get_item_uuid(None)
-		if task_uuid:
-			task_logic.toggle_task_complete(task_uuid, self.wnd, self._session)
+		self._toggle_task_complete()
 
 	def _on_menu_task_change_due(self, _evt):
 		task_uuid = self._items_list_ctrl.get_item_uuid(None)
 		if task_uuid:
 			task = OBJ.Task.get(self._session, uuid=task_uuid)
-			if TaskDialogControler(self.wnd, self._session, task).\
+			if TaskController(self.wnd, self._session, task).\
 					task_change_due_date():
 				task_logic.save_modified_task(task, self._session)
 
@@ -410,7 +409,7 @@ class FrameMain(BaseFrame):
 		task_uuid = self._items_list_ctrl.get_item_uuid(None)
 		if task_uuid:
 			task = OBJ.Task.get(self._session, uuid=task_uuid)
-			if TaskDialogControler(self.wnd, self._session, task).\
+			if TaskController(self.wnd, self._session, task).\
 					task_change_start_date():
 				task_logic.save_modified_task(task, self._session)
 
@@ -418,7 +417,7 @@ class FrameMain(BaseFrame):
 		task_uuid = self._items_list_ctrl.get_item_uuid(None)
 		if task_uuid:
 			task = OBJ.Task.get(self._session, uuid=task_uuid)
-			if TaskDialogControler(self.wnd, self._session, task).\
+			if TaskController(self.wnd, self._session, task).\
 					task_change_remind():
 				task_logic.save_modified_task(task, self._session)
 
@@ -426,11 +425,14 @@ class FrameMain(BaseFrame):
 		task_uuid = self._items_list_ctrl.get_item_uuid(None)
 		if task_uuid:
 			task = OBJ.Task.get(self._session, uuid=task_uuid)
-			if TaskDialogControler(self.wnd, self._session, task).\
+			if TaskController(self.wnd, self._session, task).\
 					task_change_hide_until():
 				task_logic.save_modified_task(task, self._session)
 
-	def _on_menu_task_notebook(self, _evt):  # pylint: disable=R0201
+	def _on_menu_task_complete(self, _evt):
+		self._toggle_task_complete()
+
+	def _on_menu_notebook_open(self, _evt):  # pylint: disable=R0201
 		FrameNotebook.run()
 
 	def _on_menu_sett_tags(self, _evt):
@@ -467,7 +469,7 @@ class FrameMain(BaseFrame):
 			self._refresh_list()
 			return
 		if task_uuid:
-			TaskDialogControler.open_task(self.wnd, task_uuid)
+			TaskController.open_task(self.wnd, task_uuid)
 
 	def _on_item_drag(self, evt):
 		s_index = evt.start
@@ -523,17 +525,14 @@ class FrameMain(BaseFrame):
 		self._delete_selected_task()
 
 	def _on_btn_complete_task(self, _evt):
-		task_uuid = self._items_list_ctrl.get_item_uuid(None)
-		if task_uuid is None:  # not selected
-			return
-		task_logic.toggle_task_complete(task_uuid, self.wnd, self._session)
+		self._toggle_task_complete()
 
 	def _on_btn_edit_parent(self, _evt):
 		if not self._items_path:
 			return
 		task_uuid = self._items_path[-1].uuid
 		if task_uuid:
-			TaskDialogControler.open_task(self.wnd, task_uuid)
+			TaskController.open_task(self.wnd, task_uuid)
 
 	def _on_btn_reminders(self, _evt):
 		if not DlgReminders.check(self.wnd, self._session):
@@ -584,7 +583,8 @@ class FrameMain(BaseFrame):
 	def _delete_selected_task(self):
 		task_uuid = self._items_list_ctrl.get_item_uuid(None)
 		if task_uuid:
-			task_logic.delete_task(task_uuid, self.wnd)
+			TaskController(self.wnd, self._session, task_uuid).\
+					delete_task()
 
 	def _new_task(self):
 		parent_uuid = None
@@ -600,13 +600,13 @@ class FrameMain(BaseFrame):
 				task_type = enums.TYPE_PROJECT
 			elif group_id == 6 and not self._items_path:
 				task_type = enums.TYPE_CHECKLIST
-		TaskDialogControler.new_task(self.wnd, task_type or enums.TYPE_TASK,
+		TaskController.new_task(self.wnd, task_type or enums.TYPE_TASK,
 				parent_uuid)
 
 	def _edit_selected_task(self):
 		task_uuid = self._items_list_ctrl.get_item_uuid(None)
 		if task_uuid:
-			TaskDialogControler.open_task(self.wnd, task_uuid)
+			TaskController.open_task(self.wnd, task_uuid)
 
 	def _clone_selected_task(self):
 		task_uuid = self._items_list_ctrl.get_item_uuid(None)
@@ -674,6 +674,15 @@ class FrameMain(BaseFrame):
 		queries.query_params_append_tags(params,
 				tmodel.checked_items_by_parent("TAGS"))
 		return params
+
+	def _toggle_task_complete(self):
+		task_uuid = self._items_list_ctrl.get_item_uuid(None)
+		if task_uuid:
+			task = OBJ.Task.get(self._session, uuid=task_uuid)
+			if not task.completed and not TaskController(
+					self.wnd, self._session, task).confirm_set_task_complete():
+				return
+			task_logic.toggle_task_complete(task_uuid, self._session)
 
 
 # additional strings to translate

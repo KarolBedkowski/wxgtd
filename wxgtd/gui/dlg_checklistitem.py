@@ -30,7 +30,7 @@ class DlgChecklistitem(BaseTaskDialog):
 		parent: parent windows.
 		task: task to edit.
 		session: SqlAlchemy session.
-		controller: TaskDialogControler associated to task.
+		controller: TaskController associated to task.
 	"""
 
 	def __init__(self, parent, task, session, controller):

@@ -41,7 +41,7 @@ class BaseTaskDialog(BaseDialog):
 		dialog_name: name of dialog in xrc file
 		task: task to edit.
 		session: SqlAlchemy session.
-		controller: TaskDialogControler associated to task.
+		controller: TaskController associated to task.
 	"""
 
 	def __init__(self, parent, dialog_name, task, session, controller):
@@ -56,6 +56,7 @@ class BaseTaskDialog(BaseDialog):
 	def run(self, _dummy=False):
 		""" Run (show) dialog.  """
 		self._wnd.Show()
+		self._wnd.Raise()
 
 	def close(self):
 		self._wnd.Destroy()
@@ -91,7 +92,9 @@ class BaseTaskDialog(BaseDialog):
 			return
 		if not self._data['prev_completed'] and self._task.completed:
 			# zakonczono zadanie
-			if not task_logic.complete_task(self._task, self._wnd, self._session):
+			if not self._controller.confirm_set_task_complete():
+				return
+			if not task_logic.complete_task(self._task, self._session):
 				return
 		task_logic.save_modified_task(self._task, self._session)
 		self._on_ok(evt)
@@ -148,16 +151,14 @@ class BaseTaskDialog(BaseDialog):
 		dlg = DlgProjectTree(self.wnd)
 		if dlg.run(modal=True):
 			parent_uuid = dlg.selected
-			if task_logic.change_task_parent(self._task, parent_uuid,
-					self._session, self.wnd):
+			if self._controller.task_change_parent(parent_uuid):
 				self._refresh_static_texts()
 				self._on_task_type_change()
 
 	def _on_btn_delete(self, _evt):
 		tuuid = self._task.uuid
-		if tuuid:
-			if task_logic.delete_task(tuuid, self.wnd, self._session):
-				self._on_ok(None)
+		if tuuid and self._controller.delete_task():
+			self._on_ok(None)
 
 	def _refresh_static_texts(self):
 		""" Odświeżenie pól dat na dlg """

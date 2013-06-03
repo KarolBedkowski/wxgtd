@@ -28,25 +28,31 @@ from .dlg_remind_settings import DlgRemindSettings
 from .dlg_show_settings import DlgShowSettings
 from .dlg_select_tags import DlgSelectTags
 from .dlg_repeat_settings import DlgRepeatSettings
+from . import message_boxes as mbox
 
 _ = gettext.gettext
 _LOG = logging.getLogger(__name__)
 
 
-class TaskDialogControler:
+class TaskController:
 	_controllers = {}
 
 	def __init__(self, parent_wnd, session, task):
 		self._session = session or OBJ.Session()
+		if isinstance(task, (str, unicode)):
+			task = OBJ.Task.get(self._session, uuid=task)
 		self._task = task
 		self._parent_wnd = parent_wnd
 		self._dialog = None
 		self._original_task_type = None
 
 	def open_dialog(self):
-		_LOG.debug('TaskDialogControler.open_dialog(ttype=%r, prev=%r)',
+		_LOG.debug('TaskController.open_dialog(ttype=%r, prev=%r)',
 				self._task.type, self._original_task_type)
 		self._original_task_type = self._task.type
+		if self._dialog is not None:
+			self._dialog.run()
+			return
 		if self._task.type == enums.TYPE_CHECKLIST_ITEM:
 			self._dialog = DlgChecklistitem(self._parent_wnd, self._task,
 					self._session, self)
@@ -60,12 +66,18 @@ class TaskDialogControler:
 				and (self._task.type == enums.TYPE_CHECKLIST_ITEM
 					or self._original_task_type == enums.TYPE_CHECKLIST_ITEM)):
 			self._dialog.close()
+			self._dialog = None
 			self.open_dialog()
 
 	def close(self):
 		if self._task.uuid in self._controllers:
 			del self._controllers[self._task.uuid]
 		self._session.close()
+
+	@property
+	def wnd(self):
+		""" Get current wx windows. """
+		return (self._dialog and self._dialog.wnd) or self._parent_wnd or None
 
 	@classmethod
 	def open_task(cls, parent_wnd, task_uuid):
@@ -74,7 +86,7 @@ class TaskDialogControler:
 			return
 		session = OBJ.Session()
 		task = OBJ.Task.get(session=session, uuid=task_uuid)
-		contr = TaskDialogControler(parent_wnd, session, task)
+		contr = TaskController(parent_wnd, session, task)
 		cls._controllers[task_uuid] = contr
 		contr.open_dialog()
 
@@ -84,8 +96,22 @@ class TaskDialogControler:
 		task = OBJ.Task(type=task_type, parent_uuid=task_parent)
 		task_logic.update_task_from_parent(task, task_parent, session,
 					AppConfig())
-		contr = TaskDialogControler(parent_wnd, session, task)
+		contr = TaskController(parent_wnd, session, task)
 		contr.open_dialog()
+
+	def confirm_set_task_complete(self):
+		return mbox.message_box_question(self.wnd, _("Set task completed?"),
+				None, _("Set complete"), _("Close"))
+
+	def delete_task(self):
+		""" Delete task with confirmation.
+
+		Returns:
+			True after successful delete task.
+		"""
+		if not mbox.message_box_delete_confirm(self.wnd, _("task")):
+			return False
+		return task_logic.delete_task(self._task, self._session)
 
 	def task_change_due_date(self):
 		""" Show dialog and change task due date.
@@ -193,6 +219,45 @@ class TaskDialogControler:
 			task.repeat_pattern = dlg.pattern
 			return True
 		return False
+
+	def task_change_parent(self, parent_uuid):
+		""" Change current task parent with confirmation.
+
+		Args:
+			parent_uuid: destination parent UUID
+		Returns:
+			True if parent was changed.
+		"""
+		parent = None
+		if parent_uuid:
+			parent = OBJ.Task.get(self._session, uuid=parent_uuid)
+		if not self._confirm_change_task_parent(parent):
+			return False
+		return task_logic.change_task_parent(self._task, parent, self._session)
+
+	def _confirm_change_task_parent(self, parent):
+		curr_type = self._task.type
+		if parent:  # nowy parent
+			if (parent.type == enums.TYPE_CHECKLIST and
+					curr_type != enums.TYPE_CHECKLIST_ITEM) or (
+					parent.type != enums.TYPE_CHECKLIST and
+					curr_type == enums.TYPE_CHECKLIST_ITEM):
+				if not mbox.message_box_warning_yesno(self.wnd,
+					_("This operation change task and subtasks type.\n"
+						"Are you sure?")):
+					return False
+		else:  # brak nowego parenta
+			if curr_type in (enums.TYPE_CHECKLIST, enums.TYPE_PROJECT):
+				if not mbox.message_box_warning_yesno(self.wnd,
+						_("This operation change all subtasks to simple"
+							" tasks\nAre you sure?")):
+					return False
+			elif curr_type == enums.TYPE_CHECKLIST_ITEM:
+				if not mbox.message_box_warning_yesno(self.wnd,
+					_("This operation change task and subtasks type.\n"
+						"Are you sure?")):
+					return False
+		return True
 
 	def _set_date(self, attr_date, attr_time_set):
 		""" Wyśweitlenie dlg wyboru daty dla danego atrybutu """
