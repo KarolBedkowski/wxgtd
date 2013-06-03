@@ -62,6 +62,10 @@ List tasks options
   -v, --verbose       Show more information
   --output-csv        Show result as csv file
 
+Options
+-------
+  --sync              Sync data on startup and exit
+
 Debug options
 -------------
   -d, --debug         Enable debug messages

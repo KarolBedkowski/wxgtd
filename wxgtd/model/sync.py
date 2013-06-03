@@ -42,22 +42,12 @@ class OtherSyncError(RuntimeError):
 	pass
 
 
-def _notify_loading_progress(progress, msg):
-	Publisher().sendMessage('sync.progress',
-			data=(progress * 0.45 + 2, msg))
-
-
-def _notify_exporting_progress(progress, msg):
-	Publisher().sendMessage('sync.progress',
-			data=(progress * 0.45 + 52, msg))
-
-
 def _notify_progress(progress, msg):
 	Publisher().sendMessage('sync.progress',
 			data=(progress, msg))
 
 
-def sync(filename, load_only=False):
+def sync(filename, load_only=False, notify_cb=_notify_progress):
 	""" Sync data from/to given file.
 
 	Notify progress by Publisher().
@@ -70,25 +60,23 @@ def sync(filename, load_only=False):
 		SyncLockedError when source file is locked.
 	"""
 	_LOG.info("sync: %r", filename)
-	_notify_progress(0, _("Creating backup"))
+	notify_cb(0, _("Creating backup"))
 	create_backup()
-	_notify_progress(1, _("Checking sync lock"))
+	notify_cb(1, _("Checking sync lock"))
 	if exporter.create_sync_lock(filename):
 		try:
-			if loader.load_from_file(filename,
-					_notify_loading_progress):
+			if loader.load_from_file(filename, notify_cb):
 				if not load_only:
-					exporter.save_to_file(filename,
-							_notify_exporting_progress)
+					exporter.save_to_file(filename, notify_cb)
 		except Exception as err:
 			_LOG.exception("file sync error")
 			raise OtherSyncError(err)
 		finally:
-			_notify_progress(99, _("Removing sync lock"))
+			notify_cb(99, _("Removing sync lock"))
 			exporter.delete_sync_lock(filename)
-		_notify_progress(100, _("Completed"))
+		notify_cb(100, _("Completed"))
 	else:
-		_notify_progress(100, _("Synchronization file is locked. "
+		notify_cb(100, _("Synchronization file is locked. "
 			"Can't synchronize..."))
 		raise SyncLockedError()
 
