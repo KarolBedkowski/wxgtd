@@ -115,18 +115,19 @@ class FrameMain(BaseFrame):
 		self._create_menu_bind('menu_file_save', self._on_menu_file_save)
 		self._create_menu_bind('menu_file_exit', self._on_menu_file_exit)
 		self._create_menu_bind('menu_file_sync', self._on_menu_file_sync)
-		self._create_menu_bind('menu_file_preferences',
-				self._on_menu_file_preferences)
 		self._create_menu_bind('menu_help_about', self._on_menu_help_about)
 		self._create_menu_bind('menu_task_new', self._on_menu_task_new)
 		self._create_menu_bind('menu_task_quick', self._on_menu_task_quick)
 		self._create_menu_bind('menu_task_edit', self._on_menu_task_edit)
 		self._create_menu_bind('menu_task_delete', self._on_menu_task_delete)
 		self._create_menu_bind('menu_task_clone', self._on_menu_task_clone)
-		self._create_menu_bind('menu_task_notebook', self._on_menu_task_notebook)
+		self._create_menu_bind('menu_notebook_open', self._on_menu_notebook_open)
+		self._create_menu_bind('menu_task_complete', self._on_menu_task_complete)
 		self._create_menu_bind('menu_sett_tags', self._on_menu_sett_tags)
 		self._create_menu_bind('menu_sett_goals', self._on_menu_sett_goals)
 		self._create_menu_bind('menu_sett_folders', self._on_menu_sett_folders)
+		self._create_menu_bind('menu_sett_preferences',
+				self._on_menu_sett_preferences)
 
 		wnd.Bind(wx.EVT_TREE_ITEM_ACTIVATED, self._on_filter_tree_item_activated,
 				self._filter_tree_ctrl)
@@ -259,7 +260,7 @@ class FrameMain(BaseFrame):
 
 		tbi = toolbar.AddLabelTool(-1, _('Notebook'),
 				iconprovider.get_image('notebook'))
-		self.wnd.Bind(wx.EVT_TOOL, self._on_menu_task_notebook, id=tbi.GetId())
+		self.wnd.Bind(wx.EVT_TOOL, self._on_menu_notebook_open, id=tbi.GetId())
 
 		toolbar.Realize()
 
@@ -361,7 +362,7 @@ class FrameMain(BaseFrame):
 			self._filter_tree_ctrl.RefreshItems()
 			Publisher().sendMessage('task.update')
 
-	def _on_menu_file_preferences(self, _evt):
+	def _on_menu_sett_preferences(self, _evt):
 		if DlgPreferences(self.wnd).run(True):
 			self._filter_tree_ctrl.RefreshItems()
 
@@ -430,7 +431,12 @@ class FrameMain(BaseFrame):
 					task_change_hide_until():
 				task_logic.save_modified_task(task, self._session)
 
-	def _on_menu_task_notebook(self, _evt):  # pylint: disable=R0201
+	def _on_menu_task_complete(self, _evt):
+		task_uuid = self._items_list_ctrl.get_item_uuid(None)
+		if task_uuid is not None:  # not selected
+			task_logic.toggle_task_complete(task_uuid, self.wnd, self._session)
+
+	def _on_menu_notebook_open(self, _evt):  # pylint: disable=R0201
 		FrameNotebook.run()
 
 	def _on_menu_sett_tags(self, _evt):
@@ -524,9 +530,8 @@ class FrameMain(BaseFrame):
 
 	def _on_btn_complete_task(self, _evt):
 		task_uuid = self._items_list_ctrl.get_item_uuid(None)
-		if task_uuid is None:  # not selected
-			return
-		task_logic.toggle_task_complete(task_uuid, self.wnd, self._session)
+		if task_uuid is not None:  # not selected
+			task_logic.toggle_task_complete(task_uuid, self.wnd, self._session)
 
 	def _on_btn_edit_parent(self, _evt):
 		if not self._items_path:
