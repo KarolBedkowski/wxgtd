@@ -583,7 +583,8 @@ class FrameMain(BaseFrame):
 	def _delete_selected_task(self):
 		task_uuid = self._items_list_ctrl.get_item_uuid(None)
 		if task_uuid:
-			task_logic.delete_task(task_uuid, self.wnd)
+			TaskDialogControler(self.wnd, self._session, task_uuid).\
+					delete_task()
 
 	def _new_task(self):
 		parent_uuid = None

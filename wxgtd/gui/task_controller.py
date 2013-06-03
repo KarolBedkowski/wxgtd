@@ -39,6 +39,8 @@ class TaskDialogControler:
 
 	def __init__(self, parent_wnd, session, task):
 		self._session = session or OBJ.Session()
+		if isinstance(task, (str, unicode)):
+			task = OBJ.Task.get(self._session, uuid=task)
 		self._task = task
 		self._parent_wnd = parent_wnd
 		self._dialog = None
@@ -96,6 +98,16 @@ class TaskDialogControler:
 	def confirm_set_task_complete(self):
 		return mbox.message_box_question(self.wnd, _("Set task completed?"),
 				None, _("Set complete"), _("Close"))
+
+	def delete_task(self):
+		""" Delete task with confirmation.
+
+		Returns:
+			True after successful delete task.
+		"""
+		if not mbox.message_box_delete_confirm(self.wnd, _("task")):
+			return False
+		return task_logic.delete_task(self._task, self._session)
 
 	def task_change_due_date(self):
 		""" Show dialog and change task due date.

@@ -156,9 +156,8 @@ class BaseTaskDialog(BaseDialog):
 
 	def _on_btn_delete(self, _evt):
 		tuuid = self._task.uuid
-		if tuuid:
-			if task_logic.delete_task(tuuid, self.wnd, self._session):
-				self._on_ok(None)
+		if tuuid and self._controller.delete_task():
+			self._on_ok(None)
 
 	def _refresh_static_texts(self):
 		""" Odświeżenie pól dat na dlg """
