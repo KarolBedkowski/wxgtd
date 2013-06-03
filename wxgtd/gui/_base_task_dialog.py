@@ -56,6 +56,7 @@ class BaseTaskDialog(BaseDialog):
 	def run(self, _dummy=False):
 		""" Run (show) dialog.  """
 		self._wnd.Show()
+		self._wnd.Raise()
 
 	def close(self):
 		self._wnd.Destroy()
