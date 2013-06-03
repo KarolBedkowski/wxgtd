@@ -50,6 +50,9 @@ class TaskController:
 		_LOG.debug('TaskController.open_dialog(ttype=%r, prev=%r)',
 				self._task.type, self._original_task_type)
 		self._original_task_type = self._task.type
+		if self._dialog is not None:
+			self._dialog.run()
+			return
 		if self._task.type == enums.TYPE_CHECKLIST_ITEM:
 			self._dialog = DlgChecklistitem(self._parent_wnd, self._task,
 					self._session, self)
@@ -63,6 +66,7 @@ class TaskController:
 				and (self._task.type == enums.TYPE_CHECKLIST_ITEM
 					or self._original_task_type == enums.TYPE_CHECKLIST_ITEM)):
 			self._dialog.close()
+			self._dialog = None
 			self.open_dialog()
 
 	def close(self):
