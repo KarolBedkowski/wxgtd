@@ -41,7 +41,7 @@ class BaseTaskDialog(BaseDialog):
 		dialog_name: name of dialog in xrc file
 		task: task to edit.
 		session: SqlAlchemy session.
-		controller: TaskDialogControler associated to task.
+		controller: TaskController associated to task.
 	"""
 
 	def __init__(self, parent, dialog_name, task, session, controller):

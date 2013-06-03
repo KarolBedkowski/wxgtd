@@ -34,7 +34,7 @@ _ = gettext.gettext
 _LOG = logging.getLogger(__name__)
 
 
-class TaskDialogControler:
+class TaskController:
 	_controllers = {}
 
 	def __init__(self, parent_wnd, session, task):
@@ -47,7 +47,7 @@ class TaskDialogControler:
 		self._original_task_type = None
 
 	def open_dialog(self):
-		_LOG.debug('TaskDialogControler.open_dialog(ttype=%r, prev=%r)',
+		_LOG.debug('TaskController.open_dialog(ttype=%r, prev=%r)',
 				self._task.type, self._original_task_type)
 		self._original_task_type = self._task.type
 		if self._task.type == enums.TYPE_CHECKLIST_ITEM:
@@ -82,7 +82,7 @@ class TaskDialogControler:
 			return
 		session = OBJ.Session()
 		task = OBJ.Task.get(session=session, uuid=task_uuid)
-		contr = TaskDialogControler(parent_wnd, session, task)
+		contr = TaskController(parent_wnd, session, task)
 		cls._controllers[task_uuid] = contr
 		contr.open_dialog()
 
@@ -92,7 +92,7 @@ class TaskDialogControler:
 		task = OBJ.Task(type=task_type, parent_uuid=task_parent)
 		task_logic.update_task_from_parent(task, task_parent, session,
 					AppConfig())
-		contr = TaskDialogControler(parent_wnd, session, task)
+		contr = TaskController(parent_wnd, session, task)
 		contr.open_dialog()
 
 	def confirm_set_task_complete(self):
