@@ -87,6 +87,11 @@ def _parse_opt():
 			dest="output_csv", help='show result as csv file')
 	optp.add_option_group(group)
 
+	group = optparse.OptionGroup(optp, "Options")
+	group.add_option('--sync', action="store_true", dest="sync",
+			help='sync data on startup and exit')
+	optp.add_option_group(group)
+
 	group = optparse.OptionGroup(optp, "Debug options")
 	group.add_option('--debug', '-d', action="store_true", default=False,
 			help='enable debug messages')
@@ -94,7 +99,8 @@ def _parse_opt():
 			help='enable sql debug messages')
 	optp.add_option_group(group)
 	options, args = optp.parse_args()
-	if not any((options.quick_task_title, options.query_group >= 0)):
+	if not any((options.quick_task_title, options.query_group >= 0,
+			options.sync)):
 		optp.print_help()
 		exit(0)
 	return options, args
@@ -179,12 +185,15 @@ def run():
 	# connect to databse
 	db.connect(db_filename, options.debug_sql)
 
+	if options.sync:
+		_sync(config, True)
 	if options.quick_task_title:
 		from wxgtd.logic import quicktask as quicktask_logic
 		quicktask_logic.create_quicktask(options.quick_task_title)
 	elif options.query_group >= 0:
 		_list_tasks(options, args)
-
+	if options.sync:
+		_sync(config, False)
 	config.save()
 	exit(0)
 
@@ -284,3 +293,14 @@ def _print_csv_tasks_list(tasks, verbose):
 		if verbose > 1:
 			row.append(task.uuid)
 		writer.writerow([col.encode('utf-8') for col in row])
+
+
+def _log_sync_cb(progress, msg):
+	print >> sys.stderr, msg
+
+
+def _sync(config, load_only):
+	last_sync_file = config.get('files', 'last_sync_file')
+	if last_sync_file:
+		from wxgtd.model import sync
+		sync.sync(last_sync_file, load_only, notify_cb=_log_sync_cb)
