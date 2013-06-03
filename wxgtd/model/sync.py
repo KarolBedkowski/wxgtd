@@ -42,23 +42,12 @@ class OtherSyncError(RuntimeError):
 	pass
 
 
-def _notify_loading_progress(progress, msg):
-	Publisher().sendMessage('sync.progress',
-			data=(progress * 0.45 + 2, msg))
-
-
-def _notify_exporting_progress(progress, msg):
-	Publisher().sendMessage('sync.progress',
-			data=(progress * 0.45 + 52, msg))
-
-
 def _notify_progress(progress, msg):
 	Publisher().sendMessage('sync.progress',
 			data=(progress, msg))
 
 
-def sync(filename, load_only=False, notify_loading_cb=None,
-		notify_exporting_cb=None, notify_cb=None):
+def sync(filename, load_only=False, notify_cb=_notify_progress):
 	""" Sync data from/to given file.
 
 	Notify progress by Publisher().
@@ -70,20 +59,15 @@ def sync(filename, load_only=False, notify_loading_cb=None,
 	Raises:
 		SyncLockedError when source file is locked.
 	"""
-	notify_loading_cb = (notify_loading_cb or notify_cb or
-			_notify_loading_progress)
-	notify_exporting_cb = (notify_exporting_cb or notify_cb or
-			_notify_exporting_progress)
-	notify_cb = notify_cb or _notify_progress
 	_LOG.info("sync: %r", filename)
 	notify_cb(0, _("Creating backup"))
 	create_backup()
 	notify_cb(1, _("Checking sync lock"))
 	if exporter.create_sync_lock(filename):
 		try:
-			if loader.load_from_file(filename, notify_loading_cb):
+			if loader.load_from_file(filename, notify_cb):
 				if not load_only:
-					exporter.save_to_file(filename, notify_exporting_cb)
+					exporter.save_to_file(filename, notify_cb)
 		except Exception as err:
 			_LOG.exception("file sync error")
 			raise OtherSyncError(err)
