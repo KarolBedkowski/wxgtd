@@ -26,8 +26,7 @@ from wxgtd.wxtools import wxutils
 from wxgtd.model import objects as OBJ
 from wxgtd.gui import _fmt as fmt
 from wxgtd.gui._base_frame import BaseFrame
-from wxgtd.gui.dlg_notebook_page import DlgNotebookPage
-from wxgtd.gui.notebook_controller import NotebookControler
+from wxgtd.gui.notebook_controller import NotebookController
 
 _ = gettext.gettext
 ngettext = gettext.ngettext  # pylint: disable=C0103
@@ -134,21 +133,17 @@ class FrameNotebook(BaseFrame):
 		self.wnd.Close()
 
 	def _on_btn_new_page(self, _evt):
-		DlgNotebookPage.create(None, self.wnd, self._session, None,
-				self.selected_folder_uuid).run(False)
+		NotebookController.new_page(self.wnd, self.selected_folder_uuid)
 
 	def _on_btn_edit_page(self, _evt):
 		uuid = self.selected_page_uuid
-		if not uuid:
-			return
-		DlgNotebookPage.create(uuid, self.wnd, self._session, uuid,
-				self.selected_folder_uuid).run(False)
+		if uuid:
+			NotebookController.open_page(self.wnd, uuid)
 
 	def _on_btn_delete_page(self, _evt):
 		uuid = self.selected_page_uuid
-		if not uuid:
-			return
-		NotebookControler.delete_page(uuid, self.wnd, self._session)
+		if uuid:
+			NotebookController(self.wnd, self._session, None).delete_page(uuid)
 
 	def _on_folders_listbox(self, _evt):
 		self._refresh_pages()
@@ -159,8 +154,7 @@ class FrameNotebook(BaseFrame):
 
 	def _on_pages_list_activated(self, evt):
 		uuid = self._pages_uuid[evt.GetData()]
-		DlgNotebookPage.create(uuid, self.wnd, self._session, uuid,
-				self.selected_folder_uuid).run(False)
+		NotebookController.open_page(self.wnd, uuid)
 
 	def _on_pages_list_col_click(self, evt):
 		m_col = evt.m_col
