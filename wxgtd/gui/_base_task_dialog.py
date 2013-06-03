@@ -148,8 +148,7 @@ class BaseTaskDialog(BaseDialog):
 		dlg = DlgProjectTree(self.wnd)
 		if dlg.run(modal=True):
 			parent_uuid = dlg.selected
-			if task_logic.change_task_parent(self._task, parent_uuid,
-					self._session, self.wnd):
+			if self._controller.task_change_parent(parent_uuid):
 				self._refresh_static_texts()
 				self._on_task_type_change()
 

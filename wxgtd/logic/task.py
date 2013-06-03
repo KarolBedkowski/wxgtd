@@ -551,37 +551,21 @@ def adjust_task_type(task, session):
 	return True
 
 
-def change_task_parent(task, parent_uuid, session, wnd):
-	parent = None
-	if parent_uuid:
-		parent = OBJ.Task.get(session, uuid=parent_uuid)
-	if not _confirm_change_task_parent(task, parent, wnd):
-		return False
+def change_task_parent(task, parent, session=None):
+	""" Change task parent.
+
+	Args:
+		task: task to change (uuid or Task)
+		parent: parent to set (uuid or Task)
+		session: optional SqlAlchemy session
+	Returns:
+		True if parent was changed
+	"""
+	session = session or OBJ.Session()
+	if isinstance(task, str):
+		task = OBJ.Task.get(session, uuid=task)
+	if parent is not None:
+		if isinstance(parent, str):
+			parent = OBJ.Task.get(session, uuid=parent)
 	task.parent = parent
-	adjust_task_type(task, session)
-	return True
-
-
-def _confirm_change_task_parent(task, parent, wnd):
-	curr_type = task.type
-	if parent:  # nowy parent
-		if (parent.type == enums.TYPE_CHECKLIST and
-				curr_type != enums.TYPE_CHECKLIST_ITEM) or (
-				parent.type != enums.TYPE_CHECKLIST and
-				curr_type == enums.TYPE_CHECKLIST_ITEM):
-			if not mbox.message_box_warning_yesno(wnd,
-				_("This operation change task and subtasks type.\n"
-					"Are you sure?")):
-				return False
-	else:  # brak nowego parenta
-		if curr_type in (enums.TYPE_CHECKLIST, enums.TYPE_PROJECT):
-			if not mbox.message_box_warning_yesno(wnd,
-					_("This operation change all subtasks to simple"
-						" tasks\nAre you sure?")):
-				return False
-		elif curr_type == enums.TYPE_CHECKLIST_ITEM:
-			if not mbox.message_box_warning_yesno(wnd,
-				_("This operation change task and subtasks type.\n"
-					"Are you sure?")):
-				return False
-	return True
+	return adjust_task_type(task, session)

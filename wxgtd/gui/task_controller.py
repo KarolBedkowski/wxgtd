@@ -28,6 +28,7 @@ from .dlg_remind_settings import DlgRemindSettings
 from .dlg_show_settings import DlgShowSettings
 from .dlg_select_tags import DlgSelectTags
 from .dlg_repeat_settings import DlgRepeatSettings
+from . import message_boxes as mbox
 
 _ = gettext.gettext
 _LOG = logging.getLogger(__name__)
@@ -66,6 +67,12 @@ class TaskDialogControler:
 		if self._task.uuid in self._controllers:
 			del self._controllers[self._task.uuid]
 		self._session.close()
+
+	@property
+	def wnd(self):
+		""" Get current wx windows. """
+		return (self._dialog and self._dialog.wnd) or (self._parent_wnd and
+				self._parent_wnd.wnd) or None
 
 	@classmethod
 	def open_task(cls, parent_wnd, task_uuid):
@@ -193,6 +200,45 @@ class TaskDialogControler:
 			task.repeat_pattern = dlg.pattern
 			return True
 		return False
+
+	def task_change_parent(self, parent_uuid):
+		""" Change current task parent with confirmation.
+
+		Args:
+			parent_uuid: destination parent UUID
+		Returns:
+			True if parent was changed.
+		"""
+		parent = None
+		if parent_uuid:
+			parent = OBJ.Task.get(self._session, uuid=parent_uuid)
+		if not self._confirm_change_task_parent(parent):
+			return False
+		return task_logic.change_task_parent(self._task, parent, self._session)
+
+	def _confirm_change_task_parent(self, parent):
+		curr_type = self._task.type
+		if parent:  # nowy parent
+			if (parent.type == enums.TYPE_CHECKLIST and
+					curr_type != enums.TYPE_CHECKLIST_ITEM) or (
+					parent.type != enums.TYPE_CHECKLIST and
+					curr_type == enums.TYPE_CHECKLIST_ITEM):
+				if not mbox.message_box_warning_yesno(self.wnd,
+					_("This operation change task and subtasks type.\n"
+						"Are you sure?")):
+					return False
+		else:  # brak nowego parenta
+			if curr_type in (enums.TYPE_CHECKLIST, enums.TYPE_PROJECT):
+				if not mbox.message_box_warning_yesno(self.wnd,
+						_("This operation change all subtasks to simple"
+							" tasks\nAre you sure?")):
+					return False
+			elif curr_type == enums.TYPE_CHECKLIST_ITEM:
+				if not mbox.message_box_warning_yesno(self.wnd,
+					_("This operation change task and subtasks type.\n"
+						"Are you sure?")):
+					return False
+		return True
 
 	def _set_date(self, attr_date, attr_time_set):
 		""" Wyśweitlenie dlg wyboru daty dla danego atrybutu """
