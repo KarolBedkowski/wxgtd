@@ -22,6 +22,7 @@ from wxgtd.model import objects as OBJ
 from wxgtd.logic import notebook as notebook_logic
 
 from ._base_dialog import BaseDialog
+from .notebook_controller import NotebookControler
 
 _ = gettext.gettext
 _LOG = logging.getLogger(__name__)
@@ -74,7 +75,7 @@ class DlgNotebookPage(BaseDialog):
 
 	def _on_delete(self, evt):
 		uuid = self._page.uuid
-		if notebook_logic.delete_notebook_page(uuid, self.wnd, self._session):
+		if NotebookControler.delete_page(uuid, self.wnd, self._session):
 			BaseDialog._on_close(self, evt)
 
 	def _data_changed(self):

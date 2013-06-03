@@ -24,10 +24,10 @@ except ImportError:
 from wxgtd.wxtools import iconprovider
 from wxgtd.wxtools import wxutils
 from wxgtd.model import objects as OBJ
-from wxgtd.logic import notebook as notebook_logic
 from wxgtd.gui import _fmt as fmt
 from wxgtd.gui._base_frame import BaseFrame
 from wxgtd.gui.dlg_notebook_page import DlgNotebookPage
+from wxgtd.gui.notebook_controller import NotebookControler
 
 _ = gettext.gettext
 ngettext = gettext.ngettext  # pylint: disable=C0103
@@ -148,7 +148,7 @@ class FrameNotebook(BaseFrame):
 		uuid = self.selected_page_uuid
 		if not uuid:
 			return
-		notebook_logic.delete_notebook_page(uuid, self.wnd, self._session)
+		NotebookControler.delete_page(uuid, self.wnd, self._session)
 
 	def _on_folders_listbox(self, _evt):
 		self._refresh_pages()
