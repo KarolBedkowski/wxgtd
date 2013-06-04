@@ -65,8 +65,10 @@ class FrameMain(BaseFrame):
 	_window_icon = 'wxgtd'
 
 	def __init__(self):
+		self._all_loaded = False
 		BaseFrame.__init__(self)
 		self._setup()
+		wx.CallAfter(self._on_all_loaded)
 
 	def _setup(self):
 		self._session = OBJ.Session()
@@ -74,7 +76,6 @@ class FrameMain(BaseFrame):
 		self._last_reminders_check = None
 		self._filter_tree_ctrl.RefreshItems()
 		self._tbicon = TaskBarIcon(self.wnd)  # pylint: disable=W0201
-		wx.CallAfter(self._refresh_list)
 		self['rb_show_selection'].SetSelection(self._appconfig.get('main',
 			'selected_group', 0))
 		if self._appconfig.get('sync', 'sync_on_startup'):
@@ -266,6 +267,10 @@ class FrameMain(BaseFrame):
 
 	# events
 
+	def _on_all_loaded(self):
+		self._all_loaded = True
+		self._refresh_list()
+
 	def _on_close(self, event):
 		appconfig = self._appconfig
 		if appconfig.get('sync', 'sync_on_exit'):
@@ -398,36 +403,28 @@ class FrameMain(BaseFrame):
 		self._toggle_task_complete()
 
 	def _on_menu_task_change_due(self, _evt):
-		task_uuid = self._items_list_ctrl.get_item_uuid(None)
-		if task_uuid:
-			task = OBJ.Task.get(self._session, uuid=task_uuid)
-			if TaskController(self.wnd, self._session, task).\
-					task_change_due_date():
-				task_logic.save_modified_task(task, self._session)
+		task = self._get_selected_task()
+		if task and TaskController(self.wnd, self._session, task).\
+				task_change_due_date():
+			task_logic.save_modified_task(task, self._session)
 
 	def _on_menu_task_change_start(self, _evt):
-		task_uuid = self._items_list_ctrl.get_item_uuid(None)
-		if task_uuid:
-			task = OBJ.Task.get(self._session, uuid=task_uuid)
-			if TaskController(self.wnd, self._session, task).\
-					task_change_start_date():
-				task_logic.save_modified_task(task, self._session)
+		task = self._get_selected_task()
+		if task and TaskController(self.wnd, self._session, task).\
+				task_change_start_date():
+			task_logic.save_modified_task(task, self._session)
 
 	def _on_menu_task_change_remind(self, _evt):
-		task_uuid = self._items_list_ctrl.get_item_uuid(None)
-		if task_uuid:
-			task = OBJ.Task.get(self._session, uuid=task_uuid)
-			if TaskController(self.wnd, self._session, task).\
-					task_change_remind():
-				task_logic.save_modified_task(task, self._session)
+		task = self._get_selected_task()
+		if task and TaskController(self.wnd, self._session, task).\
+				task_change_remind():
+			task_logic.save_modified_task(task, self._session)
 
 	def _on_menu_task_change_hide_until(self, _evt):
-		task_uuid = self._items_list_ctrl.get_item_uuid(None)
-		if task_uuid:
-			task = OBJ.Task.get(self._session, uuid=task_uuid)
-			if TaskController(self.wnd, self._session, task).\
-					task_change_hide_until():
-				task_logic.save_modified_task(task, self._session)
+		task = self._get_selected_task()
+		if task and TaskController(self.wnd, self._session, task).\
+				task_change_hide_until():
+			task_logic.save_modified_task(task, self._session)
 
 	def _on_menu_task_complete(self, _evt):
 		self._toggle_task_complete()
@@ -448,15 +445,15 @@ class FrameMain(BaseFrame):
 		self._filter_tree_ctrl.RefreshItems()
 
 	def _on_filter_tree_item_activated(self, evt):
-		wx.CallAfter(self._refresh_list)
+		self._refresh_list()
 		evt.Skip()
 
 	def _on_filter_tree_item_selected(self, evt):
-		wx.CallAfter(self._refresh_list)
+		self._refresh_list()
 		evt.Skip()
 
 	def _on_rb_show_selection(self, evt):
-		wx.CallAfter(self._refresh_list)
+		self._refresh_list()
 		evt.Skip()
 
 	def _on_items_list_activated(self, evt):
@@ -528,11 +525,10 @@ class FrameMain(BaseFrame):
 		self._toggle_task_complete()
 
 	def _on_btn_edit_parent(self, _evt):
-		if not self._items_path:
-			return
-		task_uuid = self._items_path[-1].uuid
-		if task_uuid:
-			TaskController.open_task(self.wnd, task_uuid)
+		if self._items_path:
+			task_uuid = self._items_path[-1].uuid
+			if task_uuid:
+				TaskController.open_task(self.wnd, task_uuid)
 
 	def _on_btn_reminders(self, _evt):
 		if not DlgReminders.check(self.wnd, self._session):
@@ -553,7 +549,10 @@ class FrameMain(BaseFrame):
 			DlgReminders.check(self.wnd, self._session)
 
 	def _refresh_list(self):
+		if not self._all_loaded:
+			return
 		wx.SetCursor(wx.HOURGLASS_CURSOR)
+		self.wnd.Freeze()
 		params = self._get_params_for_list()
 		_LOG.debug("FrameMain._refresh_list; params=%r", params)
 		self._session.expire_all()  # pylint: disable=E1101
@@ -563,6 +562,7 @@ class FrameMain(BaseFrame):
 		showed = self._items_list_ctrl.GetItemCount()
 		self.wnd.SetStatusText(ngettext("%d item", "%d items", showed) % showed, 1)
 		self._show_parent_info(active_only)
+		self.wnd.Thaw()
 		wx.SetCursor(wx.STANDARD_CURSOR)
 
 	def _autosync(self, on_load=True):
@@ -578,6 +578,7 @@ class FrameMain(BaseFrame):
 				msgbox.ShowModal()
 				msgbox.Destroy()
 			dlg.mark_finished(2)
+		if on_load:
 			Publisher().sendMessage('task.update')
 
 	def _delete_selected_task(self):
@@ -676,13 +677,20 @@ class FrameMain(BaseFrame):
 		return params
 
 	def _toggle_task_complete(self):
+		task = self._get_selected_task()
+		if not task:
+			return
+		if not task.completed and not TaskController(
+				self.wnd, self._session, task).confirm_set_task_complete():
+			return
+		task_logic.toggle_task_complete(task.uuid, self._session)
+
+	def _get_selected_task(self):
+		""" Return Task object for selected item. """
 		task_uuid = self._items_list_ctrl.get_item_uuid(None)
 		if task_uuid:
-			task = OBJ.Task.get(self._session, uuid=task_uuid)
-			if not task.completed and not TaskController(
-					self.wnd, self._session, task).confirm_set_task_complete():
-				return
-			task_logic.toggle_task_complete(task_uuid, self._session)
+			return OBJ.Task.get(self._session, uuid=task_uuid)
+		return None
 
 
 # additional strings to translate
@@ -694,6 +702,7 @@ def _fake_strings():
 	_('Finished')
 	_('Projects')
 	_('Checklists')
+	_('Active Alarms')
 
 
 class _TasksPopupMenu:
