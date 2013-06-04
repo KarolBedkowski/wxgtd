@@ -230,7 +230,7 @@ class FilterTreeCtrl(treemixin.VirtualTree, treemixin.ExpansionState,
 	def refresh(self):
 		""" Refresh tree. """
 		self.ExpandAll()
-		wx.CallAfter(self.RefreshItems)
+		self.RefreshItems()
 
 	def save_last_settings(self):
 		appcfg = appconfig.AppConfig()
