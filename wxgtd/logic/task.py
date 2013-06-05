@@ -385,9 +385,22 @@ def complete_task(task, session=None):
 	session = session or OBJ.Session.objects_session(task) or OBJ.Session()
 	task.task_completed = True
 	task.update_modify_time()
-	repeated_task = repeat_task(task)
-	if repeated_task is not None:
-		session.add(repeated_task)
+	if task.type == enums.TYPE_CHECKLIST_ITEM:
+		# renumber task in chcecklist - move current task to the end
+		task_importance = task.importance
+		idx = task_importance - 1
+		for idx, ntask in enumerate(session.query(OBJ.Task).
+				filter(OBJ.Task.parent_uuid == task.parent_uuid,
+					OBJ.Task.importance >= task_importance,
+					OBJ.Task.uuid != task.uuid).
+				order_by(OBJ.Task.importance), task_importance):
+			ntask.importance = idx
+		task.importance = idx + 1
+	elif task.type == enums.TYPE_TASK:
+		# repeat only regular task
+		repeated_task = repeat_task(task)
+		if repeated_task is not None:
+			session.add(repeated_task)
 	return True
 
 
