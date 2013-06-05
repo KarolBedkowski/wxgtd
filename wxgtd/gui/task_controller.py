@@ -93,9 +93,12 @@ class TaskController:
 	@classmethod
 	def new_task(cls, parent_wnd, task_type, task_parent=None):
 		session = OBJ.Session()
-		task = OBJ.Task(type=task_type, priority=0)
+		parent = None
 		if task_parent is not None:
-			task.parent = OBJ.Task.get(session, uuid=task_parent)
+			parent = OBJ.Task.get(session, uuid=task_parent)
+		task = OBJ.Task(type=task_type, priority=0, parent=parent)
+		if task_type == enums.TYPE_CHECKLIST_ITEM:
+			task.priority = -1
 		task_logic.update_task_from_parent(task, task_parent, session,
 					AppConfig())
 		contr = TaskController(parent_wnd, session, task)
