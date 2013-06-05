@@ -93,7 +93,9 @@ class TaskController:
 	@classmethod
 	def new_task(cls, parent_wnd, task_type, task_parent=None):
 		session = OBJ.Session()
-		task = OBJ.Task(type=task_type, parent_uuid=task_parent)
+		task = OBJ.Task(type=task_type, priority=0)
+		if task_parent is not None:
+			task.parent = OBJ.Task.get(session, uuid=task_parent)
 		task_logic.update_task_from_parent(task, task_parent, session,
 					AppConfig())
 		contr = TaskController(parent_wnd, session, task)
