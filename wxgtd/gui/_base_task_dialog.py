@@ -193,7 +193,11 @@ class BaseTaskDialog(BaseDialog):
 		Returns:
 			True = no error.
 		"""
-		return self.wnd.TransferDataFromWindow()
+		try:
+			return self.wnd.TransferDataFromWindow()
+		finally:
+			pass
+		return False
 
 	@wxutils.call_after
 	def _on_task_type_change(self):
