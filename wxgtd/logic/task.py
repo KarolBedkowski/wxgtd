@@ -323,23 +323,18 @@ def update_task_from_parent(task, parent_uuid, session, appconfig):
 	"""
 	if not parent_uuid:
 		return
-	# znalezienie projektu w hierarchii; czy to ma sens?
-	while parent_uuid:
-		parent = session.query(OBJ.Task).filter_by(uuid=parent_uuid).first()
-		if parent.type == enums.TYPE_PROJECT:
-			break
-		parent_uuid = parent.parent_uuid
+	parent = session.query(OBJ.Task).filter_by(uuid=parent_uuid).first()
 	if not parent:
 		_LOG.warn("update_task_from_parent: wrong parent %r", (task,
 			parent_uuid))
 		return
-	if appconfig.get('tasks', 'inerit_context') and not task.context_uuid:
+	if appconfig.get('task', 'inherit_context') and not task.context_uuid:
 		task.context_uuid = parent.context_uuid
-	if appconfig.get('tasks', 'inerit_goal') and not task.goal_uuid:
+	if appconfig.get('task', 'inherit_goal') and not task.goal_uuid:
 		task.goal_uuid = parent.goal_uuid
-	if appconfig.get('tasks', 'inerit_folder') and not task.folder_uuid:
+	if appconfig.get('task', 'inherit_folder') and not task.folder_uuid:
 		task.folder_uuid = parent.folder_uuid
-	if appconfig.get('tasks', 'inerit_tags') and not task.tags and parent.tags:
+	if appconfig.get('task', 'inherit_tags') and not task.tags and parent.tags:
 		for tasktag in parent.tags:
 			task.task.append(OBJ.TaskTag(tag_uuid=tasktag.tag_uuid))
 

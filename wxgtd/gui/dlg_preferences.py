@@ -92,13 +92,13 @@ class DlgPreferences(BaseDialog):
 		# task
 		# # inheritance from project
 		self['cb_tasks_inh_context'].SetValidator(Validator(config,
-				'task/inerit_context'))
+				'task/inherit_context'))
 		self['cb_tasks_inh_goal'].SetValidator(Validator(config,
-				'task/inerit_goal'))
+				'task/inherit_goal'))
 		self['cb_tasks_inh_folder'].SetValidator(Validator(config,
-				'task/inerit_folder'))
+				'task/inherit_folder'))
 		self['cb_tasks_inh_tags'].SetValidator(Validator(config,
-				'task/inerit_tags'))
+				'task/inherit_tags'))
 		# notification
 		self['cb_notif_popup_reminds'].SetValidator(Validator(config,
 				'notification/popup_alarms'))
