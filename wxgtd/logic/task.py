@@ -532,21 +532,29 @@ def adjust_task_type(task, session):
 		True if ok.
 	"""
 	if task.parent:
+		# zadanie ma rodzica - ustalenie typu na podstawie parenta
 		if task.parent.type == enums.TYPE_CHECKLIST:
+			# na checkliście tylko elementy listy
 			task.type = enums.TYPE_CHECKLIST_ITEM
 		elif task.type == enums.TYPE_CHECKLIST_ITEM:
+			# rodzic nie jest checklistą, więc gdy element należał do listy
+			# zmiana na zwykłe zadanie
 			task.type = enums.TYPE_TASK
 	elif task.type == enums.TYPE_CHECKLIST_ITEM:
-		# elementy checlisty tylko w checklistach
+		# brak rodzica; elementy checlisty tylko w checklistach
 		task.type = enums.TYPE_TASK
 	if task.children:
+		# aktualizacja potomków
 		if task.type in (enums.TYPE_CHECKLIST, enums.TYPE_PROJECT):
 			for subtask in task.children:
 				adjust_task_type(subtask, session)
 		else:
 			# jeżeli to nie projakt ani checliksta to nie powinna mieć podzadań
 			for subtask in task.children:
+				# przesuniecie na poziom parenta
 				subtask.parent = task.parent
+				# poprawa typu
+				adjust_task_type(subtask, session)
 	return True
 
 
