@@ -18,6 +18,7 @@ import wx
 
 from wxgtd.model import objects as OBJ
 from wxgtd.model import enums
+from wxgtd.logic import dicts as logic_dicts
 from wxgtd.wxtools.validators import Validator, ValidatorDv
 
 from ._base_task_dialog import BaseTaskDialog
@@ -100,7 +101,12 @@ class DlgTask(BaseTaskDialog):
 	def _transfer_data_from_window(self):
 		self._task.duration = self._data['duration_d'] * 1440 + \
 				self._data['duration_h'] * 60 + self._data['duration_m']
-		return BaseTaskDialog._transfer_data_from_window(self)
+		res = BaseTaskDialog._transfer_data_from_window(self)
+		# check and optionally create folder, goals if entered
+		self._check_goal_selection()
+		self._check_folder_selection()
+		self._check_context_selection()
+		return res
 
 	def _on_btn_due_date_set(self, _evt):
 		if self._controller.task_change_due_date():
@@ -162,3 +168,42 @@ class DlgTask(BaseTaskDialog):
 		self['l_prio'].SetLabel(enums.PRIORITIES[task.priority])
 		self['l_type'].SetLabel(enums.TYPES[task.type or enums.TYPE_TASK])
 		self['btn_change_type'].Enable(task.type != enums.TYPE_CHECKLIST_ITEM)
+
+	def _check_goal_selection(self):
+		choice_ctrl = self['cb_goal']
+		if choice_ctrl.GetSelection() >= 0:
+			# selected known / existing item
+			return
+		value = choice_ctrl.GetValue().strip()
+		if not value:
+			# nothing selected (default) - ok
+			return
+		goal = logic_dicts.find_or_create_goal(value, self._session)
+		if goal:
+			self._task.goal = goal
+
+	def _check_folder_selection(self):
+		choice_ctrl = self['cb_folder']
+		if choice_ctrl.GetSelection() >= 0:
+			# selected known / existing item
+			return
+		value = choice_ctrl.GetValue().strip()
+		if not value:
+			# nothing selected (default) - ok
+			return
+		folder = logic_dicts.find_or_create_folder(value, self._session)
+		if folder:
+			self._task.folder = folder
+
+	def _check_context_selection(self):
+		choice_ctrl = self['cb_context']
+		if choice_ctrl.GetSelection() >= 0:
+			# selected known / existing item
+			return
+		value = choice_ctrl.GetValue().strip()
+		if not value:
+			# nothing selected (default) - ok
+			return
+		context = logic_dicts.find_or_create_context(value, self._session)
+		if context:
+			self._task.context = context
