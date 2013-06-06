@@ -14,6 +14,7 @@ __version__ = "2010-11-25"
 import logging
 import gettext
 
+import wx
 
 from wxgtd.lib.appconfig import AppConfig
 from wxgtd.lib import datetimeutils as DTU
@@ -240,6 +241,37 @@ class TaskController:
 			return False
 		return task_logic.change_task_parent(self._task, parent, self._session)
 
+	def task_change_type(self):
+		""" Change current task type with confirmation when this action may
+		affect subtasks.
+
+		Returns:
+			True on change.
+		"""
+		parent_type = self._task.parent.type if self._task.parent else None
+		if parent_type == enums.TYPE_CHECKLIST:
+			# nie można zmienić typu z TYPE_CHECKLIST_ITEM
+			self._task.type = enums.TYPE_CHECKLIST_ITEM
+			return True
+		values = [enums.TYPE_TASK, enums.TYPE_CALL, enums.TYPE_EMAIL,
+				enums.TYPE_SMS, enums.TYPE_RETURN_CALL, enums.TYPE_PROJECT,
+				enums.TYPE_CHECKLIST]
+		choices = [enums.TYPES[val] for val in values]
+		dlg = wx.SingleChoiceDialog(self.wnd, _("Change task type to:"),
+				_("Task"), choices, wx.CHOICEDLG_STYLE)
+		new_type = self._task.type
+		if dlg.ShowModal() == wx.ID_OK:
+			new_type = values[dlg.GetSelection()]
+		dlg.Destroy()
+		if new_type == self._task.type:
+			return False
+		if (self._task.type in (enums.TYPE_PROJECT, enums.TYPE_CHECKLIST)
+				or new_type in (enums.TYPE_PROJECT, enums.TYPE_CHECKLIST)):
+			if not self._confirm_change_task_type():
+				return False
+		self._task.type = new_type
+		return True
+
 	def _confirm_change_task_parent(self, parent):
 		curr_type = self._task.type
 		if parent:  # nowy parent
@@ -249,7 +281,7 @@ class TaskController:
 					curr_type == enums.TYPE_CHECKLIST_ITEM):
 				if not mbox.message_box_warning_yesno(self.wnd,
 					_("This operation change task and subtasks type.\n"
-						"Are you sure?")):
+						"Continue change??")):
 					return False
 		else:  # brak nowego parenta
 			if curr_type in (enums.TYPE_CHECKLIST, enums.TYPE_PROJECT):
@@ -260,9 +292,14 @@ class TaskController:
 			elif curr_type == enums.TYPE_CHECKLIST_ITEM:
 				if not mbox.message_box_warning_yesno(self.wnd,
 					_("This operation change task and subtasks type.\n"
-						"Are you sure?")):
+						"Continue change??")):
 					return False
 		return True
+
+	def _confirm_change_task_type(self):
+		return mbox.message_box_warning_yesno(self.wnd,
+			_("This operation change task and subtasks type.\n"
+				"Continue change?"))
 
 	def _set_date(self, attr_date, attr_time_set):
 		""" Wyśweitlenie dlg wyboru daty dla danego atrybutu """

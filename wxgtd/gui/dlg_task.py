@@ -127,22 +127,9 @@ class DlgTask(BaseTaskDialog):
 			self._refresh_static_texts()
 
 	def _on_btn_change_type(self, _evt):
-		parent_type = self._task.parent.type if self._task.parent else None
-		if parent_type == enums.TYPE_CHECKLIST:
-			# nie można zmienić typu z TYPE_CHECKLIST_ITEM
-			self._task.type = enums.TYPE_CHECKLIST_ITEM
-			return
-		values = [enums.TYPE_TASK, enums.TYPE_CALL, enums.TYPE_EMAIL,
-				enums.TYPE_SMS, enums.TYPE_RETURN_CALL, enums.TYPE_PROJECT,
-				enums.TYPE_CHECKLIST]
-		choices = [enums.TYPES[val] for val in values]
-		dlg = wx.SingleChoiceDialog(self.wnd, _("Change task type to:"),
-				_("Task"), choices, wx.CHOICEDLG_STYLE)
-		if dlg.ShowModal() == wx.ID_OK:
-			self._task.type = values[dlg.GetSelection()]
+		if self._controller.task_change_type():
 			self._refresh_static_texts()
 			self._on_task_type_change()
-		dlg.Destroy()
 
 	def _on_sl_priority(self, _evt):
 		self['l_prio'].SetLabel(enums.PRIORITIES[self['sl_priority'].GetValue()])
