@@ -97,15 +97,15 @@ class FilterTreeModel(object):
 		self._items.append(TreeItemCB(_("Folders"), "FOLDERS",
 				TreeItemCB(_("No Folder"), None),
 				*tuple(TreeItemCB(folder.title, folder.uuid)
-						for folder in OBJ.Folder.all())))
+						for folder in OBJ.Folder.all('title'))))
 		self._items.append(TreeItemCB(_("Goals"), "GOALS",
 				TreeItemCB(_("No goal"), None),
 				*tuple(TreeItemCB(goal.title, goal.uuid)
-						for goal in OBJ.Goal.all())))
+						for goal in OBJ.Goal.all('title'))))
 		self._items.append(TreeItemCB(_("Tags"), "TAGS",
 				TreeItemCB(_("No tag"), None),
 				*tuple(TreeItemCB(tag.title, tag.uuid)
-						for tag in OBJ.Tag.all())))
+						for tag in OBJ.Tag.all('title'))))
 		self._load_last_settings()
 
 	def get_item(self, indices):

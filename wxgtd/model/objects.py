@@ -103,10 +103,17 @@ class BaseModelMixin(object):
 				~cls.tasks.any()).all()
 
 	@classmethod
-	def all(cls):
-		""" Return all objects this class. """
+	def all(cls, order_by=None):
+		""" Return all objects this class.
+
+		Args:
+			order_by: optional order_by query argument
+		"""
 		session = Session()
-		return session.query(cls).all()  # pylint: disable=E1101
+		query = session.query(cls)
+		if order_by:
+			query = query.order_by(order_by)
+		return query.all()  # pylint: disable=E1101
 
 	@classmethod
 	def get(cls, session=None, **kwargs):

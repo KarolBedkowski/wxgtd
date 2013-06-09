@@ -141,7 +141,7 @@ class DictBaseDlg(BaseDialog):
 	def _get_items(self):
 		""" Get all items given class from database. """
 		for obj in self._session.query(  # pylint: disable=E1101
-				self._item_class):
+				self._item_class).order_by('title'):
 			yield obj.title, obj.uuid
 
 	def _display_item(self, item):
