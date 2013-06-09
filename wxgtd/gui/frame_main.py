@@ -704,38 +704,12 @@ class FrameMain(BaseFrame):
 
 	def _refresh_groups(self):
 		rb_show_selection = self['rb_show_selection']
-		# all
-		cnt = OBJ.Task.select_by_filters(self._get_params_for_list(0),
-				session=self._session).count()
-		rb_show_selection.SetItemLabel(0, _("All (%d)") % cnt)
-		# hotlist
-		cnt = OBJ.Task.select_by_filters(self._get_params_for_list(1),
-				session=self._session).count()
-		rb_show_selection.SetItemLabel(1, _("Hotlist (%d)") % cnt)
-		# stared
-		cnt = OBJ.Task.select_by_filters(self._get_params_for_list(2),
-				session=self._session).count()
-		rb_show_selection.SetItemLabel(2, _("Stared (%d)") % cnt)
-		# basket
-		cnt = OBJ.Task.select_by_filters(self._get_params_for_list(3),
-				session=self._session).count()
-		rb_show_selection.SetItemLabel(3, _("Basket (%d)") % cnt)
-		# finished
-		cnt = OBJ.Task.select_by_filters(self._get_params_for_list(4),
-				session=self._session).count()
-		rb_show_selection.SetItemLabel(4, _("Finished (%d)") % cnt)
-		# Projects
-		cnt = OBJ.Task.select_by_filters(self._get_params_for_list(5),
-				session=self._session).count()
-		rb_show_selection.SetItemLabel(5, _("Projects (%d)") % cnt)
-		# Checklists
-		cnt = OBJ.Task.select_by_filters(self._get_params_for_list(6),
-				session=self._session).count()
-		rb_show_selection.SetItemLabel(6, _("Checklists (%d)") % cnt)
-		# Active alarms
-		cnt = OBJ.Task.select_by_filters(self._get_params_for_list(7),
-				session=self._session).count()
-		rb_show_selection.SetItemLabel(7, _("Active Alarms (%d)") % cnt)
+		for group, label in enumerate((_("All (%d)"), _("Hotlist (%d)"),
+				_("Stared (%d)"), _("Basket (%d)"), _("Finished (%d)"),
+				_("Projects (%d)"), _("Active Alarms (%d)"))):
+			cnt = OBJ.Task.select_by_filters(self._get_params_for_list(group),
+					session=self._session).count()
+			rb_show_selection.SetItemLabel(group, label % cnt)
 
 
 class _TasksPopupMenu:
