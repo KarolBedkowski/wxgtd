@@ -47,6 +47,7 @@ from wxgtd.gui.dlg_sync_progress import DlgSyncProggress
 from wxgtd.gui.dlg_tags import DlgTags
 from wxgtd.gui.dlg_goals import DlgGoals
 from wxgtd.gui.dlg_folders import DlgFolders
+from wxgtd.gui.dlg_contexts import DlgContexts
 from wxgtd.gui.dlg_reminders import DlgReminders
 from wxgtd.gui.frame_notebooks import FrameNotebook
 from wxgtd.gui.task_controller import TaskController
@@ -127,6 +128,7 @@ class FrameMain(BaseFrame):
 		self._create_menu_bind('menu_sett_tags', self._on_menu_sett_tags)
 		self._create_menu_bind('menu_sett_goals', self._on_menu_sett_goals)
 		self._create_menu_bind('menu_sett_folders', self._on_menu_sett_folders)
+		self._create_menu_bind('menu_sett_contexts', self._on_menu_sett_contexts)
 		self._create_menu_bind('menu_sett_preferences',
 				self._on_menu_sett_preferences)
 
@@ -443,6 +445,10 @@ class FrameMain(BaseFrame):
 
 	def _on_menu_sett_folders(self, _evt):
 		DlgFolders(self.wnd).run(True)
+		self._filter_tree_ctrl.RefreshItems()
+
+	def _on_menu_sett_contexts(self, _evt):
+		DlgContexts(self.wnd).run(True)
 		self._filter_tree_ctrl.RefreshItems()
 
 	def _on_filter_tree_item_activated(self, evt):
