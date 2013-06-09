@@ -15,6 +15,10 @@ import logging
 import gettext
 
 import wx
+try:
+	from wx.lib.pubsub.pub import Publisher
+except ImportError:
+	from wx.lib.pubsub import Publisher  # pylint: disable=E0611
 
 from wxgtd.model import objects as OBJ
 from wxgtd.model import enums
@@ -181,6 +185,7 @@ class DlgTask(BaseTaskDialog):
 		goal = logic_dicts.find_or_create_goal(value, self._session)
 		if goal:
 			self._task.goal = goal
+			Publisher().sendMessage('dict.update')
 
 	def _check_folder_selection(self):
 		choice_ctrl = self['cb_folder']
@@ -194,6 +199,7 @@ class DlgTask(BaseTaskDialog):
 		folder = logic_dicts.find_or_create_folder(value, self._session)
 		if folder:
 			self._task.folder = folder
+			Publisher().sendMessage('dict.update')
 
 	def _check_context_selection(self):
 		choice_ctrl = self['cb_context']
@@ -207,3 +213,4 @@ class DlgTask(BaseTaskDialog):
 		context = logic_dicts.find_or_create_context(value, self._session)
 		if context:
 			self._task.context = context
+			Publisher().sendMessage('dict.update')

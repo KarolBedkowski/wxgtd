@@ -18,6 +18,10 @@ import wx
 import wx.lib.customtreectrl as CT
 import wx.gizmos
 from wx.lib.mixins import treemixin
+try:
+	from wx.lib.pubsub.pub import Publisher
+except ImportError:
+	from wx.lib.pubsub import Publisher  # pylint: disable=E0611
 
 from wxgtd.model import objects as OBJ
 from wxgtd.model import enums
@@ -77,6 +81,10 @@ class FilterTreeModel(object):
 	""" Model used in FilterTreeModel. """
 
 	def __init__(self):
+		self._items = []
+		self.load()
+
+	def load(self):
 		self._items = []
 		self._items.append(TreeItemCB(_("Statuses"), "STATUSES",
 				*tuple(TreeItemCB(status, status_id or 0)
@@ -190,6 +198,8 @@ class FilterTreeCtrl(treemixin.VirtualTree, treemixin.ExpansionState,
 				id=self._menu_show_only_id)
 		self.Bind(wx.EVT_MENU, self._on_menu_show_except,
 				id=self._menu_show_except_id)
+		Publisher().subscribe(self._reload_items, ('dict', 'update'))
+		Publisher().subscribe(self._reload_items, ('dict', 'delete'))
 		wx.CallAfter(self.refresh)
 
 	@property
@@ -244,6 +254,11 @@ class FilterTreeCtrl(treemixin.VirtualTree, treemixin.ExpansionState,
 		appcfg.set('last_filter', 'goals', ','.join(map(str, goals)))
 		tags = self._model.checked_items_by_parent("TAGS")
 		appcfg.set('last_filter', 'tags', ','.join(map(str, tags)))
+
+	def _reload_items(self, *_args):
+		self.save_last_settings()
+		self._model.load()
+		wx.CallAfter(self.refresh)
 
 	def _on_right_up(self, evt):
 		item = self.GetSelection()

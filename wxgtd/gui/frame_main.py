@@ -366,6 +366,7 @@ class FrameMain(BaseFrame):
 			dlg.mark_finished()
 			self._filter_tree_ctrl.RefreshItems()
 			Publisher().sendMessage('task.update')
+			Publisher().sendMessage('dict.update')
 
 	def _on_menu_sett_preferences(self, _evt):
 		if DlgPreferences(self.wnd).run(True):
@@ -580,6 +581,7 @@ class FrameMain(BaseFrame):
 			dlg.mark_finished(2)
 		if on_load:
 			Publisher().sendMessage('task.update')
+			Publisher().sendMessage('dict.update')
 
 	def _delete_selected_task(self):
 		task_uuid = self._items_list_ctrl.get_item_uuid(None)
