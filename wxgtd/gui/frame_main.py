@@ -569,6 +569,7 @@ class FrameMain(BaseFrame):
 		showed = self._items_list_ctrl.GetItemCount()
 		self.wnd.SetStatusText(ngettext("%d item", "%d items", showed) % showed, 1)
 		self._show_parent_info(active_only)
+		self._refresh_groups()
 		self.wnd.Thaw()
 		wx.SetCursor(wx.STANDARD_CURSOR)
 
@@ -657,9 +658,10 @@ class FrameMain(BaseFrame):
 		panel_parent_icons.Update()
 		self['panel_parent'].GetSizer().Layout()
 
-	def _get_params_for_list(self):
+	def _get_params_for_list(self, group=None):
 		""" Build params for database query """
-		group_id = self['rb_show_selection'].GetSelection()
+		group_id = (self['rb_show_selection'].GetSelection() if group is None
+				else group)
 		parent = self._items_path[-1].uuid if self._items_path else None
 		_LOG.debug('_get_params_for_list: group_id=%r, parent=%r', group_id, parent)
 		tmodel = self._filter_tree_ctrl.model
@@ -700,17 +702,40 @@ class FrameMain(BaseFrame):
 			return OBJ.Task.get(self._session, uuid=task_uuid)
 		return None
 
-
-# additional strings to translate
-def _fake_strings():
-	_('All')
-	_('Hot')
-	_('Stared')
-	_('Basket')
-	_('Finished')
-	_('Projects')
-	_('Checklists')
-	_('Active Alarms')
+	def _refresh_groups(self):
+		rb_show_selection = self['rb_show_selection']
+		# all
+		cnt = OBJ.Task.select_by_filters(self._get_params_for_list(0),
+				session=self._session).count()
+		rb_show_selection.SetItemLabel(0, _("All (%d)") % cnt)
+		# hotlist
+		cnt = OBJ.Task.select_by_filters(self._get_params_for_list(1),
+				session=self._session).count()
+		rb_show_selection.SetItemLabel(1, _("Hotlist (%d)") % cnt)
+		# stared
+		cnt = OBJ.Task.select_by_filters(self._get_params_for_list(2),
+				session=self._session).count()
+		rb_show_selection.SetItemLabel(2, _("Stared (%d)") % cnt)
+		# basket
+		cnt = OBJ.Task.select_by_filters(self._get_params_for_list(3),
+				session=self._session).count()
+		rb_show_selection.SetItemLabel(3, _("Basket (%d)") % cnt)
+		# finished
+		cnt = OBJ.Task.select_by_filters(self._get_params_for_list(4),
+				session=self._session).count()
+		rb_show_selection.SetItemLabel(4, _("Finished (%d)") % cnt)
+		# Projects
+		cnt = OBJ.Task.select_by_filters(self._get_params_for_list(5),
+				session=self._session).count()
+		rb_show_selection.SetItemLabel(5, _("Projects (%d)") % cnt)
+		# Checklists
+		cnt = OBJ.Task.select_by_filters(self._get_params_for_list(6),
+				session=self._session).count()
+		rb_show_selection.SetItemLabel(6, _("Checklists (%d)") % cnt)
+		# Active alarms
+		cnt = OBJ.Task.select_by_filters(self._get_params_for_list(7),
+				session=self._session).count()
+		rb_show_selection.SetItemLabel(7, _("Active Alarms (%d)") % cnt)
 
 
 class _TasksPopupMenu:
