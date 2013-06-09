@@ -117,7 +117,12 @@ def _draw_info_task_context(mdc, cache, task, x_off, y_off):
 def _draw_info_task_parent(mdc, cache, task, x_off, y_off):
 	task_parent = cache.get('task_parent')
 	if task_parent is None and task.parent:
-		cache['task_parent'] = task_parent = task.parent.title
+		task_parents = []
+		while task.parent:
+			task_parents.insert(0, task.parent.title)
+			task = task.parent
+		task_parent = '/'.join(task_parents)
+		cache['task_parent'] = task_parent
 		cache['task_parent_x_off'] = mdc.GetTextExtent(task_parent)[0] + 10
 	if task_parent:
 		mdc.DrawBitmap(iconprovider.get_image('project_small'), x_off,
