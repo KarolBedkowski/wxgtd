@@ -569,6 +569,7 @@ class FrameMain(BaseFrame):
 		showed = self._items_list_ctrl.GetItemCount()
 		self.wnd.SetStatusText(ngettext("%d item", "%d items", showed) % showed, 1)
 		self._show_parent_info(active_only)
+		self._refresh_groups()
 		self.wnd.Thaw()
 		wx.SetCursor(wx.STANDARD_CURSOR)
 
@@ -657,9 +658,10 @@ class FrameMain(BaseFrame):
 		panel_parent_icons.Update()
 		self['panel_parent'].GetSizer().Layout()
 
-	def _get_params_for_list(self):
+	def _get_params_for_list(self, group=None):
 		""" Build params for database query """
-		group_id = self['rb_show_selection'].GetSelection()
+		group_id = (self['rb_show_selection'].GetSelection() if group is None
+				else group)
 		parent = self._items_path[-1].uuid if self._items_path else None
 		_LOG.debug('_get_params_for_list: group_id=%r, parent=%r', group_id, parent)
 		tmodel = self._filter_tree_ctrl.model
@@ -700,17 +702,14 @@ class FrameMain(BaseFrame):
 			return OBJ.Task.get(self._session, uuid=task_uuid)
 		return None
 
-
-# additional strings to translate
-def _fake_strings():
-	_('All')
-	_('Hot')
-	_('Stared')
-	_('Basket')
-	_('Finished')
-	_('Projects')
-	_('Checklists')
-	_('Active Alarms')
+	def _refresh_groups(self):
+		rb_show_selection = self['rb_show_selection']
+		for group, label in enumerate((_("All (%d)"), _("Hotlist (%d)"),
+				_("Stared (%d)"), _("Basket (%d)"), _("Finished (%d)"),
+				_("Projects (%d)"), _("Active Alarms (%d)"))):
+			cnt = OBJ.Task.select_by_filters(self._get_params_for_list(group),
+					session=self._session).count()
+			rb_show_selection.SetItemLabel(group, label % cnt)
 
 
 class _TasksPopupMenu:
