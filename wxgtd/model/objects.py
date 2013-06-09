@@ -256,7 +256,7 @@ class Task(BaseModelMixin, Base):
 			session: optional sqlalchemy session
 
 		Returns:
-			list of task
+			SqlAlchemy query
 		"""
 		# pylint: disable=R0912
 		_LOG.debug('Task.select_by_filters(%r)', params)
@@ -289,7 +289,7 @@ class Task(BaseModelMixin, Base):
 		if params.get('active_alarm'):
 			query = query.filter(Task.alarm >= now)
 		query = query.order_by(Task.title)
-		return query.all()
+		return query
 
 	@classmethod
 	def all_projects(cls):
