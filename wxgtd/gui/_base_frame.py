@@ -49,7 +49,9 @@ class BaseFrame(object):
 		else:
 			ctrl = self.wnd.FindWindowById(key)
 		if ctrl is None:
-			ctrl = self.wnd.GetMenuBar().FindItemById(xrc.XRCID(key))
+			menu = self.wnd.GetMenuBar()
+			if menu:
+				ctrl = menu.FindItemById(xrc.XRCID(key))
 		assert ctrl is not None, 'Control %r not found' % key
 		return ctrl
 
