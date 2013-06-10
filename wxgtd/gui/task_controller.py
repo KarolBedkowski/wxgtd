@@ -22,7 +22,7 @@ from wxgtd.model import objects as OBJ
 from wxgtd.model import enums
 from wxgtd.logic import task as task_logic
 
-from .dlg_task import DlgTask
+from .frame_task import FrameTask
 from .dlg_checklistitem import DlgChecklistitem
 from .dlg_datetime import DlgDateTime
 from .dlg_remind_settings import DlgRemindSettings
@@ -58,7 +58,7 @@ class TaskController:
 			self._dialog = DlgChecklistitem(self._parent_wnd, self._task,
 					self._session, self)
 		else:
-			self._dialog = DlgTask(self._parent_wnd, self._task, self._session,
+			self._dialog = FrameTask(self._parent_wnd, self._task, self._session,
 					self)
 		self._dialog.run()
 

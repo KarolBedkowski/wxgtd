@@ -32,7 +32,7 @@ _ = gettext.gettext
 _LOG = logging.getLogger(__name__)
 
 
-class DlgTask(BaseTaskDialog):
+class FrameTask(BaseTaskDialog):
 	""" Edit task dialog.
 
 	WARRNING: non-modal dialog
@@ -60,7 +60,7 @@ class DlgTask(BaseTaskDialog):
 		self['sl_priority'].Bind(wx.EVT_SCROLL, self._on_sl_priority)
 
 	def _setup(self, task):
-		_LOG.debug("DlgTask(%r)", task.uuid)
+		_LOG.debug("FrameTask(%r)", task.uuid)
 		BaseTaskDialog._setup(self, task)
 		self[wx.ID_DELETE].Enable(bool(task.uuid))
 		self._data['duration_d'] = self._data['duration_h'] = \
