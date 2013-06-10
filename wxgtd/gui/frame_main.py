@@ -658,7 +658,7 @@ class FrameMain(BaseFrame):
 		panel_parent_icons.Update()
 		self['panel_parent'].GetSizer().Layout()
 
-	def _get_params_for_list(self, group=None):
+	def _get_params_for_list(self, group=None, skip_search=False):
 		""" Build params for database query """
 		group_id = (self['rb_show_selection'].GetSelection() if group is None
 				else group)
@@ -673,7 +673,7 @@ class FrameMain(BaseFrame):
 		if self._btn_hide_until.GetValue():
 			options |= queries.OPT_HIDE_UNTIL
 		params = queries.build_query_params(group_id, options, parent,
-				self._searchbox.GetValue())
+				"" if skip_search else self._searchbox.GetValue())
 		queries.query_params_append_contexts(params,
 				tmodel.checked_items_by_parent("CONTEXTS"))
 		queries.query_params_append_folders(params,
@@ -707,8 +707,8 @@ class FrameMain(BaseFrame):
 		for group, label in enumerate((_("All (%d)"), _("Hotlist (%d)"),
 				_("Stared (%d)"), _("Basket (%d)"), _("Finished (%d)"),
 				_("Projects (%d)"), _("Active Alarms (%d)"))):
-			cnt = OBJ.Task.select_by_filters(self._get_params_for_list(group),
-					session=self._session).count()
+			cnt = OBJ.Task.select_by_filters(self._get_params_for_list(group,
+					True), session=self._session).count()
 			rb_show_selection.SetItemLabel(group, label % cnt)
 
 
