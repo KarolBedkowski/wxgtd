@@ -21,7 +21,7 @@ _ = gettext.gettext
 _LOG = logging.getLogger(__name__)
 
 
-class DlgChecklistitem(BaseTaskDialog):
+class FrameChecklistitem(BaseTaskDialog):
 	""" Edit checklist item dialog class.
 
 	WARRNING: non-modal window.

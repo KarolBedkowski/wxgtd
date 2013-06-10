@@ -23,7 +23,7 @@ from wxgtd.model import enums
 from wxgtd.logic import task as task_logic
 
 from .frame_task import FrameTask
-from .dlg_checklistitem import DlgChecklistitem
+from .frame_checklistitem import FrameChecklistitem
 from .dlg_datetime import DlgDateTime
 from .dlg_remind_settings import DlgRemindSettings
 from .dlg_show_settings import DlgShowSettings
@@ -55,7 +55,7 @@ class TaskController:
 			self._dialog.run()
 			return
 		if self._task.type == enums.TYPE_CHECKLIST_ITEM:
-			self._dialog = DlgChecklistitem(self._parent_wnd, self._task,
+			self._dialog = FrameChecklistitem(self._parent_wnd, self._task,
 					self._session, self)
 		else:
 			self._dialog = FrameTask(self._parent_wnd, self._task, self._session,
