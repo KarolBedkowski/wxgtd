@@ -33,7 +33,7 @@ _ = gettext.gettext
 _LOG = logging.getLogger(__name__)
 
 
-class BaseTaskDialog(BaseFrame):
+class BaseTaskFrame(BaseFrame):
 	""" Base class for all task dialogs.
 
 	Args:
@@ -76,7 +76,7 @@ class BaseTaskDialog(BaseFrame):
 				self._on_btn_change_project)
 
 	def _setup(self, task):
-		_LOG.debug("BaseTaskDialog.setup(%r)", task.uuid)
+		_LOG.debug("BaseTaskFrame.setup(%r)", task.uuid)
 		self._original_task = task.clone(cleanup=False)
 		self._data = {'prev_completed': task.completed}
 		self['tc_title'].SetValidator(Validator(task, 'title',

@@ -25,14 +25,14 @@ from wxgtd.model import enums
 from wxgtd.logic import dicts as logic_dicts
 from wxgtd.wxtools.validators import Validator, ValidatorDv
 
-from ._base_task_dialog import BaseTaskDialog
+from ._base_task_frame import BaseTaskFrame
 from . import _fmt as fmt
 
 _ = gettext.gettext
 _LOG = logging.getLogger(__name__)
 
 
-class FrameTask(BaseTaskDialog):
+class FrameTask(BaseTaskFrame):
 	""" Edit task dialog.
 
 	WARRNING: non-modal dialog
@@ -46,10 +46,10 @@ class FrameTask(BaseTaskDialog):
 	_window_name = "frame_task"
 
 	def __init__(self, parent, task, session, controller):
-		BaseTaskDialog.__init__(self, parent, task, session, controller)
+		BaseTaskFrame.__init__(self, parent, task, session, controller)
 
 	def _create_bindings(self, wnd):
-		BaseTaskDialog._create_bindings(self, wnd)
+		BaseTaskFrame._create_bindings(self, wnd)
 		self['btn_due_date_set'].Bind(wx.EVT_BUTTON, self._on_btn_due_date_set)
 		self['btn_start_date_set'].Bind(wx.EVT_BUTTON, self._on_btn_start_date_set)
 		self['btn_remind_set'].Bind(wx.EVT_BUTTON, self._on_btn_remiand_set)
@@ -61,7 +61,7 @@ class FrameTask(BaseTaskDialog):
 
 	def _setup(self, task):
 		_LOG.debug("FrameTask(%r)", task.uuid)
-		BaseTaskDialog._setup(self, task)
+		BaseTaskFrame._setup(self, task)
 		self[wx.ID_DELETE].Enable(bool(task.uuid))
 		self._data['duration_d'] = self._data['duration_h'] = \
 				self._data['duration_m'] = 0
@@ -82,7 +82,7 @@ class FrameTask(BaseTaskDialog):
 		#self.wnd.TransferDataToWindow()
 
 	def _setup_comboboxes(self):
-		BaseTaskDialog._setup_comboboxes(self)
+		BaseTaskFrame._setup_comboboxes(self)
 		cb_status = self['cb_status']
 		cb_status.Clear()
 		for key, status in sorted(enums.STATUSES.iteritems()):
@@ -106,7 +106,7 @@ class FrameTask(BaseTaskDialog):
 	def _transfer_data_from_window(self):
 		self._task.duration = self._data['duration_d'] * 1440 + \
 				self._data['duration_h'] * 60 + self._data['duration_m']
-		res = BaseTaskDialog._transfer_data_from_window(self)
+		res = BaseTaskFrame._transfer_data_from_window(self)
 		# check and optionally create folder, goals if entered
 		self._check_goal_selection()
 		self._check_folder_selection()
@@ -147,7 +147,7 @@ class FrameTask(BaseTaskDialog):
 
 	def _refresh_static_texts(self):
 		""" Odświeżenie pól dat na dlg """
-		BaseTaskDialog._refresh_static_texts(self)
+		BaseTaskFrame._refresh_static_texts(self)
 		task = self._task
 		due_date = (task.due_date_project if task.type == enums.TYPE_PROJECT
 				else task.due_date)
