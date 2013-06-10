@@ -33,6 +33,7 @@ class DlgChecklistitem(BaseTaskDialog):
 		controller: TaskController associated to task.
 	"""
 
+	_window_name = "dlg_checklistitem"
+
 	def __init__(self, parent, task, session, controller):
-		BaseTaskDialog.__init__(self, parent, 'dlg_checklistitem', task,
-				session, controller)
+		BaseTaskDialog.__init__(self, parent, task, session, controller)

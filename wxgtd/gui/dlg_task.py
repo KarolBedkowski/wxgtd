@@ -43,10 +43,10 @@ class DlgTask(BaseTaskDialog):
 		session: SqlAlchemy session.
 		controller: TaskController associated to task.
 	"""
+	_window_name = "dlg_task"
 
 	def __init__(self, parent, task, session, controller):
-		BaseTaskDialog.__init__(self, parent, 'dlg_task', task, session,
-				controller)
+		BaseTaskDialog.__init__(self, parent, task, session, controller)
 
 	def _create_bindings(self, wnd):
 		BaseTaskDialog._create_bindings(self, wnd)
@@ -79,6 +79,7 @@ class DlgTask(BaseTaskDialog):
 		self['sc_duration_d'].SetValidator(Validator(self._data, 'duration_d'))
 		self['sc_duration_h'].SetValidator(Validator(self._data, 'duration_h'))
 		self['sc_duration_m'].SetValidator(Validator(self._data, 'duration_m'))
+		#self.wnd.TransferDataToWindow()
 
 	def _setup_comboboxes(self):
 		BaseTaskDialog._setup_comboboxes(self)
