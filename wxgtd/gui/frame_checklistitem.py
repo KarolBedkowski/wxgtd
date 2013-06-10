@@ -15,13 +15,13 @@ __version__ = "2013-04-28"
 import logging
 import gettext
 
-from ._base_task_dialog import BaseTaskDialog
+from ._base_task_frame import BaseTaskFrame
 
 _ = gettext.gettext
 _LOG = logging.getLogger(__name__)
 
 
-class DlgChecklistitem(BaseTaskDialog):
+class FrameChecklistitem(BaseTaskFrame):
 	""" Edit checklist item dialog class.
 
 	WARRNING: non-modal window.
@@ -33,6 +33,7 @@ class DlgChecklistitem(BaseTaskDialog):
 		controller: TaskController associated to task.
 	"""
 
+	_window_name = "frame_checklistitem"
+
 	def __init__(self, parent, task, session, controller):
-		BaseTaskDialog.__init__(self, parent, 'dlg_checklistitem', task,
-				session, controller)
+		BaseTaskFrame.__init__(self, parent, task, session, controller)
