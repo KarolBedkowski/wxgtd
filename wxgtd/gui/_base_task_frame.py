@@ -232,3 +232,4 @@ class BaseTaskFrame(BaseFrame):
 	@wxutils.call_after
 	def _post_create(self):
 		self.wnd.TransferDataToWindow()
+		self['tc_title'].SetFocus()
