@@ -43,7 +43,7 @@ class DlgTask(BaseTaskDialog):
 		session: SqlAlchemy session.
 		controller: TaskController associated to task.
 	"""
-	_window_name = "dlg_task"
+	_window_name = "frame_task"
 
 	def __init__(self, parent, task, session, controller):
 		BaseTaskDialog.__init__(self, parent, task, session, controller)
