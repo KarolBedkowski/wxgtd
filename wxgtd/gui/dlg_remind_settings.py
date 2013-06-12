@@ -30,11 +30,12 @@ class DlgRemindSettings(BaseDialog):
 		parent: parent window
 		alarm: current alarm (date, time)
 		alarm_pattern: alarm pattern used to set alarm dynamically.
+		no_date: don't allow set exact date
 	"""
 
-	def __init__(self, parent, alarm, alarm_pattern):
+	def __init__(self, parent, alarm, alarm_pattern, no_date=False):
 		BaseDialog.__init__(self, parent, 'dlg_remind_settings', save_pos=False)
-		self._setup(alarm, alarm_pattern)
+		self._setup(alarm, alarm_pattern, no_date)
 
 	@property
 	def alarm(self):
@@ -50,7 +51,7 @@ class DlgRemindSettings(BaseDialog):
 		self['tc_time'].Bind(wx.lib.masked.EVT_TIMEUPDATE, self._on_time_ctrl)
 		self['c_before'].Bind(wx.EVT_CHOICE, self._on_choice_before)
 
-	def _setup(self, alarm, alarm_pattern):
+	def _setup(self, alarm, alarm_pattern, no_date):
 		_LOG.debug("DlgRemindSettings(%r)", (alarm, alarm_pattern))
 		self._data = {'date': None, 'time': None, 'pattern': alarm_pattern,
 				'alarm': alarm}
@@ -66,7 +67,13 @@ class DlgRemindSettings(BaseDialog):
 		self['tc_time'].SetValidator(ValidatorTime(self._data, 'time'))
 		self['rb_never'].SetValue(True)
 
-		if alarm:
+		if no_date:
+			self['rb_datetime'].Enable(False)
+			self['tc_time'].Enable(False)
+			self['dp_date'].Enable(False)
+			self['sb_time'].Enable(False)
+
+		if alarm and not no_date:
 			self._data['date'] = self._data['time'] = alarm
 			if not alarm_pattern or alarm_pattern == 'due':
 				self['rb_datetime'].SetValue(True)
