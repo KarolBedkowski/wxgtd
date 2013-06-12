@@ -97,11 +97,17 @@ class TaskController:
 		parent = None
 		if task_parent is not None:
 			parent = OBJ.Task.get(session, uuid=task_parent)
-		task = OBJ.Task(type=task_type, priority=0, parent=parent)
+		task = OBJ.Task(type=task_type, parent=parent)
+		appconfig = AppConfig()
 		if task_type == enums.TYPE_CHECKLIST_ITEM:
 			task.priority = -1
+		else:
+			task.priority = appconfig.get('task', 'default_priority', 0)
+		task.status = appconfig.get('task', 'default_status', None)
+		task.alarm_pattern = appconfig.get('task', 'default_remind', None)
+		task.hide_pattern = appconfig.get('task', 'default_hide', None)
 		task_logic.update_task_from_parent(task, task_parent, session,
-					AppConfig())
+					appconfig)
 		contr = TaskController(parent_wnd, session, task)
 		contr.open_dialog()
 
