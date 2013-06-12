@@ -160,14 +160,15 @@ class DlgPreferences(BaseDialog):
 
 	def _on_btn_task_def_remind_set(self, _evt):
 		dlg = DlgRemindSettings(self._wnd, None,
-				self._appconfig.get('task', 'default_remind', ''))
+				self._appconfig.get('task', 'default_remind', ''),
+				no_date=True)
 		if dlg.run(True):
 			self._appconfig.set('task', 'default_remind', dlg.alarm_pattern)
 			self._refresh_labels()
 
 	def _on_btn_task_def_hide_set(self, _evt):
 		dlg = DlgShowSettings(self._wnd, None, self._appconfig.get('task',
-			'default_hide', ''))
+			'default_hide', ''), no_date=True)
 		if dlg.run(True):
 			self._appconfig.set('task', 'default_hide', dlg.pattern)
 			self._refresh_labels()
