@@ -246,11 +246,11 @@ class FrameMain(BaseFrame):
 
 		# search box
 		self._searchbox = wx.SearchCtrl(toolbar, -1,  # pylint: disable=W0201
-				size=(150, -1))
+				size=(150, -1), style=wx.TE_PROCESS_ENTER)
 		self._searchbox.SetDescriptiveText(_('Search'))
 		self._searchbox.ShowCancelButton(True)
 		toolbar.AddControl(self._searchbox)
-		self.wnd.Bind(wx.EVT_TEXT, self._on_search, self._searchbox)
+		#self.wnd.Bind(wx.EVT_TEXT, self._on_search, self._searchbox)
 		self.wnd.Bind(wx.EVT_SEARCHCTRL_SEARCH_BTN, self._on_search,
 				self._searchbox)
 		self.wnd.Bind(wx.EVT_SEARCHCTRL_CANCEL_BTN, self._on_search_cancel,
