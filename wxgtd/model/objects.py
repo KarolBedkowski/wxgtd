@@ -292,6 +292,20 @@ class Task(BaseModelMixin, Base):
 		return query
 
 	@classmethod
+	def search(cls, text, active_only, session=None):
+		""" Search for task with title/note matching text. """
+		_LOG.debug('Task.search(%r, %r)', text, active_only)
+		session = session or Session()
+		query = session.query(cls)
+		search_str = '%%' + text + "%%"
+		query = query.filter(or_(Task.title.like(search_str),
+				Task.note.like(search_str)))
+		if active_only:
+			query = query.filter(Task.completed.is_(None))
+		query = query.order_by(Task.title)
+		return query
+
+	@classmethod
 	def all_projects(cls):
 		""" Get all projects from database. """
 		# pylint: disable=E1101
