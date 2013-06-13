@@ -437,8 +437,8 @@ class FrameMain(BaseFrame):
 	def _on_menu_task_complete(self, _evt):
 		self._toggle_task_complete()
 
-	def _on_menu_task_search(self, evt):
-		FrameSeach().run()
+	def _on_menu_search_task(self, evt):
+		FrameSeach.run(self.wnd)
 
 	def _on_menu_notebook_open(self, _evt):  # pylint: disable=R0201
 		FrameNotebook.run()

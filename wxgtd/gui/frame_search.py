@@ -34,16 +34,16 @@ class FrameSeach(BaseFrame):
 	_window_icon = 'wxgtd'
 	_instance = None
 
-	def __init__(self):
-		BaseFrame.__init__(self)
+	def __init__(self, parent):
+		BaseFrame.__init__(self, parent)
 		self._setup()
 
 	@classmethod
-	def run(cls):
+	def run(cls, parent):
 		if cls._instance is not None:
 			cls._instance.wnd.Raise()
 		else:
-			cls._instance = cls()
+			cls._instance = cls(parent)
 			cls._instance.wnd.Show()
 
 	def _setup(self):
