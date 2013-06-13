@@ -126,6 +126,7 @@ class FrameMain(BaseFrame):
 		self._create_menu_bind('menu_task_clone', self._on_menu_task_clone)
 		self._create_menu_bind('menu_notebook_open', self._on_menu_notebook_open)
 		self._create_menu_bind('menu_task_complete', self._on_menu_task_complete)
+		self._create_menu_bind('menu_search_task', self._on_menu_search_task)
 		self._create_menu_bind('menu_sett_tags', self._on_menu_sett_tags)
 		self._create_menu_bind('menu_sett_goals', self._on_menu_sett_goals)
 		self._create_menu_bind('menu_sett_folders', self._on_menu_sett_folders)
@@ -268,7 +269,7 @@ class FrameMain(BaseFrame):
 
 		tbi = toolbar.AddLabelTool(-1, _('Search'),
 				iconprovider.get_image(wx.ART_FIND))
-		self.wnd.Bind(wx.EVT_TOOL, self._on_menu_task_search, id=tbi.GetId())
+		self.wnd.Bind(wx.EVT_TOOL, self._on_menu_search_task, id=tbi.GetId())
 
 		toolbar.Realize()
 
