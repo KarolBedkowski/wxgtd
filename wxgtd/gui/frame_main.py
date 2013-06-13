@@ -51,6 +51,7 @@ from wxgtd.gui.dlg_contexts import DlgContexts
 from wxgtd.gui.dlg_reminders import DlgReminders
 from wxgtd.gui.frame_notebooks import FrameNotebook
 from wxgtd.gui.task_controller import TaskController
+from wxgtd.gui.frame_search import FrameSeach
 
 _ = gettext.gettext
 ngettext = gettext.ngettext  # pylint: disable=C0103
@@ -125,6 +126,7 @@ class FrameMain(BaseFrame):
 		self._create_menu_bind('menu_task_clone', self._on_menu_task_clone)
 		self._create_menu_bind('menu_notebook_open', self._on_menu_notebook_open)
 		self._create_menu_bind('menu_task_complete', self._on_menu_task_complete)
+		self._create_menu_bind('menu_search_task', self._on_menu_search_task)
 		self._create_menu_bind('menu_sett_tags', self._on_menu_sett_tags)
 		self._create_menu_bind('menu_sett_goals', self._on_menu_sett_goals)
 		self._create_menu_bind('menu_sett_folders', self._on_menu_sett_folders)
@@ -264,6 +266,10 @@ class FrameMain(BaseFrame):
 		tbi = toolbar.AddLabelTool(-1, _('Notebook'),
 				iconprovider.get_image('notebook'))
 		self.wnd.Bind(wx.EVT_TOOL, self._on_menu_notebook_open, id=tbi.GetId())
+
+		tbi = toolbar.AddLabelTool(-1, _('Search'),
+				iconprovider.get_image(wx.ART_FIND))
+		self.wnd.Bind(wx.EVT_TOOL, self._on_menu_search_task, id=tbi.GetId())
 
 		toolbar.Realize()
 
@@ -431,6 +437,9 @@ class FrameMain(BaseFrame):
 
 	def _on_menu_task_complete(self, _evt):
 		self._toggle_task_complete()
+
+	def _on_menu_search_task(self, evt):
+		FrameSeach.run(self.wnd)
 
 	def _on_menu_notebook_open(self, _evt):  # pylint: disable=R0201
 		FrameNotebook.run()
