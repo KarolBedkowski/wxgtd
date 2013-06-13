@@ -269,9 +269,9 @@ class Task(BaseModelMixin, Base):
 		query = _append_filter_list(query, Task.type, params.get('types'))
 		search_str = params.get('search_str', '').strip()
 		if search_str:
-			search_str = '%%' + search_str + "%%"
-			query = query.filter(or_(Task.title.like(search_str),
-					Task.note.like(search_str)))
+			search_str = '%%' + search_str.lower() + "%%"
+			query = query.filter(or_(func.lower(Task.title).like(search_str),
+					func.lower(Task.note).like(search_str)))
 		now = datetime.datetime.utcnow()
 		query = _query_add_filter_by_tags(query, params)
 		if params.get('hide_until'):
@@ -297,9 +297,9 @@ class Task(BaseModelMixin, Base):
 		_LOG.debug('Task.search(%r, %r)', text, active_only)
 		session = session or Session()
 		query = session.query(cls)
-		search_str = '%%' + text + "%%"
-		query = query.filter(or_(Task.title.like(search_str),
-				Task.note.like(search_str)))
+		search_str = '%%' + text.lower() + "%%"
+		query = query.filter(or_(func.lower(Task.title).like(search_str),
+				func.lower(Task.note).like(search_str)))
 		if active_only:
 			query = query.filter(Task.completed.is_(None))
 		query = query.order_by(Task.title)
