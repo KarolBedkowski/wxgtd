@@ -516,6 +516,10 @@ def save_modified_task(task, session=None):
 	session = session or OBJ.Session()
 	update_project_due_date(task)
 	adjust_task_type(task, session)
+	if task.type == enums.TYPE_CHECKLIST_ITEM:
+		if not task.importance:
+			task.importance = OBJ.Task.find_max_importance(task.parent_uuid,
+					session) + 1
 	task.update_modify_time()
 	session.add(task)
 	session.commit()  # pylint: disable=E1101
