@@ -15,6 +15,7 @@ import re
 import locale
 import gettext
 
+import wx
 from wx import xrc
 from wx.lib import masked
 from wx.lib import colourselect as csel
@@ -101,6 +102,33 @@ class ColourSelectHandler(xrc.XmlResourceHandler):
 		return ctrl
 
 
+class SearchCtrlXmlHandler(xrc.XmlResourceHandler):
+	""" Custom control: "SearchCtrl". """
+
+	def __init__(self):
+		xrc.XmlResourceHandler.__init__(self)
+		self.AddWindowStyles()
+
+	def CanHandle(self, node):
+		return self.IsOfClass(node, "SearchCtrl")
+
+	def DoCreateResource(self):
+		value = (self.GetParamValue("value")
+				if self.HasParam("value") else "")
+		ctrl = wx.SearchCtrl(
+				self.GetParentAsWindow(),
+				self.GetID(),
+				value=value,
+				style=wx.TE_PROCESS_ENTER)
+		if self.HasParam("description"):
+			ctrl.SetDescriptiveText(self.GetParamValue("description"))
+		if self.HasParam("show_cancel_button"):
+			ctrl.ShowCancelButton(bool(self.GetParamValue("show_cancel_button")))
+		self.SetupWindow(ctrl)
+		self.CreateChildren(ctrl)
+		return ctrl
+
+
 _XRC_CACHE = {}
 
 
@@ -134,6 +162,7 @@ def load_xrc_resource(filename):
 		res.InsertHandler(NumCtrlXmlHandler())
 		res.InsertHandler(TimeCtrlXmlHandler())
 		res.InsertHandler(ColourSelectHandler())
+		res.InsertHandler(SearchCtrlXmlHandler())
 		res.LoadFromString(data)
 		_XRC_CACHE[xrcfile_path] = res
 	return res
