@@ -68,7 +68,7 @@ class _IconProviderCache(Singleton):
 		"""
 		# load from wxArtProvider
 		bitmap = wx.ArtProvider_GetBitmap(name)
-		if not bitmap and not bitmap.IsNull():
+		if bitmap and not bitmap.IsNull():
 			return bitmap
 		bitmap = None
 		# load from directory
