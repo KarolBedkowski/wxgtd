@@ -365,6 +365,40 @@ class TaskController:
 			return task_logic.save_modified_tasks(tasks_to_save, self._session)
 		return False
 
+	def tasks_change_folder(self, tasks_uuid):
+		""" Change folder in given tasks; display window with defined folders
+		to select.
+
+		Args:
+			tasks_uuid: list of tasks uuid to change
+		Returns:
+			True when success.
+		"""
+		values, choices = [], []
+		for folder in OBJ.Folder.all():
+			values.append(folder.uuid)
+			choices.append(folder.title)
+		dlg = wx.SingleChoiceDialog(self.wnd, _("Change tasks folder to:"),
+				_("Tasks"), choices, wx.CHOICEDLG_STYLE)
+		folder = None
+		if dlg.ShowModal() == wx.ID_OK:
+			folder = values[dlg.GetSelection()]
+		dlg.Destroy()
+		if folder is None:
+			return False
+		tasks_to_save = []
+		for task_uuid in tasks_uuid:
+			task = OBJ.Task.get(self._session, uuid=task_uuid)
+			if not task:
+				_LOG.warn("tasks_change_status: task %r not found", task_uuid)
+				continue
+			if task.folder_uuid != folder:
+				task.folder_uuid = folder
+				tasks_to_save.append(task)
+		if tasks_to_save:
+			return task_logic.save_modified_tasks(tasks_to_save, self._session)
+		return False
+
 	def _confirm_change_task_parent(self, parent):
 		curr_type = self._task.type
 		if parent:  # nowy parent
