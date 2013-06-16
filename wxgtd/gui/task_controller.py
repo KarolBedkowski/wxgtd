@@ -492,6 +492,34 @@ class TaskController:
 			tasks_to_save.append(task)
 		return task_logic.save_modified_tasks(tasks_to_save, self._session)
 
+	def tasks_change_hide_until(self, tasks_uuid):
+		""" Show dialog and change given tasks show settings.
+
+		Args:
+			tasks_uuid: task to change
+		Returns:
+			True if date was changed.
+		"""
+		task = OBJ.Task.get(self._session, uuid=tasks_uuid[0])
+		date_time = None
+		if task.hide_until:
+			date_time = DTU.datetime2timestamp(task.hide_until)
+		dlg = DlgShowSettings(self._parent_wnd, date_time, task.hide_pattern)
+		if not dlg.run(True):
+			return
+		hide_until = None
+		hide_pattern = dlg.pattern
+		if dlg.datetime:
+			hide_until = DTU.timestamp2datetime(dlg.datetime)
+		tasks_to_save = []
+		for task_uuid in tasks_uuid:
+			task = OBJ.Task.get(self._session, uuid=task_uuid)
+			task.hide_until = hide_until
+			task.hide_pattern = hide_pattern
+			task_logic.update_task_hide(task)
+			tasks_to_save.append(task)
+		return task_logic.save_modified_tasks(tasks_to_save, self._session)
+
 	def _confirm_change_task_parent(self, parent):
 		curr_type = self._task.type
 		if parent:  # nowy parent
