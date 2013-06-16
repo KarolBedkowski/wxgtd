@@ -165,6 +165,12 @@ class FrameMain(BaseFrame):
 				id=self._tasks_popup_menu.task_set_complete_id)
 		wnd.Bind(wx.EVT_MENU, self._on_menu_task_set_not_completed,
 				id=self._tasks_popup_menu.task_set_not_complete_id)
+		wnd.Bind(wx.EVT_MENU, self._on_menu_task_toggle_starred,
+				id=self._tasks_popup_menu.toggle_task_stared_id)
+		wnd.Bind(wx.EVT_MENU, self._on_menu_task_set_starred,
+				id=self._tasks_popup_menu.task_set_starred_id)
+		wnd.Bind(wx.EVT_MENU, self._on_menu_task_set_not_starred,
+				id=self._tasks_popup_menu.task_set_not_starred_id)
 		wnd.Bind(wx.EVT_MENU, self._on_menu_task_clone,
 				id=self._tasks_popup_menu.task_clone_id)
 		wnd.Bind(wx.EVT_MENU, self._on_menu_task_change_due,
@@ -434,6 +440,19 @@ class FrameMain(BaseFrame):
 		if tasks_uuid:
 			TaskController(self.wnd, self._session,
 					None).tasks_set_completed_status(tasks_uuid, False)
+
+	def _on_menu_task_toggle_starred(self, _evt):
+		self._toggle_task_starred()
+
+	def _on_menu_task_set_starred(self, _evt):
+		tasks_uuid = list(self._items_list_ctrl.get_selected_items_uuid())
+		TaskController(self.wnd, self._session,
+				None).tasks_set_starred_flag(tasks_uuid, True)
+
+	def _on_menu_task_set_not_starred(self, _evt):
+		tasks_uuid = list(self._items_list_ctrl.get_selected_items_uuid())
+		TaskController(self.wnd, self._session,
+				None).tasks_set_starred_flag(tasks_uuid, False)
 
 	def _on_menu_task_change_due(self, _evt):
 		if self._items_list_ctrl.selected_count == 1:
@@ -780,6 +799,10 @@ class FrameMain(BaseFrame):
 			return
 		task_logic.toggle_task_complete(task.uuid, self._session)
 
+	def _toggle_task_starred(self):
+		task_uuid = self._items_list_ctrl.get_item_uuid(None)
+		task_logic.toggle_task_starred(task_uuid, self._session)
+
 	def _get_selected_task(self):
 		""" Return Task object for selected item. """
 		task_uuid = self._items_list_ctrl.get_item_uuid(None)
@@ -816,10 +839,14 @@ class _TasksPopupMenu:
 		self.task_change_project_id = wx.NewId()
 		self.task_change_folder_id = wx.NewId()
 		self.task_change_status_id = wx.NewId()
+		self.toggle_task_stared_id = wx.NewId()
+		self.task_set_starred_id = wx.NewId()
+		self.task_set_not_starred_id = wx.NewId()
 
 	def build(self, task_type):
 		menu = wx.Menu()
 		menu.Append(self.toggle_task_complete_id, _('Toggle Task Completed'))
+		menu.Append(self.toggle_task_stared_id, _('Toggle Task Starred'))
 		menu.AppendSeparator()
 		menu.Append(self.task_edit_id, _('Edit Task'))
 		menu.Append(self.task_clone_id, _('Clone Task'))
@@ -842,6 +869,8 @@ class _TasksPopupMenu:
 		menu = wx.Menu()
 		menu.Append(self.task_set_complete_id, _('Set Task Completed'))
 		menu.Append(self.task_set_not_complete_id, _('Set Task Not Completed'))
+		menu.Append(self.task_set_starred_id, _('Set Task Starred'))
+		menu.Append(self.task_set_not_starred_id, _('Set Task Not Starred'))
 		menu.AppendSeparator()
 		menu.Append(self.task_delete_id, _('Delete Task'))
 		menu.AppendSeparator()

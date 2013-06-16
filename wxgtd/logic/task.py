@@ -423,6 +423,21 @@ def toggle_task_complete(task_uuid, session=None):
 	return save_modified_task(task, session)
 
 
+def toggle_task_starred(task_uuid, session=None):
+	""" Toggle task starred flag.
+
+	Args:
+		task_uuid: UUID of task to change
+		session: optional SqlAlchemy session
+	Returns:
+		True if ok
+	"""
+	session = session or OBJ.Session()
+	task = OBJ.Task.get(session, uuid=task_uuid)
+	task.starred = not task.starred
+	return save_modified_task(task, session)
+
+
 _PERIOD_PL = {'Week': "Weeks", "Day": "Days", "Month": "Months",
 		"Year": "Years"}
 

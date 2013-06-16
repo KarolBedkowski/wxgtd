@@ -570,6 +570,20 @@ class TaskController:
 			return task_logic.save_modified_tasks(tasks_to_save, self._session)
 		return False
 
+	def tasks_set_starred_flag(self, tasks_uuid, starred):
+		""" Set starred flag for given tasks. """
+		tasks_to_save = []
+		for task_uuid in tasks_uuid:
+			task = OBJ.Task.get(self._session, uuid=task_uuid)
+			if not task:
+				_LOG.warn("tasks_set_completed_status: task %r not found", task_uuid)
+				continue
+			task.starred = bool(starred)
+			tasks_to_save.append(task)
+		if tasks_to_save:
+			return task_logic.save_modified_tasks(tasks_to_save, self._session)
+		return False
+
 	def _confirm_change_task_type(self):
 		return mbox.message_box_warning_yesno(self.wnd,
 			_("This operation change task and subtasks type.\n"
