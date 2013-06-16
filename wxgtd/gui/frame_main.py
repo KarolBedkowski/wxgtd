@@ -171,6 +171,14 @@ class FrameMain(BaseFrame):
 				id=self._tasks_popup_menu.task_change_remind_id)
 		wnd.Bind(wx.EVT_MENU, self._on_menu_task_change_hide_until,
 				id=self._tasks_popup_menu.task_change_hide_until_id)
+		wnd.Bind(wx.EVT_MENU, self._on_menu_task_change_context,
+				id=self._tasks_popup_menu.task_change_context_id)
+		wnd.Bind(wx.EVT_MENU, self._on_menu_task_change_folder,
+				id=self._tasks_popup_menu.task_change_folder_id)
+		wnd.Bind(wx.EVT_MENU, self._on_menu_task_change_project,
+				id=self._tasks_popup_menu.task_change_project_id)
+		wnd.Bind(wx.EVT_MENU, self._on_menu_task_change_status,
+				id=self._tasks_popup_menu.task_change_status_id)
 
 	def _create_toolbar(self):
 		toolbar = self.wnd.CreateToolBar()
@@ -435,6 +443,24 @@ class FrameMain(BaseFrame):
 				task_change_hide_until():
 			task_logic.save_modified_task(task, self._session)
 
+	def _on_menu_task_change_context(self, _evt):
+		# TODO
+		pass
+
+	def _on_menu_task_change_folder(self, _evt):
+		pass
+		# TODO
+
+	def _on_menu_task_change_project(self, _evt):
+		pass
+		# TODO
+
+	def _on_menu_task_change_status(self, _evt):
+		tasks_uuid = list(self._items_list_ctrl.get_selected_items_uuid())
+		if tasks_uuid:
+			TaskController(self.wnd, self._session,
+					None).tasks_change_status(tasks_uuid)
+
 	def _on_menu_task_complete(self, _evt):
 		self._toggle_task_complete()
 
@@ -508,11 +534,16 @@ class FrameMain(BaseFrame):
 		self._refresh_list()
 
 	def _on_items_list_right_click(self, _evt):
-		task_type = self._items_list_ctrl.get_item_type(None)
-		if task_type is not None:
+		if self._items_list_ctrl.selected_count == 0:
+			return
+		elif self._items_list_ctrl.selected_count == 1:
+			task_type = self._items_list_ctrl.get_item_type(None)
 			menu = self._tasks_popup_menu.build(task_type)
-			self.wnd.PopupMenu(menu)
-			menu.Destroy()
+		else:
+			menu = self._tasks_popup_menu.build_multi(set(
+				self._items_list_ctrl.get_selected_items_type()))
+		self.wnd.PopupMenu(menu)
+		menu.Destroy()
 
 	def _on_btn_path_back(self, _evt):
 		if self._items_path:
@@ -734,6 +765,10 @@ class _TasksPopupMenu:
 		self.task_change_start_id = wx.NewId()
 		self.task_change_remind_id = wx.NewId()
 		self.task_change_hide_until_id = wx.NewId()
+		self.task_change_context_id = wx.NewId()
+		self.task_change_project_id = wx.NewId()
+		self.task_change_folder_id = wx.NewId()
+		self.task_change_status_id = wx.NewId()
 
 	def build(self, task_type):
 		menu = wx.Menu()
@@ -744,8 +779,26 @@ class _TasksPopupMenu:
 		menu.Append(self.task_delete_id, _('Delete Task'))
 		if task_type not in (enums.TYPE_CHECKLIST, enums.TYPE_CHECKLIST_ITEM):
 			menu.AppendSeparator()
-			menu.Append(self.task_change_due_id, _('Change Due Date'))
-			menu.Append(self.task_change_start_id, _('Change Start Date'))
-			menu.Append(self.task_change_remind_id, _('Change Remind Date'))
-			menu.Append(self.task_change_hide_until_id, _('Change Show Settings'))
+			menu.Append(self.task_change_due_id, _('Change Due Date...'))
+			menu.Append(self.task_change_start_id, _('Change Start Date...'))
+			menu.Append(self.task_change_remind_id, _('Change Remind Date...'))
+			menu.Append(self.task_change_hide_until_id,
+					_('Change Show Settings..'))
+		return menu
+
+	def build_multi(self, _types):
+		menu = wx.Menu()
+		menu.Append(self.toggle_task_complete_id, _('Toggle Task Completed'))
+		menu.AppendSeparator()
+		menu.Append(self.task_delete_id, _('Delete Task'))
+		menu.AppendSeparator()
+		menu.Append(self.task_change_context_id, _('Change Context...'))
+		menu.Append(self.task_change_project_id, _('Change Project/List...'))
+		menu.Append(self.task_change_folder_id, _('Change Folder...'))
+		menu.Append(self.task_change_status_id, _('Change Status...'))
+		menu.AppendSeparator()
+		menu.Append(self.task_change_due_id, _('Change Due Date...'))
+		menu.Append(self.task_change_start_id, _('Change Start Date...'))
+		menu.Append(self.task_change_remind_id, _('Change Remind Date...'))
+		menu.Append(self.task_change_hide_until_id, _('Change Show Settings...'))
 		return menu
