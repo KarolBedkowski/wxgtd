@@ -221,6 +221,11 @@ class FrameMain(BaseFrame):
 				shortHelp=_('Toggle selected task completed'))
 		self.wnd.Bind(wx.EVT_TOOL, self._on_btn_complete_task, id=tbi.GetId())
 
+		tbi = toolbar.AddLabelTool(-1, _('Toggle Task Starred'),
+				iconprovider.get_image('task_starred'),
+				shortHelp=_('Toggle selected task starred'))
+		self.wnd.Bind(wx.EVT_TOOL, self._on_btn_starred_task, id=tbi.GetId())
+
 		toolbar.AddSeparator()
 
 		appconfig = self._appconfig
@@ -631,6 +636,9 @@ class FrameMain(BaseFrame):
 
 	def _on_btn_complete_task(self, _evt):
 		self._toggle_task_complete()
+
+	def _on_btn_starred_task(self, _evt):
+		self._toggle_task_starred()
 
 	def _on_btn_edit_parent(self, _evt):
 		if self._items_path:
