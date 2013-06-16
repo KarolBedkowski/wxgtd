@@ -19,6 +19,7 @@ import wx
 from wxgtd.model import objects as OBJ
 from wxgtd.gui._base_frame import BaseFrame
 from wxgtd.gui import _tasklistctrl as TLC
+from wxgtd.gui.task_controller import TaskController
 
 _ = gettext.gettext
 ngettext = gettext.ngettext  # pylint: disable=C0103
@@ -71,6 +72,8 @@ class FrameSeach(BaseFrame):
 				self._searchbox)
 		self.wnd.Bind(wx.EVT_TEXT_ENTER, self._on_search, self._searchbox)
 		self.wnd.Bind(wx.EVT_BUTTON, self._on_search, id=wx.ID_FIND)
+		wnd.Bind(wx.EVT_LIST_ITEM_ACTIVATED, self._on_items_list_activated,
+				self._items_list_ctrl)
 
 	# events
 
@@ -86,6 +89,11 @@ class FrameSeach(BaseFrame):
 		if self._searchbox.GetValue():
 			self._searchbox.SetValue('')
 		self._refresh_list()
+
+	def _on_items_list_activated(self, evt):
+		task_uuid, _task_type = self._items_list_ctrl.items[evt.GetData()]
+		if task_uuid:
+			TaskController.open_task(self.wnd, task_uuid)
 
 	def _refresh_list(self):
 		wx.SetCursor(wx.HOURGLASS_CURSOR)
