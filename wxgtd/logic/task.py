@@ -527,6 +527,31 @@ def save_modified_task(task, session=None):
 	return True
 
 
+def save_modified_tasks(tasks, session=None):
+	""" Save modified tasks.
+	Update required fields.
+
+	Args:
+		tasks: list of task to save
+		session: optional SqlAlchemy session
+	Returns:
+		True if ok.
+	"""
+	session = session or OBJ.Session()
+	for task in tasks:
+		update_project_due_date(task)
+		adjust_task_type(task, session)
+		if task.type == enums.TYPE_CHECKLIST_ITEM:
+			if not task.importance:
+				task.importance = OBJ.Task.find_max_importance(task.parent_uuid,
+						session) + 1
+		task.update_modify_time()
+		session.add(task)
+	session.commit()  # pylint: disable=E1101
+	Publisher().sendMessage('task.update')
+	return True
+
+
 def adjust_task_type(task, session):
 	""" Update task type when moving task to project/change type.
 	Args:
