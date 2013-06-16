@@ -442,10 +442,15 @@ class FrameMain(BaseFrame):
 			task_logic.save_modified_task(task, self._session)
 
 	def _on_menu_task_change_start(self, _evt):
-		task = self._get_selected_task()
-		if task and TaskController(self.wnd, self._session, task).\
-				task_change_start_date():
-			task_logic.save_modified_task(task, self._session)
+		if self._items_list_ctrl.selected_count == 1:
+			task = self._get_selected_task()
+			if (task and TaskController(self.wnd, self._session, task).
+					task_change_start_date()):
+				task_logic.save_modified_task(task, self._session)
+		elif self._items_list_ctrl.selected_count > 1:
+			tasks_uuid = list(self._items_list_ctrl.get_selected_items_uuid())
+			TaskController(self.wnd, self._session,
+					None).tasks_change_start_date(tasks_uuid)
 
 	def _on_menu_task_change_remind(self, _evt):
 		task = self._get_selected_task()

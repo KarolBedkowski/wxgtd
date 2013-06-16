@@ -147,9 +147,9 @@ class TaskController:
 			True if date was changed.
 		"""
 		if self._task.type == enums.TYPE_PROJECT:
-			return self._set_date('due_date_project', 'due_time_set')
+			return self._set_date(self._task, 'due_date_project', 'due_time_set')
 		else:
-			return self._set_date('due_date', 'due_time_set')
+			return self._set_date(self._task, 'due_date', 'due_time_set')
 
 	def task_change_start_date(self):
 		""" Show dialog and change task start date.
@@ -160,7 +160,7 @@ class TaskController:
 		Returns:
 			True if date was changed.
 		"""
-		return self._set_date('start_date', 'start_time_set')
+		return self._set_date(self._task, 'start_date', 'start_time_set')
 
 	def task_change_remind(self):
 		""" Show dialog and change task start date.
@@ -417,6 +417,21 @@ class TaskController:
 			return task_logic.save_modified_tasks(tasks_to_save, self._session)
 		return False
 
+	def tasks_change_start_date(self, tasks_uuid):
+		""" Change start date for given tasks. """
+		task1 = OBJ.Task.get(self._session, uuid=tasks_uuid[0])
+		if self._set_date(task1, 'start_date', 'start_time_set'):
+			tasks_to_save = [task1]
+			for task_uuid in tasks_uuid[1:]:
+				task = OBJ.Task.get(self._session, uuid=task_uuid)
+				if (task.start_date != task1.start_date or
+						task.start_time_set != task1.start_time_set):
+					task.start_date = task1.start_date
+					task.start_time_set = task1.start_time_set
+					tasks_to_save.append(task)
+			return task_logic.save_modified_tasks(tasks_to_save, self._session)
+		return False
+
 	def _confirm_change_task_parent(self, parent):
 		curr_type = self._task.type
 		if parent:  # nowy parent
@@ -472,9 +487,8 @@ class TaskController:
 			_("This operation change task and subtasks type.\n"
 				"Continue change?"))
 
-	def _set_date(self, attr_date, attr_time_set):
+	def _set_date(self, task, attr_date, attr_time_set):
 		""" Wyśweitlenie dlg wyboru daty dla danego atrybutu """
-		task = self._task
 		value = getattr(task, attr_date)
 		if value:
 			value = DTU.datetime2timestamp(value)
