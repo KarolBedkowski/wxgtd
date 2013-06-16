@@ -432,6 +432,33 @@ class TaskController:
 			return task_logic.save_modified_tasks(tasks_to_save, self._session)
 		return False
 
+	def tasks_change_due_date(self, tasks_uuid):
+		""" Change due date for given tasks. """
+		task1 = OBJ.Task.get(self._session, uuid=tasks_uuid[0])
+		task1_due_attr = 'due_date'
+		if task1.type == enums.TYPE_PROJECT:
+			task1_due_attr = 'due_date_project',
+		if self._set_date(task1, task1_due_attr, 'due_time_set'):
+			tasks_to_save = [task1]
+			due = (task1.due_date_project if task1.type == enums.TYPE_PROJECT
+					else task1.due_date)
+			for task_uuid in tasks_uuid[1:]:
+				task = OBJ.Task.get(self._session, uuid=task_uuid)
+				if task.type == enums.TYPE_PROJECT:
+					if (task.start_time_set != task1.start_time_set or
+							task.due_date_project != due):
+						task.due_date_project = due
+						task.due_time_set = task1.due_time_set
+						tasks_to_save.append(task)
+				else:
+					if (task.start_time_set != task1.start_time_set or
+							task.due_date != due):
+						task.due_date = due
+						task.due_time_set = task1.due_time_set
+						tasks_to_save.append(task)
+			return task_logic.save_modified_tasks(tasks_to_save, self._session)
+		return False
+
 	def _confirm_change_task_parent(self, parent):
 		curr_type = self._task.type
 		if parent:  # nowy parent
