@@ -192,7 +192,7 @@ class FrameNotebook(BaseFrame):
 		self._lb_folders.Append(_("No Folder") + cnt_str, None)
 		for folder in (self._session.query(OBJ.Folder)
 				.filter(OBJ.Folder.deleted.is_(None))
-				.order_by(OBJ.Folder.title).all()):
+				.order_by(OBJ.Folder.title)):
 			title = folder.title
 			cnt = len(folder.notebook_pages)
 			if cnt > 0:

@@ -53,7 +53,7 @@ class DlgNotebookPage(BaseDialog):
 		self._original_page = self._page.clone(cleanup=False)
 		cb_folder = self['c_folder']
 		cb_folder.Append(_("No Folder"), None)
-		for folder in self._session.query(OBJ.Folder).all():
+		for folder in OBJ.Folder.all(session=self._session, order_by='title'):
 			cb_folder.Append(folder.title, folder.uuid)
 		self['tc_title'].SetValidator(Validator(self._page, 'title',
 				validators=LVALID.NotEmptyValidator(), field='title'))

@@ -90,17 +90,17 @@ class FrameTask(BaseTaskFrame):
 		cb_context = self['cb_context']
 		cb_context.Clear()
 		cb_context.Append("", None)
-		for context in OBJ.Context.all():
+		for context in OBJ.Context.all(session=self._session):
 			cb_context.Append(context.title, context.uuid)
 		cb_folder = self['cb_folder']
 		cb_folder.Clear()
 		cb_folder.Append("", None)
-		for folder in OBJ.Folder.all():
+		for folder in OBJ.Folder.all(session=self._session):
 			cb_folder.Append(folder.title, folder.uuid)
 		cb_goal = self['cb_goal']
 		cb_goal.Clear()
 		cb_goal.Append("", None)
-		for goal in OBJ.Goal.all():
+		for goal in OBJ.Goal.all(session=self._session):
 			cb_goal.Append(goal.title, goal.uuid)
 
 	def _transfer_data_from_window(self):

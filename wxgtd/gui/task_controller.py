@@ -332,7 +332,7 @@ class TaskController:
 			True when success.
 		"""
 		values, choices = [None], [_("No Context")]
-		for context in OBJ.Context.all():
+		for context in OBJ.Context.all(session=self._session):
 			values.append(context.uuid)
 			choices.append(context.title)
 		dlg = wx.SingleChoiceDialog(self.wnd, _("Change tasks context to:"),
@@ -393,7 +393,7 @@ class TaskController:
 			True when success.
 		"""
 		values, choices = [None], [_("No Folder")]
-		for folder in OBJ.Folder.all():
+		for folder in OBJ.Folder.all(session=self._session):
 			values.append(folder.uuid)
 			choices.append(folder.title)
 		dlg = wx.SingleChoiceDialog(self.wnd, _("Change tasks folder to:"),

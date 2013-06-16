@@ -135,13 +135,11 @@ class DictBaseDlg(BaseDialog):
 
 	def _get_item(self, uuid):
 		""" Get item from database on the basis of uuid. """
-		return self._session.query(  # pylint: disable=E1101
-				self._item_class).filter_by(uuid=uuid).first()
+		return self._item_class.get(self._session, uuid=uuid)
 
 	def _get_items(self):
 		""" Get all items given class from database. """
-		for obj in self._session.query(  # pylint: disable=E1101
-				self._item_class).order_by('title'):
+		for obj in self._item_class.all(session=self._session, order_by='title'):
 			yield obj.title, obj.uuid
 
 	def _display_item(self, item):
