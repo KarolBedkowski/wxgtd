@@ -280,6 +280,13 @@ class TaskController:
 		return True
 
 	def tasks_change_status(self, tasks_uuid):
+		""" Change status in given tasks; display window with statuses
+
+		Args:
+			tasks_uuid: list of tasks uuid to change
+		Returns:
+			True when success.
+		"""
 		values = sorted(enums.STATUSES.keys())
 		choices = [enums.STATUSES[val] for val in values]
 		dlg = wx.SingleChoiceDialog(self.wnd, _("Change tasks status to:"),
@@ -313,17 +320,17 @@ class TaskController:
 		Returns:
 			True when success.
 		"""
-		values, choices = [], []
+		values, choices = [None], [_("No Context")]
 		for context in OBJ.Context.all():
 			values.append(context.uuid)
 			choices.append(context.title)
 		dlg = wx.SingleChoiceDialog(self.wnd, _("Change tasks context to:"),
 				_("Tasks"), choices, wx.CHOICEDLG_STYLE)
-		context = None
+		context = -1
 		if dlg.ShowModal() == wx.ID_OK:
 			context = values[dlg.GetSelection()]
 		dlg.Destroy()
-		if context is None:
+		if context == -1:
 			return False
 		tasks_to_save = []
 		for task_uuid in tasks_uuid:
@@ -374,17 +381,17 @@ class TaskController:
 		Returns:
 			True when success.
 		"""
-		values, choices = [], []
+		values, choices = [None], [_("No Folder")]
 		for folder in OBJ.Folder.all():
 			values.append(folder.uuid)
 			choices.append(folder.title)
 		dlg = wx.SingleChoiceDialog(self.wnd, _("Change tasks folder to:"),
 				_("Tasks"), choices, wx.CHOICEDLG_STYLE)
-		folder = None
+		folder = -1
 		if dlg.ShowModal() == wx.ID_OK:
 			folder = values[dlg.GetSelection()]
 		dlg.Destroy()
-		if folder is None:
+		if folder == -1:
 			return False
 		tasks_to_save = []
 		for task_uuid in tasks_uuid:
