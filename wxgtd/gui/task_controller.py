@@ -441,6 +441,32 @@ class TaskController:
 					return False
 		return True
 
+	def tasks_set_completed_status(self, tasks_uuid, compl):
+		if compl:
+			if not mbox.message_box_question(self.wnd, _("Set tasks completed?"),
+					None, _("Set complete"), _("Close")):
+				return False
+		else:
+			if not mbox.message_box_question(self.wnd,
+					_("Set tasks not completed?"), None, _("Set complete"),
+					_("Close")):
+				return False
+		tasks_to_save = []
+		for task_uuid in tasks_uuid:
+			task = OBJ.Task.get(self._session, uuid=task_uuid)
+			if not task:
+				_LOG.warn("tasks_set_completed_status: task %r not found", task_uuid)
+				continue
+			if task.task_completed != compl:
+				if compl:
+					task_logic.complete_task(task, self._session)
+				else:
+					task.task_completed = False
+				tasks_to_save.append(task)
+		if tasks_to_save:
+			return task_logic.save_modified_tasks(tasks_to_save, self._session)
+		return False
+
 	def _confirm_change_task_type(self):
 		return mbox.message_box_warning_yesno(self.wnd,
 			_("This operation change task and subtasks type.\n"

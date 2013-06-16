@@ -161,6 +161,10 @@ class FrameMain(BaseFrame):
 				id=self._tasks_popup_menu.task_delete_id)
 		wnd.Bind(wx.EVT_MENU, self._on_menu_task_toggle_completed,
 				id=self._tasks_popup_menu.toggle_task_complete_id)
+		wnd.Bind(wx.EVT_MENU, self._on_menu_task_set_completed,
+				id=self._tasks_popup_menu.task_set_complete_id)
+		wnd.Bind(wx.EVT_MENU, self._on_menu_task_set_not_completed,
+				id=self._tasks_popup_menu.task_set_not_complete_id)
 		wnd.Bind(wx.EVT_MENU, self._on_menu_task_clone,
 				id=self._tasks_popup_menu.task_clone_id)
 		wnd.Bind(wx.EVT_MENU, self._on_menu_task_change_due,
@@ -418,6 +422,18 @@ class FrameMain(BaseFrame):
 
 	def _on_menu_task_toggle_completed(self, _evt):
 		self._toggle_task_complete()
+
+	def _on_menu_task_set_completed(self, _evt):
+		tasks_uuid = list(self._items_list_ctrl.get_selected_items_uuid())
+		if tasks_uuid:
+			TaskController(self.wnd, self._session,
+					None).tasks_set_completed_status(tasks_uuid, True)
+
+	def _on_menu_task_set_not_completed(self, _evt):
+		tasks_uuid = list(self._items_list_ctrl.get_selected_items_uuid())
+		if tasks_uuid:
+			TaskController(self.wnd, self._session,
+					None).tasks_set_completed_status(tasks_uuid, False)
 
 	def _on_menu_task_change_due(self, _evt):
 		task = self._get_selected_task()
@@ -767,6 +783,8 @@ class _TasksPopupMenu:
 
 	def __init__(self):
 		self.toggle_task_complete_id = wx.NewId()
+		self.task_set_complete_id = wx.NewId()
+		self.task_set_not_complete_id = wx.NewId()
 		self.task_edit_id = wx.NewId()
 		self.task_clone_id = wx.NewId()
 		self.task_delete_id = wx.NewId()
@@ -802,7 +820,8 @@ class _TasksPopupMenu:
 
 	def build_multi(self, _types):
 		menu = wx.Menu()
-		menu.Append(self.toggle_task_complete_id, _('Toggle Task Completed'))
+		menu.Append(self.task_set_complete_id, _('Set Task Completed'))
+		menu.Append(self.task_set_not_complete_id, _('Set Task Not Completed'))
 		menu.AppendSeparator()
 		menu.Append(self.task_delete_id, _('Delete Task'))
 		menu.AppendSeparator()
