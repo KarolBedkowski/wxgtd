@@ -92,7 +92,7 @@ class BaseModelMixin(object):
 	def selecy_by_modified_is_less(cls, timestamp, session=None):
 		""" Find object with modified date less than given. """
 		session = session or Session()
-		return session.query(cls).filter(cls.modified < timestamp).all()
+		return session.query(cls).filter(cls.modified < timestamp)
 
 	@classmethod
 	def select_old_usunsed(cls, timestamp, session=None):
@@ -100,7 +100,7 @@ class BaseModelMixin(object):
 		any task. """
 		session = session or Session()
 		return session.query(cls).filter(cls.modified < timestamp).filter(
-				~cls.tasks.any()).all()
+				~cls.tasks.any())
 
 	@classmethod
 	def all(cls, order_by=None, session=None):
@@ -309,13 +309,13 @@ class Task(BaseModelMixin, Base):
 	def all_projects(cls):
 		""" Get all projects from database. """
 		# pylint: disable=E1101
-		return Session().query(cls).filter_by(type=enums.TYPE_PROJECT).all()
+		return Session().query(cls).filter_by(type=enums.TYPE_PROJECT)
 
 	@classmethod
 	def all_checklists(cls):
 		""" Get all checklists from database. """
 		# pylint: disable=E1101
-		return Session().query(cls).filter_by(type=enums.TYPE_CHECKLIST).all()
+		return Session().query(cls).filter_by(type=enums.TYPE_CHECKLIST)
 
 	@classmethod
 	def root_projects_checklists(cls, session=None):
@@ -325,8 +325,7 @@ class Task(BaseModelMixin, Base):
 				.filter(Task.parent_uuid.is_(None),
 						or_(Task.type == enums.TYPE_CHECKLIST,
 						Task.type == enums.TYPE_PROJECT))
-				.order_by(Task.title)
-				.all())
+				.order_by(Task.title))
 
 	@classmethod
 	def select_reminders(cls, since=None, session=None):
@@ -351,7 +350,7 @@ class Task(BaseModelMixin, Base):
 		# not completed
 		query = query.filter(Task.completed.is_(None))
 		query = query.order_by(Task.alarm)
-		return query.all()
+		return query
 
 	@classmethod
 	def find_max_importance(cls, parent_uuid, session=None):
@@ -369,20 +368,19 @@ class Task(BaseModelMixin, Base):
 	@property
 	def sub_projects(self):
 		return Session.object_session(self).query(Task).with_parent(self)\
-				.filter_by(type=enums.TYPE_PROJECT).all()
+				.filter_by(type=enums.TYPE_PROJECT)
 
 	@property
 	def sub_checklists(self):
 		return Session.object_session(self).query(Task).with_parent(self)\
-				.filter_by(type=enums.TYPE_CHECKLIST).all()
+				.filter_by(type=enums.TYPE_CHECKLIST)
 
 	@property
 	def sub_project_or_checklists(self):
 		return (Session.object_session(self).query(Task).with_parent(self)
 				.filter(or_(Task.type == enums.TYPE_CHECKLIST,
 						Task.type == enums.TYPE_PROJECT))
-				.order_by(Task.title)
-				.all())
+				.order_by(Task.title))
 
 	def clone(self, cleanup=True):
 		""" Clone current object. """

@@ -62,7 +62,7 @@ class DlgReminders(BaseDialog):
 				dlg = cls._windows['dlg_reminders'] = DlgReminders(parent_wnd,
 						session)
 			dlg.run()
-			dlg.load_tasks(tasks)
+			dlg.load_tasks(tasks_to_show)
 			wx.CallAfter(dlg.wnd.Raise)
 		return len(tasks_to_show) > 0
 
