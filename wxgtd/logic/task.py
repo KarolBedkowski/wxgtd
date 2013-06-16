@@ -345,23 +345,27 @@ def delete_task(task, session=None):
 	Show confirmation and delete task from database.
 
 	Args:
-		task: task for delete (Task or UUID)
+		task: one or list of task for delete (Task or UUID)
 		session: sqlalchemy session
 
 	Returns:
 		True = task deleted
 	"""
 	session = session or OBJ.Session()
-	if isinstance(task, (str, unicode)):
-		task = session.query(OBJ.Task).filter_by(uuid=task).first()
-		if not task:
-			_LOG.warning("delete_task: missing task %r", task)
-			return False
-
-	session.delete(task)
-	session.commit()
-	Publisher().sendMessage('task.delete', data={'task_uuid': task.uuid})
-	return True
+	tasks = task if isinstance(task, (list, tuple)) else [task]
+	deleted = 0
+	for task in tasks:
+		if isinstance(task, (str, unicode)):
+			task = session.query(OBJ.Task).filter_by(uuid=task).first()
+			if not task:
+				_LOG.warning("delete_task: missing task %r", task)
+				continue
+		session.delete(task)
+		deleted += 1
+	if deleted:
+		session.commit()
+		Publisher().sendMessage('task.delete')
+	return bool(deleted)
 
 
 def complete_task(task, session=None):
