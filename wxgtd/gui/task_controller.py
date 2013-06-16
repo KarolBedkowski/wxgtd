@@ -459,6 +459,39 @@ class TaskController:
 			return task_logic.save_modified_tasks(tasks_to_save, self._session)
 		return False
 
+	def tasks_change_remind(self, tasks_uuid):
+		""" Show dialog and change given tasks start date.
+
+		Args:
+			tasks_uuid: task to change
+		Returns:
+			True if date was changed.
+		"""
+		task = OBJ.Task.get(self._session, uuid=tasks_uuid[0])
+		alarm = None
+		if task.alarm:
+			alarm = DTU.datetime2timestamp(task.alarm)
+		dlg = DlgRemindSettings(self._parent_wnd, alarm, task.alarm_pattern)
+		if not dlg.run(True):
+			return False
+		if dlg.alarm:
+			alarm = DTU.timestamp2datetime(dlg.alarm)
+			alarm_pattern = None
+		else:
+			alarm = None
+			alarm_pattern = dlg.alarm_pattern
+		task.alarm = alarm
+		task.alarm_pattern = alarm_pattern
+		task_logic.update_task_alarm(task)
+		tasks_to_save = [task]
+		for task_uuid in tasks_uuid[1:]:
+			task = OBJ.Task.get(self._session, uuid=task_uuid)
+			task.alarm = alarm
+			task.alarm_pattern = alarm_pattern
+			task_logic.update_task_alarm(task)
+			tasks_to_save.append(task)
+		return task_logic.save_modified_tasks(tasks_to_save, self._session)
+
 	def _confirm_change_task_parent(self, parent):
 		curr_type = self._task.type
 		if parent:  # nowy parent
