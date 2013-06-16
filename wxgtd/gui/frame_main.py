@@ -126,6 +126,7 @@ class FrameMain(BaseFrame):
 		self._create_menu_bind('menu_task_clone', self._on_menu_task_clone)
 		self._create_menu_bind('menu_notebook_open', self._on_menu_notebook_open)
 		self._create_menu_bind('menu_task_complete', self._on_menu_task_complete)
+		self._create_menu_bind('menu_task_starred', self._on_menu_task_starred)
 		self._create_menu_bind('menu_search_task', self._on_menu_search_task)
 		self._create_menu_bind('menu_sett_tags', self._on_menu_sett_tags)
 		self._create_menu_bind('menu_sett_goals', self._on_menu_sett_goals)
@@ -529,6 +530,9 @@ class FrameMain(BaseFrame):
 
 	def _on_menu_task_complete(self, _evt):
 		self._toggle_task_complete()
+
+	def _on_menu_task_starred(self, _evt):
+		self._toggle_task_starred()
 
 	def _on_menu_search_task(self, _evt):
 		FrameSeach.run(self.wnd)
