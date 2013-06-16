@@ -29,6 +29,7 @@ from .dlg_remind_settings import DlgRemindSettings
 from .dlg_show_settings import DlgShowSettings
 from .dlg_select_tags import DlgSelectTags
 from .dlg_repeat_settings import DlgRepeatSettings
+from .dlg_projects_tree import DlgProjectTree
 from . import message_boxes as mbox
 
 _ = gettext.gettext
@@ -125,6 +126,17 @@ class TaskController:
 			return False
 		return task_logic.delete_task(self._task, self._session)
 
+	def delete_tasks(self, tasks_uuid):
+		""" Delete multiple task with confirmation.
+		Args:
+			tasks_uuid: list of tasks uuid to delete
+		Returns:
+			True after successful delete tasks.
+		"""
+		if not mbox.message_box_delete_confirm(self.wnd, _("tasks")):
+			return False
+		return task_logic.delete_task(tasks_uuid, self._session)
+
 	def task_change_due_date(self):
 		""" Show dialog and change task due date.
 
@@ -135,9 +147,9 @@ class TaskController:
 			True if date was changed.
 		"""
 		if self._task.type == enums.TYPE_PROJECT:
-			return self._set_date('due_date_project', 'due_time_set')
+			return self._set_date(self._task, 'due_date_project', 'due_time_set')
 		else:
-			return self._set_date('due_date', 'due_time_set')
+			return self._set_date(self._task, 'due_date', 'due_time_set')
 
 	def task_change_start_date(self):
 		""" Show dialog and change task start date.
@@ -148,7 +160,7 @@ class TaskController:
 		Returns:
 			True if date was changed.
 		"""
-		return self._set_date('start_date', 'start_time_set')
+		return self._set_date(self._task, 'start_date', 'start_time_set')
 
 	def task_change_remind(self):
 		""" Show dialog and change task start date.
@@ -278,6 +290,236 @@ class TaskController:
 		self._task.type = new_type
 		return True
 
+	def tasks_change_status(self, tasks_uuid):
+		""" Change status in given tasks; display window with statuses
+
+		Args:
+			tasks_uuid: list of tasks uuid to change
+		Returns:
+			True when success.
+		"""
+		values = sorted(enums.STATUSES.keys())
+		choices = [enums.STATUSES[val] for val in values]
+		dlg = wx.SingleChoiceDialog(self.wnd, _("Change tasks status to:"),
+				_("Tasks"), choices, wx.CHOICEDLG_STYLE)
+		new_status = None
+		if dlg.ShowModal() == wx.ID_OK:
+			new_status = values[dlg.GetSelection()]
+		dlg.Destroy()
+		if new_status is None:
+			return False
+		tasks_to_save = []
+		for task_uuid in tasks_uuid:
+			task = OBJ.Task.get(self._session, uuid=task_uuid)
+			if not task:
+				_LOG.warn("tasks_change_status: task %r not found", task_uuid)
+				continue
+			if task.status == new_status:
+				continue
+			task.status = new_status
+			tasks_to_save.append(task)
+		if tasks_to_save:
+			return task_logic.save_modified_tasks(tasks_to_save, self._session)
+		return False
+
+	def tasks_change_context(self, tasks_uuid):
+		""" Change context in given tasks; display window with defined context
+		to select.
+
+		Args:
+			tasks_uuid: list of tasks uuid to change
+		Returns:
+			True when success.
+		"""
+		values, choices = [None], [_("No Context")]
+		for context in OBJ.Context.all():
+			values.append(context.uuid)
+			choices.append(context.title)
+		dlg = wx.SingleChoiceDialog(self.wnd, _("Change tasks context to:"),
+				_("Tasks"), choices, wx.CHOICEDLG_STYLE)
+		context = -1
+		if dlg.ShowModal() == wx.ID_OK:
+			context = values[dlg.GetSelection()]
+		dlg.Destroy()
+		if context == -1:
+			return False
+		tasks_to_save = []
+		for task_uuid in tasks_uuid:
+			task = OBJ.Task.get(self._session, uuid=task_uuid)
+			if not task:
+				_LOG.warn("tasks_change_status: task %r not found", task_uuid)
+				continue
+			if task.context_uuid != context:
+				task.context_uuid = context
+				tasks_to_save.append(task)
+		if tasks_to_save:
+			return task_logic.save_modified_tasks(tasks_to_save, self._session)
+		return False
+
+	def tasks_change_project(self, tasks_uuid):
+		""" Move tasks to project/checklist; display window with defined
+		projects to select.
+
+		Args:
+			tasks_uuid: list of tasks uuid to change
+		Returns:
+			True when success.
+		"""
+		dlg = DlgProjectTree(self.wnd)
+		if not dlg.run(modal=True):
+			return False
+		parent_uuid = dlg.selected
+		tasks_to_save = []
+		for task_uuid in tasks_uuid:
+			task = OBJ.Task.get(self._session, uuid=task_uuid)
+			if not task:
+				_LOG.warn("tasks_change_status: task %r not found", task_uuid)
+				continue
+			if task.parent_uuid != parent_uuid:
+				if task_logic.change_task_parent(task, parent_uuid,
+						self._session):
+					tasks_to_save.append(task)
+		if tasks_to_save:
+			return task_logic.save_modified_tasks(tasks_to_save, self._session)
+		return False
+
+	def tasks_change_folder(self, tasks_uuid):
+		""" Change folder in given tasks; display window with defined folders
+		to select.
+
+		Args:
+			tasks_uuid: list of tasks uuid to change
+		Returns:
+			True when success.
+		"""
+		values, choices = [None], [_("No Folder")]
+		for folder in OBJ.Folder.all():
+			values.append(folder.uuid)
+			choices.append(folder.title)
+		dlg = wx.SingleChoiceDialog(self.wnd, _("Change tasks folder to:"),
+				_("Tasks"), choices, wx.CHOICEDLG_STYLE)
+		folder = -1
+		if dlg.ShowModal() == wx.ID_OK:
+			folder = values[dlg.GetSelection()]
+		dlg.Destroy()
+		if folder == -1:
+			return False
+		tasks_to_save = []
+		for task_uuid in tasks_uuid:
+			task = OBJ.Task.get(self._session, uuid=task_uuid)
+			if not task:
+				_LOG.warn("tasks_change_status: task %r not found", task_uuid)
+				continue
+			if task.folder_uuid != folder:
+				task.folder_uuid = folder
+				tasks_to_save.append(task)
+		if tasks_to_save:
+			return task_logic.save_modified_tasks(tasks_to_save, self._session)
+		return False
+
+	def tasks_change_start_date(self, tasks_uuid):
+		""" Change start date for given tasks. """
+		task1 = OBJ.Task.get(self._session, uuid=tasks_uuid[0])
+		if self._set_date(task1, 'start_date', 'start_time_set'):
+			tasks_to_save = [task1]
+			for task_uuid in tasks_uuid[1:]:
+				task = OBJ.Task.get(self._session, uuid=task_uuid)
+				if (task.start_date != task1.start_date or
+						task.start_time_set != task1.start_time_set):
+					task.start_date = task1.start_date
+					task.start_time_set = task1.start_time_set
+					tasks_to_save.append(task)
+			return task_logic.save_modified_tasks(tasks_to_save, self._session)
+		return False
+
+	def tasks_change_due_date(self, tasks_uuid):
+		""" Change due date for given tasks. """
+		task1 = OBJ.Task.get(self._session, uuid=tasks_uuid[0])
+		task1_due_attr = 'due_date'
+		if task1.type == enums.TYPE_PROJECT:
+			task1_due_attr = 'due_date_project',
+		if self._set_date(task1, task1_due_attr, 'due_time_set'):
+			tasks_to_save = [task1]
+			due = (task1.due_date_project if task1.type == enums.TYPE_PROJECT
+					else task1.due_date)
+			for task_uuid in tasks_uuid[1:]:
+				task = OBJ.Task.get(self._session, uuid=task_uuid)
+				if task.type == enums.TYPE_PROJECT:
+					if (task.start_time_set != task1.start_time_set or
+							task.due_date_project != due):
+						task.due_date_project = due
+						task.due_time_set = task1.due_time_set
+						tasks_to_save.append(task)
+				else:
+					if (task.start_time_set != task1.start_time_set or
+							task.due_date != due):
+						task.due_date = due
+						task.due_time_set = task1.due_time_set
+						tasks_to_save.append(task)
+			return task_logic.save_modified_tasks(tasks_to_save, self._session)
+		return False
+
+	def tasks_change_remind(self, tasks_uuid):
+		""" Show dialog and change given tasks start date.
+
+		Args:
+			tasks_uuid: task to change
+		Returns:
+			True if date was changed.
+		"""
+		task = OBJ.Task.get(self._session, uuid=tasks_uuid[0])
+		alarm = None
+		if task.alarm:
+			alarm = DTU.datetime2timestamp(task.alarm)
+		dlg = DlgRemindSettings(self._parent_wnd, alarm, task.alarm_pattern)
+		if not dlg.run(True):
+			return False
+		if dlg.alarm:
+			alarm = DTU.timestamp2datetime(dlg.alarm)
+			alarm_pattern = None
+		else:
+			alarm = None
+			alarm_pattern = dlg.alarm_pattern
+		task.alarm = alarm
+		task.alarm_pattern = alarm_pattern
+		task_logic.update_task_alarm(task)
+		tasks_to_save = [task]
+		for task_uuid in tasks_uuid[1:]:
+			task = OBJ.Task.get(self._session, uuid=task_uuid)
+			task.alarm = alarm
+			task.alarm_pattern = alarm_pattern
+			task_logic.update_task_alarm(task)
+			tasks_to_save.append(task)
+		return task_logic.save_modified_tasks(tasks_to_save, self._session)
+
+	def tasks_change_hide_until(self, tasks_uuid):
+		""" Show dialog and change given tasks show settings.
+
+		Args:
+			tasks_uuid: task to change
+		Returns:
+			True if date was changed.
+		"""
+		task = OBJ.Task.get(self._session, uuid=tasks_uuid[0])
+		date_time = None
+		if task.hide_until:
+			date_time = DTU.datetime2timestamp(task.hide_until)
+		dlg = DlgShowSettings(self._parent_wnd, date_time, task.hide_pattern)
+		if not dlg.run(True):
+			return
+		hide_until = None
+		hide_pattern = dlg.pattern
+		if dlg.datetime:
+			hide_until = DTU.timestamp2datetime(dlg.datetime)
+		tasks_to_save = []
+		for task_uuid in tasks_uuid:
+			task = OBJ.Task.get(self._session, uuid=task_uuid)
+			task.hide_until = hide_until
+			task.hide_pattern = hide_pattern
+			task_logic.update_task_hide(task)
+			tasks_to_save.append(task)
+		return task_logic.save_modified_tasks(tasks_to_save, self._session)
+
 	def _confirm_change_task_parent(self, parent):
 		curr_type = self._task.type
 		if parent:  # nowy parent
@@ -302,14 +544,53 @@ class TaskController:
 					return False
 		return True
 
+	def tasks_set_completed_status(self, tasks_uuid, compl):
+		if compl:
+			if not mbox.message_box_question(self.wnd, _("Set tasks completed?"),
+					None, _("Set complete"), _("Close")):
+				return False
+		else:
+			if not mbox.message_box_question(self.wnd,
+					_("Set tasks not completed?"), None, _("Set complete"),
+					_("Close")):
+				return False
+		tasks_to_save = []
+		for task_uuid in tasks_uuid:
+			task = OBJ.Task.get(self._session, uuid=task_uuid)
+			if not task:
+				_LOG.warn("tasks_set_completed_status: task %r not found", task_uuid)
+				continue
+			if task.task_completed != compl:
+				if compl:
+					task_logic.complete_task(task, self._session)
+				else:
+					task.task_completed = False
+				tasks_to_save.append(task)
+		if tasks_to_save:
+			return task_logic.save_modified_tasks(tasks_to_save, self._session)
+		return False
+
+	def tasks_set_starred_flag(self, tasks_uuid, starred):
+		""" Set starred flag for given tasks. """
+		tasks_to_save = []
+		for task_uuid in tasks_uuid:
+			task = OBJ.Task.get(self._session, uuid=task_uuid)
+			if not task:
+				_LOG.warn("tasks_set_completed_status: task %r not found", task_uuid)
+				continue
+			task.starred = bool(starred)
+			tasks_to_save.append(task)
+		if tasks_to_save:
+			return task_logic.save_modified_tasks(tasks_to_save, self._session)
+		return False
+
 	def _confirm_change_task_type(self):
 		return mbox.message_box_warning_yesno(self.wnd,
 			_("This operation change task and subtasks type.\n"
 				"Continue change?"))
 
-	def _set_date(self, attr_date, attr_time_set):
+	def _set_date(self, task, attr_date, attr_time_set):
 		""" Wyśweitlenie dlg wyboru daty dla danego atrybutu """
-		task = self._task
 		value = getattr(task, attr_date)
 		if value:
 			value = DTU.datetime2timestamp(value)

@@ -345,23 +345,27 @@ def delete_task(task, session=None):
 	Show confirmation and delete task from database.
 
 	Args:
-		task: task for delete (Task or UUID)
+		task: one or list of task for delete (Task or UUID)
 		session: sqlalchemy session
 
 	Returns:
 		True = task deleted
 	"""
 	session = session or OBJ.Session()
-	if isinstance(task, (str, unicode)):
-		task = session.query(OBJ.Task).filter_by(uuid=task).first()
-		if not task:
-			_LOG.warning("delete_task: missing task %r", task)
-			return False
-
-	session.delete(task)
-	session.commit()
-	Publisher().sendMessage('task.delete', data={'task_uuid': task.uuid})
-	return True
+	tasks = task if isinstance(task, (list, tuple)) else [task]
+	deleted = 0
+	for task in tasks:
+		if isinstance(task, (str, unicode)):
+			task = session.query(OBJ.Task).filter_by(uuid=task).first()
+			if not task:
+				_LOG.warning("delete_task: missing task %r", task)
+				continue
+		session.delete(task)
+		deleted += 1
+	if deleted:
+		session.commit()
+		Publisher().sendMessage('task.delete')
+	return bool(deleted)
 
 
 def complete_task(task, session=None):
@@ -416,6 +420,21 @@ def toggle_task_complete(task_uuid, session=None):
 			return False
 	else:
 		task.task_completed = False
+	return save_modified_task(task, session)
+
+
+def toggle_task_starred(task_uuid, session=None):
+	""" Toggle task starred flag.
+
+	Args:
+		task_uuid: UUID of task to change
+		session: optional SqlAlchemy session
+	Returns:
+		True if ok
+	"""
+	session = session or OBJ.Session()
+	task = OBJ.Task.get(session, uuid=task_uuid)
+	task.starred = not task.starred
 	return save_modified_task(task, session)
 
 
@@ -524,6 +543,31 @@ def save_modified_task(task, session=None):
 	session.add(task)
 	session.commit()  # pylint: disable=E1101
 	Publisher().sendMessage('task.update', data={'task_uuid': task.uuid})
+	return True
+
+
+def save_modified_tasks(tasks, session=None):
+	""" Save modified tasks.
+	Update required fields.
+
+	Args:
+		tasks: list of task to save
+		session: optional SqlAlchemy session
+	Returns:
+		True if ok.
+	"""
+	session = session or OBJ.Session()
+	for task in tasks:
+		update_project_due_date(task)
+		adjust_task_type(task, session)
+		if task.type == enums.TYPE_CHECKLIST_ITEM:
+			if not task.importance:
+				task.importance = OBJ.Task.find_max_importance(task.parent_uuid,
+						session) + 1
+		task.update_modify_time()
+		session.add(task)
+	session.commit()  # pylint: disable=E1101
+	Publisher().sendMessage('task.update')
 	return True
 
 
