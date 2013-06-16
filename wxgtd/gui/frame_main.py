@@ -454,8 +454,10 @@ class FrameMain(BaseFrame):
 		# TODO
 
 	def _on_menu_task_change_project(self, _evt):
-		pass
-		# TODO
+		tasks_uuid = list(self._items_list_ctrl.get_selected_items_uuid())
+		if tasks_uuid:
+			TaskController(self.wnd, self._session,
+					None).tasks_change_project(tasks_uuid)
 
 	def _on_menu_task_change_status(self, _evt):
 		tasks_uuid = list(self._items_list_ctrl.get_selected_items_uuid())

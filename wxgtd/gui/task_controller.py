@@ -29,6 +29,7 @@ from .dlg_remind_settings import DlgRemindSettings
 from .dlg_show_settings import DlgShowSettings
 from .dlg_select_tags import DlgSelectTags
 from .dlg_repeat_settings import DlgRepeatSettings
+from .dlg_projects_tree import DlgProjectTree
 from . import message_boxes as mbox
 
 _ = gettext.gettext
@@ -333,6 +334,33 @@ class TaskController:
 			if task.context_uuid != context:
 				task.context_uuid = context
 				tasks_to_save.append(task)
+		if tasks_to_save:
+			return task_logic.save_modified_tasks(tasks_to_save, self._session)
+		return False
+
+	def tasks_change_project(self, tasks_uuid):
+		""" Move tasks to project/checklist; display window with defined
+		projects to select.
+
+		Args:
+			tasks_uuid: list of tasks uuid to change
+		Returns:
+			True when success.
+		"""
+		dlg = DlgProjectTree(self.wnd)
+		if not dlg.run(modal=True):
+			return False
+		parent_uuid = dlg.selected
+		tasks_to_save = []
+		for task_uuid in tasks_uuid:
+			task = OBJ.Task.get(self._session, uuid=task_uuid)
+			if not task:
+				_LOG.warn("tasks_change_status: task %r not found", task_uuid)
+				continue
+			if task.parent_uuid != parent_uuid:
+				if task_logic.change_task_parent(task, parent_uuid,
+						self._session):
+					tasks_to_save.append(task)
 		if tasks_to_save:
 			return task_logic.save_modified_tasks(tasks_to_save, self._session)
 		return False
