@@ -637,10 +637,13 @@ class FrameMain(BaseFrame):
 			Publisher().sendMessage('dict.update')
 
 	def _delete_selected_task(self):
-		task_uuid = self._items_list_ctrl.get_item_uuid(None)
-		if task_uuid:
-			TaskController(self.wnd, self._session, task_uuid).\
+		tasks_uuid = list(self._items_list_ctrl.get_selected_items_uuid())
+		if len(tasks_uuid) == 1:
+			TaskController(self.wnd, self._session, tasks_uuid[0]).\
 					delete_task()
+		elif len(tasks_uuid) > 1:
+			TaskController(self.wnd, self._session,
+					None).delete_tasks(tasks_uuid)
 
 	def _new_task(self):
 		parent_uuid = None
@@ -783,6 +786,11 @@ class _TasksPopupMenu:
 		menu.Append(self.task_edit_id, _('Edit Task'))
 		menu.Append(self.task_clone_id, _('Clone Task'))
 		menu.Append(self.task_delete_id, _('Delete Task'))
+		menu.AppendSeparator()
+		menu.Append(self.task_change_context_id, _('Change Context...'))
+		menu.Append(self.task_change_project_id, _('Change Project/List...'))
+		menu.Append(self.task_change_folder_id, _('Change Folder...'))
+		menu.Append(self.task_change_status_id, _('Change Status...'))
 		if task_type not in (enums.TYPE_CHECKLIST, enums.TYPE_CHECKLIST_ITEM):
 			menu.AppendSeparator()
 			menu.Append(self.task_change_due_id, _('Change Due Date...'))

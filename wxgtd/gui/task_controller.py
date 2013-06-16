@@ -126,6 +126,17 @@ class TaskController:
 			return False
 		return task_logic.delete_task(self._task, self._session)
 
+	def delete_tasks(self, tasks_uuid):
+		""" Delete multiple task with confirmation.
+		Args:
+			tasks_uuid: list of tasks uuid to delete
+		Returns:
+			True after successful delete tasks.
+		"""
+		if not mbox.message_box_delete_confirm(self.wnd, _("tasks")):
+			return False
+		return task_logic.delete_task(tasks_uuid, self._session)
+
 	def task_change_due_date(self):
 		""" Show dialog and change task due date.
 
