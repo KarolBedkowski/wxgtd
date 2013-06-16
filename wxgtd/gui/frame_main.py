@@ -444,8 +444,10 @@ class FrameMain(BaseFrame):
 			task_logic.save_modified_task(task, self._session)
 
 	def _on_menu_task_change_context(self, _evt):
-		# TODO
-		pass
+		tasks_uuid = list(self._items_list_ctrl.get_selected_items_uuid())
+		if tasks_uuid:
+			TaskController(self.wnd, self._session,
+					None).tasks_change_context(tasks_uuid)
 
 	def _on_menu_task_change_folder(self, _evt):
 		pass

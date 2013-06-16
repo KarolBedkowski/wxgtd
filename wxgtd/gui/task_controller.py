@@ -303,6 +303,40 @@ class TaskController:
 			return task_logic.save_modified_tasks(tasks_to_save, self._session)
 		return False
 
+	def tasks_change_context(self, tasks_uuid):
+		""" Change context in given tasks; display window with defined context
+		to select.
+
+		Args:
+			tasks_uuid: list of tasks uuid to change
+		Returns:
+			True when success.
+		"""
+		values, choices = [], []
+		for context in OBJ.Context.all():
+			values.append(context.uuid)
+			choices.append(context.title)
+		dlg = wx.SingleChoiceDialog(self.wnd, _("Change tasks context to:"),
+				_("Tasks"), choices, wx.CHOICEDLG_STYLE)
+		context = None
+		if dlg.ShowModal() == wx.ID_OK:
+			context = values[dlg.GetSelection()]
+		dlg.Destroy()
+		if context is None:
+			return False
+		tasks_to_save = []
+		for task_uuid in tasks_uuid:
+			task = OBJ.Task.get(self._session, uuid=task_uuid)
+			if not task:
+				_LOG.warn("tasks_change_status: task %r not found", task_uuid)
+				continue
+			if task.context_uuid != context:
+				task.context_uuid = context
+				tasks_to_save.append(task)
+		if tasks_to_save:
+			return task_logic.save_modified_tasks(tasks_to_save, self._session)
+		return False
+
 	def _confirm_change_task_parent(self, parent):
 		curr_type = self._task.type
 		if parent:  # nowy parent
