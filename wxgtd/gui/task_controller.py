@@ -278,6 +278,31 @@ class TaskController:
 		self._task.type = new_type
 		return True
 
+	def tasks_change_status(self, tasks_uuid):
+		values = sorted(enums.STATUSES.keys())
+		choices = [enums.STATUSES[val] for val in values]
+		dlg = wx.SingleChoiceDialog(self.wnd, _("Change tasks status to:"),
+				_("Tasks"), choices, wx.CHOICEDLG_STYLE)
+		new_status = None
+		if dlg.ShowModal() == wx.ID_OK:
+			new_status = values[dlg.GetSelection()]
+		dlg.Destroy()
+		if new_status is None:
+			return False
+		tasks_to_save = []
+		for task_uuid in tasks_uuid:
+			task = OBJ.Task.get(self._session, uuid=task_uuid)
+			if not task:
+				_LOG.warn("tasks_change_status: task %r not found", task_uuid)
+				continue
+			if task.status == new_status:
+				continue
+			task.status = new_status
+			tasks_to_save.append(task)
+		if tasks_to_save:
+			return task_logic.save_modified_tasks(tasks_to_save, self._session)
+		return False
+
 	def _confirm_change_task_parent(self, parent):
 		curr_type = self._task.type
 		if parent:  # nowy parent
