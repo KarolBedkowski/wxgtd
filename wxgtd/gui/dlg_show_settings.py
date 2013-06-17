@@ -29,12 +29,13 @@ class DlgShowSettings(BaseDialog):
 	Args:
 		parent: parent windows
 		date: date when show task
-		parent: pattern to set date dynamically (enums.HIDE_PATTERNS)
+		pattern: pattern to set date dynamically (enums.HIDE_PATTERNS)
+		no_date: don't allow set exact date
 	"""
 
-	def __init__(self, parent, date, pattern):
+	def __init__(self, parent, date, pattern, no_date=False):
 		BaseDialog.__init__(self, parent, 'dlg_show_settings', save_pos=False)
-		self._setup(date, pattern)
+		self._setup(date, pattern, no_date)
 
 	@property
 	def datetime(self):
@@ -50,7 +51,7 @@ class DlgShowSettings(BaseDialog):
 		self['tc_time'].Bind(wx.lib.masked.EVT_TIMEUPDATE, self._on_time_ctrl)
 		self['c_pattern'].Bind(wx.EVT_CHOICE, self._on_choice_pattern)
 
-	def _setup(self, date, pattern):
+	def _setup(self, date, pattern, no_date):
 		_LOG.debug("DlgShowSettings(%r)", (date, pattern))
 		self._data = {'date': None, 'time': None, 'pattern': pattern,
 				'datetime': date}
@@ -59,12 +60,18 @@ class DlgShowSettings(BaseDialog):
 		self['tc_time'].SetValidator(ValidatorTime(self._data, 'time'))
 		self['tc_time'].BindSpinButton(self['sb_time'])
 
+		if no_date:
+			self['rb_datetime'].Enable(False)
+			self['tc_time'].Enable(False)
+			self['dp_date'].Enable(False)
+			self['sb_time'].Enable(False)
+
 		c_pattern = self['c_pattern']
 		for rem_key, rem_name in enums.HIDE_PATTERNS_LIST:
 			c_pattern.Append(rem_name, rem_key)
 
 		self['rb_always'].SetValue(True)
-		if date:
+		if date and not no_date:
 			self._data['date'] = self._data['time'] = date
 			if not pattern:
 				self['rb_datetime'].SetValue(True)

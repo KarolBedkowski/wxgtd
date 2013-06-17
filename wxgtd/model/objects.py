@@ -92,7 +92,7 @@ class BaseModelMixin(object):
 	def selecy_by_modified_is_less(cls, timestamp, session=None):
 		""" Find object with modified date less than given. """
 		session = session or Session()
-		return session.query(cls).filter(cls.modified < timestamp).all()
+		return session.query(cls).filter(cls.modified < timestamp)
 
 	@classmethod
 	def select_old_usunsed(cls, timestamp, session=None):
@@ -100,13 +100,20 @@ class BaseModelMixin(object):
 		any task. """
 		session = session or Session()
 		return session.query(cls).filter(cls.modified < timestamp).filter(
-				~cls.tasks.any()).all()
+				~cls.tasks.any())
 
 	@classmethod
-	def all(cls):
-		""" Return all objects this class. """
-		session = Session()
-		return session.query(cls).all()  # pylint: disable=E1101
+	def all(cls, order_by=None, session=None):
+		""" Return all objects this class.
+
+		Args:
+			order_by: optional order_by query argument
+		"""
+		session = session or Session()
+		query = session.query(cls)
+		if order_by:
+			query = query.order_by(order_by)
+		return query  # pylint: disable=E1101
 
 	@classmethod
 	def get(cls, session=None, **kwargs):
@@ -249,7 +256,7 @@ class Task(BaseModelMixin, Base):
 			session: optional sqlalchemy session
 
 		Returns:
-			list of task
+			SqlAlchemy query
 		"""
 		# pylint: disable=R0912
 		_LOG.debug('Task.select_by_filters(%r)', params)
@@ -262,9 +269,9 @@ class Task(BaseModelMixin, Base):
 		query = _append_filter_list(query, Task.type, params.get('types'))
 		search_str = params.get('search_str', '').strip()
 		if search_str:
-			search_str = '%%' + search_str + "%%"
-			query = query.filter(or_(Task.title.like(search_str),
-					Task.note.like(search_str)))
+			search_str = '%%' + search_str.lower() + "%%"
+			query = query.filter(or_(func.lower(Task.title).like(search_str),
+					func.lower(Task.note).like(search_str)))
 		now = datetime.datetime.utcnow()
 		query = _query_add_filter_by_tags(query, params)
 		if params.get('hide_until'):
@@ -282,19 +289,33 @@ class Task(BaseModelMixin, Base):
 		if params.get('active_alarm'):
 			query = query.filter(Task.alarm >= now)
 		query = query.order_by(Task.title)
-		return query.all()
+		return query
+
+	@classmethod
+	def search(cls, text, active_only, session=None):
+		""" Search for task with title/note matching text. """
+		_LOG.debug('Task.search(%r, %r)', text, active_only)
+		session = session or Session()
+		query = session.query(cls)
+		search_str = '%%' + text.lower() + "%%"
+		query = query.filter(or_(func.lower(Task.title).like(search_str),
+				func.lower(Task.note).like(search_str)))
+		if active_only:
+			query = query.filter(Task.completed.is_(None))
+		query = query.order_by(Task.title)
+		return query
 
 	@classmethod
 	def all_projects(cls):
 		""" Get all projects from database. """
 		# pylint: disable=E1101
-		return Session().query(cls).filter_by(type=enums.TYPE_PROJECT).all()
+		return Session().query(cls).filter_by(type=enums.TYPE_PROJECT)
 
 	@classmethod
 	def all_checklists(cls):
 		""" Get all checklists from database. """
 		# pylint: disable=E1101
-		return Session().query(cls).filter_by(type=enums.TYPE_CHECKLIST).all()
+		return Session().query(cls).filter_by(type=enums.TYPE_CHECKLIST)
 
 	@classmethod
 	def root_projects_checklists(cls, session=None):
@@ -304,8 +325,7 @@ class Task(BaseModelMixin, Base):
 				.filter(Task.parent_uuid.is_(None),
 						or_(Task.type == enums.TYPE_CHECKLIST,
 						Task.type == enums.TYPE_PROJECT))
-				.order_by(Task.title)
-				.all())
+				.order_by(Task.title))
 
 	@classmethod
 	def select_reminders(cls, since=None, session=None):
@@ -330,7 +350,7 @@ class Task(BaseModelMixin, Base):
 		# not completed
 		query = query.filter(Task.completed.is_(None))
 		query = query.order_by(Task.alarm)
-		return query.all()
+		return query
 
 	@classmethod
 	def find_max_importance(cls, parent_uuid, session=None):
@@ -348,20 +368,19 @@ class Task(BaseModelMixin, Base):
 	@property
 	def sub_projects(self):
 		return Session.object_session(self).query(Task).with_parent(self)\
-				.filter_by(type=enums.TYPE_PROJECT).all()
+				.filter_by(type=enums.TYPE_PROJECT)
 
 	@property
 	def sub_checklists(self):
 		return Session.object_session(self).query(Task).with_parent(self)\
-				.filter_by(type=enums.TYPE_CHECKLIST).all()
+				.filter_by(type=enums.TYPE_CHECKLIST)
 
 	@property
 	def sub_project_or_checklists(self):
 		return (Session.object_session(self).query(Task).with_parent(self)
 				.filter(or_(Task.type == enums.TYPE_CHECKLIST,
 						Task.type == enums.TYPE_PROJECT))
-				.order_by(Task.title)
-				.all())
+				.order_by(Task.title))
 
 	def clone(self, cleanup=True):
 		""" Clone current object. """

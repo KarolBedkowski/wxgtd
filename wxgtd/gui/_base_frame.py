@@ -35,18 +35,23 @@ class BaseFrame(object):
 	_window_name = None
 	_window_icon = None
 
-	def __init__(self):
+	def __init__(self, parent=None):
 		self._appconfig = AppConfig()
-		self.wnd = self._load_window()
+		self.wnd = self._load_window(parent)
 		self._load_controls()
 		self._create_toolbar()
 		self._create_bindings(self.wnd)
 		self._setup_wnd(self.wnd)
 
 	def __getitem__(self, key):
-		ctrl = xrc.XRCCTRL(self.wnd, key)
+		if isinstance(key, (str, unicode)):
+			ctrl = xrc.XRCCTRL(self.wnd, key)
+		else:
+			ctrl = self.wnd.FindWindowById(key)
 		if ctrl is None:
-			ctrl = self.wnd.GetMenuBar().FindItemById(xrc.XRCID(key))
+			menu = self.wnd.GetMenuBar()
+			if menu:
+				ctrl = menu.FindItemById(xrc.XRCID(key))
 		assert ctrl is not None, 'Control %r not found' % key
 		return ctrl
 
@@ -60,11 +65,12 @@ class BaseFrame(object):
 			wnd.SetBackgroundColour(bgcolor)
 			#_update_color(wnd, bgcolor)
 
+		wnd.SetExtraStyle(wx.WS_EX_VALIDATE_RECURSIVELY)
 		self._set_size_pos()
 
-	def _load_window(self):
+	def _load_window(self, parent):
 		res = wxresources.load_xrc_resource(self._xrc_resource)
-		wnd = res.LoadFrame(None, self._window_name)
+		wnd = res.LoadFrame(parent, self._window_name)
 		assert wnd is not None, 'Frame %r not found in %r ' % \
 				(self._window_name, self._xrc_resource)
 		return wnd

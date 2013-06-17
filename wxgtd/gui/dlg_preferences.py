@@ -17,11 +17,14 @@ import gettext
 
 import wx
 
-from wxgtd.wxtools.validators import Validator
+from wxgtd.wxtools.validators import Validator, ValidatorDv
 from wxgtd.model import enums
 from wxgtd.lib.appconfig import AppConfig
+from wxgtd.wxtools import wxutils
 
 from ._base_dialog import BaseDialog
+from .dlg_remind_settings import DlgRemindSettings
+from .dlg_show_settings import DlgShowSettings
 
 _LOG = logging.getLogger(__name__)
 _ = gettext.gettext
@@ -56,13 +59,21 @@ class DlgPreferences(BaseDialog):
 
 	def __init__(self, parent):
 		BaseDialog.__init__(self, parent, 'dlg_preferences', save_pos=False)
+		self._setup_comboboxes()
 		self._setup()
+		self._refresh_labels()
 
 	def _create_bindings(self, wnd):
 		BaseDialog._create_bindings(self, wnd)
 		self['sl_hotlist_priority'].Bind(wx.EVT_SCROLL, self._on_sl_priority)
 		self['btn_sync_file_select'].Bind(wx.EVT_BUTTON,
 				self._on_btn_sync_file_select)
+		self['sl_task_def_priority'].Bind(wx.EVT_SCROLL,
+				self._on_sl_task_def_priority)
+		self['btn_task_def_remind_set'].Bind(wx.EVT_BUTTON,
+				self._on_btn_task_def_remind_set)
+		self['btn_task_def_hide_until_set'].Bind(wx.EVT_BUTTON,
+				self._on_btn_task_def_hide_set)
 
 	def _setup(self):  # pylint: disable=R0201
 		_LOG.debug("DlgPreferences()")
@@ -92,19 +103,30 @@ class DlgPreferences(BaseDialog):
 		# task
 		# # inheritance from project
 		self['cb_tasks_inh_context'].SetValidator(Validator(config,
-				'task/inerit_context'))
+				'task/inherit_context'))
 		self['cb_tasks_inh_goal'].SetValidator(Validator(config,
-				'task/inerit_goal'))
+				'task/inherit_goal'))
 		self['cb_tasks_inh_folder'].SetValidator(Validator(config,
-				'task/inerit_folder'))
+				'task/inherit_folder'))
 		self['cb_tasks_inh_tags'].SetValidator(Validator(config,
-				'task/inerit_tags'))
+				'task/inherit_tags'))
+		# # defaults
+		self['cb_task_def_status'].SetValidator(ValidatorDv(config,
+				'task/default_status'))
+		self['sl_task_def_priority'].SetValidator(Validator(config,
+				'task/default_priority'))
 		# notification
 		self['cb_notif_popup_reminds'].SetValidator(Validator(config,
 				'notification/popup_alarms'))
 		# gui
 		self['cb_gui_hide_on_start'].SetValidator(Validator(config,
 				'gui/hide_on_start'))
+
+	def _setup_comboboxes(self):
+		cb_status = self['cb_task_def_status']
+		cb_status.Clear()
+		for key, status in sorted(enums.STATUSES.iteritems()):
+			cb_status.Append(status, key)
 
 	def _on_ok(self, evt):
 		if not self._wnd.Validate():
@@ -119,6 +141,10 @@ class DlgPreferences(BaseDialog):
 		self['l_hotlist_priority'].SetLabel(
 				enums.PRIORITIES[self['sl_hotlist_priority'].GetValue()])
 
+	def _on_sl_task_def_priority(self, _evt):
+		self['l_task_def_prio'].SetLabel(
+				enums.PRIORITIES[self['sl_task_def_priority'].GetValue()])
+
 	def _on_btn_sync_file_select(self, _evt):
 		last_file = self['tc_sync_filename'].GetValue()
 		if not last_file:
@@ -131,3 +157,29 @@ class DlgPreferences(BaseDialog):
 		if dlg.ShowModal() == wx.ID_OK:
 			self['tc_sync_filename'].SetValue(dlg.GetPath())
 		dlg.Destroy()
+
+	def _on_btn_task_def_remind_set(self, _evt):
+		dlg = DlgRemindSettings(self._wnd, None,
+				self._appconfig.get('task', 'default_remind', ''),
+				no_date=True)
+		if dlg.run(True):
+			self._appconfig.set('task', 'default_remind', dlg.alarm_pattern)
+			self._refresh_labels()
+
+	def _on_btn_task_def_hide_set(self, _evt):
+		dlg = DlgShowSettings(self._wnd, None, self._appconfig.get('task',
+			'default_hide', ''), no_date=True)
+		if dlg.run(True):
+			self._appconfig.set('task', 'default_hide', dlg.pattern)
+			self._refresh_labels()
+
+	@wxutils.call_after
+	def _refresh_labels(self):
+		self['l_task_def_prio'].SetLabel(
+				enums.PRIORITIES[self['sl_task_def_priority'].GetValue()])
+		self['l_task_def_remind'].SetLabel(
+				enums.REMIND_PATTERNS.get(self._appconfig.get('task',
+					'default_remind', ""), ""))
+		self['l_task_def_hide_until'].SetLabel(
+				enums.HIDE_PATTERNS.get(self._appconfig.get('task',
+					'default_hide', ""), ""))

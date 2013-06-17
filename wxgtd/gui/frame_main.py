@@ -15,7 +15,6 @@ import sys
 import os
 import gettext
 import logging
-import datetime
 import traceback
 
 import wx
@@ -32,6 +31,7 @@ from wxgtd.model import loader
 from wxgtd.model import exporter
 from wxgtd.model import sync
 from wxgtd.model import enums
+from wxgtd.model import queries
 from wxgtd.logic import task as task_logic
 from wxgtd.gui import dlg_about
 from wxgtd.gui import _fmt as fmt
@@ -47,9 +47,11 @@ from wxgtd.gui.dlg_sync_progress import DlgSyncProggress
 from wxgtd.gui.dlg_tags import DlgTags
 from wxgtd.gui.dlg_goals import DlgGoals
 from wxgtd.gui.dlg_folders import DlgFolders
+from wxgtd.gui.dlg_contexts import DlgContexts
 from wxgtd.gui.dlg_reminders import DlgReminders
 from wxgtd.gui.frame_notebooks import FrameNotebook
-from wxgtd.gui.task_controller import TaskDialogControler
+from wxgtd.gui.task_controller import TaskController
+from wxgtd.gui.frame_search import FrameSeach
 
 _ = gettext.gettext
 ngettext = gettext.ngettext  # pylint: disable=C0103
@@ -65,8 +67,10 @@ class FrameMain(BaseFrame):
 	_window_icon = 'wxgtd'
 
 	def __init__(self):
+		self._all_loaded = False
 		BaseFrame.__init__(self)
 		self._setup()
+		wx.CallAfter(self._on_all_loaded)
 
 	def _setup(self):
 		self._session = OBJ.Session()
@@ -74,7 +78,6 @@ class FrameMain(BaseFrame):
 		self._last_reminders_check = None
 		self._filter_tree_ctrl.RefreshItems()
 		self._tbicon = TaskBarIcon(self.wnd)  # pylint: disable=W0201
-		wx.CallAfter(self._refresh_list)
 		self['rb_show_selection'].SetSelection(self._appconfig.get('main',
 			'selected_group', 0))
 		if self._appconfig.get('sync', 'sync_on_startup'):
@@ -106,6 +109,7 @@ class FrameMain(BaseFrame):
 		box = wx.BoxSizer(wx.HORIZONTAL)
 		box.Add(self._panel_parent_icons, 1, wx.EXPAND)
 		ppicons.SetSizer(box)
+		self._tasks_popup_menu = _TasksPopupMenu()
 
 	def _create_bindings(self, wnd):
 		BaseFrame._create_bindings(self, wnd)
@@ -114,18 +118,22 @@ class FrameMain(BaseFrame):
 		self._create_menu_bind('menu_file_save', self._on_menu_file_save)
 		self._create_menu_bind('menu_file_exit', self._on_menu_file_exit)
 		self._create_menu_bind('menu_file_sync', self._on_menu_file_sync)
-		self._create_menu_bind('menu_file_preferences',
-				self._on_menu_file_preferences)
 		self._create_menu_bind('menu_help_about', self._on_menu_help_about)
 		self._create_menu_bind('menu_task_new', self._on_menu_task_new)
 		self._create_menu_bind('menu_task_quick', self._on_menu_task_quick)
 		self._create_menu_bind('menu_task_edit', self._on_menu_task_edit)
 		self._create_menu_bind('menu_task_delete', self._on_menu_task_delete)
 		self._create_menu_bind('menu_task_clone', self._on_menu_task_clone)
-		self._create_menu_bind('menu_task_notebook', self._on_menu_task_notebook)
+		self._create_menu_bind('menu_notebook_open', self._on_menu_notebook_open)
+		self._create_menu_bind('menu_task_complete', self._on_menu_task_complete)
+		self._create_menu_bind('menu_task_starred', self._on_menu_task_starred)
+		self._create_menu_bind('menu_search_task', self._on_menu_search_task)
 		self._create_menu_bind('menu_sett_tags', self._on_menu_sett_tags)
 		self._create_menu_bind('menu_sett_goals', self._on_menu_sett_goals)
 		self._create_menu_bind('menu_sett_folders', self._on_menu_sett_folders)
+		self._create_menu_bind('menu_sett_contexts', self._on_menu_sett_contexts)
+		self._create_menu_bind('menu_sett_preferences',
+				self._on_menu_sett_preferences)
 
 		wnd.Bind(wx.EVT_TREE_ITEM_ACTIVATED, self._on_filter_tree_item_activated,
 				self._filter_tree_ctrl)
@@ -135,6 +143,10 @@ class FrameMain(BaseFrame):
 				self['rb_show_selection'])
 		wnd.Bind(wx.EVT_LIST_ITEM_ACTIVATED, self._on_items_list_activated,
 				self._items_list_ctrl)
+		self._items_list_ctrl.Bind(wx.EVT_COMMAND_RIGHT_CLICK,
+				self._on_items_list_right_click)
+		self._items_list_ctrl.Bind(wx.EVT_RIGHT_UP,
+				self._on_items_list_right_click)
 		wnd.Bind(TLC.EVT_DRAG_TASK, self._on_item_drag, self._items_list_ctrl)
 		wnd.Bind(wx.EVT_BUTTON, self._on_btn_path_back, id=wx.ID_UP)
 		wnd.Bind(wx.EVT_BUTTON, self._on_btn_edit_parent,
@@ -143,6 +155,41 @@ class FrameMain(BaseFrame):
 
 		Publisher().subscribe(self._on_tasks_update, ('task', 'update'))
 		Publisher().subscribe(self._on_tasks_update, ('task', 'delete'))
+
+		wnd.Bind(wx.EVT_MENU, self._on_menu_task_edit,
+				id=self._tasks_popup_menu.task_edit_id)
+		wnd.Bind(wx.EVT_MENU, self._on_menu_task_delete,
+				id=self._tasks_popup_menu.task_delete_id)
+		wnd.Bind(wx.EVT_MENU, self._on_menu_task_toggle_completed,
+				id=self._tasks_popup_menu.toggle_task_complete_id)
+		wnd.Bind(wx.EVT_MENU, self._on_menu_task_set_completed,
+				id=self._tasks_popup_menu.task_set_complete_id)
+		wnd.Bind(wx.EVT_MENU, self._on_menu_task_set_not_completed,
+				id=self._tasks_popup_menu.task_set_not_complete_id)
+		wnd.Bind(wx.EVT_MENU, self._on_menu_task_toggle_starred,
+				id=self._tasks_popup_menu.toggle_task_stared_id)
+		wnd.Bind(wx.EVT_MENU, self._on_menu_task_set_starred,
+				id=self._tasks_popup_menu.task_set_starred_id)
+		wnd.Bind(wx.EVT_MENU, self._on_menu_task_set_not_starred,
+				id=self._tasks_popup_menu.task_set_not_starred_id)
+		wnd.Bind(wx.EVT_MENU, self._on_menu_task_clone,
+				id=self._tasks_popup_menu.task_clone_id)
+		wnd.Bind(wx.EVT_MENU, self._on_menu_task_change_due,
+				id=self._tasks_popup_menu.task_change_due_id)
+		wnd.Bind(wx.EVT_MENU, self._on_menu_task_change_start,
+				id=self._tasks_popup_menu.task_change_start_id)
+		wnd.Bind(wx.EVT_MENU, self._on_menu_task_change_remind,
+				id=self._tasks_popup_menu.task_change_remind_id)
+		wnd.Bind(wx.EVT_MENU, self._on_menu_task_change_hide_until,
+				id=self._tasks_popup_menu.task_change_hide_until_id)
+		wnd.Bind(wx.EVT_MENU, self._on_menu_task_change_context,
+				id=self._tasks_popup_menu.task_change_context_id)
+		wnd.Bind(wx.EVT_MENU, self._on_menu_task_change_folder,
+				id=self._tasks_popup_menu.task_change_folder_id)
+		wnd.Bind(wx.EVT_MENU, self._on_menu_task_change_project,
+				id=self._tasks_popup_menu.task_change_project_id)
+		wnd.Bind(wx.EVT_MENU, self._on_menu_task_change_status,
+				id=self._tasks_popup_menu.task_change_status_id)
 
 	def _create_toolbar(self):
 		toolbar = self.wnd.CreateToolBar()
@@ -174,6 +221,11 @@ class FrameMain(BaseFrame):
 				iconprovider.get_image('task_done'),
 				shortHelp=_('Toggle selected task completed'))
 		self.wnd.Bind(wx.EVT_TOOL, self._on_btn_complete_task, id=tbi.GetId())
+
+		tbi = toolbar.AddLabelTool(-1, _('Toggle Task Starred'),
+				iconprovider.get_image('task_starred'),
+				shortHelp=_('Toggle selected task starred'))
+		self.wnd.Bind(wx.EVT_TOOL, self._on_btn_starred_task, id=tbi.GetId())
 
 		toolbar.AddSeparator()
 
@@ -218,11 +270,11 @@ class FrameMain(BaseFrame):
 
 		# search box
 		self._searchbox = wx.SearchCtrl(toolbar, -1,  # pylint: disable=W0201
-				size=(150, -1))
+				size=(150, -1), style=wx.TE_PROCESS_ENTER)
 		self._searchbox.SetDescriptiveText(_('Search'))
 		self._searchbox.ShowCancelButton(True)
 		toolbar.AddControl(self._searchbox)
-		self.wnd.Bind(wx.EVT_TEXT, self._on_search, self._searchbox)
+		#self.wnd.Bind(wx.EVT_TEXT, self._on_search, self._searchbox)
 		self.wnd.Bind(wx.EVT_SEARCHCTRL_SEARCH_BTN, self._on_search,
 				self._searchbox)
 		self.wnd.Bind(wx.EVT_SEARCHCTRL_CANCEL_BTN, self._on_search_cancel,
@@ -237,11 +289,19 @@ class FrameMain(BaseFrame):
 
 		tbi = toolbar.AddLabelTool(-1, _('Notebook'),
 				iconprovider.get_image('notebook'))
-		self.wnd.Bind(wx.EVT_TOOL, self._on_menu_task_notebook, id=tbi.GetId())
+		self.wnd.Bind(wx.EVT_TOOL, self._on_menu_notebook_open, id=tbi.GetId())
+
+		tbi = toolbar.AddLabelTool(-1, _('Search'),
+				iconprovider.get_image(wx.ART_FIND))
+		self.wnd.Bind(wx.EVT_TOOL, self._on_menu_search_task, id=tbi.GetId())
 
 		toolbar.Realize()
 
 	# events
+
+	def _on_all_loaded(self):
+		self._all_loaded = True
+		self._refresh_list()
 
 	def _on_close(self, event):
 		appconfig = self._appconfig
@@ -338,8 +398,9 @@ class FrameMain(BaseFrame):
 			dlg.mark_finished()
 			self._filter_tree_ctrl.RefreshItems()
 			Publisher().sendMessage('task.update')
+			Publisher().sendMessage('dict.update')
 
-	def _on_menu_file_preferences(self, _evt):
+	def _on_menu_sett_preferences(self, _evt):
 		if DlgPreferences(self.wnd).run(True):
 			self._filter_tree_ctrl.RefreshItems()
 
@@ -371,7 +432,112 @@ class FrameMain(BaseFrame):
 	def _on_menu_task_clone(self, _evt):
 		self._clone_selected_task()
 
-	def _on_menu_task_notebook(self, _evt):  # pylint: disable=R0201
+	def _on_menu_task_toggle_completed(self, _evt):
+		self._toggle_task_complete()
+
+	def _on_menu_task_set_completed(self, _evt):
+		tasks_uuid = list(self._items_list_ctrl.get_selected_items_uuid())
+		if tasks_uuid:
+			TaskController(self.wnd, self._session,
+					None).tasks_set_completed_status(tasks_uuid, True)
+
+	def _on_menu_task_set_not_completed(self, _evt):
+		tasks_uuid = list(self._items_list_ctrl.get_selected_items_uuid())
+		if tasks_uuid:
+			TaskController(self.wnd, self._session,
+					None).tasks_set_completed_status(tasks_uuid, False)
+
+	def _on_menu_task_toggle_starred(self, _evt):
+		self._toggle_task_starred()
+
+	def _on_menu_task_set_starred(self, _evt):
+		tasks_uuid = list(self._items_list_ctrl.get_selected_items_uuid())
+		TaskController(self.wnd, self._session,
+				None).tasks_set_starred_flag(tasks_uuid, True)
+
+	def _on_menu_task_set_not_starred(self, _evt):
+		tasks_uuid = list(self._items_list_ctrl.get_selected_items_uuid())
+		TaskController(self.wnd, self._session,
+				None).tasks_set_starred_flag(tasks_uuid, False)
+
+	def _on_menu_task_change_due(self, _evt):
+		if self._items_list_ctrl.selected_count == 1:
+			task = self._get_selected_task()
+			if task and TaskController(self.wnd, self._session, task).\
+					task_change_due_date():
+				task_logic.save_modified_task(task, self._session)
+		elif self._items_list_ctrl.selected_count > 1:
+			tasks_uuid = list(self._items_list_ctrl.get_selected_items_uuid())
+			TaskController(self.wnd, self._session,
+					None).tasks_change_due_date(tasks_uuid)
+
+	def _on_menu_task_change_start(self, _evt):
+		if self._items_list_ctrl.selected_count == 1:
+			task = self._get_selected_task()
+			if (task and TaskController(self.wnd, self._session, task).
+					task_change_start_date()):
+				task_logic.save_modified_task(task, self._session)
+		elif self._items_list_ctrl.selected_count > 1:
+			tasks_uuid = list(self._items_list_ctrl.get_selected_items_uuid())
+			TaskController(self.wnd, self._session,
+					None).tasks_change_start_date(tasks_uuid)
+
+	def _on_menu_task_change_remind(self, _evt):
+		if self._items_list_ctrl.selected_count == 1:
+			task = self._get_selected_task()
+			if task and TaskController(self.wnd, self._session, task).\
+					task_change_remind():
+				task_logic.save_modified_task(task, self._session)
+		elif self._items_list_ctrl.selected_count > 1:
+			tasks_uuid = list(self._items_list_ctrl.get_selected_items_uuid())
+			TaskController(self.wnd, self._session,
+					None).tasks_change_remind(tasks_uuid)
+
+	def _on_menu_task_change_hide_until(self, _evt):
+		if self._items_list_ctrl.selected_count == 1:
+			task = self._get_selected_task()
+			if task and TaskController(self.wnd, self._session, task).\
+					task_change_hide_until():
+				task_logic.save_modified_task(task, self._session)
+		elif self._items_list_ctrl.selected_count > 1:
+			tasks_uuid = list(self._items_list_ctrl.get_selected_items_uuid())
+			TaskController(self.wnd, self._session,
+					None).tasks_change_hide_until(tasks_uuid)
+
+	def _on_menu_task_change_context(self, _evt):
+		tasks_uuid = list(self._items_list_ctrl.get_selected_items_uuid())
+		if tasks_uuid:
+			TaskController(self.wnd, self._session,
+					None).tasks_change_context(tasks_uuid)
+
+	def _on_menu_task_change_folder(self, _evt):
+		tasks_uuid = list(self._items_list_ctrl.get_selected_items_uuid())
+		if tasks_uuid:
+			TaskController(self.wnd, self._session,
+					None).tasks_change_folder(tasks_uuid)
+
+	def _on_menu_task_change_project(self, _evt):
+		tasks_uuid = list(self._items_list_ctrl.get_selected_items_uuid())
+		if tasks_uuid:
+			TaskController(self.wnd, self._session,
+					None).tasks_change_project(tasks_uuid)
+
+	def _on_menu_task_change_status(self, _evt):
+		tasks_uuid = list(self._items_list_ctrl.get_selected_items_uuid())
+		if tasks_uuid:
+			TaskController(self.wnd, self._session,
+					None).tasks_change_status(tasks_uuid)
+
+	def _on_menu_task_complete(self, _evt):
+		self._toggle_task_complete()
+
+	def _on_menu_task_starred(self, _evt):
+		self._toggle_task_starred()
+
+	def _on_menu_search_task(self, _evt):
+		FrameSeach.run(self.wnd)
+
+	def _on_menu_notebook_open(self, _evt):  # pylint: disable=R0201
 		FrameNotebook.run()
 
 	def _on_menu_sett_tags(self, _evt):
@@ -386,29 +552,31 @@ class FrameMain(BaseFrame):
 		DlgFolders(self.wnd).run(True)
 		self._filter_tree_ctrl.RefreshItems()
 
+	def _on_menu_sett_contexts(self, _evt):
+		DlgContexts(self.wnd).run(True)
+		self._filter_tree_ctrl.RefreshItems()
+
 	def _on_filter_tree_item_activated(self, evt):
-		wx.CallAfter(self._refresh_list)
+		self._refresh_list()
 		evt.Skip()
 
 	def _on_filter_tree_item_selected(self, evt):
-		wx.CallAfter(self._refresh_list)
+		self._refresh_list()
 		evt.Skip()
 
 	def _on_rb_show_selection(self, evt):
-		wx.CallAfter(self._refresh_list)
+		self._refresh_list()
 		evt.Skip()
 
 	def _on_items_list_activated(self, evt):
 		task_uuid, task_type = self._items_list_ctrl.items[evt.GetData()]
 		if task_type in (enums.TYPE_PROJECT, enums.TYPE_CHECKLIST):
-			session = self._session
-			task = session.query(  # pylint: disable=E1101
-					OBJ.Task).filter_by(uuid=task_uuid).first()
+			task = OBJ.Task.get(self._session, uuid=task_uuid)
 			self._items_path.append(task)
 			self._refresh_list()
 			return
 		if task_uuid:
-			TaskDialogControler.open_task(self.wnd, task_uuid)
+			TaskController.open_task(self.wnd, task_uuid)
 
 	def _on_item_drag(self, evt):
 		s_index = evt.start
@@ -432,6 +600,18 @@ class FrameMain(BaseFrame):
 			item.update_modify_time()
 		self._session.commit()
 		self._refresh_list()
+
+	def _on_items_list_right_click(self, _evt):
+		if self._items_list_ctrl.selected_count == 0:
+			return
+		elif self._items_list_ctrl.selected_count == 1:
+			task_type = self._items_list_ctrl.get_item_type(None)
+			menu = self._tasks_popup_menu.build(task_type)
+		else:
+			menu = self._tasks_popup_menu.build_multi(set(
+				self._items_list_ctrl.get_selected_items_type()))
+		self.wnd.PopupMenu(menu)
+		menu.Destroy()
 
 	def _on_btn_path_back(self, _evt):
 		if self._items_path:
@@ -457,17 +637,16 @@ class FrameMain(BaseFrame):
 		self._delete_selected_task()
 
 	def _on_btn_complete_task(self, _evt):
-		task_uuid = self._items_list_ctrl.get_item_uuid(None)
-		if task_uuid is None:  # not selected
-			return
-		task_logic.toggle_task_complete(task_uuid, self.wnd, self._session)
+		self._toggle_task_complete()
+
+	def _on_btn_starred_task(self, _evt):
+		self._toggle_task_starred()
 
 	def _on_btn_edit_parent(self, _evt):
-		if not self._items_path:
-			return
-		task_uuid = self._items_path[-1].uuid
-		if task_uuid:
-			TaskDialogControler.open_task(self.wnd, task_uuid)
+		if self._items_path:
+			task_uuid = self._items_path[-1].uuid
+			if task_uuid:
+				TaskController.open_task(self.wnd, task_uuid)
 
 	def _on_btn_reminders(self, _evt):
 		if not DlgReminders.check(self.wnd, self._session):
@@ -488,7 +667,10 @@ class FrameMain(BaseFrame):
 			DlgReminders.check(self.wnd, self._session)
 
 	def _refresh_list(self):
+		if not self._all_loaded:
+			return
 		wx.SetCursor(wx.HOURGLASS_CURSOR)
+		self.wnd.Freeze()
 		params = self._get_params_for_list()
 		_LOG.debug("FrameMain._refresh_list; params=%r", params)
 		self._session.expire_all()  # pylint: disable=E1101
@@ -498,6 +680,8 @@ class FrameMain(BaseFrame):
 		showed = self._items_list_ctrl.GetItemCount()
 		self.wnd.SetStatusText(ngettext("%d item", "%d items", showed) % showed, 1)
 		self._show_parent_info(active_only)
+		self._refresh_groups()
+		self.wnd.Thaw()
 		wx.SetCursor(wx.STANDARD_CURSOR)
 
 	def _autosync(self, on_load=True):
@@ -513,12 +697,18 @@ class FrameMain(BaseFrame):
 				msgbox.ShowModal()
 				msgbox.Destroy()
 			dlg.mark_finished(2)
+		if on_load:
 			Publisher().sendMessage('task.update')
+			Publisher().sendMessage('dict.update')
 
 	def _delete_selected_task(self):
-		task_uuid = self._items_list_ctrl.get_item_uuid(None)
-		if task_uuid:
-			task_logic.delete_task(task_uuid, self.wnd)
+		tasks_uuid = list(self._items_list_ctrl.get_selected_items_uuid())
+		if len(tasks_uuid) == 1:
+			TaskController(self.wnd, self._session, tasks_uuid[0]).\
+					delete_task()
+		elif len(tasks_uuid) > 1:
+			TaskController(self.wnd, self._session,
+					None).delete_tasks(tasks_uuid)
 
 	def _new_task(self):
 		parent_uuid = None
@@ -534,13 +724,13 @@ class FrameMain(BaseFrame):
 				task_type = enums.TYPE_PROJECT
 			elif group_id == 6 and not self._items_path:
 				task_type = enums.TYPE_CHECKLIST
-		TaskDialogControler.new_task(self.wnd, task_type or enums.TYPE_TASK,
+		TaskController.new_task(self.wnd, task_type or enums.TYPE_TASK,
 				parent_uuid)
 
 	def _edit_selected_task(self):
 		task_uuid = self._items_list_ctrl.get_item_uuid(None)
 		if task_uuid:
-			TaskDialogControler.open_task(self.wnd, task_uuid)
+			TaskController.open_task(self.wnd, task_uuid)
 
 	def _clone_selected_task(self):
 		task_uuid = self._items_list_ctrl.get_item_uuid(None)
@@ -582,75 +772,125 @@ class FrameMain(BaseFrame):
 		panel_parent_icons.Update()
 		self['panel_parent'].GetSizer().Layout()
 
-	def _get_params_for_list(self):
+	def _get_params_for_list(self, group=None, skip_search=False):
 		""" Build params for database query """
-		group_id = self['rb_show_selection'].GetSelection()
+		group_id = (self['rb_show_selection'].GetSelection() if group is None
+				else group)
 		parent = self._items_path[-1].uuid if self._items_path else None
 		_LOG.debug('_get_params_for_list: group_id=%r, parent=%r', group_id, parent)
 		tmodel = self._filter_tree_ctrl.model
-		params = {'starred': False, 'min_priority': None,
-				'max_due_date': None, 'types': None,
-				'contexts': list(tmodel.checked_items_by_parent("CONTEXTS")),
-				'folders': list(tmodel.checked_items_by_parent("FOLDERS")),
-				'goals': list(tmodel.checked_items_by_parent("GOALS")),
-				'statuses': list(tmodel.checked_items_by_parent("STATUSES")),
-				'tags': list(tmodel.checked_items_by_parent("TAGS")),
-				'hide_until': self._btn_hide_until.GetValue(),
-				'search_str': self._searchbox.GetValue(),
-				'parent_uuid': parent}
-		params['finished'] = None if self._btn_show_finished.GetValue() else False
-		if not parent and not self._btn_show_subtasks.GetValue():
-			# tylko nadrzędne
-			params['parent_uuid'] = 0
-		if group_id == 1 and not parent:  # hot
-			# ignore hotlist settings when showing subtasks
-			_get_hotlist_settings(params, self._appconfig)
-		elif group_id == 2 and not parent:  # stared
-			# ignore starred when showing subtasks
-			params['starred'] = True
-		elif group_id == 3:  # basket
-			# no status, no context
-			params['contexts'] = [None]
-			params['statuses'] = [0]
-			params['goals'] = [None]
-			params['folders'] = [None]
-			params['tags'] = [None]
-			params['finished'] = False
-			params['no_due_date'] = True
-		elif group_id == 4:  # finished
-			params['finished'] = True
-		elif group_id == 5 and not parent:  # projects
-			params['types'] = [enums.TYPE_PROJECT]
-		elif group_id == 6:  # checklists
-			if parent:
-				params['types'] = [enums.TYPE_CHECKLIST, enums.TYPE_CHECKLIST_ITEM]
-			else:
-				params['types'] = [enums.TYPE_CHECKLIST]
-		elif group_id == 7:  # future alarms
-			params['active_alarm'] = True
-			params['finished'] = (None if self._btn_show_finished.GetValue()
-					else False)
+		options = 0
+		if self._btn_show_finished.GetValue():
+			options |= queries.OPT_SHOW_FINISHED
+		if self._btn_show_subtasks.GetValue():
+			options |= queries.OPT_SHOW_SUBTASKS
+		if self._btn_hide_until.GetValue():
+			options |= queries.OPT_HIDE_UNTIL
+		params = queries.build_query_params(group_id, options, parent,
+				"" if skip_search else self._searchbox.GetValue())
+		queries.query_params_append_contexts(params,
+				tmodel.checked_items_by_parent("CONTEXTS"))
+		queries.query_params_append_folders(params,
+				tmodel.checked_items_by_parent("FOLDERS"))
+		queries.query_params_append_goals(params,
+				tmodel.checked_items_by_parent("GOALS"))
+		queries.query_params_append_statuses(params,
+				tmodel.checked_items_by_parent("STATUSES"))
+		queries.query_params_append_tags(params,
+				tmodel.checked_items_by_parent("TAGS"))
 		return params
 
+	def _toggle_task_complete(self):
+		task = self._get_selected_task()
+		if not task:
+			return
+		if not task.completed and not TaskController(
+				self.wnd, self._session, task).confirm_set_task_complete():
+			return
+		task_logic.toggle_task_complete(task.uuid, self._session)
 
-def _get_hotlist_settings(params, conf):
-	now = datetime.datetime.utcnow()
-	params['filter_operator'] = 'or' if conf.get('hotlist', 'cond', True) \
-			else 'and'
-	params['max_due_date'] = now + datetime.timedelta(days=conf.get('hotlist',
-			'due', 0))
-	params['min_priority'] = conf.get('hotlist', 'priority', 3)
-	params['starred'] = conf.get('hotlist', 'starred', False)
-	params['next_action'] = conf.get('hotlist', 'next_action', False)
-	params['started'] = conf.get('hotlist', 'started', False)
+	def _toggle_task_starred(self):
+		task_uuid = self._items_list_ctrl.get_item_uuid(None)
+		task_logic.toggle_task_starred(task_uuid, self._session)
+
+	def _get_selected_task(self):
+		""" Return Task object for selected item. """
+		task_uuid = self._items_list_ctrl.get_item_uuid(None)
+		if task_uuid:
+			return OBJ.Task.get(self._session, uuid=task_uuid)
+		return None
+
+	def _refresh_groups(self):
+		rb_show_selection = self['rb_show_selection']
+		for group, label in enumerate((_("All (%d)"), _("Hotlist (%d)"),
+				_("Starred (%d)"), _("Basket (%d)"), _("Finished (%d)"),
+				_("Projects (%d)"), _("Active Alarms (%d)"))):
+			cnt = OBJ.Task.select_by_filters(self._get_params_for_list(group,
+					True), session=self._session).count()
+			rb_show_selection.SetItemLabel(group, label % cnt)
 
 
-# additional strings to translate
-def _fake_strings():
-	_('All')
-	_('Hot')
-	_('Stared')
-	_('Basket')
-	_('Finished')
-	_('Projects')
-	_('Checklists')
+class _TasksPopupMenu:
+	""" Popup menu for tasks list. """
+	# pylint: disable=R0902,R0903
+
+	def __init__(self):
+		self.toggle_task_complete_id = wx.NewId()
+		self.task_set_complete_id = wx.NewId()
+		self.task_set_not_complete_id = wx.NewId()
+		self.task_edit_id = wx.NewId()
+		self.task_clone_id = wx.NewId()
+		self.task_delete_id = wx.NewId()
+		self.task_change_due_id = wx.NewId()
+		self.task_change_start_id = wx.NewId()
+		self.task_change_remind_id = wx.NewId()
+		self.task_change_hide_until_id = wx.NewId()
+		self.task_change_context_id = wx.NewId()
+		self.task_change_project_id = wx.NewId()
+		self.task_change_folder_id = wx.NewId()
+		self.task_change_status_id = wx.NewId()
+		self.toggle_task_stared_id = wx.NewId()
+		self.task_set_starred_id = wx.NewId()
+		self.task_set_not_starred_id = wx.NewId()
+
+	def build(self, task_type):
+		menu = wx.Menu()
+		menu.Append(self.toggle_task_complete_id, _('Toggle Task Completed'))
+		menu.Append(self.toggle_task_stared_id, _('Toggle Task Starred'))
+		menu.AppendSeparator()
+		menu.Append(self.task_edit_id, _('Edit Task'))
+		menu.Append(self.task_clone_id, _('Clone Task'))
+		menu.Append(self.task_delete_id, _('Delete Task'))
+		menu.AppendSeparator()
+		menu.Append(self.task_change_context_id, _('Change Context...'))
+		menu.Append(self.task_change_project_id, _('Change Project/List...'))
+		menu.Append(self.task_change_folder_id, _('Change Folder...'))
+		menu.Append(self.task_change_status_id, _('Change Status...'))
+		if task_type not in (enums.TYPE_CHECKLIST, enums.TYPE_CHECKLIST_ITEM):
+			menu.AppendSeparator()
+			menu.Append(self.task_change_due_id, _('Change Due Date...'))
+			menu.Append(self.task_change_start_id, _('Change Start Date...'))
+			menu.Append(self.task_change_remind_id, _('Change Remind Date...'))
+			menu.Append(self.task_change_hide_until_id,
+					_('Change Show Settings..'))
+		return menu
+
+	def build_multi(self, _types):
+		menu = wx.Menu()
+		menu.Append(self.task_set_complete_id, _('Set Task Completed'))
+		menu.Append(self.task_set_not_complete_id, _('Set Task Not Completed'))
+		menu.Append(self.task_set_starred_id, _('Set Task Starred'))
+		menu.Append(self.task_set_not_starred_id, _('Set Task Not Starred'))
+		menu.AppendSeparator()
+		menu.Append(self.task_delete_id, _('Delete Task'))
+		menu.AppendSeparator()
+		menu.Append(self.task_change_context_id, _('Change Context...'))
+		menu.Append(self.task_change_project_id, _('Change Project/List...'))
+		menu.Append(self.task_change_folder_id, _('Change Folder...'))
+		menu.Append(self.task_change_status_id, _('Change Status...'))
+		menu.AppendSeparator()
+		menu.Append(self.task_change_due_id, _('Change Due Date...'))
+		menu.Append(self.task_change_start_id, _('Change Start Date...'))
+		menu.Append(self.task_change_remind_id, _('Change Remind Date...'))
+		menu.Append(self.task_change_hide_until_id, _('Change Show Settings...'))
+		return menu

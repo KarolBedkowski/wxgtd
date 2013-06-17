@@ -23,7 +23,7 @@ from wxgtd.wxtools.validators import Validator
 from wxgtd.wxtools.validators import v_length as LVALID
 from wxgtd.wxtools import wxutils
 
-from ._base_dialog import BaseDialog
+from ._base_frame import BaseFrame
 from . import _fmt as fmt
 from . import dialogs
 from . import message_boxes as mbox
@@ -33,44 +33,50 @@ _ = gettext.gettext
 _LOG = logging.getLogger(__name__)
 
 
-class BaseTaskDialog(BaseDialog):
+class BaseTaskFrame(BaseFrame):
 	""" Base class for all task dialogs.
 
 	Args:
 		parent: parent windows.
-		dialog_name: name of dialog in xrc file
 		task: task to edit.
 		session: SqlAlchemy session.
-		controller: TaskDialogControler associated to task.
+		controller: TaskController associated to task.
 	"""
 
-	def __init__(self, parent, dialog_name, task, session, controller):
-		BaseDialog.__init__(self, parent, dialog_name)
+	_xrc_resource = "wxgtd.xrc"
+
+	def __init__(self, parent, task, session, controller):
+		BaseFrame.__init__(self, parent)
 		self._session = session
 		self._task = task
 		self._controller = controller
 		self._setup_comboboxes()
 		self._setup(task)
 		self._refresh_static_texts()
+		self._post_create()
 
 	def run(self, _dummy=False):
 		""" Run (show) dialog.  """
-		self._wnd.Show()
+		self.wnd.Show()
+		self.wnd.Raise()
 
 	def close(self):
-		self._wnd.Destroy()
+		self.wnd.Destroy()
 
 	def _create_bindings(self, wnd):
-		BaseDialog._create_bindings(self, wnd)
+		BaseFrame._create_bindings(self, wnd)
 		self['lb_notes_list'].Bind(wx.EVT_LISTBOX_DCLICK, self._on_lb_notes_list)
 		wnd.Bind(wx.EVT_BUTTON, self._on_btn_delete, id=wx.ID_DELETE)
 		wnd.Bind(wx.EVT_BUTTON, self._on_btn_new_note, id=wx.ID_ADD)
+		wnd.Bind(wx.EVT_BUTTON, self._on_save, id=wx.ID_SAVE)
+		wnd.Bind(wx.EVT_BUTTON, self._on_ok, id=wx.ID_OK)
+		wnd.Bind(wx.EVT_BUTTON, self._on_cancel, id=wx.ID_CLOSE)
 		self['btn_del_note'].Bind(wx.EVT_BUTTON, self._on_btn_del_note)
 		self['btn_change_project'].Bind(wx.EVT_BUTTON,
 				self._on_btn_change_project)
 
 	def _setup(self, task):
-		_LOG.debug("BaseTaskDialog.setup(%r)", task.uuid)
+		_LOG.debug("BaseTaskFrame.setup(%r)", task.uuid)
 		self._original_task = task.clone(cleanup=False)
 		self._data = {'prev_completed': task.completed}
 		self['tc_title'].SetValidator(Validator(task, 'title',
@@ -91,7 +97,9 @@ class BaseTaskDialog(BaseDialog):
 			return
 		if not self._data['prev_completed'] and self._task.completed:
 			# zakonczono zadanie
-			if not task_logic.complete_task(self._task, self._wnd, self._session):
+			if not self._controller.confirm_set_task_complete():
+				return
+			if not task_logic.complete_task(self._task, self._session):
 				return
 		task_logic.save_modified_task(self._task, self._session)
 		self._on_ok(evt)
@@ -101,11 +109,15 @@ class BaseTaskDialog(BaseDialog):
 			_LOG.debug('data changed')
 			return
 		self._session.rollback()
-		self._wnd.Close()
+		self.wnd.Close()
 
 	def _on_close(self, evt):
 		self._controller.close()
-		BaseDialog._on_close(self, evt)
+		BaseFrame._on_close(self, evt)
+
+	def _on_ok(self, _evt):
+		""" Action for ok/yes - close window. """
+		self.wnd.Close()
 
 	def _on_lb_notes_list(self, _evt):
 		sel = self['lb_notes_list'].GetSelection()
@@ -148,16 +160,14 @@ class BaseTaskDialog(BaseDialog):
 		dlg = DlgProjectTree(self.wnd)
 		if dlg.run(modal=True):
 			parent_uuid = dlg.selected
-			if task_logic.change_task_parent(self._task, parent_uuid,
-					self._session, self.wnd):
+			if self._controller.task_change_parent(parent_uuid):
 				self._refresh_static_texts()
 				self._on_task_type_change()
 
 	def _on_btn_delete(self, _evt):
 		tuuid = self._task.uuid
-		if tuuid:
-			if task_logic.delete_task(tuuid, self.wnd, self._session):
-				self._on_ok(None)
+		if tuuid and self._controller.delete_task():
+			self._on_ok(None)
 
 	def _refresh_static_texts(self):
 		""" Odświeżenie pól dat na dlg """
@@ -184,7 +194,7 @@ class BaseTaskDialog(BaseDialog):
 		Returns:
 			True = no error.
 		"""
-		return self._wnd.Validate()
+		return self.wnd.Validate()
 
 	def _transfer_data_from_window(self):
 		""" Transfer values from widgets to objects.
@@ -192,10 +202,34 @@ class BaseTaskDialog(BaseDialog):
 		Returns:
 			True = no error.
 		"""
-		return self.wnd.TransferDataFromWindow()
+		try:
+			return self.wnd.TransferDataFromWindow()
+		finally:
+			pass
+		return False
+
+	def _confirm_close(self):
+		res = mbox.message_box_not_save_confirm(self.wnd, None)
+		if res == wx.ID_NO:
+			return True
+		if res == wx.ID_YES:
+			self._on_save(None)
+		return False
 
 	@wxutils.call_after
 	def _on_task_type_change(self):
 		""" Called after task type change. """
+		fake_title = False
+		if not self['tc_title'].GetValue().strip():
+			self['tc_title'].SetValue("<?>")
+			fake_title = True
 		self._transfer_data_from_window()
+		if fake_title:
+			self._task.title = ""
+			self['tc_title'].SetValue("")
 		self._controller.change_task_type()
+
+	@wxutils.call_after
+	def _post_create(self):
+		self.wnd.TransferDataToWindow()
+		self['tc_title'].SetFocus()

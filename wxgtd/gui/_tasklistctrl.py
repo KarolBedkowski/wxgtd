@@ -119,7 +119,7 @@ class TaskListControl(ULC.UltimateListCtrl, listmix.ColumnSorterMixin):
 		# configure infobox
 		infobox.configure()
 		agwStyle = agwStyle | wx.LC_REPORT | wx.BORDER_SUNKEN | wx.LC_HRULES \
-				| wx.LC_SINGLE_SEL | ULC.ULC_HAS_VARIABLE_ROW_HEIGHT
+				| ULC.ULC_HAS_VARIABLE_ROW_HEIGHT
 		ULC.UltimateListCtrl.__init__(self, parent, wid, pos, size, style,
 				agwStyle)
 		listmix.ColumnSorterMixin.__init__(self, 4)
@@ -152,13 +152,43 @@ class TaskListControl(ULC.UltimateListCtrl, listmix.ColumnSorterMixin):
 		""" Get selected item index. """
 		return self.GetNextItem(-1, wx.LIST_NEXT_ALL, wx.LIST_STATE_SELECTED)
 
+	@property
+	def selected_count(self):
+		return self.GetSelectedItemCount()
+
 	def get_item_uuid(self, idx):
 		""" Get given or selected (when idx is None) task uuid. """
 		if idx is None:
 			idx = self.selected
 			if idx < 0:
-				return None, None
+				return None
 		return self._items[self.GetItemData(idx)][0]
+
+	def get_item_type(self, idx):
+		""" Get given or selected (when idx is None) task type. """
+		if idx is None:
+			idx = self.selected
+			if idx < 0:
+				return None
+		return self._items[self.GetItemData(idx)][1]
+
+	def get_selected_items_type(self):
+		""" Get selected tasks type. """
+		idx = -1
+		while True:
+			idx = self.GetNextItem(idx, wx.LIST_NEXT_ALL, wx.LIST_STATE_SELECTED)
+			if idx < 0:
+				break
+			yield self._items[self.GetItemData(idx)][1]
+
+	def get_selected_items_uuid(self):
+		""" Get selected tasks uuid. """
+		idx = -1
+		while True:
+			idx = self.GetNextItem(idx, wx.LIST_NEXT_ALL, wx.LIST_STATE_SELECTED)
+			if idx < 0:
+				break
+			yield self._items[self.GetItemData(idx)][0]
 
 	def fill(self, tasks, active_only=False):
 		""" Fill the list with tasks.

@@ -103,7 +103,10 @@ def _draw_info_task_status(mdc, cache, task, x_off, y_off):
 def _draw_info_task_context(mdc, cache, task, x_off, y_off):
 	task_context = cache.get('task_context')
 	if task_context is None and task.context:
-		cache['task_context'] = task_context = task.context.title
+		task_context = task.context.title
+		if not task_context.startswith('@'):
+			task_context = '@' + task_context
+		cache['task_context'] = task_context
 		cache['task_context_x_off'] = mdc.GetTextExtent(task_context)[0] + 10
 	if task_context:
 		mdc.DrawText(task_context, x_off, y_off)
@@ -114,7 +117,12 @@ def _draw_info_task_context(mdc, cache, task, x_off, y_off):
 def _draw_info_task_parent(mdc, cache, task, x_off, y_off):
 	task_parent = cache.get('task_parent')
 	if task_parent is None and task.parent:
-		cache['task_parent'] = task_parent = task.parent.title
+		task_parents = []
+		while task.parent:
+			task_parents.insert(0, task.parent.title)
+			task = task.parent
+		task_parent = '/'.join(task_parents)
+		cache['task_parent'] = task_parent
 		cache['task_parent_x_off'] = mdc.GetTextExtent(task_parent)[0] + 10
 	if task_parent:
 		mdc.DrawBitmap(iconprovider.get_image('project_small'), x_off,

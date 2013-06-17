@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-""" Main module.
+""" Main module - gui interface
 
 Copyright (c) Karol Będkowski, 2013
 
@@ -29,21 +29,14 @@ except AttributeError:
 _LOG = logging.getLogger(__name__)
 
 
-def _show_version(*_args, **_kwargs):
-	from wxgtd import version
-	print version.INFO
-	exit(0)
+from wxgtd import version
 
 
 def _parse_opt():
 	""" Parse cli options. """
-	optp = optparse.OptionParser()
-	optp.add_option('--version', action="callback", callback=_show_version,
-		help='show information about application version')
+	optp = optparse.OptionParser(version=version.NAME + " (GUI) " +
+			version.VERSION)
 	group = optparse.OptionGroup(optp, "Creating tasks")
-	group.add_option('--quick-task', '-q', action="callback",
-			callback=create_quicktask,
-			help='add quickly task', type="string")
 	group.add_option('--quick-task-dialog', action="store_true", default=False,
 			help='enable debug messages', dest="quick_task_dialog")
 	optp.add_option_group(group)
@@ -192,36 +185,3 @@ def run():
 
 	# app closed; save config
 	config.save()
-
-
-def create_quicktask(_option, _opt_str, value, _parser, *_args, **_kwargs):
-	if not value:
-		raise optparse.OptionValueError()
-
-	# app config
-	from wxgtd.lib import appconfig
-
-	# logowanie
-	from wxgtd.lib.logging_setup import logging_setup
-	logging_setup('wxgtd.log', False, False)
-
-	# konfiguracja
-	config = appconfig.AppConfig('wxgtd.cfg', 'wxgtd')
-	config.load_defaults(config.get_data_file('defaults.cfg'))
-	config.load()
-	config.debug = False
-
-	# locale
-	_setup_locale(config)
-
-	# database
-	from wxgtd.model import db
-	db_filename = _find_db_file(config)
-	_create_file_dir(db_filename)
-	# connect to databse
-	db.connect(db_filename, False)
-
-	from wxgtd.logic import quicktask as quicktask_logic
-	quicktask_logic.create_quicktask(value)
-	config.save()
-	exit(0)

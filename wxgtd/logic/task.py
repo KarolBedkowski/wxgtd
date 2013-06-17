@@ -24,7 +24,6 @@ try:
 except ImportError:
 	from wx.lib.pubsub import Publisher  # pylint: disable=E0611
 
-from wxgtd.gui import message_boxes as mbox
 from wxgtd.model import objects as OBJ
 from wxgtd.model import enums
 
@@ -324,87 +323,91 @@ def update_task_from_parent(task, parent_uuid, session, appconfig):
 	"""
 	if not parent_uuid:
 		return
-	# znalezienie projektu w hierarchii; czy to ma sens?
-	while parent_uuid:
-		parent = session.query(OBJ.Task).filter_by(uuid=parent_uuid).first()
-		if parent.type == enums.TYPE_PROJECT:
-			break
-		parent_uuid = parent.parent_uuid
+	parent = session.query(OBJ.Task).filter_by(uuid=parent_uuid).first()
 	if not parent:
 		_LOG.warn("update_task_from_parent: wrong parent %r", (task,
 			parent_uuid))
 		return
-	if appconfig.get('tasks', 'inerit_context') and not task.context_uuid:
+	if appconfig.get('task', 'inherit_context') and not task.context_uuid:
 		task.context_uuid = parent.context_uuid
-	if appconfig.get('tasks', 'inerit_goal') and not task.goal_uuid:
+	if appconfig.get('task', 'inherit_goal') and not task.goal_uuid:
 		task.goal_uuid = parent.goal_uuid
-	if appconfig.get('tasks', 'inerit_folder') and not task.folder_uuid:
+	if appconfig.get('task', 'inherit_folder') and not task.folder_uuid:
 		task.folder_uuid = parent.folder_uuid
-	if appconfig.get('tasks', 'inerit_tags') and not task.tags and parent.tags:
+	if appconfig.get('task', 'inherit_tags') and not task.tags and parent.tags:
 		for tasktag in parent.tags:
 			task.task.append(OBJ.TaskTag(tag_uuid=tasktag.tag_uuid))
 
 
-def delete_task(task_uuid, parent_wnd=None, session=None):
+def delete_task(task, session=None):
 	""" Delete given task.
 
 	Show confirmation and delete task from database.
 
 	Args:
-		task_uuid: task for delete
-		parent_wnd: current wxWindow
+		task: one or list of task for delete (Task or UUID)
 		session: sqlalchemy session
 
 	Returns:
 		True = task deleted
 	"""
-	if not mbox.message_box_delete_confirm(parent_wnd, _("task")):
-		return False
-
 	session = session or OBJ.Session()
-	task = session.query(OBJ.Task).filter_by(uuid=task_uuid).first()
-	if not task:
-		_LOG.warning("delete_task: missing task %r", task_uuid)
-		return False
+	tasks = task if isinstance(task, (list, tuple)) else [task]
+	deleted = 0
+	for task in tasks:
+		if isinstance(task, (str, unicode)):
+			task = session.query(OBJ.Task).filter_by(uuid=task).first()
+			if not task:
+				_LOG.warning("delete_task: missing task %r", task)
+				continue
+		session.delete(task)
+		deleted += 1
+	if deleted:
+		session.commit()
+		Publisher().sendMessage('task.delete')
+	return bool(deleted)
 
-	session.delete(task)
-	session.commit()
-	Publisher().sendMessage('task.delete', data={'task_uuid': task_uuid})
-	return True
 
-
-def complete_task(task, parent_wnd=None, session=None):
+def complete_task(task, session=None):
 	""" Complete task.
 
 	Repeat task if necessary.
 
 	Args:
 		task: Task object
-		parent_wnd: current wxWindow
 		session: sqlalchemy session
 
 	Returns:
 		True if task is completed
 	"""
-	if not mbox.message_box_question(parent_wnd, _("Set task completed?"),
-			None, _("Set complete"), _("Close")):
-		return False
 	# pylint: disable=E1101
 	session = session or OBJ.Session.objects_session(task) or OBJ.Session()
 	task.task_completed = True
 	task.update_modify_time()
-	repeated_task = repeat_task(task)
-	if repeated_task is not None:
-		session.add(repeated_task)
+	if task.type == enums.TYPE_CHECKLIST_ITEM:
+		# renumber task in chcecklist - move current task to the end
+		task_importance = task.importance
+		idx = task_importance - 1
+		for idx, ntask in enumerate(session.query(OBJ.Task).
+				filter(OBJ.Task.parent_uuid == task.parent_uuid,
+					OBJ.Task.importance >= task_importance,
+					OBJ.Task.uuid != task.uuid).
+				order_by(OBJ.Task.importance), task_importance):
+			ntask.importance = idx
+		task.importance = idx + 1
+	elif task.type == enums.TYPE_TASK:
+		# repeat only regular task
+		repeated_task = repeat_task(task)
+		if repeated_task is not None:
+			session.add(repeated_task)
 	return True
 
 
-def toggle_task_complete(task_uuid, parent_wnd, session=None):
+def toggle_task_complete(task_uuid, session=None):
 	""" Togle task complete flag.
 
 	Args:
 		task_uuid: UUID of task to change
-		parent_wnd: parent wxwidget window
 		session: optional SqlAlchemy session
 	Returns:
 		True if ok
@@ -413,10 +416,25 @@ def toggle_task_complete(task_uuid, parent_wnd, session=None):
 	task = session.query(  # pylint: disable=E1101
 			OBJ.Task).filter_by(uuid=task_uuid).first()
 	if not task.task_completed:
-		if not complete_task(task, parent_wnd, session):
+		if not complete_task(task, session):
 			return False
 	else:
 		task.task_completed = False
+	return save_modified_task(task, session)
+
+
+def toggle_task_starred(task_uuid, session=None):
+	""" Toggle task starred flag.
+
+	Args:
+		task_uuid: UUID of task to change
+		session: optional SqlAlchemy session
+	Returns:
+		True if ok
+	"""
+	session = session or OBJ.Session()
+	task = OBJ.Task.get(session, uuid=task_uuid)
+	task.starred = not task.starred
 	return save_modified_task(task, session)
 
 
@@ -517,10 +535,39 @@ def save_modified_task(task, session=None):
 	session = session or OBJ.Session()
 	update_project_due_date(task)
 	adjust_task_type(task, session)
+	if task.type == enums.TYPE_CHECKLIST_ITEM:
+		if not task.importance:
+			task.importance = OBJ.Task.find_max_importance(task.parent_uuid,
+					session) + 1
 	task.update_modify_time()
 	session.add(task)
 	session.commit()  # pylint: disable=E1101
 	Publisher().sendMessage('task.update', data={'task_uuid': task.uuid})
+	return True
+
+
+def save_modified_tasks(tasks, session=None):
+	""" Save modified tasks.
+	Update required fields.
+
+	Args:
+		tasks: list of task to save
+		session: optional SqlAlchemy session
+	Returns:
+		True if ok.
+	"""
+	session = session or OBJ.Session()
+	for task in tasks:
+		update_project_due_date(task)
+		adjust_task_type(task, session)
+		if task.type == enums.TYPE_CHECKLIST_ITEM:
+			if not task.importance:
+				task.importance = OBJ.Task.find_max_importance(task.parent_uuid,
+						session) + 1
+		task.update_modify_time()
+		session.add(task)
+	session.commit()  # pylint: disable=E1101
+	Publisher().sendMessage('task.update')
 	return True
 
 
@@ -533,55 +580,47 @@ def adjust_task_type(task, session):
 		True if ok.
 	"""
 	if task.parent:
+		# zadanie ma rodzica - ustalenie typu na podstawie parenta
 		if task.parent.type == enums.TYPE_CHECKLIST:
+			# na checkliście tylko elementy listy
 			task.type = enums.TYPE_CHECKLIST_ITEM
 		elif task.type == enums.TYPE_CHECKLIST_ITEM:
+			# rodzic nie jest checklistą, więc gdy element należał do listy
+			# zmiana na zwykłe zadanie
 			task.type = enums.TYPE_TASK
 	elif task.type == enums.TYPE_CHECKLIST_ITEM:
-		# elementy checlisty tylko w checklistach
+		# brak rodzica; elementy checlisty tylko w checklistach
 		task.type = enums.TYPE_TASK
 	if task.children:
+		# aktualizacja potomków
 		if task.type in (enums.TYPE_CHECKLIST, enums.TYPE_PROJECT):
 			for subtask in task.children:
 				adjust_task_type(subtask, session)
 		else:
 			# jeżeli to nie projakt ani checliksta to nie powinna mieć podzadań
 			for subtask in task.children:
+				# przesuniecie na poziom parenta
 				subtask.parent = task.parent
+				# poprawa typu
+				adjust_task_type(subtask, session)
 	return True
 
 
-def change_task_parent(task, parent_uuid, session, wnd):
-	parent = None
-	if parent_uuid:
-		parent = OBJ.Task.get(session, uuid=parent_uuid)
-	if not _confirm_change_task_parent(task, parent, wnd):
-		return False
+def change_task_parent(task, parent, session=None):
+	""" Change task parent.
+
+	Args:
+		task: task to change (uuid or Task)
+		parent: parent to set (uuid or Task)
+		session: optional SqlAlchemy session
+	Returns:
+		True if parent was changed
+	"""
+	session = session or OBJ.Session()
+	if isinstance(task, (str, unicode)):
+		task = OBJ.Task.get(session, uuid=task)
+	if parent is not None:
+		if isinstance(parent, (str, unicode)):
+			parent = OBJ.Task.get(session, uuid=parent)
 	task.parent = parent
-	adjust_task_type(task, session)
-	return True
-
-
-def _confirm_change_task_parent(task, parent, wnd):
-	curr_type = task.type
-	if parent:  # nowy parent
-		if (parent.type == enums.TYPE_CHECKLIST and
-				curr_type != enums.TYPE_CHECKLIST_ITEM) or (
-				parent.type != enums.TYPE_CHECKLIST and
-				curr_type == enums.TYPE_CHECKLIST_ITEM):
-			if not mbox.message_box_warning_yesno(wnd,
-				_("This operation change task and subtasks type.\n"
-					"Are you sure?")):
-				return False
-	else:  # brak nowego parenta
-		if curr_type in (enums.TYPE_CHECKLIST, enums.TYPE_PROJECT):
-			if not mbox.message_box_warning_yesno(wnd,
-					_("This operation change all subtasks to simple"
-						" tasks\nAre you sure?")):
-				return False
-		elif curr_type == enums.TYPE_CHECKLIST_ITEM:
-			if not mbox.message_box_warning_yesno(wnd,
-				_("This operation change task and subtasks type.\n"
-					"Are you sure?")):
-				return False
-	return True
+	return adjust_task_type(task, session)
