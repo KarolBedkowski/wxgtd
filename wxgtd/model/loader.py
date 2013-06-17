@@ -17,7 +17,6 @@ import os
 import logging
 import zipfile
 import gettext
-import datetime
 try:
 	import cjson
 	_JSON_DECODER = cjson.decode
@@ -183,6 +182,7 @@ def _cleanup_tasks(loaded_tasks, last_sync, session):
 			session=session):
 		if task.uuid not in loaded_tasks:
 			_LOG.info("_cleanup_tasks: delete task %r", task.uuid)
+			_LOG.debug("_cleanup_tasks: delete task %r", task)
 			session.delete(task)
 			idx += 1
 	return idx
@@ -203,6 +203,7 @@ def _cleanup_notebooks(loaded_notebooks, last_sync, session):
 			session=session):
 		if page.uuid not in loaded_notebooks:
 			_LOG.info("_cleanup_notebooks: delete page %r", page.uuid)
+			_LOG.debug("_cleanup_notebooks: delete page %r", page)
 			session.delete(page)
 			idx += 1
 	return idx
@@ -224,7 +225,8 @@ def _cleanup_unused(objcls, loaded_cache, last_sync, session):
 	for obj in objcls.select_old_usunsed(last_sync,
 			session=session):
 		if obj.uuid not in loaded:
-			_LOG.debug("_cleanup_unused: delete  %r", obj.uuid)
+			_LOG.info("_cleanup_unused: %r delete  %r", objcls, obj.uuid)
+			_LOG.debug("_cleanup_unused: %r delete  %r", objcls, obj)
 			session.delete(obj)
 			idx += 1
 	_LOG.info("_cleanup_unused(%r): deleted=%d", objcls, idx)
@@ -327,7 +329,12 @@ def load_json(strdata, notify_cb, force=False):
 	notebooks_cache = _load_notebooks(data, session, notify_cb)
 	_load_notebook_folders(data, session, notebooks_cache, folders_cache,
 			notify_cb)
-	last_prev_sync_time = _load_synclog(data, session, notify_cb)
+	_load_synclog(data, session, notify_cb)
+
+	my_dev_id = session.query(  # pylint: disable=E1101
+			objects.Conf).filter_by(key='deviceId').first().val
+	last_prev_sync_time = session.query(  # pylint: disable=E1101
+			objects.SyncLog).filter_by(device_id=my_dev_id).first().sync_time
 
 	# 80: cleanup
 	if last_prev_sync_time:
@@ -624,7 +631,6 @@ def _load_notebook_folders(data, session, notebooks_cache, folders_cache,
 def _load_synclog(data, session, notify_cb):
 	_LOG.info("_load_synclog")
 	notify_cb(76, _("Loading synclog"))
-	last_sync_time = last_prev_sync_time = datetime.datetime(1900, 1, 1)
 	for sync_log in data.get("syncLog"):
 		_convert_timestamps(sync_log, "prevSyncTime", "syncTime")
 		slog_item = objects.SyncLog.get(session, device_id=sync_log["deviceId"])
@@ -635,13 +641,9 @@ def _load_synclog(data, session, notify_cb):
 			slog_item.device_id = sync_log["deviceId"]
 		slog_item.sync_time = sync_log["syncTime"]
 		session.add(slog_item)  # pylint: disable=E1101
-		if slog_item.sync_time > last_sync_time:
-			last_sync_time = slog_item.sync_time
-			last_prev_sync_time = slog_item.prev_sync_time
 	if "syncLog" in data:
 		del data["syncLog"]
 	notify_cb(79, _("Synclog loaded"))
-	return last_prev_sync_time
 
 
 def _update_all_tasks(session):
