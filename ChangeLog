@@ -1,3 +1,11 @@
+wxgtd 0.9.0 2013-06-17
+
+	* more CLI commands (query)
+	* GUI improvements
+	* search tasks windows
+	* allow to edit many tasks at once
+	* bugfixes
+
 wxgtd 0.8.0 2013-06-01
 
 	* basic CLI commands (adding tasks)
