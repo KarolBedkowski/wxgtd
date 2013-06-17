@@ -824,7 +824,8 @@ class FrameMain(BaseFrame):
 		rb_show_selection = self['rb_show_selection']
 		for group, label in enumerate((_("All (%d)"), _("Hotlist (%d)"),
 				_("Starred (%d)"), _("Basket (%d)"), _("Finished (%d)"),
-				_("Projects (%d)"), _("Active Alarms (%d)"))):
+				_("Projects (%d)"), _("Checklists (%d)"),
+				_("Active Alarms (%d)"))):
 			cnt = OBJ.Task.select_by_filters(self._get_params_for_list(group,
 					True), session=self._session).count()
 			rb_show_selection.SetItemLabel(group, label % cnt)
