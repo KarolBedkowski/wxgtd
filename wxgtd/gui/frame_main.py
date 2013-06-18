@@ -152,6 +152,7 @@ class FrameMain(BaseFrame):
 		wnd.Bind(wx.EVT_BUTTON, self._on_btn_edit_parent,
 				self['btn_parent_edit'])
 		wnd.Bind(wx.EVT_TIMER, self._on_timer)
+		wnd.Bind(wx.EVT_ICONIZE, self._on_window_iconze)
 
 		Publisher().subscribe(self._on_tasks_update, ('task', 'update'))
 		Publisher().subscribe(self._on_tasks_update, ('task', 'delete'))
@@ -674,6 +675,10 @@ class FrameMain(BaseFrame):
 		if self._appconfig.get('notification', 'popup_alarms'):
 			_LOG.debug('FrameMain._on_timer: check reminders')
 			DlgReminders.check(self.wnd, self._session)
+
+	def _on_window_iconze(self, _evt):
+		if self._appconfig.get('gui', 'min_to_tray'):
+			self.wnd.Show(False)
 
 	def _refresh_list(self):
 		if not self._all_loaded:
