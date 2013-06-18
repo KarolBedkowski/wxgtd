@@ -190,6 +190,8 @@ class FrameMain(BaseFrame):
 				id=self._tasks_popup_menu.task_change_project_id)
 		wnd.Bind(wx.EVT_MENU, self._on_menu_task_change_status,
 				id=self._tasks_popup_menu.task_change_status_id)
+		wnd.Bind(wx.EVT_MENU, self._on_menu_task_change_priority,
+				id=self._tasks_popup_menu.task_change_priority_id)
 
 	def _create_toolbar(self):
 		toolbar = self.wnd.CreateToolBar()
@@ -528,6 +530,12 @@ class FrameMain(BaseFrame):
 			TaskController(self.wnd, self._session,
 					None).tasks_change_status(tasks_uuid)
 
+	def _on_menu_task_change_priority(self, _evt):
+		tasks_uuid = list(self._items_list_ctrl.get_selected_items_uuid())
+		if tasks_uuid:
+			TaskController(self.wnd, self._session,
+					None).tasks_change_priority(tasks_uuid)
+
 	def _on_menu_task_complete(self, _evt):
 		self._toggle_task_complete()
 
@@ -851,6 +859,7 @@ class _TasksPopupMenu:
 		self.task_change_project_id = wx.NewId()
 		self.task_change_folder_id = wx.NewId()
 		self.task_change_status_id = wx.NewId()
+		self.task_change_priority_id = wx.NewId()
 		self.toggle_task_stared_id = wx.NewId()
 		self.task_set_starred_id = wx.NewId()
 		self.task_set_not_starred_id = wx.NewId()
@@ -868,6 +877,7 @@ class _TasksPopupMenu:
 		menu.Append(self.task_change_project_id, _('Change Project/List...'))
 		menu.Append(self.task_change_folder_id, _('Change Folder...'))
 		menu.Append(self.task_change_status_id, _('Change Status...'))
+		menu.Append(self.task_change_priority_id, _('Change Priority...'))
 		if task_type not in (enums.TYPE_CHECKLIST, enums.TYPE_CHECKLIST_ITEM):
 			menu.AppendSeparator()
 			menu.Append(self.task_change_due_id, _('Change Due Date...'))
@@ -890,6 +900,7 @@ class _TasksPopupMenu:
 		menu.Append(self.task_change_project_id, _('Change Project/List...'))
 		menu.Append(self.task_change_folder_id, _('Change Folder...'))
 		menu.Append(self.task_change_status_id, _('Change Status...'))
+		menu.Append(self.task_change_priority_id, _('Change Priority...'))
 		menu.AppendSeparator()
 		menu.Append(self.task_change_due_id, _('Change Due Date...'))
 		menu.Append(self.task_change_start_id, _('Change Start Date...'))

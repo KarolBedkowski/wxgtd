@@ -290,6 +290,25 @@ class TaskController:
 		self._task.type = new_type
 		return True
 
+	def task_change_priority(self):
+		""" Change current task priority. Showing dialog.
+
+		Returns:
+			True on change.
+		"""
+		values = (-1, 0, 1, 2, 3)
+		choices = [enums.PRIORITIES[val] for val in values]
+		dlg = wx.SingleChoiceDialog(self.wnd, _("Change task priority to:"),
+				_("Task"), choices, wx.CHOICEDLG_STYLE)
+		new_priority = self._task.priority
+		if dlg.ShowModal() == wx.ID_OK:
+			new_priority = values[dlg.GetSelection()]
+		dlg.Destroy()
+		if new_priority == self._task.priority:
+			return False
+		self._task.priority = new_priority
+		return True
+
 	def tasks_change_status(self, tasks_uuid):
 		""" Change status in given tasks; display window with statuses
 
@@ -517,6 +536,31 @@ class TaskController:
 			task.hide_until = hide_until
 			task.hide_pattern = hide_pattern
 			task_logic.update_task_hide(task)
+			tasks_to_save.append(task)
+		return task_logic.save_modified_tasks(tasks_to_save, self._session)
+
+	def tasks_change_priority(self, tasks_uuid):
+		""" Show dialog and change given tasks priority.
+
+		Args:
+			tasks_uuid: task to change
+		Returns:
+			True if date was changed.
+		"""
+		values = (-1, 0, 1, 2, 3)
+		choices = [enums.PRIORITIES[val] for val in values]
+		dlg = wx.SingleChoiceDialog(self.wnd, _("Change task priority to:"),
+				_("Task"), choices, wx.CHOICEDLG_STYLE)
+		new_priority = None
+		if dlg.ShowModal() == wx.ID_OK:
+			new_priority = values[dlg.GetSelection()]
+		dlg.Destroy()
+		tasks_to_save = []
+		for task_uuid in tasks_uuid:
+			task = OBJ.Task.get(self._session, uuid=task_uuid)
+			if new_priority == task:
+				continue
+			task.priority = new_priority
 			tasks_to_save.append(task)
 		return task_logic.save_modified_tasks(tasks_to_save, self._session)
 
