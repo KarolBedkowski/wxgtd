@@ -147,7 +147,7 @@ class FrameMain(BaseFrame):
 				self._on_items_list_right_click)
 		self._items_list_ctrl.Bind(wx.EVT_RIGHT_UP,
 				self._on_items_list_right_click)
-		wnd.Bind(TLC.EVT_DRAG_TASK, self._on_item_drag, self._items_list_ctrl)
+		self._items_list_ctrl.Bind(TLC.EVT_DRAG_TASK, self._on_item_drag)
 		wnd.Bind(wx.EVT_BUTTON, self._on_btn_path_back, id=wx.ID_UP)
 		wnd.Bind(wx.EVT_BUTTON, self._on_btn_edit_parent,
 				self['btn_parent_edit'])
@@ -581,6 +581,7 @@ class FrameMain(BaseFrame):
 	def _on_item_drag(self, evt):
 		s_index = evt.start
 		e_index = evt.stop
+		_LOG.debug('FrameMain._on_item_drag: %r -> %r', s_index, e_index)
 		if s_index == e_index:
 			return
 		items = []
