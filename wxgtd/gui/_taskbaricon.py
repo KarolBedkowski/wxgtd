@@ -57,7 +57,6 @@ class TaskBarIcon(wx.TaskBarIcon):
 
 	def _create_bindings(self):
 		self.Bind(wx.EVT_TASKBAR_LEFT_UP, self._on_icon_activate)
-		self.Bind(wx.EVT_TASKBAR_LEFT_DCLICK, self._on_icon_activate)
 		self.Bind(wx.EVT_MENU, self._on_icon_activate, id=self.TBMENU_RESTORE)
 		self.Bind(wx.EVT_MENU, self._on_menu_app_close, id=self.TBMENU_CLOSE)
 		self.Bind(wx.EVT_MENU, self._on_menu_show_notebook,
@@ -67,9 +66,13 @@ class TaskBarIcon(wx.TaskBarIcon):
 	def _on_icon_activate(self, _evt):
 		if self._frame.IsIconized():
 			self._frame.Iconize(False)
-		if not self._frame.IsShown():
+			self._frame.Raise()
+			return
+		if self._frame.IsShown():
+			self._frame.Show(False)
+		else:
 			self._frame.Show(True)
-		self._frame.Raise()
+			self._frame.Raise()
 
 	def _on_menu_app_close(self, _evt):
 		wx.CallAfter(self._frame.Close)
