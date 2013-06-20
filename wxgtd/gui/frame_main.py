@@ -615,8 +615,9 @@ class FrameMain(BaseFrame):
 		if self._items_list_ctrl.selected_count == 0:
 			return
 		elif self._items_list_ctrl.selected_count == 1:
-			task_type = self._items_list_ctrl.get_item_type(None)
-			menu = self._tasks_popup_menu.build(task_type)
+			task_uuid = self._items_list_ctrl.get_item_uuid(None)
+			task = OBJ.Task.get(session=self._session, uuid=task_uuid)
+			menu = self._tasks_popup_menu.build(task)
 		else:
 			menu = self._tasks_popup_menu.build_multi(set(
 				self._items_list_ctrl.get_selected_items_type()))
@@ -869,21 +870,25 @@ class _TasksPopupMenu:
 		self.task_set_starred_id = wx.NewId()
 		self.task_set_not_starred_id = wx.NewId()
 
-	def build(self, task_type):
+	def build(self, task):
+		""" Build popup menu for given (selected) task """
 		menu = wx.Menu()
-		menu.Append(self.toggle_task_complete_id, _('Toggle Task Completed'))
-		menu.Append(self.toggle_task_stared_id, _('Toggle Task Starred'))
+		menu.Append(self.toggle_task_complete_id, _('Set Task Not Completed')
+				if task.completed else _('Set Task Completed'))
+		menu.Append(self.toggle_task_stared_id, _('Set Task Not Starred')
+				if task.starred else _('Set Task Starred'))
 		menu.AppendSeparator()
 		menu.Append(self.task_edit_id, _('Edit Task'))
 		menu.Append(self.task_clone_id, _('Clone Task'))
 		menu.Append(self.task_delete_id, _('Delete Task'))
 		menu.AppendSeparator()
-		menu.Append(self.task_change_context_id, _('Change Context...'))
 		menu.Append(self.task_change_project_id, _('Change Project/List...'))
-		menu.Append(self.task_change_folder_id, _('Change Folder...'))
-		menu.Append(self.task_change_status_id, _('Change Status...'))
+		if task.type != enums.TYPE_CHECKLIST_ITEM:
+			menu.Append(self.task_change_context_id, _('Change Context...'))
+			menu.Append(self.task_change_folder_id, _('Change Folder...'))
+			menu.Append(self.task_change_status_id, _('Change Status...'))
 		menu.Append(self.task_change_priority_id, _('Change Priority...'))
-		if task_type not in (enums.TYPE_CHECKLIST, enums.TYPE_CHECKLIST_ITEM):
+		if task.type not in (enums.TYPE_CHECKLIST, enums.TYPE_CHECKLIST_ITEM):
 			menu.AppendSeparator()
 			menu.Append(self.task_change_due_id, _('Change Due Date...'))
 			menu.Append(self.task_change_start_id, _('Change Start Date...'))
@@ -893,6 +898,7 @@ class _TasksPopupMenu:
 		return menu
 
 	def build_multi(self, _types):
+		""" Build popup menu for >1 selected tasks """
 		menu = wx.Menu()
 		menu.Append(self.task_set_complete_id, _('Set Task Completed'))
 		menu.Append(self.task_set_not_complete_id, _('Set Task Not Completed'))
@@ -901,8 +907,8 @@ class _TasksPopupMenu:
 		menu.AppendSeparator()
 		menu.Append(self.task_delete_id, _('Delete Task'))
 		menu.AppendSeparator()
-		menu.Append(self.task_change_context_id, _('Change Context...'))
 		menu.Append(self.task_change_project_id, _('Change Project/List...'))
+		menu.Append(self.task_change_context_id, _('Change Context...'))
 		menu.Append(self.task_change_folder_id, _('Change Folder...'))
 		menu.Append(self.task_change_status_id, _('Change Status...'))
 		menu.Append(self.task_change_priority_id, _('Change Priority...'))
