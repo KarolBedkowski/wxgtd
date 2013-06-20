@@ -157,6 +157,9 @@ class FrameMain(BaseFrame):
 		Publisher().subscribe(self._on_tasks_update, ('task', 'update'))
 		Publisher().subscribe(self._on_tasks_update, ('task', 'delete'))
 
+		self._create_popup_menu_bindings(wnd)
+
+	def _create_popup_menu_bindings(self, wnd):
 		wnd.Bind(wx.EVT_MENU, self._on_menu_task_edit,
 				id=self._tasks_popup_menu.task_edit_id)
 		wnd.Bind(wx.EVT_MENU, self._on_menu_task_delete,
