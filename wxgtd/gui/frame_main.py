@@ -48,7 +48,7 @@ from wxgtd.gui.dlg_tags import DlgTags
 from wxgtd.gui.dlg_goals import DlgGoals
 from wxgtd.gui.dlg_folders import DlgFolders
 from wxgtd.gui.dlg_contexts import DlgContexts
-from wxgtd.gui.dlg_reminders import DlgReminders
+from wxgtd.gui.frame_reminders import FrameReminders
 from wxgtd.gui.frame_notebooks import FrameNotebook
 from wxgtd.gui.task_controller import TaskController
 from wxgtd.gui.frame_search import FrameSeach
@@ -660,7 +660,7 @@ class FrameMain(BaseFrame):
 				TaskController.open_task(self.wnd, task_uuid)
 
 	def _on_btn_reminders(self, _evt):
-		if not DlgReminders.check(self.wnd, self._session):
+		if not FrameReminders.check(self.wnd, self._session):
 			mbox.message_box_info(self.wnd, _("No active alarms in this moment."),
 					_("Alarms"))
 
@@ -675,7 +675,7 @@ class FrameMain(BaseFrame):
 	def _on_timer(self, _evt, _force_show=False):
 		if self._appconfig.get('notification', 'popup_alarms'):
 			_LOG.debug('FrameMain._on_timer: check reminders')
-			DlgReminders.check(self.wnd, self._session)
+			FrameReminders.check(self.wnd, self._session)
 
 	def _on_window_iconze(self, _evt):
 		if self._appconfig.get('gui', 'min_to_tray'):
