@@ -33,8 +33,8 @@ from wxgtd.model import sync
 from wxgtd.model import enums
 from wxgtd.model import queries
 from wxgtd.logic import task as task_logic
+from wxgtd.lib import fmt
 from wxgtd.gui import dlg_about
-from wxgtd.gui import _fmt as fmt
 from wxgtd.gui import _infobox as infobox
 from wxgtd.gui import message_boxes as mbox
 from wxgtd.gui import _tasklistctrl as TLC
@@ -48,6 +48,7 @@ from wxgtd.gui.dlg_tags import DlgTags
 from wxgtd.gui.dlg_goals import DlgGoals
 from wxgtd.gui.dlg_folders import DlgFolders
 from wxgtd.gui.dlg_contexts import DlgContexts
+from wxgtd.gui.dlg_export_tasks import DlgExportTasks
 from wxgtd.gui.frame_reminders import FrameReminders
 from wxgtd.gui.frame_notebooks import FrameNotebook
 from wxgtd.gui.task_controller import TaskController
@@ -118,6 +119,8 @@ class FrameMain(BaseFrame):
 		self._create_menu_bind('menu_file_save', self._on_menu_file_save)
 		self._create_menu_bind('menu_file_exit', self._on_menu_file_exit)
 		self._create_menu_bind('menu_file_sync', self._on_menu_file_sync)
+		self._create_menu_bind('menu_file_export_tasks',
+				self._on_menu_file_export_tasks)
 		self._create_menu_bind('menu_help_about', self._on_menu_help_about)
 		self._create_menu_bind('menu_task_new', self._on_menu_task_new)
 		self._create_menu_bind('menu_task_quick', self._on_menu_task_quick)
@@ -409,6 +412,12 @@ class FrameMain(BaseFrame):
 	def _on_menu_sett_preferences(self, _evt):
 		if DlgPreferences(self.wnd).run(True):
 			self._filter_tree_ctrl.RefreshItems()
+
+	def _on_menu_file_export_tasks(self, _evt):
+		params = self._get_params_for_list()
+		tasks = OBJ.Task.select_by_filters(params, session=self._session)
+		if tasks:
+			DlgExportTasks(self.wnd, tasks).run(modal=True)
 
 	def _on_menu_file_exit(self, _evt):
 		self.wnd.Close()

@@ -24,9 +24,9 @@ from wxgtd.model import objects as OBJ
 from wxgtd.model import enums
 from wxgtd.logic import dicts as logic_dicts
 from wxgtd.wxtools.validators import Validator, ValidatorDv
+from wxgtd.lib import fmt
 
 from ._base_task_frame import BaseTaskFrame
-from . import _fmt as fmt
 
 _ = gettext.gettext
 _LOG = logging.getLogger(__name__)
