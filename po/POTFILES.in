@@ -24,7 +24,6 @@ wxgtd/gui/dlg_folders.py
 wxgtd/gui/task_controller.py
 wxgtd/gui/__init__.py
 wxgtd/gui/notebook_controller.py
-wxgtd/gui/_fmt.py
 wxgtd/gui/_base_dialog.py
 wxgtd/gui/dlg_preferences.py
 wxgtd/gui/splash.py

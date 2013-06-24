@@ -24,7 +24,7 @@ except ImportError:
 from wxgtd.wxtools import iconprovider
 from wxgtd.wxtools import wxutils
 from wxgtd.model import objects as OBJ
-from wxgtd.gui import _fmt as fmt
+from wxgtd.lib import fmt
 from wxgtd.gui._base_frame import BaseFrame
 from wxgtd.gui.notebook_controller import NotebookController
 

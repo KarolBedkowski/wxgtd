@@ -33,8 +33,8 @@ from wxgtd.model import sync
 from wxgtd.model import enums
 from wxgtd.model import queries
 from wxgtd.logic import task as task_logic
+from wxgtd.lib import fmt
 from wxgtd.gui import dlg_about
-from wxgtd.gui import _fmt as fmt
 from wxgtd.gui import _infobox as infobox
 from wxgtd.gui import message_boxes as mbox
 from wxgtd.gui import _tasklistctrl as TLC

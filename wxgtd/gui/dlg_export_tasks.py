@@ -9,7 +9,7 @@ Licence: GPLv2+
 
 __author__ = "Karol Będkowski"
 __copyright__ = "Copyright (c) Karol Będkowski, 2013"
-__version__ = "2013-06-24"
+__version__ = "2013-06-23"
 
 import logging
 import gettext

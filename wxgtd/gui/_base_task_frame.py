@@ -22,9 +22,9 @@ from wxgtd.logic import task as task_logic
 from wxgtd.wxtools.validators import Validator
 from wxgtd.wxtools.validators import v_length as LVALID
 from wxgtd.wxtools import wxutils
+from wxgtd.lib import fmt
 
 from ._base_frame import BaseFrame
-from . import _fmt as fmt
 from . import dialogs
 from . import message_boxes as mbox
 from .dlg_projects_tree import DlgProjectTree

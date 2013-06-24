@@ -22,7 +22,7 @@ from wx.lib.agw import ultimatelistctrl as ULC
 import wx.lib.mixins.listctrl as listmix
 
 from wxgtd.model import enums
-from wxgtd.gui import _fmt as fmt
+from wxgtd.lib import fmt
 from wxgtd.gui import _infobox as infobox
 from wxgtd.wxtools import iconprovider
 
