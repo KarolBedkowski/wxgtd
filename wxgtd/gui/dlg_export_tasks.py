@@ -20,6 +20,7 @@ import wx
 from wxgtd.wxtools.validators import Validator
 from wxgtd.wxtools.validators import v_length as LVALID
 from wxgtd.model import exporter
+from wxgtd.gui import message_boxes as msg
 
 from ._base_dialog import BaseDialog
 
@@ -65,15 +66,16 @@ class DlgExportTasks(BaseDialog):
 		elif self['rb_details_verbose'].GetValue():
 			details = 2
 		filename = self['tc_filename'].GetValue()
-		with open(filename, 'wt') as dfile:
-			if self['rb_format_txt'].GetValue():  # txt
-				exporter.dump_tasks_to_text(self._tasks, details, output=dfile)
-			else:  # csv
-				exporter.dump_tasks_to_csv(self._tasks, details, output=dfile)
-		dlg = wx.MessageDialog(self._wnd, _("Export complete."), _("Export"),
-				wx.OK)
-		dlg.ShowModal()
-		dlg.Destroy()
+		try:
+			with open(filename, 'wt') as dfile:
+				if self['rb_format_txt'].GetValue():  # txt
+					exporter.dump_tasks_to_text(self._tasks, details, output=dfile)
+				else:  # csv
+					exporter.dump_tasks_to_csv(self._tasks, details, output=dfile)
+			msg.message_box_info(self._wnd, _("Export complete."))
+		except IOError as error:
+			msg.message_box_error_ex(self._wnd, _("Export Error."),
+					str(error))
 
 	def _on_btn_file_select(self, _evt):
 		default_dir = os.path.expanduser("~")
