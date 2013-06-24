@@ -18,6 +18,8 @@ import logging
 import zipfile
 import datetime
 import gettext
+import csv
+import sys
 try:
 	import cjson
 	_JSON_DECODER = cjson.decode
@@ -27,8 +29,9 @@ except ImportError:
 	_JSON_DECODER = json.loads
 	_JSON_ENCODER = json.dumps
 
-
+from wxgtd.lib import fmt
 from wxgtd.model import objects
+from wxgtd.model import enums
 
 _LOG = logging.getLogger(__name__)
 _ = gettext.gettext
@@ -469,3 +472,76 @@ def _dump_notebooks(session, notify_cb, folders_cache):
 	notify_cb(76, _("Saved %d notebooks") % len(notebooks))
 	notify_cb(77, _("Saved %d notebook folders") % len(notebook_folders))
 	return res
+
+
+def dump_tasks_to_csv(tasks, verbose, output=sys.stdout):
+	""" Export task list to stdout in cvs format. """
+	fields = []
+	if verbose > 0:
+		fields = [_('Starred'), _('Type'), _('Priority')]
+	fields.append(_('Title'))
+	fields.append(_('Completed'))
+	fields.append(_('Due date'))
+	fields.append(_('Start date'))
+	if verbose > 0:
+		fields.append(_('Alarm'))
+		fields.append(_('Repeat'))
+		fields.append(_('Note'))
+	if verbose > 1:
+		fields.append(_('Task UUID'))
+	writer = csv.writer(output, delimiter=';')
+	writer.writerow([col.encode('utf-8') for col in fields])
+	types = {enums.TYPE_PROJECT: _('project'),
+			enums.TYPE_CHECKLIST: _('checklist'),
+			enums.TYPE_CHECKLIST_ITEM: _('checklist item'),
+			enums.TYPE_CALL: _('call'),
+			enums.TYPE_RETURN_CALL: _('return call'),
+			enums.TYPE_EMAIL: _('email'),
+			enums.TYPE_SMS: _('sms')}
+	for task in tasks:
+		row = [task.title,
+				fmt.format_timestamp(task.completed, True),
+				fmt.format_timestamp(task.due_date, task.due_time_set),
+				fmt.format_timestamp(task.start_date, task.start_time_set)]
+		if verbose > 0:
+			row.append('*' if task.starred else '')
+			row.append(types.get(task.type, 'task'))
+			row.append(str(task.priority) if task.priority >= 0 else '')
+			row.append(fmt.format_timestamp(task.alarm, True))
+			row.append(task.repeat_pattern or '')
+			row.append(task.note or '')
+		if verbose > 1:
+			row.append(task.uuid)
+		writer.writerow([col.encode('utf-8') for col in row])
+
+
+def dump_tasks_to_text(tasks, verbose, output=sys.stdout, title_width=80):
+	""" Export task list to stdout in human-friendly format. """
+	types = {enums.TYPE_PROJECT: 'P',
+			enums.TYPE_CHECKLIST: 'C',
+			enums.TYPE_CHECKLIST_ITEM: '-',
+			enums.TYPE_CALL: 'c',
+			enums.TYPE_RETURN_CALL: 'r',
+			enums.TYPE_EMAIL: 'e',
+			enums.TYPE_SMS: 's'}
+	for task in tasks:
+		if verbose > 0:
+			output.write(('*' if task.starred else ' '))
+			output.write(types.get(task.type, ' '))
+			output.write(str(task.priority) if task.priority >= 0 else ' ')
+			output.write(' [F] ' if task.completed else '     ')
+		output.write('%-80s' % task.title[:title_width])
+		output.write('%-19s' % fmt.format_timestamp(task.due_date,
+			task.due_time_set))
+		output.write('%-19s' % fmt.format_timestamp(task.start_date,
+			task.start_time_set))
+		if verbose > 0:
+			flags = ("["
+					+ ("r" if task.repeat_pattern else " ")
+					+ ("a" if task.alarm else " ")
+					+ ("n" if task.note else " ")
+					+ "]")
+			output.write(flags + " ")
+		if verbose > 1:
+			output.write(task.uuid)
+		output.write('\n')
