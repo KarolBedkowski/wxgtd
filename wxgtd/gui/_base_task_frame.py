@@ -171,12 +171,13 @@ class BaseTaskFrame(BaseFrame):
 		if tuuid and self._controller.delete_task():
 			self._on_ok(None)
 
-	def _on_text_url(self, evt):
+	def _on_text_url(self, evt):  # pylint: disable=R0201
 		""" Double click on url-s open browser. """
 		if not evt.GetMouseEvent().ButtonDClick(wx.MOUSE_BTN_LEFT):
 			return
 		start, end = evt.GetURLStart(), evt.GetURLEnd()
 		url = evt.GetEventObject().GetValue()[start:end]
+		_LOG.debug("BaseTaskFrame._on_text_url: open url=%r", url)
 		wx.LaunchDefaultBrowser(url)
 
 	def _refresh_static_texts(self):
