@@ -11,11 +11,9 @@ __author__ = "Karol Będkowski"
 __copyright__ = "Copyright (c) Karol Będkowski, 2013"
 __version__ = "2013-04-28"
 
-import sys
 import os
 import gettext
 import logging
-import traceback
 
 import wx
 import wx.lib.customtreectrl as CT
@@ -339,11 +337,12 @@ class FrameMain(BaseFrame):
 			try:
 				loader.load_from_file(filename, dlgp.update, force=True)
 			except Exception as err:  # pylint: disable=W0703
-				error = "\n".join(traceback.format_exception(*sys.exc_info()))
+				_LOG.exception("FrameMain._on_menu_file_load error")
 				msgdlg = wx.lib.dialogs.ScrolledMessageDialog(self.wnd,
-						str(err) + "\n\n" + error, _("Synchronisation error"))
+						str(err), _("Synchronisation error"))
 				msgdlg.ShowModal()
 				msgdlg.Destroy()
+				dlgp.update(100, _("Error: ") + str(err))
 			dlgp.mark_finished(2)
 			appconfig.set('files', 'last_dir', os.path.dirname(filename))
 			appconfig.set('files', 'last_file', os.path.basename(filename))
@@ -364,11 +363,12 @@ class FrameMain(BaseFrame):
 			try:
 				exporter.save_to_file(filename, dlgp.update)
 			except Exception as err:  # pylint: disable=W0703
-				error = "\n".join(traceback.format_exception(*sys.exc_info()))
+				_LOG.exception('FrameMain._on_menu_file_save error')
 				msgdlg = wx.lib.dialogs.ScrolledMessageDialog(self.wnd,
-						str(err) + "\n\n" + error, _("Synchronisation error"))
+						str(err), _("Synchronisation error"))
 				msgdlg.ShowModal()
 				msgdlg.Destroy()
+				dlgp.update(100, _("Error: ") + str(err))
 			dlgp.mark_finished(2)
 			Publisher().sendMessage('task.update')
 			appconfig.set('files', 'last_dir', os.path.dirname(filename))
@@ -398,12 +398,15 @@ class FrameMain(BaseFrame):
 						_("wxGTD"), wx.OK | wx.ICON_HAND)
 				msgbox.ShowModal()
 				msgbox.Destroy()
+				dlg.update(100, _("Sync file is locked."))
 			except sync.OtherSyncError as err:
-				error = "\n".join(traceback.format_exception(*sys.exc_info()))
+				_LOG.exception('FrameMain._on_menu_file_sync error: %r',
+						str(err))
 				msgdlg = wx.lib.dialogs.ScrolledMessageDialog(self.wnd,
-						str(err) + "\n\n" + error, _("Synchronisation error"))
+						str(err), _("Synchronisation error"))
 				msgdlg.ShowModal()
 				msgdlg.Destroy()
+				dlg.update(100, _("Error: ") + str(err))
 			dlg.mark_finished()
 			self._filter_tree_ctrl.RefreshItems()
 			Publisher().sendMessage('task.update')
@@ -724,6 +727,7 @@ class FrameMain(BaseFrame):
 						_("wxGTD"), wx.OK | wx.ICON_HAND)
 				msgbox.ShowModal()
 				msgbox.Destroy()
+				dlg.update(100, _("Sync file is locked."))
 			dlg.mark_finished(2)
 		if on_load:
 			Publisher().sendMessage('task.update')
