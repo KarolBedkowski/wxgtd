@@ -224,7 +224,8 @@ class TaskController:
 			for tag_uuid in new_tags:
 				tasktag = OBJ.TaskTag()
 				tasktag.tag = self._session.query(  # pylint: disable=E1101
-						OBJ.Tag).filter_by(uuid=tag_uuid).first()
+						OBJ.Tag).filter(OBJ.Task.uuid == tag_uuid,
+								OBJ.Task.deleted.is_(None)).first()
 				task.tags.append(tasktag)  # pylint: disable=E1103
 			return True
 		return False

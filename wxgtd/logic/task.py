@@ -391,7 +391,8 @@ def complete_task(task, session=None):
 		for idx, ntask in enumerate(session.query(OBJ.Task).
 				filter(OBJ.Task.parent_uuid == task.parent_uuid,
 					OBJ.Task.importance >= task_importance,
-					OBJ.Task.uuid != task.uuid).
+					OBJ.Task.uuid != task.uuid,
+					OBJ.Task.deleted.is_(None)).
 				order_by(OBJ.Task.importance), task_importance):
 			ntask.importance = idx
 		task.importance = idx + 1
