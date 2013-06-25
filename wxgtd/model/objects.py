@@ -223,7 +223,7 @@ class Task(BaseModelMixin, Base):
 		""" Count of not-complete subtask. """
 		return orm.object_session(self).scalar(select([func.count(Task.uuid)])
 				.where(and_(Task.parent_uuid == self.uuid,
-						Task.completed.is_(None))))
+						Task.completed.is_(None), Task.deleted.is_(None))))
 
 	@property
 	def child_overdue(self):
@@ -232,6 +232,7 @@ class Task(BaseModelMixin, Base):
 		return orm.object_session(self).scalar(select([func.count(Task.uuid)])
 				.where(and_(Task.parent_uuid == self.uuid,
 						Task.due_date.isnot(None), Task.completed.is_(None),
+						Task.deleted.is_(None),
 						or_(
 							and_(Task.due_date < now,
 								Task.type != enums.TYPE_PROJECT),
@@ -360,16 +361,16 @@ class Task(BaseModelMixin, Base):
 	def find_max_importance(cls, parent_uuid, session=None):
 		""" Find maximal importance in childs of given task."""
 		return (session or Session()).scalar(
-				select([func.max(Task.importance)]).where(
+				select([func.max(Task.importance)]).where(and_(
 						Task.parent_uuid == parent_uuid,
-						Task.deleted.is_(None))) or 0
+						Task.deleted.is_(None)))) or 0
 
 	@property
 	def child_count(self):
 		"""  Count subtask. """
 		return orm.object_session(self).scalar(select([func.count(Task.uuid)])
-				.where(Task.parent_uuid == self.uuid,
-					Task.deleted.is_(None)))
+				.where(and_(Task.parent_uuid == self.uuid,
+					Task.deleted.is_(None))))
 
 	@property
 	def sub_projects(self):
