@@ -183,11 +183,13 @@ class FrameNotebook(BaseFrame):
 		to_sel = self._lb_folders.GetSelection()
 		self._lb_folders.Clear()
 		self._lb_pages.DeleteAllItems()
-		all_cnt = self._session.query(OBJ.NotebookPage).count()
+		all_cnt = self._session.query(OBJ.NotebookPage).filter(
+				OBJ.NotebookPage.deleted.is_(None)).count()
 		cnt_str = ("  (%d)" % all_cnt) if all_cnt else ""
 		self._lb_folders.Append(_("Any Folder") + cnt_str, "-")
 		no_folder_cnt = self._session.query(OBJ.NotebookPage)\
-				.filter(OBJ.NotebookPage.folder_uuid.is_(None)).count()
+				.filter(OBJ.NotebookPage.folder_uuid.is_(None),
+						OBJ.NotebookPage.deleted.is_(None)).count()
 		cnt_str = ("  (%d)" % no_folder_cnt) if no_folder_cnt else ""
 		self._lb_folders.Append(_("No Folder") + cnt_str, None)
 		for folder in (self._session.query(OBJ.Folder)

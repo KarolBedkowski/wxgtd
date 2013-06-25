@@ -137,6 +137,17 @@ class TaskController:
 			return False
 		return task_logic.delete_task(tasks_uuid, self._session)
 
+	def undelete_task(self):
+		""" UnDelete task with confirmation.
+
+		Returns:
+			True after successful delete task.
+		"""
+		if not mbox.message_box_question_yesno(self.wnd,
+				_("Undelete selected tasks?")):
+			return False
+		return task_logic.undelete_task(self._task, self._session)
+
 	def task_change_due_date(self):
 		""" Show dialog and change task due date.
 
@@ -224,7 +235,8 @@ class TaskController:
 			for tag_uuid in new_tags:
 				tasktag = OBJ.TaskTag()
 				tasktag.tag = self._session.query(  # pylint: disable=E1101
-						OBJ.Tag).filter_by(uuid=tag_uuid).first()
+						OBJ.Tag).filter(OBJ.Task.uuid == tag_uuid,
+								OBJ.Task.deleted.is_(None)).first()
 				task.tags.append(tasktag)  # pylint: disable=E1103
 			return True
 		return False

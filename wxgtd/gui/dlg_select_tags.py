@@ -79,7 +79,8 @@ class DlgSelectTags(BaseDialog):
 		selected_tags = self.selected_tags
 		self._clb_tags.Clear()
 		self._tagslist = []
-		for tag in self._session.query(Tag):  # pylint: disable=E1101
+		for tag in self._session.query(Tag).filter(  # pylint: disable=E1101
+				Tag.deleted.is_(None)):
 			num = self._clb_tags.Append(tag.title)
 			if wx.Platform == '__WXMSW__':
 				self._tagslist.append(tag.uuid)

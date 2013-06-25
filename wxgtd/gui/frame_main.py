@@ -165,6 +165,8 @@ class FrameMain(BaseFrame):
 				id=self._tasks_popup_menu.task_edit_id)
 		wnd.Bind(wx.EVT_MENU, self._on_menu_task_delete,
 				id=self._tasks_popup_menu.task_delete_id)
+		wnd.Bind(wx.EVT_MENU, self._on_menu_task_undelete,
+				id=self._tasks_popup_menu.task_undelete_id)
 		wnd.Bind(wx.EVT_MENU, self._on_menu_task_toggle_completed,
 				id=self._tasks_popup_menu.toggle_task_complete_id)
 		wnd.Bind(wx.EVT_MENU, self._on_menu_task_set_completed,
@@ -444,6 +446,9 @@ class FrameMain(BaseFrame):
 	def _on_menu_task_delete(self, _evt):
 		self._delete_selected_task()
 
+	def _on_menu_task_undelete(self, _evt):
+		self._undelete_selected_task()
+
 	def _on_menu_task_edit(self, _evt):
 		self._edit_selected_task()
 
@@ -589,7 +594,9 @@ class FrameMain(BaseFrame):
 		evt.Skip()
 
 	def _on_rb_show_selection(self, evt):
-		self._items_path = []
+		group_id = self['rb_show_selection'].GetSelection()
+		if group_id != queries.QUERY_TRASH:
+			self._items_path = []
 		self._refresh_list()
 		evt.Skip()
 
@@ -742,6 +749,11 @@ class FrameMain(BaseFrame):
 			TaskController(self.wnd, self._session,
 					None).delete_tasks(tasks_uuid)
 
+	def _undelete_selected_task(self):
+		task_uuid = self._items_list_ctrl.get_item_uuid(None)
+		if task_uuid:
+			TaskController(self.wnd, self._session, task_uuid).undelete_task()
+
 	def _new_task(self):
 		parent_uuid = None
 		task_type = None
@@ -888,6 +900,7 @@ class _TasksPopupMenu:
 		self.toggle_task_stared_id = wx.NewId()
 		self.task_set_starred_id = wx.NewId()
 		self.task_set_not_starred_id = wx.NewId()
+		self.task_undelete_id = wx.NewId()
 
 	def build(self, task):
 		""" Build popup menu for given (selected) task """
@@ -899,7 +912,10 @@ class _TasksPopupMenu:
 		menu.AppendSeparator()
 		menu.Append(self.task_edit_id, _('Edit Task'))
 		menu.Append(self.task_clone_id, _('Clone Task'))
-		menu.Append(self.task_delete_id, _('Delete Task'))
+		if task.deleted:
+			menu.Append(self.task_undelete_id, _('Undelete Task'))
+		else:
+			menu.Append(self.task_delete_id, _('Delete Task'))
 		menu.AppendSeparator()
 		menu.Append(self.task_change_project_id, _('Change Project/List...'))
 		if task.type != enums.TYPE_CHECKLIST_ITEM:

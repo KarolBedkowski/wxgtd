@@ -14,6 +14,7 @@ __version__ = "2013-05-28"
 
 import logging
 import gettext
+import datetime
 
 
 try:
@@ -44,8 +45,7 @@ def delete_notebook_page(page_uuid, session=None):
 	if not page:
 		_LOG.warning("delete_notebook_page: missing page %r", page_uuid)
 		return False
-
-	session.delete(page)
+	page.deleted = datetime.datetime.now()
 	session.commit()
 	Publisher().sendMessage('notebook.delete', data={'notebook_uuid': page_uuid})
 	return True

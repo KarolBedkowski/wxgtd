@@ -14,6 +14,7 @@ __version__ = "2013-05-19"
 
 import logging
 import gettext
+import datetime
 
 import wx
 
@@ -154,7 +155,7 @@ class BaseTaskFrame(BaseFrame):
 			return
 		note = self._task.notes[sel]
 		if note.uuid:
-			self._session.delete(note)
+			note.deleted = datetime.datetime.now()
 		del self._task.notes[sel]
 		self._refresh_static_texts()
 

@@ -213,7 +213,8 @@ def _dump_folders(session, notify_cb):
 	notify_cb(1, _("Saving folders"))
 	folders_cache = _build_uuid_map(session, objects.Folder)
 	folders = []
-	for obj in session.query(objects.Folder):  # pylint: disable=E1101
+	for obj in session.query(objects.Folder).filter(  # pylint: disable=E1101
+			objects.Folder.deleted.is_(None)):
 		folder = {'_id': folders_cache[obj.uuid],
 				'parent_id': folders_cache[obj.parent_uuid] if obj.parent_uuid
 						else 0,
@@ -236,7 +237,8 @@ def _dump_contexts(session, notify_cb):
 	notify_cb(6, _("Saving contexts"))
 	contexts_cache = _build_uuid_map(session, objects.Context)
 	contexts = []
-	for obj in session.query(objects.Context):  # pylint: disable=E1101
+	for obj in session.query(objects.Context).filter(  # pylint: disable=E1101
+			objects.Context.deleted.is_(None)):
 		folder = {'_id': contexts_cache[obj.uuid],
 				'parent_id': contexts_cache[obj.parent_uuid] if obj.parent_uuid
 						else 0,
@@ -259,7 +261,8 @@ def _dump_goals(session, notify_cb):
 	notify_cb(11, _("Saving goals"))
 	goals_cache = _build_uuid_map(session, objects.Goal)
 	goals = []
-	for obj in session.query(objects.Goal):  # pylint: disable=E1101
+	for obj in session.query(objects.Goal).filter(  # pylint: disable=E1101
+			objects.Goal.deleted.is_(None)):
 		folder = {'_id': goals_cache[obj.uuid],
 				'parent_id': goals_cache[obj.parent_uuid] if obj.parent_uuid
 						else 0,
@@ -289,7 +292,8 @@ def _dump_tasks(session, notify_cb, folders_cache, contexts_cache,
 	task_folders = []
 	task_contexts = []
 	task_goals = []
-	for task in session.query(objects.Task):  # pylint: disable=E1101
+	for task in session.query(objects.Task).filter(  # pylint: disable=E1101
+			objects.Task.deleted.is_(None)):
 		tasks.append({'_id': tasks_cache[task.uuid],
 				'parent_id': tasks_cache[task.parent_uuid] if task.parent_uuid
 						else 0,
@@ -367,7 +371,8 @@ def _dump_tags(session, notify_cb):
 	_LOG.info("dump_database_to_json: tags")
 	tags_cache = _build_uuid_map(session, objects.Tag)
 	tags = []
-	for obj in session.query(objects.Tag):  # pylint: disable=E1101
+	for obj in session.query(objects.Tag).filter(  # pylint: disable=E1101
+			objects.Tag.deleted.is_(None)):
 		folder = {'_id': tags_cache[obj.uuid],
 				'parent_id': tags_cache[obj.parent_uuid] if obj.parent_uuid
 						else 0,
@@ -449,7 +454,8 @@ def _dump_notebooks(session, notify_cb, folders_cache):
 	notebooks_cache = _build_uuid_map(session, objects.NotebookPage)
 	notebooks = []
 	notebook_folders = []
-	for notebook in session.query(objects.NotebookPage):  # pylint: disable=E1101
+	for notebook in (session.query(objects.NotebookPage)  # pylint: disable=E1101
+			.filter(objects.NotebookPage.deleted.is_(None))):
 		notebooks.append({'_id': notebooks_cache[notebook.uuid],
 				'uuid': notebook.uuid,
 				'created': fmt_date(notebook.created),

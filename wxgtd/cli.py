@@ -63,6 +63,9 @@ def _parse_opt():
 	group.add_option('--future-alarms', action="store_const",
 			const=queries.QUERY_FUTURE_ALARMS,
 			dest="query_group", help='show task with alarms in future')
+	group.add_option('--trash', action="store_const",
+			const=queries.QUERY_TRASH,
+			dest="query_group", help='show deleted tasks')
 	optp.add_option_group(group)
 
 	group = optparse.OptionGroup(optp, "Task operations")

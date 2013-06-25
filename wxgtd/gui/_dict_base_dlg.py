@@ -14,6 +14,7 @@ __version__ = "2013-04-27"
 
 import gettext
 import logging
+import datetime
 
 import wx
 try:
@@ -105,7 +106,10 @@ class DictBaseDlg(BaseDialog):
 		if mbox.message_box_delete_confirm(self._wnd, self._item_name):
 			item = self._get_item(sel)
 			if item:
-				self._session.delete(item)  # pylint: disable=E1101
+				if hasattr(item, 'deleted'):
+					item.deleted = datetime.datetime.now()
+				else:
+					self._session.delete(item)  # pylint: disable=E1101
 				self._session.commit()  # pylint: disable=E1101
 			self._refresh_list()
 			Publisher().sendMessage('dict.delete')

@@ -17,6 +17,7 @@ import os
 import logging
 import zipfile
 import gettext
+import datetime
 try:
 	import cjson
 	_JSON_DECODER = cjson.decode
@@ -183,7 +184,7 @@ def _cleanup_tasks(loaded_tasks, last_sync, session):
 		if task.uuid not in loaded_tasks:
 			_LOG.info("_cleanup_tasks: delete task %r", task.uuid)
 			_LOG.debug("_cleanup_tasks: delete task %r", task)
-			session.delete(task)
+			task.deleted = datetime.datetime.now()
 			idx += 1
 	return idx
 
@@ -204,7 +205,7 @@ def _cleanup_notebooks(loaded_notebooks, last_sync, session):
 		if page.uuid not in loaded_notebooks:
 			_LOG.info("_cleanup_notebooks: delete page %r", page.uuid)
 			_LOG.debug("_cleanup_notebooks: delete page %r", page)
-			session.delete(page)
+			page.deleted = datetime.datetime.now()
 			idx += 1
 	return idx
 
@@ -227,7 +228,10 @@ def _cleanup_unused(objcls, loaded_cache, last_sync, session):
 		if obj.uuid not in loaded:
 			_LOG.info("_cleanup_unused: %r delete  %r", objcls, obj.uuid)
 			_LOG.debug("_cleanup_unused: %r delete  %r", objcls, obj)
-			session.delete(obj)
+			if hasattr(obj, 'deleted'):
+				obj.deleted = datetime.datetime.now()
+			else:
+				session.delete(obj)
 			idx += 1
 	_LOG.info("_cleanup_unused(%r): deleted=%d", objcls, idx)
 	return idx
