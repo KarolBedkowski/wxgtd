@@ -62,6 +62,8 @@ def sync(filename, load_only=False, notify_cb=_notify_progress):
 	_LOG.info("sync: %r", filename)
 	notify_cb(0, _("Creating backup"))
 	create_backup()
+	notify_cb(1, _("Sanity check"))
+	_sync_folder_sanity_check(os.path.dirname(filename))
 	notify_cb(1, _("Checking sync lock"))
 	if exporter.create_sync_lock(filename):
 		try:
@@ -125,3 +127,11 @@ def create_backup():
 			internal_fname="GDT_SYNC.json")
 	_LOG.info('create_backup: COMPLETED %s', filename)
 	return True
+
+
+def _sync_folder_sanity_check(directory):
+	files = os.listdir(directory)
+	if 'sync.locked' in files:
+		files.remove('sync.locked')
+	if len(files) > 2:
+		raise OtherSyncError(_("To many files in sync directory."))
