@@ -368,6 +368,30 @@ def delete_task(task, session=None):
 	return bool(deleted)
 
 
+def undelete_task(task, session=None):
+	""" Undelete given task.
+
+	Args:
+		task: one or list of task for delete (Task or UUID)
+		session: sqlalchemy session
+
+	Returns:
+		True = task undeleted
+	"""
+	session = session or OBJ.Session()
+	tasks = task if isinstance(task, (list, tuple)) else [task]
+	tasks_to_save = []
+	for task in tasks:
+		if isinstance(task, (str, unicode)):
+			task = session.query(OBJ.Task).filter_by(uuid=task).first()
+			if not task:
+				_LOG.warning("undelete_task: missing task %r", task)
+				continue
+		task.deleted = None
+		tasks_to_save.append(task)
+	save_modified_tasks(tasks_to_save, session)
+
+
 def complete_task(task, session=None):
 	""" Complete task.
 

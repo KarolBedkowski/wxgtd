@@ -137,6 +137,17 @@ class TaskController:
 			return False
 		return task_logic.delete_task(tasks_uuid, self._session)
 
+	def undelete_task(self):
+		""" UnDelete task with confirmation.
+
+		Returns:
+			True after successful delete task.
+		"""
+		if not mbox.message_box_question_yesno(self.wnd,
+				_("Undelete selected tasks?")):
+			return False
+		return task_logic.undelete_task(self._task, self._session)
+
 	def task_change_due_date(self):
 		""" Show dialog and change task due date.
 
