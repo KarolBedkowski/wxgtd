@@ -360,7 +360,7 @@ def delete_task(task, session=None):
 			if not task:
 				_LOG.warning("delete_task: missing task %r", task)
 				continue
-		session.delete(task)
+		task.deleted = datetime.datetime.now()
 		deleted += 1
 	if deleted:
 		session.commit()
