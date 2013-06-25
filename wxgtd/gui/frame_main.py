@@ -586,7 +586,9 @@ class FrameMain(BaseFrame):
 		evt.Skip()
 
 	def _on_rb_show_selection(self, evt):
-		self._items_path = []
+		group_id = self['rb_show_selection'].GetSelection()
+		if group_id != queries.QUERY_TRASH:
+			self._items_path = []
 		self._refresh_list()
 		evt.Skip()
 

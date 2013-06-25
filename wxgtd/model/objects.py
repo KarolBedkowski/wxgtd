@@ -263,7 +263,11 @@ class Task(BaseModelMixin, Base):
 		# pylint: disable=R0912
 		_LOG.debug('Task.select_by_filters(%r)', params)
 		session = session or Session()
-		query = session.query(cls).filter(cls.deleted.is_(None))
+		query = session.query(cls)
+		if params.get('deleted'):
+			query = query.filter(cls.deleted.isnot(None))
+		else:
+			query = query.filter(cls.deleted.is_(None))
 		query = _append_filter_list(query, Task.context_uuid, params.get('contexts'))
 		query = _append_filter_list(query, Task.folder_uuid, params.get('folders'))
 		query = _append_filter_list(query, Task.goal_uuid, params.get('goals'))
