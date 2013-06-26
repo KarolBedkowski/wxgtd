@@ -181,7 +181,7 @@ def _cleanup_tasks(loaded_tasks, last_sync, session):
 	idx = 0
 	for task in objects.Task.selecy_by_modified_is_less(last_sync,
 			session=session):
-		if task.uuid not in loaded_tasks:
+		if task.uuid not in loaded_tasks and not task.deleted:
 			_LOG.info("_cleanup_tasks: delete task %r", task.uuid)
 			_LOG.debug("_cleanup_tasks: delete task %r", task)
 			task.deleted = datetime.datetime.now()
@@ -202,7 +202,7 @@ def _cleanup_notebooks(loaded_notebooks, last_sync, session):
 	idx = 0
 	for page in objects.NotebookPage.selecy_by_modified_is_less(last_sync,
 			session=session):
-		if page.uuid not in loaded_notebooks:
+		if page.uuid not in loaded_notebooks and not page.deleted:
 			_LOG.info("_cleanup_notebooks: delete page %r", page.uuid)
 			_LOG.debug("_cleanup_notebooks: delete page %r", page)
 			page.deleted = datetime.datetime.now()
@@ -229,6 +229,8 @@ def _cleanup_unused(objcls, loaded_cache, last_sync, session):
 			_LOG.info("_cleanup_unused: %r delete  %r", objcls, obj.uuid)
 			_LOG.debug("_cleanup_unused: %r delete  %r", objcls, obj)
 			if hasattr(obj, 'deleted'):
+				if obj.deleted:
+					continue
 				obj.deleted = datetime.datetime.now()
 			else:
 				session.delete(obj)
