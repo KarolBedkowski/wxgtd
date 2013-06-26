@@ -93,7 +93,9 @@ def build_query_params(query_group, options, parent, search_str):
 				OPT_SHOW_FINISHED else False)
 	elif query_group == QUERY_TRASH:
 		params['deleted'] = True
+		params['hide_until'] = None
 		params['parent_uuid'] = None
+		params['finished'] = None
 	return params
 
 
