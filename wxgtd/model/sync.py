@@ -63,7 +63,7 @@ def sync(filename, load_only=False, notify_cb=_notify_progress):
 	notify_cb(0, _("Creating backup"))
 	create_backup()
 	notify_cb(1, _("Sanity check"))
-	_sync_folder_sanity_check(os.path.dirname(filename))
+	_sync_file_check(filename)
 	notify_cb(1, _("Checking sync lock"))
 	if exporter.create_sync_lock(filename):
 		try:
@@ -129,7 +129,10 @@ def create_backup():
 	return True
 
 
-def _sync_folder_sanity_check(directory):
+def _sync_file_check(filename):
+	directory = os.path.dirname(filename)
+	if not os.path.isdir(directory):
+		raise OtherSyncError(_("Sync directory not exists."))
 	files = os.listdir(directory)
 	if 'sync.locked' in files:
 		files.remove('sync.locked')
