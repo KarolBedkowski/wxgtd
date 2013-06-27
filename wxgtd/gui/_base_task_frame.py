@@ -100,7 +100,8 @@ class BaseTaskFrame(BaseFrame):
 			return
 		if not self._data['prev_completed'] and self._task.completed:
 			# zakonczono zadanie
-			if not self._controller.confirm_set_task_complete():
+			if (self._appconfig.get('gui', 'confirm_complete_dlg') and
+					not self._controller.confirm_set_task_complete()):
 				return
 			if not task_logic.complete_task(self._task, self._session):
 				return
