@@ -231,14 +231,8 @@ class BaseTaskFrame(BaseFrame):
 	@wxutils.call_after
 	def _on_task_type_change(self):
 		""" Called after task type change. """
-		fake_title = False
-		if not self['tc_title'].GetValue().strip():
-			self['tc_title'].SetValue("<?>")
-			fake_title = True
+		self['tc_title'].GetValidator().enable(False)
 		self._transfer_data_from_window()
-		if fake_title:
-			self._task.title = ""
-			self['tc_title'].SetValue("")
 		self._controller.change_task_type()
 
 	@wxutils.call_after
