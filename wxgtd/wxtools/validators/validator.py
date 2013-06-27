@@ -82,6 +82,10 @@ class Validator(wx.PyValidator):
 		self._field = field
 		self._default = default
 		self._readonly = readonly
+		self._run_validation = True
+
+	def enable(self, enabled=True):
+		self._run_validation = enabled
 
 	def Clone(self, *_args, **_kwars):
 		"""	Clone validator.
@@ -99,7 +103,7 @@ class Validator(wx.PyValidator):
 			True when value is ok.
 		"""
 		control = self.GetWindow()
-		if self._validators is not None:
+		if self._run_validation and self._validators is not None:
 			value = self._get_value_from_control()
 			for validator in self._validators:
 				try:
@@ -144,9 +148,12 @@ class Validator(wx.PyValidator):
 		"""
 		if not self._readonly:
 			value = self._get_value_from_control()
-			if self._validators is not None:
+			if self._run_validation and self._validators is not None:
 				for validator in self._validators:
-					value = validator.value_from_window(value)
+					try:
+						value = validator.value_from_window(value)
+					except ValidateError:
+						pass
 			self._set_value(value)
 		return True
 
