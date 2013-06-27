@@ -14,6 +14,7 @@ __version__ = "2013-05-19"
 
 import logging
 import gettext
+import datetime
 
 import wx
 
@@ -22,9 +23,9 @@ from wxgtd.logic import task as task_logic
 from wxgtd.wxtools.validators import Validator
 from wxgtd.wxtools.validators import v_length as LVALID
 from wxgtd.wxtools import wxutils
+from wxgtd.lib import fmt
 
 from ._base_frame import BaseFrame
-from . import _fmt as fmt
 from . import dialogs
 from . import message_boxes as mbox
 from .dlg_projects_tree import DlgProjectTree
@@ -86,6 +87,8 @@ class BaseTaskFrame(BaseFrame):
 		self['l_modified'].SetLabel(fmt.format_timestamp(task.modified))
 		self['cb_completed'].SetValidator(Validator(task, 'task_completed'))
 		self['cb_starred'].SetValidator(Validator(task, 'starred'))
+		self['tc_note'].Bind(wx.EVT_TEXT_URL, self._on_text_url)
+		self['tc_title'].Bind(wx.EVT_TEXT_URL, self._on_text_url)
 
 	def _setup_comboboxes(self):  # pylint: disable=R0201
 		pass
@@ -97,7 +100,8 @@ class BaseTaskFrame(BaseFrame):
 			return
 		if not self._data['prev_completed'] and self._task.completed:
 			# zakonczono zadanie
-			if not self._controller.confirm_set_task_complete():
+			if (self._appconfig.get('gui', 'confirm_complete_dlg') and
+					not self._controller.confirm_set_task_complete()):
 				return
 			if not task_logic.complete_task(self._task, self._session):
 				return
@@ -152,7 +156,7 @@ class BaseTaskFrame(BaseFrame):
 			return
 		note = self._task.notes[sel]
 		if note.uuid:
-			self._session.delete(note)
+			note.deleted = datetime.datetime.now()
 		del self._task.notes[sel]
 		self._refresh_static_texts()
 
@@ -168,6 +172,15 @@ class BaseTaskFrame(BaseFrame):
 		tuuid = self._task.uuid
 		if tuuid and self._controller.delete_task():
 			self._on_ok(None)
+
+	def _on_text_url(self, evt):  # pylint: disable=R0201
+		""" Double click on url-s open browser. """
+		if not evt.GetMouseEvent().ButtonDClick(wx.MOUSE_BTN_LEFT):
+			return
+		start, end = evt.GetURLStart(), evt.GetURLEnd()
+		url = evt.GetEventObject().GetValue()[start:end]
+		_LOG.debug("BaseTaskFrame._on_text_url: open url=%r", url)
+		wx.LaunchDefaultBrowser(url)
 
 	def _refresh_static_texts(self):
 		""" Odświeżenie pól dat na dlg """
@@ -219,14 +232,8 @@ class BaseTaskFrame(BaseFrame):
 	@wxutils.call_after
 	def _on_task_type_change(self):
 		""" Called after task type change. """
-		fake_title = False
-		if not self['tc_title'].GetValue().strip():
-			self['tc_title'].SetValue("<?>")
-			fake_title = True
+		self['tc_title'].GetValidator().enable(False)
 		self._transfer_data_from_window()
-		if fake_title:
-			self._task.title = ""
-			self['tc_title'].SetValue("")
 		self._controller.change_task_type()
 
 	@wxutils.call_after

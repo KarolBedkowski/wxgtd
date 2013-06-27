@@ -110,7 +110,8 @@ class BaseModelMixin(object):
 			order_by: optional order_by query argument
 		"""
 		session = session or Session()
-		query = session.query(cls)
+		if hasattr(cls, 'deleted'):
+			query = session.query(cls).filter(cls.deleted.is_(None))
 		if order_by:
 			query = query.order_by(order_by)
 		return query  # pylint: disable=E1101
@@ -222,7 +223,7 @@ class Task(BaseModelMixin, Base):
 		""" Count of not-complete subtask. """
 		return orm.object_session(self).scalar(select([func.count(Task.uuid)])
 				.where(and_(Task.parent_uuid == self.uuid,
-						Task.completed.is_(None))))
+						Task.completed.is_(None), Task.deleted.is_(None))))
 
 	@property
 	def child_overdue(self):
@@ -231,6 +232,7 @@ class Task(BaseModelMixin, Base):
 		return orm.object_session(self).scalar(select([func.count(Task.uuid)])
 				.where(and_(Task.parent_uuid == self.uuid,
 						Task.due_date.isnot(None), Task.completed.is_(None),
+						Task.deleted.is_(None),
 						or_(
 							and_(Task.due_date < now,
 								Task.type != enums.TYPE_PROJECT),
@@ -262,6 +264,10 @@ class Task(BaseModelMixin, Base):
 		_LOG.debug('Task.select_by_filters(%r)', params)
 		session = session or Session()
 		query = session.query(cls)
+		if params.get('deleted'):
+			query = query.filter(cls.deleted.isnot(None))
+		else:
+			query = query.filter(cls.deleted.is_(None))
 		query = _append_filter_list(query, Task.context_uuid, params.get('contexts'))
 		query = _append_filter_list(query, Task.folder_uuid, params.get('folders'))
 		query = _append_filter_list(query, Task.goal_uuid, params.get('goals'))
@@ -296,7 +302,7 @@ class Task(BaseModelMixin, Base):
 		""" Search for task with title/note matching text. """
 		_LOG.debug('Task.search(%r, %r)', text, active_only)
 		session = session or Session()
-		query = session.query(cls)
+		query = session.query(cls).filter(cls.deleted.is_(None))
 		search_str = '%%' + text.lower() + "%%"
 		query = query.filter(or_(func.lower(Task.title).like(search_str),
 				func.lower(Task.note).like(search_str)))
@@ -309,13 +315,15 @@ class Task(BaseModelMixin, Base):
 	def all_projects(cls):
 		""" Get all projects from database. """
 		# pylint: disable=E1101
-		return Session().query(cls).filter_by(type=enums.TYPE_PROJECT)
+		return Session().query(cls).filter(cls.type == enums.TYPE_PROJECT,
+				cls.deleted.is_(None))
 
 	@classmethod
 	def all_checklists(cls):
 		""" Get all checklists from database. """
 		# pylint: disable=E1101
-		return Session().query(cls).filter_by(type=enums.TYPE_CHECKLIST)
+		return Session().query(cls).filter(cls.type == enums.TYPE_CHECKLIST,
+				cls.deleted.is_(None))
 
 	@classmethod
 	def root_projects_checklists(cls, session=None):
@@ -323,6 +331,7 @@ class Task(BaseModelMixin, Base):
 		session = session or Session()
 		return (session.query(Task)
 				.filter(Task.parent_uuid.is_(None),
+						Task.deleted.is_(None),
 						or_(Task.type == enums.TYPE_CHECKLIST,
 						Task.type == enums.TYPE_PROJECT))
 				.order_by(Task.title))
@@ -342,7 +351,7 @@ class Task(BaseModelMixin, Base):
 		query = session.query(cls)
 		# with reminders in past
 		now = datetime.datetime.utcnow()
-		query = query.filter(Task.alarm <= now)
+		query = query.filter(Task.alarm <= now, Task.deleted.is_(None))
 		# if "since" is set - use it as minimal alarm
 		if since:
 			query = query.filter(Task.alarm > since)
@@ -356,30 +365,35 @@ class Task(BaseModelMixin, Base):
 	def find_max_importance(cls, parent_uuid, session=None):
 		""" Find maximal importance in childs of given task."""
 		return (session or Session()).scalar(
-				select([func.max(Task.importance)]).where(
-						Task.parent_uuid == parent_uuid)) or 0
+				select([func.max(Task.importance)]).where(and_(
+						Task.parent_uuid == parent_uuid,
+						Task.deleted.is_(None)))) or 0
 
 	@property
 	def child_count(self):
 		"""  Count subtask. """
 		return orm.object_session(self).scalar(select([func.count(Task.uuid)])
-				.where(Task.parent_uuid == self.uuid))
+				.where(and_(Task.parent_uuid == self.uuid,
+					Task.deleted.is_(None))))
 
 	@property
 	def sub_projects(self):
 		return Session.object_session(self).query(Task).with_parent(self)\
-				.filter_by(type=enums.TYPE_PROJECT)
+				.filter(Task.type == enums.TYPE_PROJECT,
+					Task.deleted.is_(None))
 
 	@property
 	def sub_checklists(self):
 		return Session.object_session(self).query(Task).with_parent(self)\
-				.filter_by(type=enums.TYPE_CHECKLIST)
+				.filter(Task.type == enums.TYPE_CHECKLIST,
+					Task.deleted.is_(None))
 
 	@property
 	def sub_project_or_checklists(self):
 		return (Session.object_session(self).query(Task).with_parent(self)
 				.filter(or_(Task.type == enums.TYPE_CHECKLIST,
-						Task.type == enums.TYPE_PROJECT))
+						Task.type == enums.TYPE_PROJECT),
+					Task.deleted.is_(None))
 				.order_by(Task.title))
 
 	def clone(self, cleanup=True):

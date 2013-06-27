@@ -20,6 +20,7 @@ import wx
 from wxgtd.wxtools import iconprovider
 from wxgtd.gui.frame_notebooks import FrameNotebook
 from wxgtd.gui import quicktask
+from wxgtd.gui.task_controller import TaskController
 
 _ = gettext.gettext
 _LOG = logging.getLogger(__name__)
@@ -30,6 +31,7 @@ class TaskBarIcon(wx.TaskBarIcon):
 	TBMENU_CLOSE = wx.NewId()
 	TBMENU_SHOW_NOTEBOOK = wx.NewId()
 	TBMENU_QUICK_TASK = wx.NewId()
+	TBMENU_NEW_TASK = wx.NewId()
 
 	def __init__(self, parent_frame):
 		wx.TaskBarIcon.__init__(self)
@@ -47,29 +49,34 @@ class TaskBarIcon(wx.TaskBarIcon):
 
 	def CreatePopupMenu(self):
 		menu = wx.Menu()
-		menu.Append(self.TBMENU_RESTORE, _("Restore wxGTD"))
-		menu.Append(self.TBMENU_SHOW_NOTEBOOK, _("Show notebook"))
+		menu.Append(self.TBMENU_RESTORE, _("Show/Hide wxGTD"))
+		menu.Append(self.TBMENU_SHOW_NOTEBOOK, _("Show Notebook"))
 		menu.AppendSeparator()
-		menu.Append(self.TBMENU_QUICK_TASK, _("Quick task..."))
+		menu.Append(self.TBMENU_QUICK_TASK, _("Quick New Task..."))
+		menu.Append(self.TBMENU_NEW_TASK, _("Create New Task..."))
 		menu.AppendSeparator()
 		menu.Append(self.TBMENU_CLOSE,  _("Close wxGTD"))
 		return menu
 
 	def _create_bindings(self):
 		self.Bind(wx.EVT_TASKBAR_LEFT_UP, self._on_icon_activate)
-		self.Bind(wx.EVT_TASKBAR_LEFT_DCLICK, self._on_icon_activate)
 		self.Bind(wx.EVT_MENU, self._on_icon_activate, id=self.TBMENU_RESTORE)
 		self.Bind(wx.EVT_MENU, self._on_menu_app_close, id=self.TBMENU_CLOSE)
 		self.Bind(wx.EVT_MENU, self._on_menu_show_notebook,
 				id=self.TBMENU_SHOW_NOTEBOOK)
 		self.Bind(wx.EVT_MENU, self._on_menu_quick_task, id=self.TBMENU_QUICK_TASK)
+		self.Bind(wx.EVT_MENU, self._on_menu_new_task, id=self.TBMENU_NEW_TASK)
 
 	def _on_icon_activate(self, _evt):
 		if self._frame.IsIconized():
 			self._frame.Iconize(False)
-		if not self._frame.IsShown():
+			self._frame.Raise()
+			return
+		if self._frame.IsShown():
+			self._frame.Show(False)
+		else:
 			self._frame.Show(True)
-		self._frame.Raise()
+			self._frame.Raise()
 
 	def _on_menu_app_close(self, _evt):
 		wx.CallAfter(self._frame.Close)
@@ -79,3 +86,6 @@ class TaskBarIcon(wx.TaskBarIcon):
 
 	def _on_menu_quick_task(self, _evt):  # pylint: disable=R0201
 		quicktask.quick_task()
+
+	def _on_menu_new_task(self, _evt):
+		TaskController.new_task(self._frame, None)

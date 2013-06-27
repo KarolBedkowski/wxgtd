@@ -121,6 +121,10 @@ class DlgPreferences(BaseDialog):
 		# gui
 		self['cb_gui_hide_on_start'].SetValidator(Validator(config,
 				'gui/hide_on_start'))
+		self['cb_gui_min_to_tray'].SetValidator(Validator(config,
+				'gui/min_to_tray'))
+		self['cb_gui_confirm_complete_dlg'].SetValidator(Validator(config,
+				'gui/confirm_complete_dlg'))
 
 	def _setup_comboboxes(self):
 		cb_status = self['cb_task_def_status']

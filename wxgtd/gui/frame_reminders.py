@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-""" Dialog showing reminders.
+""" Frame showing reminders.
 
 Copyright (c) Karol Będkowski, 2013
 
@@ -9,7 +9,7 @@ Licence: GPLv2+
 
 __author__ = "Karol Będkowski"
 __copyright__ = "Copyright (c) Karol Będkowski, 2013"
-__version__ = "2013-05-08"
+__version__ = "2013-06-20"
 
 import logging
 import gettext
@@ -26,22 +26,26 @@ from wxgtd.model import enums
 from wxgtd.model import objects as OBJ
 from wxgtd.gui.task_controller import TaskController
 from . import _tasklistctrl as tlc
-from ._base_dialog import BaseDialog
+from ._base_frame import BaseFrame
 
 _ = gettext.gettext
 _LOG = logging.getLogger(__name__)
 
 
-class DlgReminders(BaseDialog):
+class FrameReminders(BaseFrame):
 	""" Reminders dialog
 
 	Args:
 		parent: parent window
 	"""
 
+	_xrc_resource = 'wxgtd.xrc'
+	_window_name = 'frame_reminders'
+	_instance = None
+
 	def __init__(self, parent, session):
 		self._task_list_ctrl = None
-		BaseDialog.__init__(self, parent, 'dlg_reminders', save_pos=True)
+		BaseFrame.__init__(self, parent)
 		self._obj_key = 'dlg_reminders'
 		self._setup(session)
 		self._refresh()
@@ -53,26 +57,26 @@ class DlgReminders(BaseDialog):
 		tasks_to_show = []
 		for task in tasks:
 			if task.completed:
-				_LOG.warn('DlgReminders.check completed %r', task)
+				_LOG.warn('FrameReminders.check completed %r', task)
 				continue
 			tasks_to_show.append(task)
 		if tasks_to_show:
-			dlg = cls._windows.get('dlg_reminders')
-			if not dlg:
-				dlg = cls._windows['dlg_reminders'] = DlgReminders(parent_wnd,
-						session)
-			dlg.run()
-			dlg.load_tasks(tasks_to_show)
-			wx.CallAfter(dlg.wnd.Raise)
+			window = cls._instance
+			if not window:
+				window = cls._instance = FrameReminders(parent_wnd, session)
+				window.wnd.Show()
+			window.load_tasks(tasks_to_show)
+			wx.CallAfter(window.wnd.Raise)
 		return len(tasks_to_show) > 0
 
 	def load_tasks(self, tasks):
-		_LOG.debug('DlgReminders.load_tasks(%r)', tasks)
+		_LOG.debug('FrameReminders.load_tasks(%r)', tasks)
 		self._reminders = tasks
 		self._refresh()
 
-	def _load_controls(self, wnd):
-		BaseDialog._load_controls(self, wnd)
+	def _load_controls(self):
+		BaseFrame._load_controls(self)
+		wnd = self.wnd
 		wnd.SetExtraStyle(wx.WS_EX_VALIDATE_RECURSIVELY)
 		tasklist_panel = self['panel_parent_tasks']
 		box = wx.BoxSizer(wx.HORIZONTAL)
@@ -82,13 +86,14 @@ class DlgReminders(BaseDialog):
 		tasklist_panel.SetSizer(box)
 
 	def _create_bindings(self, wnd):
-		BaseDialog._create_bindings(self, wnd)
+		BaseFrame._create_bindings(self, wnd)
 		self._task_list_ctrl.Bind(tlc.EVT_LIST_BTN_SNOOZE,
 				self._on_task_btn_snooze)
 		self._task_list_ctrl.Bind(tlc.EVT_LIST_BTN_DISMISS,
 				self._on_task_btn_dismiss)
 		self._task_list_ctrl.Bind(wx.EVT_LIST_ITEM_ACTIVATED,
 				self._on_items_list_activated)
+		wnd.Bind(wx.EVT_BUTTON, self._on_btn_close, id=wx.ID_CLOSE)
 
 		Publisher().subscribe(self._on_tasks_update, ('task', 'update'))
 		Publisher().subscribe(self._on_tasks_update, ('task', 'delete'))
@@ -100,6 +105,13 @@ class DlgReminders(BaseDialog):
 	def _refresh(self):
 		self._task_list_ctrl.fill(self._reminders)
 
+	def _on_close(self, event):
+		self.__class__._instance = None
+		BaseFrame._on_close(self, event)
+
+	def _on_btn_close(self, _evt):
+		self.wnd.Close(True)
+
 	def _on_task_btn_dismiss(self, evt):
 		task_uuid = evt.task
 		task = OBJ.Task.get(self._session, uuid=task_uuid)
@@ -110,7 +122,7 @@ class DlgReminders(BaseDialog):
 
 	def _on_task_btn_snooze(self, evt):
 		task_uuid = evt.task
-		dlg = wx.SingleChoiceDialog(self._wnd, _("Please select snooze time"),
+		dlg = wx.SingleChoiceDialog(self.wnd, _("Please select snooze time"),
 				_("Snooze task alarm"),
 				[pattern[1] for pattern in enums.SNOOZE_PATTERNS],
 				wx.CHOICEDLG_STYLE)
@@ -140,7 +152,7 @@ class DlgReminders(BaseDialog):
 			TaskController.open_task(self.wnd, task_uuid)
 
 	def _on_tasks_update(self, args):
-		_LOG.debug('DlgReminders._on_tasks_update(%r)', args)
+		_LOG.debug('FrameReminders._on_tasks_update(%r)', args)
 		uuid = args.data['task_uuid']
 		if args.topic == ('task', 'delete'):
 			self._remove_task(uuid)

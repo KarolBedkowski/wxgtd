@@ -25,6 +25,7 @@ QUERY_FINISHED = 4
 QUERY_PROJECTS = 5
 QUERY_CHECKLISTS = 6
 QUERY_FUTURE_ALARMS = 7
+QUERY_TRASH = 8
 
 # options
 OPT_SHOW_FINISHED = 1
@@ -90,6 +91,11 @@ def build_query_params(query_group, options, parent, search_str):
 		params['active_alarm'] = True
 		params['finished'] = (None if options & OPT_SHOW_FINISHED ==
 				OPT_SHOW_FINISHED else False)
+	elif query_group == QUERY_TRASH:
+		params['deleted'] = True
+		params['hide_until'] = None
+		params['parent_uuid'] = None
+		params['finished'] = None
 	return params
 
 

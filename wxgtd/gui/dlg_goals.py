@@ -15,7 +15,7 @@ import gettext
 
 from wxgtd.model import objects as OBJ
 from wxgtd.model import enums
-from wxgtd.wxtools.validators import Validator, ValidatorColorStr, ValidatorDv
+from wxgtd.wxtools.validators import ValidatorDv
 
 from ._dict_base_dlg import DictBaseDlg
 
@@ -36,19 +36,12 @@ class DlgGoals(DictBaseDlg):
 
 	def _load_controls(self, wnd):
 		DictBaseDlg._load_controls(self, wnd)
-		self['tc_title'].SetValidator(Validator(self._proxy, 'title'))
-		self['tc_note'].SetValidator(Validator(self._proxy, 'note'))
-		self['colorselect'].SetValidator(ValidatorColorStr(self._proxy,
-				'bg_color', with_alpha=True))
 		self['c_timeperiod'].SetValidator(ValidatorDv(self._proxy,
 				'time_period'))
 
 	def _set_buttons_state(self):
 		DictBaseDlg._set_buttons_state(self)
 		item_in_edit = self._displayed_item is not None
-		self['tc_title'].Enable(item_in_edit)
-		self['tc_note'].Enable(item_in_edit)
-		self['colorselect'].Enable(item_in_edit)
 		self['c_timeperiod'].Enable(item_in_edit)
 
 	def _setup_combobox(self):

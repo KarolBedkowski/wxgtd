@@ -3,12 +3,15 @@ wxgtd/__init__.py
 wxgtd/main.py
 wxgtd/version.py
 wxgtd/configuration.py
+wxgtd/lib/locales.py
 wxgtd/lib/__init__.py
+wxgtd/lib/fmt.py
 wxgtd/lib/appconfig.py
 wxgtd/lib/datetimeutils.py
 wxgtd/lib/logging_setup.py
 wxgtd/lib/singleton.py
 wxgtd/gui/_infobox.py
+wxgtd/gui/frame_reminders.py
 wxgtd/gui/dlg_notebook_page.py
 wxgtd/gui/frame_search.py
 wxgtd/gui/dlg_sync_progress.py
@@ -24,7 +27,6 @@ wxgtd/gui/dlg_folders.py
 wxgtd/gui/task_controller.py
 wxgtd/gui/__init__.py
 wxgtd/gui/notebook_controller.py
-wxgtd/gui/_fmt.py
 wxgtd/gui/_base_dialog.py
 wxgtd/gui/dlg_preferences.py
 wxgtd/gui/splash.py
@@ -34,8 +36,8 @@ wxgtd/gui/dlg_remind_settings.py
 wxgtd/gui/dlg_select_tags.py
 wxgtd/gui/dialogs.py
 wxgtd/gui/quicktask.py
-wxgtd/gui/dlg_reminders.py
 wxgtd/gui/dlg_datetime.py
+wxgtd/gui/dlg_export_tasks.py
 wxgtd/gui/frame_task.py
 wxgtd/gui/dlg_contexts.py
 wxgtd/gui/_dict_base_dlg.py

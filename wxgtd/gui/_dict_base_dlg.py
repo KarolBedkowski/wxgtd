@@ -14,6 +14,7 @@ __version__ = "2013-04-27"
 
 import gettext
 import logging
+import datetime
 
 import wx
 try:
@@ -24,6 +25,7 @@ except ImportError:
 from wxgtd.model.objects import Session
 from wxgtd.gui._base_dialog import BaseDialog
 from wxgtd.gui import message_boxes as mbox
+from wxgtd.wxtools.validators import Validator, ValidatorColorStr
 
 _LOG = logging.getLogger(__name__)
 _ = gettext.gettext
@@ -68,6 +70,10 @@ class DictBaseDlg(BaseDialog):
 	def _load_controls(self, wnd):
 		BaseDialog._load_controls(self, wnd)
 		self._items_lctrl = self[self._items_list_control]
+		self['tc_title'].SetValidator(Validator(self._proxy, 'title'))
+		self['tc_note'].SetValidator(Validator(self._proxy, 'note'))
+		self['colorselect'].SetValidator(ValidatorColorStr(self._proxy,
+				'bg_color', with_alpha=True))
 
 	def _create_bindings(self, wnd):
 		BaseDialog._create_bindings(self, wnd)
@@ -105,7 +111,10 @@ class DictBaseDlg(BaseDialog):
 		if mbox.message_box_delete_confirm(self._wnd, self._item_name):
 			item = self._get_item(sel)
 			if item:
-				self._session.delete(item)  # pylint: disable=E1101
+				if hasattr(item, 'deleted'):
+					item.deleted = datetime.datetime.now()
+				else:
+					self._session.delete(item)  # pylint: disable=E1101
 				self._session.commit()  # pylint: disable=E1101
 			self._refresh_list()
 			Publisher().sendMessage('dict.delete')
@@ -153,3 +162,6 @@ class DictBaseDlg(BaseDialog):
 		item_in_edit = self._displayed_item is not None
 		self[wx.ID_SAVE].Enable(item_in_edit)
 		self[wx.ID_DELETE].Enable(item_in_edit)
+		self['tc_title'].Enable(item_in_edit)
+		self['tc_note'].Enable(item_in_edit)
+		self['colorselect'].Enable(item_in_edit)

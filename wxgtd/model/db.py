@@ -13,9 +13,11 @@ __copyright__ = "Copyright (c) Karol Będkowski, 2013"
 __version__ = "2013-04-26"
 
 
+import os
 import time
 import sqlite3
 import logging
+import datetime
 
 import sqlalchemy
 from sqlalchemy.engine import Engine
@@ -85,6 +87,50 @@ def connect(filename, debug=False, *args, **kwargs):
 	engine.execute("delete from task_tags "
 			"where task_uuid not in (select uuid from tasks)"
 			"or tag_uuid not in (select uuid from tags)")
-	_LOG.info('Database bootstrap COMPLETED')
 
+	date_threshold = datetime.datetime.now() - datetime.timedelta(days=90)
+	_LOG.debug('Cleanup deleted tasks older than %r', date_threshold)
+	engine.execute("delete from tasks "
+			"where deleted < ? and prevent_auto_purge = 0",
+			(date_threshold, ))
+	_LOG.debug('Cleanup deleted folders older than %r', date_threshold)
+	engine.execute("delete from folders where deleted < ?", (date_threshold, ))
+
+	_LOG.debug('Cleanup deleted goals older than %r', date_threshold)
+	engine.execute("delete from goals where deleted < ?", (date_threshold, ))
+
+	_LOG.debug('Cleanup deleted tags older than %r', date_threshold)
+	engine.execute("delete from tags where deleted < ?", (date_threshold, ))
+
+	_LOG.debug('Cleanup deleted pages older than %r', date_threshold)
+	engine.execute("delete from notebook_pages where deleted < ?",
+			(date_threshold, ))
+
+	_LOG.info('Database bootstrap COMPLETED')
 	return objects.Session
+
+
+def find_db_file(config):
+	""" Find existing database file. """
+
+	def _try_path(path):
+		""" Check if in given path exists wxgtd.db file. """
+		file_path = os.path.join(path, 'wxgtd.db')
+		if os.path.isfile(file_path):
+			return file_path
+		return None
+
+	db_filename = _try_path(config.main_dir)
+	if not db_filename:
+		db_filename = _try_path(os.path.join(config.main_dir, 'db'))
+	if not db_filename:
+		db_dir = os.path.join(config.main_dir, 'db')
+		if os.path.isdir(db_dir):
+			db_filename = os.path.join(db_dir, 'wxgtd.db')
+	if not db_filename:
+		db_filename = os.path.join(config.user_share_dir, 'wxgtd.db')
+	#  create dir for database if not exist
+	db_dirname = os.path.dirname(db_filename)
+	if not os.path.isdir(db_dirname):
+		os.mkdir(db_dirname)
+	return db_filename
