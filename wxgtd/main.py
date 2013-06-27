@@ -52,14 +52,12 @@ def run():
 	# parse options
 	options = _parse_opt()
 
-	# app config
-	from wxgtd.lib import appconfig
-
 	# logowanie
 	from wxgtd.lib.logging_setup import logging_setup
 	logging_setup('wxgtd.log', options.debug, options.debug_sql)
 
-	# konfiguracja
+	# app config
+	from wxgtd.lib import appconfig
 	config = appconfig.AppConfig('wxgtd.cfg', 'wxgtd')
 	config.load_defaults(config.get_data_file('defaults.cfg'))
 	config.load()
@@ -92,18 +90,13 @@ def run():
 		Splash().Show()
 		wx.Yield()
 
-	# program
-	from wxgtd.model import db
-
-	# find database file.
-	db_filename = db.find_db_file(config)
-
 	if sys.platform == 'win32':
 		wx.Locale.AddCatalogLookupPathPrefix(config.locales_dir)
 		wx.Locale(wx.LANGUAGE_DEFAULT).AddCatalog('wxstd')
 
 	# connect to databse
-	db.connect(db_filename, options.debug_sql)
+	from wxgtd.model import db
+	db.connect(db.find_db_file(config), options.debug_sql)
 
 	if options.quick_task_dialog:
 		from wxgtd.gui import quicktask
