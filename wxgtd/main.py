@@ -81,7 +81,7 @@ def run():
 	import wx
 
 	# create app
-	app = wx.PySimpleApp(0)
+	app = wx.App(False)
 	wx.InitAllImageHandlers()
 
 	# splash screen
