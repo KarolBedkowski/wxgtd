@@ -23,9 +23,10 @@ except ImportError:
 	from wx.lib.pubsub import Publisher  # pylint: disable=E0611
 
 from wxgtd.model.objects import Session
+from wxgtd.wxtools.validators import Validator, ValidatorColorStr
 from wxgtd.gui._base_dialog import BaseDialog
 from wxgtd.gui import message_boxes as mbox
-from wxgtd.wxtools.validators import Validator, ValidatorColorStr
+from wxgtd.gui.dlg_trash import DlgTrash
 
 _LOG = logging.getLogger(__name__)
 _ = gettext.gettext
@@ -80,6 +81,7 @@ class DictBaseDlg(BaseDialog):
 		wnd.Bind(wx.EVT_BUTTON, self._on_add_item, id=wx.ID_ADD)
 		wnd.Bind(wx.EVT_BUTTON, self._on_del_item, id=wx.ID_DELETE)
 		self._items_lctrl.Bind(wx.EVT_LISTBOX, self._on_list_item_activate)
+		wnd.Bind(wx.EVT_BUTTON, self._on_btn_delete, self['btn_deleted'])
 
 	def _on_ok(self, evt):
 		BaseDialog._on_ok(self, evt)
@@ -126,6 +128,12 @@ class DictBaseDlg(BaseDialog):
 		item = self._get_item(uuid)
 		self._display_item(item)
 
+	def _on_btn_delete(self, _evt):
+		items = self._item_class.get_deleted(session=self._session,
+				order_by='title')
+		if DlgTrash(self._wnd, items, self._session).run(modal=True):
+			self._refresh_list()
+
 	def _refresh_list(self,):
 		""" Refresh list of all elements. """
 		self._displayed_item = None
@@ -148,7 +156,8 @@ class DictBaseDlg(BaseDialog):
 
 	def _get_items(self):
 		""" Get all items given class from database. """
-		for obj in self._item_class.all(session=self._session, order_by='title'):
+		items = self._item_class.all(session=self._session, order_by='title')
+		for obj in items:
 			yield obj.title, obj.uuid
 
 	def _display_item(self, item):
