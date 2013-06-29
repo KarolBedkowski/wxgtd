@@ -44,6 +44,7 @@ List tasks
   --projects          Show projects
   --checklists        Show checklists
   --future-alarms     Show task with alarms in future
+  --trash             Show deleted tasks
 
 Task operations
 ---------------
