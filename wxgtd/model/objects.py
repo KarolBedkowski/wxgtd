@@ -110,8 +110,24 @@ class BaseModelMixin(object):
 			order_by: optional order_by query argument
 		"""
 		session = session or Session()
+		query = session.query(cls)
 		if hasattr(cls, 'deleted'):
-			query = session.query(cls).filter(cls.deleted.is_(None))
+			query = query.filter(cls.deleted.is_(None))
+		if order_by:
+			query = query.order_by(order_by)
+		return query  # pylint: disable=E1101
+
+	@classmethod
+	def get_deleted(cls, order_by=None, session=None):
+		""" Return all deleted objects this class.
+
+		Args:
+			order_by: optional order_by query argument
+			session: optional SqlAlchemy session
+		"""
+		assert hasattr(cls, 'deleted')
+		session = session or Session()
+		query = session.query(cls).filter(cls.deleted.isnot(None))
 		if order_by:
 			query = query.order_by(order_by)
 		return query  # pylint: disable=E1101
