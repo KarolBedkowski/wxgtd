@@ -110,14 +110,21 @@ class DictBaseDlg(BaseDialog):
 		sel = self._selected_item_uuid
 		if sel is None:
 			return
-		if mbox.message_box_delete_confirm(self._wnd, self._item_name):
-			item = self._get_item(sel)
-			if item:
-				if hasattr(item, 'deleted'):
-					item.deleted = datetime.datetime.now()
-				else:
-					self._session.delete(item)  # pylint: disable=E1101
-				self._session.commit()  # pylint: disable=E1101
+		item = self._get_item(sel)
+		if not item:
+			return
+		additional_info = None
+		if self._check_children_before_delete(item):
+			additional_info = (_('After removal, it cannot be recovered.')
+					+ "\n\n"
+					+ _("Warning: this affect another items!"))
+		if mbox.message_box_delete_confirm(self._wnd, self._item_name + ' "' +
+				item.title + '"', additional_info):
+			if hasattr(item, 'deleted'):
+				item.deleted = datetime.datetime.now()
+			else:
+				self._session.delete(item)  # pylint: disable=E1101
+			self._session.commit()  # pylint: disable=E1101
 			self._refresh_list()
 			Publisher().sendMessage('dict.delete')
 			return True
@@ -174,3 +181,10 @@ class DictBaseDlg(BaseDialog):
 		self['tc_title'].Enable(item_in_edit)
 		self['tc_note'].Enable(item_in_edit)
 		self['colorselect'].Enable(item_in_edit)
+
+	def _check_children_before_delete(self, item):
+		if hasattr(item, 'children') and bool(item.children):
+			return True
+		if hasattr(item, 'tasks') and bool(item.tasks):
+			return True
+		return False
