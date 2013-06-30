@@ -654,7 +654,8 @@ class TaskTag(BaseModelMixin, Base):
 	created = Column(DateTime, default=datetime.datetime.utcnow)
 	modified = Column(DateTime, default=datetime.datetime.utcnow, index=True)
 
-	tag = orm.relationship("Tag", lazy="joined")
+	tag = orm.relationship("Tag", lazy="joined",
+			backref=orm.backref("task_tag"))
 
 
 class NotebookPage(BaseModelMixin, Base):
