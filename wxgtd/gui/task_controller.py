@@ -223,11 +223,10 @@ class TaskController:
 			True if tags was changed.
 		"""
 		task = self._task
-		tags = [tasktag.tag for tasktag in task.tags]
+		tags = task.tags
 		dlg = DlgSelectTags(self._parent_wnd, tags, self._session)
 		if dlg.run(True):
-			task.tags = [OBJ.TaskTag(task=task, tag=tag) for tag in
-					dlg.selected_tags]
+			task.tags = dlg.selected_tags
 			return True
 		return False
 

@@ -165,7 +165,7 @@ def _draw_info_task_tags(mdc, cache, task, x_off, y_off):
 	task_tags = cache.get('task_tags')
 	if task_tags is None and task.tags:
 		cache['task_tags'] = task_tags = ",".join(
-				tasktag.tag.title for tasktag in task.tags)
+				tag.title for tag in task.tags)
 	if task_tags:
 		mdc.DrawBitmap(iconprovider.get_image('tag_small'), x_off,
 				y_off, False)

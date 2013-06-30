@@ -21,6 +21,7 @@ import datetime
 
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Index
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy import orm, or_, and_
 from sqlalchemy import select, func
 
@@ -208,8 +209,10 @@ class Task(BaseModelMixin, Base):
 	folder = orm.relationship("Folder", backref=orm.backref('tasks'))
 	context = orm.relationship("Context", backref=orm.backref('tasks'))
 	goal = orm.relationship("Goal", backref=orm.backref('tasks'))
-	tags = orm.relationship("TaskTag", cascade="all, delete, delete-orphan",
-			backref=orm.backref("task"))
+#	tags = orm.relationship("TaskTag", cascade="all, delete, delete-orphan",
+#			backref=orm.backref("task"))
+	tags = association_proxy('task_tags', 'tag', creator=lambda t:
+			TaskTag(tag=t))
 	children = orm.relationship("Task", backref=orm.backref('parent',
 		remote_side=[uuid]))
 	notes = orm.relationship("Tasknote", backref=orm.backref('tasks'),
@@ -417,10 +420,7 @@ class Task(BaseModelMixin, Base):
 		""" Clone current object. """
 		newobj = BaseModelMixin.clone(self, cleanup)
 		# clone tags
-		for tasktag in self.tags:
-			ntasktag = TaskTag()
-			ntasktag.tag_uuid = tasktag.tag_uuid
-			newobj.tags.append(ntasktag)
+		newobj.tags = self.tags[:]
 		# clone notes
 		for note in self.notes:
 			newobj.notes.append(note.clone())
@@ -654,8 +654,9 @@ class TaskTag(BaseModelMixin, Base):
 	created = Column(DateTime, default=datetime.datetime.utcnow)
 	modified = Column(DateTime, default=datetime.datetime.utcnow, index=True)
 
-	tag = orm.relationship("Tag", lazy="joined",
-			backref=orm.backref("task_tag"))
+	task = orm.relationship(Task, backref=orm.backref(
+			"task_tags", cascade="all, delete-orphan"))
+	tag = orm.relationship("Tag", lazy="joined")
 
 
 class NotebookPage(BaseModelMixin, Base):
