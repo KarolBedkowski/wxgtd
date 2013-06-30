@@ -32,11 +32,11 @@ class DlgSelectTags(BaseDialog):
 		selected: list of uuid selected tags.
 	"""
 
-	def __init__(self, parent, selected=None):
+	def __init__(self, parent, selected=None, session=None):
 		self._tagslist = None
 		self._clb_tags = None
 		BaseDialog.__init__(self, parent, 'dlg_select_tags', save_pos=False)
-		self._setup(selected)
+		self._setup(selected, session)
 		self._show_tags()
 
 	def _load_controls(self, wnd):
@@ -47,9 +47,9 @@ class DlgSelectTags(BaseDialog):
 		BaseDialog._create_bindings(self, wnd)
 		wnd.Bind(wx.EVT_BUTTON, self._on_add_tag, id=wx.ID_ADD)
 
-	def _setup(self, selected):
+	def _setup(self, selected, session):
 		_LOG.debug("DlgSelectTags(%r)", selected)
-		self._session = Session()
+		self._session = session or Session()
 		self.selected_tags = selected
 
 	def _on_ok(self, evt):
@@ -83,10 +83,10 @@ class DlgSelectTags(BaseDialog):
 				Tag.deleted.is_(None)):
 			num = self._clb_tags.Append(tag.title)
 			if wx.Platform == '__WXMSW__':
-				self._tagslist.append(tag.uuid)
+				self._tagslist.append(tag)
 			else:
-				self._clb_tags.SetClientData(num, tag.uuid)
-			if tag.uuid in selected_tags:
+				self._clb_tags.SetClientData(num, tag)
+			if tag in selected_tags:
 				self._clb_tags.Check(num, True)
 
 	def _get_selected_tags(self):

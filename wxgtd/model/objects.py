@@ -208,7 +208,8 @@ class Task(BaseModelMixin, Base):
 	folder = orm.relationship("Folder", backref=orm.backref('tasks'))
 	context = orm.relationship("Context", backref=orm.backref('tasks'))
 	goal = orm.relationship("Goal", backref=orm.backref('tasks'))
-	tags = orm.relationship("TaskTag", cascade="all, delete, delete-orphan")
+	tags = orm.relationship("TaskTag", cascade="all, delete, delete-orphan",
+			backref=orm.backref("task"))
 	children = orm.relationship("Task", backref=orm.backref('parent',
 		remote_side=[uuid]))
 	notes = orm.relationship("Tasknote", backref=orm.backref('tasks'),
@@ -653,7 +654,7 @@ class TaskTag(BaseModelMixin, Base):
 	created = Column(DateTime, default=datetime.datetime.utcnow)
 	modified = Column(DateTime, default=datetime.datetime.utcnow, index=True)
 
-	tag = orm.relationship("Tag", cascade="all", lazy="joined")
+	tag = orm.relationship("Tag", lazy="joined")
 
 
 class NotebookPage(BaseModelMixin, Base):
