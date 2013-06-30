@@ -30,3 +30,10 @@ class DlgTags(DictBaseDlg):
 
 	def __init__(self, parent):
 		DictBaseDlg.__init__(self, parent, 'dlg_tags')
+
+	def _check_children_before_delete(self, item):
+		if hasattr(item, 'children') and bool(item.children):
+			return True
+		if bool(item.task_tag):
+			return True
+		return False
