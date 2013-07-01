@@ -85,6 +85,7 @@ class BaseTaskFrame(BaseFrame):
 		self['tc_note'].SetValidator(Validator(task, 'note',))
 		self['l_created'].SetLabel(fmt.format_timestamp(task.created))
 		self['l_modified'].SetLabel(fmt.format_timestamp(task.modified))
+		self['l_deleted'].SetLabel(fmt.format_timestamp(task.deleted))
 		self['cb_completed'].SetValidator(Validator(task, 'task_completed'))
 		self['cb_starred'].SetValidator(Validator(task, 'starred'))
 		self['tc_note'].Bind(wx.EVT_TEXT_URL, self._on_text_url)
