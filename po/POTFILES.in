@@ -45,6 +45,7 @@ wxgtd/gui/frame_checklistitem.py
 wxgtd/gui/_tasklistctrl.py
 wxgtd/gui/dlg_about.py
 wxgtd/gui/_filtertreectrl.py
+wxgtd/gui/dlg_trash.py
 wxgtd/gui/frame_main.py
 wxgtd/logic/task.py
 wxgtd/logic/notebook.py
