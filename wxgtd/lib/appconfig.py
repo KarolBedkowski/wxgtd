@@ -297,6 +297,27 @@ class AppConfig(Singleton):
 			config.set('last_files', 'file%d' % fidn, fname)
 
 
+class AppConfigWrapper(object):
+	""" Wrapper for AppConfig class that allow use it with validators.
+	Values are accessible by <section>/<key>."""
+	# pylint: disable=R0903
+
+	def __init__(self):
+		self._config = AppConfig()
+
+	def __getitem__(self, key):
+		key = key.split('/')
+		return self._config.get(key[0], key[1])
+
+	def __setitem__(self, key, value):
+		key = key.split('/')
+		self._config.set(key[0], key[1], value)
+
+	def get(self, key, default=None):
+		key = key.split('/')
+		return self._config.get(key[0], key[1], default)
+
+
 def is_frozen():
 	""" Check if application is frozen. """
 	if __file__.startswith(sys.prefix):
