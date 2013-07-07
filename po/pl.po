@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: wxgtd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2013-06-27 22:47+0200\n"
-"PO-Revision-Date: 2013-06-27 22:48+0200\n"
+"POT-Creation-Date: 2013-07-07 11:06+0200\n"
+"PO-Revision-Date: 2013-07-07 11:07+0200\n"
 "Last-Translator: Karol Będkowski <karol.bedkowski@gmail.com>\n"
 "Language-Team: polski <>\n"
 "Language: pl\n"
@@ -21,7 +21,7 @@ msgstr ""
 
 #: ../wxgtd/version.py:19 ../wxgtd/version.py:23
 #: ../wxgtd/gui/_taskbaricon.py:46 ../wxgtd/gui/frame_main.py:400
-#: ../wxgtd/gui/frame_main.py:734 ../data/wxgtd.xrc.h:106
+#: ../wxgtd/gui/frame_main.py:734 ../data/wxgtd.xrc.h:79
 msgid "wxGTD"
 msgstr "wxGTD"
 
@@ -89,7 +89,7 @@ msgid "Snooze task alarm"
 msgstr "Drzemka"
 
 #: ../wxgtd/gui/dlg_notebook_page.py:55 ../wxgtd/gui/frame_notebooks.py:194
-#: ../wxgtd/gui/task_controller.py:426 ../wxgtd/gui/_filtertreectrl.py:98
+#: ../wxgtd/gui/task_controller.py:415 ../wxgtd/gui/_filtertreectrl.py:98
 msgid "No Folder"
 msgstr "Brak folderu"
 
@@ -150,11 +150,11 @@ msgstr "Zapisz"
 msgid "Delete %s?"
 msgstr "Usunąć %s?"
 
-#: ../wxgtd/gui/message_boxes.py:150
+#: ../wxgtd/gui/message_boxes.py:150 ../wxgtd/gui/_dict_base_dlg.py:118
 msgid "After removal, it cannot be recovered."
 msgstr "Po usunięciu, nie będzie możliwe przywrócenie."
 
-#: ../wxgtd/gui/message_boxes.py:158 ../data/wxgtd.xrc.h:43
+#: ../wxgtd/gui/message_boxes.py:158 ../data/wxgtd.xrc.h:41
 msgid "Delete"
 msgstr "Usuń"
 
@@ -171,11 +171,11 @@ msgid "tag"
 msgstr "etykiatę"
 
 #: ../wxgtd/gui/frame_notebooks.py:62 ../wxgtd/gui/_tasklistctrl.py:278
-#: ../wxgtd/model/exporter.py:488
+#: ../wxgtd/gui/dlg_trash.py:43 ../wxgtd/model/exporter.py:488
 msgid "Title"
 msgstr "Tytuł"
 
-#: ../wxgtd/gui/frame_notebooks.py:63
+#: ../wxgtd/gui/frame_notebooks.py:63 ../wxgtd/gui/dlg_trash.py:44
 msgid "Created"
 msgstr "Utworzenie"
 
@@ -239,11 +239,11 @@ msgstr "Nowe zadanie..."
 msgid "Close wxGTD"
 msgstr "Zamknij wxGTD"
 
-#: ../wxgtd/gui/_base_task_frame.py:132 ../wxgtd/gui/_base_task_frame.py:142
+#: ../wxgtd/gui/_base_task_frame.py:133 ../wxgtd/gui/_base_task_frame.py:143
 msgid "Task Note"
 msgstr "Notatka Zadania"
 
-#: ../wxgtd/gui/_base_task_frame.py:155
+#: ../wxgtd/gui/_base_task_frame.py:156
 msgid "note"
 msgstr "notatka"
 
@@ -287,31 +287,31 @@ msgstr "piąty"
 msgid "last"
 msgstr "ostatni"
 
-#: ../wxgtd/gui/dlg_repeat_settings.py:133 ../data/wxgtd.xrc.h:149
+#: ../wxgtd/gui/dlg_repeat_settings.py:133 ../data/wxgtd.xrc.h:155
 msgid "Monday"
 msgstr "poniedziałek"
 
-#: ../wxgtd/gui/dlg_repeat_settings.py:134 ../data/wxgtd.xrc.h:150
+#: ../wxgtd/gui/dlg_repeat_settings.py:134 ../data/wxgtd.xrc.h:156
 msgid "Tuesday"
 msgstr "wtorek"
 
-#: ../wxgtd/gui/dlg_repeat_settings.py:135 ../data/wxgtd.xrc.h:151
+#: ../wxgtd/gui/dlg_repeat_settings.py:135 ../data/wxgtd.xrc.h:157
 msgid "Wednesday"
 msgstr "środa"
 
-#: ../wxgtd/gui/dlg_repeat_settings.py:136 ../data/wxgtd.xrc.h:152
+#: ../wxgtd/gui/dlg_repeat_settings.py:136 ../data/wxgtd.xrc.h:158
 msgid "Thursday"
 msgstr "czwartek"
 
-#: ../wxgtd/gui/dlg_repeat_settings.py:137 ../data/wxgtd.xrc.h:153
+#: ../wxgtd/gui/dlg_repeat_settings.py:137 ../data/wxgtd.xrc.h:159
 msgid "Friday"
 msgstr "piątek"
 
-#: ../wxgtd/gui/dlg_repeat_settings.py:138 ../data/wxgtd.xrc.h:154
+#: ../wxgtd/gui/dlg_repeat_settings.py:138 ../data/wxgtd.xrc.h:160
 msgid "Saturday"
 msgstr "sobota"
 
-#: ../wxgtd/gui/dlg_repeat_settings.py:139 ../data/wxgtd.xrc.h:155
+#: ../wxgtd/gui/dlg_repeat_settings.py:139 ../data/wxgtd.xrc.h:161
 msgid "Sunday"
 msgstr "niedzila"
 
@@ -323,13 +323,13 @@ msgstr "folder"
 msgid "Set task completed?"
 msgstr "Zaznaczyć zadanie jako zakończone?"
 
-#: ../wxgtd/gui/task_controller.py:117 ../wxgtd/gui/task_controller.py:606
-#: ../wxgtd/gui/task_controller.py:610
+#: ../wxgtd/gui/task_controller.py:117 ../wxgtd/gui/task_controller.py:595
+#: ../wxgtd/gui/task_controller.py:599
 msgid "Set complete"
 msgstr "Ustaw jako zakończone"
 
-#: ../wxgtd/gui/task_controller.py:117 ../wxgtd/gui/task_controller.py:606
-#: ../wxgtd/gui/task_controller.py:611
+#: ../wxgtd/gui/task_controller.py:117 ../wxgtd/gui/task_controller.py:595
+#: ../wxgtd/gui/task_controller.py:600
 msgid "Close"
 msgstr "Zamknij"
 
@@ -345,42 +345,42 @@ msgstr "zadania"
 msgid "Undelete selected tasks?"
 msgstr "Przywrócić zaznaczonego zadania?"
 
-#: ../wxgtd/gui/task_controller.py:290
+#: ../wxgtd/gui/task_controller.py:279
 msgid "Change task type to:"
 msgstr "Zmiana typu zadania na:"
 
-#: ../wxgtd/gui/task_controller.py:291 ../wxgtd/gui/task_controller.py:314
-#: ../wxgtd/gui/task_controller.py:565 ../wxgtd/model/enums.py:44
-#: ../data/wxgtd.xrc.h:5
+#: ../wxgtd/gui/task_controller.py:280 ../wxgtd/gui/task_controller.py:303
+#: ../wxgtd/gui/task_controller.py:554 ../wxgtd/model/enums.py:44
+#: ../data/wxgtd.xrc.h:32
 msgid "Task"
 msgstr "Zadanie"
 
-#: ../wxgtd/gui/task_controller.py:313 ../wxgtd/gui/task_controller.py:564
+#: ../wxgtd/gui/task_controller.py:302 ../wxgtd/gui/task_controller.py:553
 msgid "Change task priority to:"
 msgstr "Zmiana priorytetu zadania na:"
 
-#: ../wxgtd/gui/task_controller.py:334
+#: ../wxgtd/gui/task_controller.py:323
 msgid "Change tasks status to:"
 msgstr "Zmiana status zadania na:"
 
-#: ../wxgtd/gui/task_controller.py:335 ../wxgtd/gui/task_controller.py:370
-#: ../wxgtd/gui/task_controller.py:431 ../data/wxgtd.xrc.h:58
+#: ../wxgtd/gui/task_controller.py:324 ../wxgtd/gui/task_controller.py:359
+#: ../wxgtd/gui/task_controller.py:420 ../data/wxgtd.xrc.h:111
 msgid "Tasks"
 msgstr "Zadania"
 
-#: ../wxgtd/gui/task_controller.py:365 ../wxgtd/gui/_filtertreectrl.py:94
+#: ../wxgtd/gui/task_controller.py:354 ../wxgtd/gui/_filtertreectrl.py:94
 msgid "No Context"
 msgstr "Brak kontekstu"
 
-#: ../wxgtd/gui/task_controller.py:369
+#: ../wxgtd/gui/task_controller.py:358
 msgid "Change tasks context to:"
 msgstr "Zmiana kontekst zadania na:"
 
-#: ../wxgtd/gui/task_controller.py:430
+#: ../wxgtd/gui/task_controller.py:419
 msgid "Change tasks folder to:"
 msgstr "Zmiana folder zadania na:"
 
-#: ../wxgtd/gui/task_controller.py:587 ../wxgtd/gui/task_controller.py:598
+#: ../wxgtd/gui/task_controller.py:576 ../wxgtd/gui/task_controller.py:587
 msgid ""
 "This operation change task and subtasks type.\n"
 "Continue change??"
@@ -388,7 +388,7 @@ msgstr ""
 "Ta operacja zmieni typ zadania i podzadań.\n"
 "Kontynuować zmianę?"
 
-#: ../wxgtd/gui/task_controller.py:593
+#: ../wxgtd/gui/task_controller.py:582
 msgid ""
 "This operation change all subtasks to simple tasks\n"
 "Are you sure?"
@@ -396,15 +396,15 @@ msgstr ""
 "Ta operacja zmieni wszystkie podzadania na zwykłe zadania.\n"
 "Czy jesteś pewien?"
 
-#: ../wxgtd/gui/task_controller.py:605
+#: ../wxgtd/gui/task_controller.py:594
 msgid "Set tasks completed?"
 msgstr "Zaznaczyć zadanie jako zakończone?"
 
-#: ../wxgtd/gui/task_controller.py:610
+#: ../wxgtd/gui/task_controller.py:599
 msgid "Set tasks not completed?"
 msgstr "Zaznaczyć zadanie jako niezakończone?"
 
-#: ../wxgtd/gui/task_controller.py:645
+#: ../wxgtd/gui/task_controller.py:634
 msgid ""
 "This operation change task and subtasks type.\n"
 "Continue change?"
@@ -469,6 +469,10 @@ msgstr "Proszę wybrać docelowy plik."
 msgid "context"
 msgstr "kontekst"
 
+#: ../wxgtd/gui/_dict_base_dlg.py:120
+msgid "Warning: this affect another items!"
+msgstr "Uwaga: będzie to dotyczyło innych elementów!"
+
 #: ../wxgtd/gui/_tasklistctrl.py:242
 msgid "Dismiss"
 msgstr "Odrzuć"
@@ -493,7 +497,7 @@ msgstr "Info"
 msgid "Statuses"
 msgstr "Statusy"
 
-#: ../wxgtd/gui/_filtertreectrl.py:93 ../data/wxgtd.xrc.h:105
+#: ../wxgtd/gui/_filtertreectrl.py:93 ../data/wxgtd.xrc.h:141
 msgid "Contexts"
 msgstr "Konteksty"
 
@@ -501,7 +505,7 @@ msgstr "Konteksty"
 msgid "Folders"
 msgstr "Foldery"
 
-#: ../wxgtd/gui/_filtertreectrl.py:101 ../data/wxgtd.xrc.h:96
+#: ../wxgtd/gui/_filtertreectrl.py:101 ../data/wxgtd.xrc.h:148
 msgid "Goals"
 msgstr "Cele"
 
@@ -509,7 +513,7 @@ msgstr "Cele"
 msgid "No goal"
 msgstr "Brak celu"
 
-#: ../wxgtd/gui/_filtertreectrl.py:105 ../data/wxgtd.xrc.h:162
+#: ../wxgtd/gui/_filtertreectrl.py:105 ../data/wxgtd.xrc.h:19
 msgid "Tags"
 msgstr "Etykiety"
 
@@ -520,6 +524,14 @@ msgstr "Brak etykiety"
 #: ../wxgtd/gui/_filtertreectrl.py:268 ../wxgtd/gui/_filtertreectrl.py:269
 msgid "Select only this item"
 msgstr "Zaznacz tylko ten element"
+
+#: ../wxgtd/gui/dlg_trash.py:45 ../data/wxgtd.xrc.h:24
+msgid "Deleted"
+msgstr "Usunięto"
+
+#: ../wxgtd/gui/dlg_trash.py:67
+msgid "Please select one or more items to undelete."
+msgstr "Proszę wybrać jeden lub więcej elementów do przywrócenia."
 
 #: ../wxgtd/gui/frame_main.py:205
 msgid "New Task"
@@ -592,11 +604,11 @@ msgstr "Ukrywaj dopóki"
 msgid "Synchronize tasks"
 msgstr "Synchronizuj zadania"
 
-#: ../wxgtd/gui/frame_main.py:295 ../data/wxgtd.xrc.h:104
+#: ../wxgtd/gui/frame_main.py:295 ../data/wxgtd.xrc.h:16
 msgid "Reminders"
 msgstr "Przypomnienia"
 
-#: ../wxgtd/gui/frame_main.py:299 ../data/wxgtd.xrc.h:54
+#: ../wxgtd/gui/frame_main.py:299 ../data/wxgtd.xrc.h:17
 msgid "Notebook"
 msgstr "Notatnik"
 
@@ -821,7 +833,7 @@ msgstr "Projekt"
 msgid "Checklist"
 msgstr "Lista"
 
-#: ../wxgtd/model/enums.py:47 ../data/wxgtd.xrc.h:87
+#: ../wxgtd/model/enums.py:47 ../data/wxgtd.xrc.h:31
 msgid "Checklist Item"
 msgstr "Element listy"
 
@@ -971,7 +983,7 @@ msgstr "Śr."
 msgid "Low"
 msgstr "Nis."
 
-#: ../wxgtd/model/enums.py:114 ../data/wxgtd.xrc.h:92
+#: ../wxgtd/model/enums.py:114 ../data/wxgtd.xrc.h:145
 msgid "None"
 msgstr "brak"
 
@@ -1366,7 +1378,7 @@ msgstr "Data startu"
 msgid "Alarm"
 msgstr "Alarm"
 
-#: ../wxgtd/model/exporter.py:494 ../data/wxgtd.xrc.h:145
+#: ../wxgtd/model/exporter.py:494 ../data/wxgtd.xrc.h:151
 msgid "Repeat"
 msgstr "Powtórzenie"
 
@@ -1466,572 +1478,596 @@ msgid "Incorrect value"
 msgstr "Niewłaściwa wartość"
 
 #: ../data/wxgtd.xrc.h:1
-msgid "Remind"
-msgstr "Przypomnij"
-
-#: ../data/wxgtd.xrc.h:2
-msgid "Never"
-msgstr "Nigdy"
-
-#: ../data/wxgtd.xrc.h:3
-msgid "Date and Time"
-msgstr "Data i godzina"
-
-#: ../data/wxgtd.xrc.h:4
-msgid "Before"
-msgstr "Przed"
-
-#: ../data/wxgtd.xrc.h:6
-msgid "Title:"
-msgstr "Tytuł:"
-
-#: ../data/wxgtd.xrc.h:7
-msgid "Note:"
-msgstr "Notatka:"
-
-#: ../data/wxgtd.xrc.h:8
-msgid "Parameters"
-msgstr "Parametry"
-
-#: ../data/wxgtd.xrc.h:9
-msgid "Status:"
-msgstr "Status:"
-
-#: ../data/wxgtd.xrc.h:10
-msgid "Due:"
-msgstr "Termin:"
-
-#: ../data/wxgtd.xrc.h:11
-msgid "l_due"
-msgstr "l_due"
-
-#: ../data/wxgtd.xrc.h:12
-msgid "Set"
-msgstr "Wybierz"
-
-#: ../data/wxgtd.xrc.h:13
-msgid "Type:"
-msgstr "Typ:"
-
-#: ../data/wxgtd.xrc.h:14
-msgid "l_type"
-msgstr "l_type"
-
-#: ../data/wxgtd.xrc.h:15
-msgid "Change"
-msgstr "Zmień"
-
-#: ../data/wxgtd.xrc.h:16
-msgid "Remind:"
-msgstr "Przypomnienie:"
-
-#: ../data/wxgtd.xrc.h:17
-msgid "l_remind"
-msgstr "l_remind"
-
-#: ../data/wxgtd.xrc.h:18
-msgid "Project/List:"
-msgstr "Projekt/lista:"
-
-#: ../data/wxgtd.xrc.h:19
-msgid "l_project"
-msgstr "l_project"
-
-#: ../data/wxgtd.xrc.h:20
-msgid "Repeat:"
-msgstr "Powtarzanie:"
-
-#: ../data/wxgtd.xrc.h:21
-msgid "l_repeat"
-msgstr "l_repeat"
-
-#: ../data/wxgtd.xrc.h:22
-msgid "Folder"
-msgstr "Folder"
-
-#: ../data/wxgtd.xrc.h:23
-msgid "Priority:"
-msgstr "Priorytet:"
-
-#: ../data/wxgtd.xrc.h:24
-msgid "l_prio"
-msgstr "l_prio"
-
-#: ../data/wxgtd.xrc.h:25
-msgid "Context:"
-msgstr "Kontekst:"
-
-#: ../data/wxgtd.xrc.h:26
-msgid "Goal:"
-msgstr "Cel:"
-
-#: ../data/wxgtd.xrc.h:27
-msgid "Completed:"
-msgstr "Ukończone:"
-
-#: ../data/wxgtd.xrc.h:28
-msgid "l_completed_date"
-msgstr "l_completed_date"
-
-#: ../data/wxgtd.xrc.h:29
-msgid "Starred:"
-msgstr "Oznaczone:"
-
-#: ../data/wxgtd.xrc.h:30
-msgid "Additional"
-msgstr "Dodatkowe"
-
-#: ../data/wxgtd.xrc.h:31
-msgid "Start date:"
-msgstr "Data startu:"
-
-#: ../data/wxgtd.xrc.h:32
-msgid "l_start_date"
-msgstr "l_start_date"
-
-#: ../data/wxgtd.xrc.h:33
-msgid "Duration:"
-msgstr "Czas trwania:"
-
-#: ../data/wxgtd.xrc.h:34
-msgid "D:"
-msgstr "D:"
-
-#: ../data/wxgtd.xrc.h:35
-msgid "H:"
-msgstr "G:"
-
-#: ../data/wxgtd.xrc.h:36
-msgid "M:"
-msgstr "M:"
-
-#: ../data/wxgtd.xrc.h:37
-msgid "Hide until:"
-msgstr "Ukryj do:"
-
-#: ../data/wxgtd.xrc.h:38
-msgid "l_hide_until"
-msgstr "l_hide_until"
-
-#: ../data/wxgtd.xrc.h:39
-msgid "Tags:"
-msgstr "Etykiety:"
-
-#: ../data/wxgtd.xrc.h:40
-msgid "l_tags"
-msgstr "l_tags"
-
-#: ../data/wxgtd.xrc.h:41
-msgid "Select"
-msgstr "Wybierz"
-
-#: ../data/wxgtd.xrc.h:42
-msgid "Notes"
-msgstr "Notatki"
-
-#: ../data/wxgtd.xrc.h:44
-msgid "Information"
-msgstr "Informacje"
-
-#: ../data/wxgtd.xrc.h:45
-msgid "Created:"
-msgstr "Utworzone:"
-
-#: ../data/wxgtd.xrc.h:46
-msgid "l_created"
-msgstr "l_created"
-
-#: ../data/wxgtd.xrc.h:47
-msgid "Modified:"
-msgstr "Zmodyfikowane:"
-
-#: ../data/wxgtd.xrc.h:48
-msgid "l_modified"
-msgstr "l_modified"
-
-#: ../data/wxgtd.xrc.h:50
-msgid "Tag"
-msgstr "Etykieta"
-
-#: ../data/wxgtd.xrc.h:51
-msgid "Color:"
-msgstr "Kolor:"
-
-#: ../data/wxgtd.xrc.h:52
-msgid "Notebook Page"
-msgstr "Strona notatnika"
-
-#: ../data/wxgtd.xrc.h:53
-msgid "Folder:"
-msgstr "Folder:"
-
-#: ../data/wxgtd.xrc.h:55
-msgid "Search Tasks"
-msgstr "Szukaj zadań"
-
-#: ../data/wxgtd.xrc.h:56
-msgid "Search in finished"
-msgstr "Szukaj w zakończonych"
-
-#: ../data/wxgtd.xrc.h:57
-msgid "Preferences"
-msgstr "Preferencje"
-
-#: ../data/wxgtd.xrc.h:59
-msgid "Inheritance from projects"
-msgstr "Dziedziczenie z projektu"
-
-#: ../data/wxgtd.xrc.h:60
-msgid "Defaults"
-msgstr "Wartości domyślne"
-
-#: ../data/wxgtd.xrc.h:61
-msgid "l_task_def_remind"
-msgstr "l_task_def_remind"
-
-#: ../data/wxgtd.xrc.h:62
-msgid "l_task_def_hide_until"
-msgstr "l_task_def_hide_until"
-
-#: ../data/wxgtd.xrc.h:63
-msgid "Hotlist"
-msgstr "Gorąca lista"
-
-#: ../data/wxgtd.xrc.h:64
-msgid "Hotlist filter"
-msgstr "Filtr gorącej listy"
-
-#: ../data/wxgtd.xrc.h:65
-msgid "Due date (next days):"
-msgstr "Termin (w kolejnych dniach):"
-
-#: ../data/wxgtd.xrc.h:66
-msgid "Minimal priority:"
-msgstr "Minimalny priorytet:"
-
-#: ../data/wxgtd.xrc.h:67
-msgid "l_priority"
-msgstr "l_priority"
-
-#: ../data/wxgtd.xrc.h:68
-msgid "Next action:"
-msgstr "Następna akcja:"
-
-#: ../data/wxgtd.xrc.h:69
-msgid "Task started:"
-msgstr "Zadanie oznaczone:"
-
-#: ../data/wxgtd.xrc.h:70
-msgid "Contition operator:"
-msgstr "Operator warunkowy:"
-
-#: ../data/wxgtd.xrc.h:71
-msgid "or"
-msgstr "lub"
-
-#: ../data/wxgtd.xrc.h:72
-msgid "and"
-msgstr "i"
-
-#: ../data/wxgtd.xrc.h:73
-msgid "Sync"
-msgstr "Synchronizacja"
-
-#: ../data/wxgtd.xrc.h:74
-msgid "File location"
-msgstr "Położenie pliku"
-
-#: ../data/wxgtd.xrc.h:75
-msgid "..."
-msgstr "..."
-
-#: ../data/wxgtd.xrc.h:76
-msgid "Options"
-msgstr "Opcje"
-
-#: ../data/wxgtd.xrc.h:77
-msgid "Sync on startup (only load)"
-msgstr "Synchronizacja przy uruchomieniu (tylko wczytanie)"
-
-#: ../data/wxgtd.xrc.h:78
-msgid "Sync on exit (load and write)"
-msgstr "Synchronizacja przy wyjściu (wczytanie i zapisanie)"
-
-#: ../data/wxgtd.xrc.h:79
-msgid "Notification"
-msgstr "Powiadomienia"
-
-#: ../data/wxgtd.xrc.h:80
-msgid "Show task notifications in popup window"
-msgstr "Wyświetlanie powiadomień w wyskakującym oknie"
-
-#: ../data/wxgtd.xrc.h:81
-msgid "GUI"
-msgstr "Interfejs użytkownika"
-
-#: ../data/wxgtd.xrc.h:82
-msgid "System tray"
-msgstr "Pole systemowe"
-
-#: ../data/wxgtd.xrc.h:83
-msgid "Start window minimalized to system tray"
-msgstr "Uruchamianie okna zminimalizowanego do pola systemowego"
-
-#: ../data/wxgtd.xrc.h:84
-msgid "Minimalize to system try"
-msgstr "Minimalizuj do pola systemowego"
-
-#: ../data/wxgtd.xrc.h:85
-msgid "Confirmations"
-msgstr "Potwierdzenia"
-
-#: ../data/wxgtd.xrc.h:86
-msgid "Confirm completion from task dialog"
-msgstr "Potwierdzanie zakończenia z dialogu zadania"
-
-#: ../data/wxgtd.xrc.h:88
-msgid "Checklist:"
-msgstr "Lista:"
-
-#: ../data/wxgtd.xrc.h:89
-msgid "label_46"
-msgstr "label_46"
-
-#: ../data/wxgtd.xrc.h:90
-msgid "Date & Time"
-msgstr "Data i czas"
-
-#: ../data/wxgtd.xrc.h:91
-msgid "Select date"
-msgstr "Wybierz datę"
-
-#: ../data/wxgtd.xrc.h:93
-msgid "Date"
-msgstr "Data"
-
-#: ../data/wxgtd.xrc.h:94
-msgid "Time:"
-msgstr "Czas:"
-
-#: ../data/wxgtd.xrc.h:95
-msgid "Projects and Checklists"
-msgstr "Projekty i listy"
-
-#: ../data/wxgtd.xrc.h:97
-msgid "Time period:"
-msgstr "Okres:"
-
-#: ../data/wxgtd.xrc.h:98
-msgid "Syncing"
-msgstr "Synchronizacja"
-
-#: ../data/wxgtd.xrc.h:99
-msgid "Show"
-msgstr "Wyświetl"
-
-#: ../data/wxgtd.xrc.h:100
-msgid "Show task"
-msgstr "Wyświetl zadanie"
-
-#: ../data/wxgtd.xrc.h:101
-msgid "Always"
-msgstr "Zawsze"
-
-#: ../data/wxgtd.xrc.h:102
-msgid "Since date and time"
-msgstr "Od daty i godziny"
-
-#: ../data/wxgtd.xrc.h:103
-msgid "Since"
-msgstr "Od"
-
-#: ../data/wxgtd.xrc.h:107
-msgid "_File"
-msgstr "_Plik"
-
-#: ../data/wxgtd.xrc.h:108
-msgid "_Load File...\\tCtrl+L"
-msgstr "_Wczytaj plik...\\tCtrl+L"
-
-#: ../data/wxgtd.xrc.h:109
-msgid "_Save File...\\tCtrl+S"
-msgstr "_Zapisz plik...\\tCtrl+S"
-
-#: ../data/wxgtd.xrc.h:110
-msgid "S_ynchronize Tasks\\tCtrl+Shift+S"
-msgstr "S_ynchronizuj zadania\\tCtrl+Shift+S"
-
-#: ../data/wxgtd.xrc.h:111
-msgid "Export..."
-msgstr "Eksportuj..."
-
-#: ../data/wxgtd.xrc.h:112
-msgid "Export Tasks..."
-msgstr "Eksportuj zadania..."
-
-#: ../data/wxgtd.xrc.h:113
-msgid "_Exit\\tCtrl+Q"
-msgstr "_Zakończ\\tCtrl+Q"
-
-#: ../data/wxgtd.xrc.h:114
-msgid "_Task"
-msgstr "_Zadanie"
-
-#: ../data/wxgtd.xrc.h:115
-msgid "_New Task..\\tCtrl+N"
-msgstr "_Nowe zadanie...\\tCtrl+N"
-
-#: ../data/wxgtd.xrc.h:116
-msgid "_Quick Task..\\tF2"
-msgstr "_Szybkie zadanie...\\tF2"
-
-#: ../data/wxgtd.xrc.h:117
-msgid "_Edit Task...\\tCtrl+E"
-msgstr "_Edytuj zadanie\\tCtrl+E"
-
-#: ../data/wxgtd.xrc.h:118
-msgid "_Delete Task\\tDEL"
-msgstr "_Usuń zadanie\\tDEL"
-
-#: ../data/wxgtd.xrc.h:119
-msgid "_Clone Task\\tCtrl+D"
-msgstr "_Powiel zadanie\\tCtrl+D"
-
-#: ../data/wxgtd.xrc.h:120
-msgid "_Toggle Task Completed\\tF5"
-msgstr "Przełączenie _zakończenia zadania\\tF5"
-
-#: ../data/wxgtd.xrc.h:121
-msgid "Toggle Task _Starred\\tF6"
-msgstr "Przełączenie _oznaczenia zadania\\tF6"
-
-#: ../data/wxgtd.xrc.h:122
-msgid "_Notebook"
-msgstr "_Notatnik"
-
-#: ../data/wxgtd.xrc.h:123
-msgid "_Open Notebook\\tF8"
-msgstr "_Otwórz notatnik\\tF8"
-
-#: ../data/wxgtd.xrc.h:124
-msgid "S_earch"
-msgstr "_Szukaj"
-
-#: ../data/wxgtd.xrc.h:125
-msgid "_Tasks...\\tCtrl+F"
-msgstr "_Zadania\\tCtrl+F"
-
-#: ../data/wxgtd.xrc.h:126
-msgid "_Settings"
-msgstr "_Ustawienia"
-
-#: ../data/wxgtd.xrc.h:127
-msgid "_Tags"
-msgstr "_Etykiety"
-
-#: ../data/wxgtd.xrc.h:128
-msgid "_Goals"
-msgstr "_Cele"
-
-#: ../data/wxgtd.xrc.h:129
-msgid "_Folders"
-msgstr "_Foldery"
-
-#: ../data/wxgtd.xrc.h:130
-msgid "_Contexts"
-msgstr "_Konteksty"
-
-#: ../data/wxgtd.xrc.h:131
-msgid "_Preferences"
-msgstr "_Preferencje"
-
-#: ../data/wxgtd.xrc.h:132
-msgid "_Help"
-msgstr "_Pomoc"
-
-#: ../data/wxgtd.xrc.h:133
-msgid "_About"
-msgstr "_O programie"
-
-#: ../data/wxgtd.xrc.h:134
-msgid "l_parent_due\\nl_parent_due"
-msgstr "l_parent_due\\nl_parent_due"
-
-#: ../data/wxgtd.xrc.h:135
-msgid "Edit"
-msgstr "Edycja"
-
-#: ../data/wxgtd.xrc.h:136
 msgid "Export Tasks"
 msgstr "Eksportuj zadania"
 
-#: ../data/wxgtd.xrc.h:137
+#: ../data/wxgtd.xrc.h:2
 msgid "Format"
 msgstr "Format"
 
-#: ../data/wxgtd.xrc.h:138
+#: ../data/wxgtd.xrc.h:3
 msgid "Text file"
 msgstr "Plik tekstowy"
 
-#: ../data/wxgtd.xrc.h:139
+#: ../data/wxgtd.xrc.h:4
 msgid "CSV"
 msgstr "CSV"
 
-#: ../data/wxgtd.xrc.h:140
+#: ../data/wxgtd.xrc.h:5
 msgid "Destination File"
 msgstr "Plik docelowy"
 
-#: ../data/wxgtd.xrc.h:141
+#: ../data/wxgtd.xrc.h:6
+msgid "..."
+msgstr "..."
+
+#: ../data/wxgtd.xrc.h:7
 msgid "Details"
 msgstr "Szczegóły"
 
-#: ../data/wxgtd.xrc.h:142
+#: ../data/wxgtd.xrc.h:8
 msgid "Simple List"
 msgstr "Prosta lista"
 
-#: ../data/wxgtd.xrc.h:143
+#: ../data/wxgtd.xrc.h:9
 msgid "Normal"
 msgstr "Normalny"
 
-#: ../data/wxgtd.xrc.h:144
+#: ../data/wxgtd.xrc.h:10
 msgid "Verbose"
 msgstr "Szczegółowy"
 
-#: ../data/wxgtd.xrc.h:146
-msgid "Every"
-msgstr "Co"
+#: ../data/wxgtd.xrc.h:11
+msgid "Show"
+msgstr "Wyświetl"
 
-#: ../data/wxgtd.xrc.h:147
-msgid "Every X T"
-msgstr "Co X T"
+#: ../data/wxgtd.xrc.h:12
+msgid "Show task"
+msgstr "Wyświetl zadanie"
 
-#: ../data/wxgtd.xrc.h:148
-msgid "Every W"
-msgstr "Co W"
+#: ../data/wxgtd.xrc.h:13
+msgid "Always"
+msgstr "Zawsze"
 
-#: ../data/wxgtd.xrc.h:156
-msgid "The X D every M months"
-msgstr "Co X D każdego M miesiąca"
+#: ../data/wxgtd.xrc.h:14
+msgid "Since date and time"
+msgstr "Od daty i godziny"
 
-#: ../data/wxgtd.xrc.h:157
-msgid "Relative to"
-msgstr "W stosunku do"
+#: ../data/wxgtd.xrc.h:15
+msgid "Since"
+msgstr "Od"
 
-#: ../data/wxgtd.xrc.h:158
-msgid "duo date"
-msgstr "terminu"
+#: ../data/wxgtd.xrc.h:18
+msgid "Syncing"
+msgstr "Synchronizacja"
 
-#: ../data/wxgtd.xrc.h:159
-msgid "completion"
-msgstr "zakończenia"
+#: ../data/wxgtd.xrc.h:20
+msgid "Tag"
+msgstr "Etykieta"
 
-#: ../data/wxgtd.xrc.h:160
+#: ../data/wxgtd.xrc.h:21
+msgid "Title:"
+msgstr "Tytuł:"
+
+#: ../data/wxgtd.xrc.h:22
+msgid "Note:"
+msgstr "Notatka:"
+
+#: ../data/wxgtd.xrc.h:23
+msgid "Color:"
+msgstr "Kolor:"
+
+#: ../data/wxgtd.xrc.h:25
+msgid "Trash"
+msgstr "Kosz"
+
+#: ../data/wxgtd.xrc.h:26
+msgid "Undelete"
+msgstr "Przywróć"
+
+#: ../data/wxgtd.xrc.h:27
+msgid "Search Tasks"
+msgstr "Szukaj zadań"
+
+#: ../data/wxgtd.xrc.h:28
+msgid "Search in finished"
+msgstr "Szukaj w zakończonych"
+
+#: ../data/wxgtd.xrc.h:29
+msgid "Notebook Page"
+msgstr "Strona notatnika"
+
+#: ../data/wxgtd.xrc.h:30
+msgid "Folder:"
+msgstr "Folder:"
+
+#: ../data/wxgtd.xrc.h:33
+msgid "Parameters"
+msgstr "Parametry"
+
+#: ../data/wxgtd.xrc.h:34
+msgid "Checklist:"
+msgstr "Lista:"
+
+#: ../data/wxgtd.xrc.h:35
+msgid "label_46"
+msgstr "label_46"
+
+#: ../data/wxgtd.xrc.h:36
+msgid "Change"
+msgstr "Zmień"
+
+#: ../data/wxgtd.xrc.h:37
+msgid "Completed:"
+msgstr "Ukończone:"
+
+#: ../data/wxgtd.xrc.h:38
+msgid "l_completed_date"
+msgstr "l_completed_date"
+
+#: ../data/wxgtd.xrc.h:39
+msgid "Starred:"
+msgstr "Oznaczone:"
+
+#: ../data/wxgtd.xrc.h:40
+msgid "Notes"
+msgstr "Notatki"
+
+#: ../data/wxgtd.xrc.h:42
+msgid "Information"
+msgstr "Informacje"
+
+#: ../data/wxgtd.xrc.h:43
+msgid "Created:"
+msgstr "Utworzone:"
+
+#: ../data/wxgtd.xrc.h:44
+msgid "l_created"
+msgstr "l_created"
+
+#: ../data/wxgtd.xrc.h:45
+msgid "Modified:"
+msgstr "Zmodyfikowane:"
+
+#: ../data/wxgtd.xrc.h:46
+msgid "l_modified"
+msgstr "l_modified"
+
+#: ../data/wxgtd.xrc.h:47
+msgid "Deleted:"
+msgstr "Usunięto:"
+
+#: ../data/wxgtd.xrc.h:48
+msgid "l_deleted"
+msgstr "l_deleted"
+
+#: ../data/wxgtd.xrc.h:50
+msgid "Folder"
+msgstr "Folder"
+
+#: ../data/wxgtd.xrc.h:51
+msgid "Status:"
+msgstr "Status:"
+
+#: ../data/wxgtd.xrc.h:52
+msgid "Due:"
+msgstr "Termin:"
+
+#: ../data/wxgtd.xrc.h:53
+msgid "l_due"
+msgstr "l_due"
+
+#: ../data/wxgtd.xrc.h:54
+msgid "Set"
+msgstr "Wybierz"
+
+#: ../data/wxgtd.xrc.h:55
+msgid "Type:"
+msgstr "Typ:"
+
+#: ../data/wxgtd.xrc.h:56
+msgid "l_type"
+msgstr "l_type"
+
+#: ../data/wxgtd.xrc.h:57
+msgid "Remind:"
+msgstr "Przypomnienie:"
+
+#: ../data/wxgtd.xrc.h:58
+msgid "l_remind"
+msgstr "l_remind"
+
+#: ../data/wxgtd.xrc.h:59
+msgid "Project/List:"
+msgstr "Projekt/lista:"
+
+#: ../data/wxgtd.xrc.h:60
+msgid "l_project"
+msgstr "l_project"
+
+#: ../data/wxgtd.xrc.h:61
+msgid "Repeat:"
+msgstr "Powtarzanie:"
+
+#: ../data/wxgtd.xrc.h:62
+msgid "l_repeat"
+msgstr "l_repeat"
+
+#: ../data/wxgtd.xrc.h:63
+msgid "Priority:"
+msgstr "Priorytet:"
+
+#: ../data/wxgtd.xrc.h:64
+msgid "l_prio"
+msgstr "l_prio"
+
+#: ../data/wxgtd.xrc.h:65
+msgid "Context:"
+msgstr "Kontekst:"
+
+#: ../data/wxgtd.xrc.h:66
+msgid "Goal:"
+msgstr "Cel:"
+
+#: ../data/wxgtd.xrc.h:67
+msgid "Additional"
+msgstr "Dodatkowe"
+
+#: ../data/wxgtd.xrc.h:68
+msgid "Start date:"
+msgstr "Data startu:"
+
+#: ../data/wxgtd.xrc.h:69
+msgid "l_start_date"
+msgstr "l_start_date"
+
+#: ../data/wxgtd.xrc.h:70
+msgid "Duration:"
+msgstr "Czas trwania:"
+
+#: ../data/wxgtd.xrc.h:71
+msgid "D:"
+msgstr "D:"
+
+#: ../data/wxgtd.xrc.h:72
+msgid "H:"
+msgstr "G:"
+
+#: ../data/wxgtd.xrc.h:73
+msgid "M:"
+msgstr "M:"
+
+#: ../data/wxgtd.xrc.h:74
+msgid "Hide until:"
+msgstr "Ukryj do:"
+
+#: ../data/wxgtd.xrc.h:75
+msgid "l_hide_until"
+msgstr "l_hide_until"
+
+#: ../data/wxgtd.xrc.h:76
+msgid "Tags:"
+msgstr "Etykiety:"
+
+#: ../data/wxgtd.xrc.h:77
+msgid "l_tags"
+msgstr "l_tags"
+
+#: ../data/wxgtd.xrc.h:78
+msgid "Select"
+msgstr "Wybierz"
+
+#: ../data/wxgtd.xrc.h:80
+msgid "_File"
+msgstr "_Plik"
+
+#: ../data/wxgtd.xrc.h:81
+msgid "_Load File...\\tCtrl+L"
+msgstr "_Wczytaj plik...\\tCtrl+L"
+
+#: ../data/wxgtd.xrc.h:82
+msgid "_Save File...\\tCtrl+S"
+msgstr "_Zapisz plik...\\tCtrl+S"
+
+#: ../data/wxgtd.xrc.h:83
+msgid "S_ynchronize Tasks\\tCtrl+Shift+S"
+msgstr "S_ynchronizuj zadania\\tCtrl+Shift+S"
+
+#: ../data/wxgtd.xrc.h:84
+msgid "Export..."
+msgstr "Eksportuj..."
+
+#: ../data/wxgtd.xrc.h:85
+msgid "Export Tasks..."
+msgstr "Eksportuj zadania..."
+
+#: ../data/wxgtd.xrc.h:86
+msgid "_Exit\\tCtrl+Q"
+msgstr "_Zakończ\\tCtrl+Q"
+
+#: ../data/wxgtd.xrc.h:87
+msgid "_Task"
+msgstr "_Zadanie"
+
+#: ../data/wxgtd.xrc.h:88
+msgid "_New Task..\\tCtrl+N"
+msgstr "_Nowe zadanie...\\tCtrl+N"
+
+#: ../data/wxgtd.xrc.h:89
+msgid "_Quick Task..\\tF2"
+msgstr "_Szybkie zadanie...\\tF2"
+
+#: ../data/wxgtd.xrc.h:90
+msgid "_Edit Task...\\tCtrl+E"
+msgstr "_Edytuj zadanie\\tCtrl+E"
+
+#: ../data/wxgtd.xrc.h:91
+msgid "_Delete Task\\tDEL"
+msgstr "_Usuń zadanie\\tDEL"
+
+#: ../data/wxgtd.xrc.h:92
+msgid "_Clone Task\\tCtrl+D"
+msgstr "_Powiel zadanie\\tCtrl+D"
+
+#: ../data/wxgtd.xrc.h:93
+msgid "_Toggle Task Completed\\tF5"
+msgstr "Przełączenie _zakończenia zadania\\tF5"
+
+#: ../data/wxgtd.xrc.h:94
+msgid "Toggle Task _Starred\\tF6"
+msgstr "Przełączenie _oznaczenia zadania\\tF6"
+
+#: ../data/wxgtd.xrc.h:95
+msgid "_Notebook"
+msgstr "_Notatnik"
+
+#: ../data/wxgtd.xrc.h:96
+msgid "_Open Notebook\\tF8"
+msgstr "_Otwórz notatnik\\tF8"
+
+#: ../data/wxgtd.xrc.h:97
+msgid "S_earch"
+msgstr "_Szukaj"
+
+#: ../data/wxgtd.xrc.h:98
+msgid "_Tasks...\\tCtrl+F"
+msgstr "_Zadania\\tCtrl+F"
+
+#: ../data/wxgtd.xrc.h:99
+msgid "_Settings"
+msgstr "_Ustawienia"
+
+#: ../data/wxgtd.xrc.h:100
+msgid "_Tags"
+msgstr "_Etykiety"
+
+#: ../data/wxgtd.xrc.h:101
+msgid "_Goals"
+msgstr "_Cele"
+
+#: ../data/wxgtd.xrc.h:102
+msgid "_Folders"
+msgstr "_Foldery"
+
+#: ../data/wxgtd.xrc.h:103
+msgid "_Contexts"
+msgstr "_Konteksty"
+
+#: ../data/wxgtd.xrc.h:104
+msgid "_Preferences"
+msgstr "_Preferencje"
+
+#: ../data/wxgtd.xrc.h:105
+msgid "_Help"
+msgstr "_Pomoc"
+
+#: ../data/wxgtd.xrc.h:106
+msgid "_About"
+msgstr "_O programie"
+
+#: ../data/wxgtd.xrc.h:107
+msgid "l_parent_due\\nl_parent_due"
+msgstr "l_parent_due\\nl_parent_due"
+
+#: ../data/wxgtd.xrc.h:108
+msgid "Edit"
+msgstr "Edycja"
+
+#: ../data/wxgtd.xrc.h:109
+msgid "Projects and Checklists"
+msgstr "Projekty i listy"
+
+#: ../data/wxgtd.xrc.h:110
+msgid "Preferences"
+msgstr "Preferencje"
+
+#: ../data/wxgtd.xrc.h:112
+msgid "Inheritance from projects"
+msgstr "Dziedziczenie z projektu"
+
+#: ../data/wxgtd.xrc.h:113
+msgid "Defaults"
+msgstr "Wartości domyślne"
+
+#: ../data/wxgtd.xrc.h:114
+msgid "l_task_def_remind"
+msgstr "l_task_def_remind"
+
+#: ../data/wxgtd.xrc.h:115
+msgid "l_task_def_hide_until"
+msgstr "l_task_def_hide_until"
+
+#: ../data/wxgtd.xrc.h:116
+msgid "Hotlist"
+msgstr "Gorąca lista"
+
+#: ../data/wxgtd.xrc.h:117
+msgid "Hotlist filter"
+msgstr "Filtr gorącej listy"
+
+#: ../data/wxgtd.xrc.h:118
+msgid "Due date (next days):"
+msgstr "Termin (w kolejnych dniach):"
+
+#: ../data/wxgtd.xrc.h:119
+msgid "Minimal priority:"
+msgstr "Minimalny priorytet:"
+
+#: ../data/wxgtd.xrc.h:120
+msgid "l_priority"
+msgstr "l_priority"
+
+#: ../data/wxgtd.xrc.h:121
+msgid "Next action:"
+msgstr "Następna akcja:"
+
+#: ../data/wxgtd.xrc.h:122
+msgid "Task started:"
+msgstr "Zadanie oznaczone:"
+
+#: ../data/wxgtd.xrc.h:123
+msgid "Contition operator:"
+msgstr "Operator warunkowy:"
+
+#: ../data/wxgtd.xrc.h:124
+msgid "or"
+msgstr "lub"
+
+#: ../data/wxgtd.xrc.h:125
+msgid "and"
+msgstr "i"
+
+#: ../data/wxgtd.xrc.h:126
+msgid "Sync"
+msgstr "Synchronizacja"
+
+#: ../data/wxgtd.xrc.h:127
+msgid "File location"
+msgstr "Położenie pliku"
+
+#: ../data/wxgtd.xrc.h:128
+msgid "Options"
+msgstr "Opcje"
+
+#: ../data/wxgtd.xrc.h:129
+msgid "Sync on startup (only load)"
+msgstr "Synchronizacja przy uruchomieniu (tylko wczytanie)"
+
+#: ../data/wxgtd.xrc.h:130
+msgid "Sync on exit (load and write)"
+msgstr "Synchronizacja przy wyjściu (wczytanie i zapisanie)"
+
+#: ../data/wxgtd.xrc.h:131
+msgid "Notification"
+msgstr "Powiadomienia"
+
+#: ../data/wxgtd.xrc.h:132
+msgid "Show task notifications in popup window"
+msgstr "Wyświetlanie powiadomień w wyskakującym oknie"
+
+#: ../data/wxgtd.xrc.h:133
+msgid "GUI"
+msgstr "Interfejs użytkownika"
+
+#: ../data/wxgtd.xrc.h:134
+msgid "System tray"
+msgstr "Pole systemowe"
+
+#: ../data/wxgtd.xrc.h:135
+msgid "Start window minimalized to system tray"
+msgstr "Uruchamianie okna zminimalizowanego do pola systemowego"
+
+#: ../data/wxgtd.xrc.h:136
+msgid "Minimalize to system try"
+msgstr "Minimalizuj do pola systemowego"
+
+#: ../data/wxgtd.xrc.h:137
+msgid "Confirmations"
+msgstr "Potwierdzenia"
+
+#: ../data/wxgtd.xrc.h:138
+msgid "Confirm completion from task dialog"
+msgstr "Potwierdzanie zakończenia z dialogu zadania"
+
+#: ../data/wxgtd.xrc.h:139
 msgid "Select tag"
 msgstr "Wybierz etykietę"
 
-#: ../data/wxgtd.xrc.h:161
+#: ../data/wxgtd.xrc.h:140
 msgid "New tag:"
 msgstr "Nowa etykieta:"
+
+#: ../data/wxgtd.xrc.h:142
+msgid "Context"
+msgstr "Kontekst"
+
+#: ../data/wxgtd.xrc.h:143
+msgid "Date & Time"
+msgstr "Data i czas"
+
+#: ../data/wxgtd.xrc.h:144
+msgid "Select date"
+msgstr "Wybierz datę"
+
+#: ../data/wxgtd.xrc.h:146
+msgid "Date"
+msgstr "Data"
+
+#: ../data/wxgtd.xrc.h:147
+msgid "Time:"
+msgstr "Czas:"
+
+#: ../data/wxgtd.xrc.h:149
+msgid "Goal"
+msgstr "Cel"
+
+#: ../data/wxgtd.xrc.h:150
+msgid "Time period:"
+msgstr "Okres:"
+
+#: ../data/wxgtd.xrc.h:152
+msgid "Every"
+msgstr "Co"
+
+#: ../data/wxgtd.xrc.h:153
+msgid "Every X T"
+msgstr "Co X T"
+
+#: ../data/wxgtd.xrc.h:154
+msgid "Every W"
+msgstr "Co W"
+
+#: ../data/wxgtd.xrc.h:162
+msgid "The X D every M months"
+msgstr "Co X D każdego M miesiąca"
+
+#: ../data/wxgtd.xrc.h:163
+msgid "Relative to"
+msgstr "W stosunku do"
+
+#: ../data/wxgtd.xrc.h:164
+msgid "duo date"
+msgstr "terminu"
+
+#: ../data/wxgtd.xrc.h:165
+msgid "completion"
+msgstr "zakończenia"
+
+#: ../data/wxgtd.xrc.h:166
+msgid "Remind"
+msgstr "Przypomnij"
+
+#: ../data/wxgtd.xrc.h:167
+msgid "Never"
+msgstr "Nigdy"
+
+#: ../data/wxgtd.xrc.h:168
+msgid "Date and Time"
+msgstr "Data i godzina"
+
+#: ../data/wxgtd.xrc.h:169
+msgid "Before"
+msgstr "Przed"
 
 #~ msgid "Restore wxGTD"
 #~ msgstr "Przywróć wxGTD"
