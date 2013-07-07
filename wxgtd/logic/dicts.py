@@ -14,6 +14,7 @@ __version__ = "2013-04-19"
 
 
 import logging
+import datetime
 
 try:
 	from wx.lib.pubsub.pub import Publisher
@@ -84,3 +85,24 @@ def find_or_create_context(title, session):
 		session.add(context)
 		Publisher().sendMessage('context.update')
 	return context
+
+
+def undelete_dict_item(item, session):
+	""" Undelete given item.
+
+	Args:
+		item: item to undelete
+		session: SqlAlchemy session
+
+	Returns:
+		True if ok
+	"""
+	if item.deleted:
+		_LOG.info("undelete_dict_item: %r", item)
+		item.deleted = None
+		item.modified = datetime.datetime.now()
+		session.commit()
+		Publisher().sendMessage('dictitem.update')
+		return True
+	_LOG.warn("undelete_dict_item: undelete not deleted object: %r", item)
+	return False

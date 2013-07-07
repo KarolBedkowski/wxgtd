@@ -21,6 +21,7 @@ import datetime
 
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Index
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy import orm, or_, and_
 from sqlalchemy import select, func
 
@@ -110,8 +111,24 @@ class BaseModelMixin(object):
 			order_by: optional order_by query argument
 		"""
 		session = session or Session()
+		query = session.query(cls)
 		if hasattr(cls, 'deleted'):
-			query = session.query(cls).filter(cls.deleted.is_(None))
+			query = query.filter(cls.deleted.is_(None))
+		if order_by:
+			query = query.order_by(order_by)
+		return query  # pylint: disable=E1101
+
+	@classmethod
+	def get_deleted(cls, order_by=None, session=None):
+		""" Return all deleted objects this class.
+
+		Args:
+			order_by: optional order_by query argument
+			session: optional SqlAlchemy session
+		"""
+		assert hasattr(cls, 'deleted')
+		session = session or Session()
+		query = session.query(cls).filter(cls.deleted.isnot(None))
 		if order_by:
 			query = query.order_by(order_by)
 		return query  # pylint: disable=E1101
@@ -192,7 +209,10 @@ class Task(BaseModelMixin, Base):
 	folder = orm.relationship("Folder", backref=orm.backref('tasks'))
 	context = orm.relationship("Context", backref=orm.backref('tasks'))
 	goal = orm.relationship("Goal", backref=orm.backref('tasks'))
-	tags = orm.relationship("TaskTag", cascade="all, delete, delete-orphan")
+#	tags = orm.relationship("TaskTag", cascade="all, delete, delete-orphan",
+#			backref=orm.backref("task"))
+	tags = association_proxy('task_tags', 'tag', creator=lambda t:
+			TaskTag(tag=t))
 	children = orm.relationship("Task", backref=orm.backref('parent',
 		remote_side=[uuid]))
 	notes = orm.relationship("Tasknote", backref=orm.backref('tasks'),
@@ -400,10 +420,7 @@ class Task(BaseModelMixin, Base):
 		""" Clone current object. """
 		newobj = BaseModelMixin.clone(self, cleanup)
 		# clone tags
-		for tasktag in self.tags:
-			ntasktag = TaskTag()
-			ntasktag.tag_uuid = tasktag.tag_uuid
-			newobj.tags.append(ntasktag)
+		newobj.tags = self.tags[:]
 		# clone notes
 		for note in self.notes:
 			newobj.notes.append(note.clone())
@@ -637,7 +654,9 @@ class TaskTag(BaseModelMixin, Base):
 	created = Column(DateTime, default=datetime.datetime.utcnow)
 	modified = Column(DateTime, default=datetime.datetime.utcnow, index=True)
 
-	tag = orm.relationship("Tag", cascade="all", lazy="joined")
+	task = orm.relationship(Task, backref=orm.backref(
+			"task_tags", cascade="all, delete-orphan"))
+	tag = orm.relationship("Tag", lazy="joined")
 
 
 class NotebookPage(BaseModelMixin, Base):

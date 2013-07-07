@@ -223,21 +223,10 @@ class TaskController:
 			True if tags was changed.
 		"""
 		task = self._task
-		tags_uuids = [tasktag.tag_uuid for tasktag in task.tags]
-		dlg = DlgSelectTags(self._parent_wnd, tags_uuids)
+		tags = task.tags
+		dlg = DlgSelectTags(self._parent_wnd, tags, self._session)
 		if dlg.run(True):
-			new_tags = dlg.selected_tags
-			for tasktag in list(task.tags):
-				if tasktag.tag_uuid not in new_tags:
-					task.tags.delete(tasktag)  # pylint: disable=E1103
-				else:
-					new_tags.remove(tasktag.tag_uuid)
-			for tag_uuid in new_tags:
-				tasktag = OBJ.TaskTag()
-				tasktag.tag = self._session.query(  # pylint: disable=E1101
-						OBJ.Tag).filter(OBJ.Task.uuid == tag_uuid,
-								OBJ.Task.deleted.is_(None)).first()
-				task.tags.append(tasktag)  # pylint: disable=E1103
+			task.tags = dlg.selected_tags
 			return True
 		return False
 

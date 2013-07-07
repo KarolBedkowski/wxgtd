@@ -154,7 +154,7 @@ class FrameTask(BaseTaskFrame):
 		self['l_due'].SetLabel(fmt.format_timestamp(due_date, task.due_time_set))
 		self['l_start_date'].SetLabel(fmt.format_timestamp(task.start_date,
 				task.start_time_set))
-		self['l_tags'].SetLabel(", ".join(tag.tag.title for tag in task.tags) or '')
+		self['l_tags'].SetLabel(", ".join(tag.title for tag in task.tags) or '')
 		if task.alarm_pattern:
 			self['l_remind'].SetLabel(enums.REMIND_PATTERNS[task.alarm_pattern])
 		elif task.alarm:

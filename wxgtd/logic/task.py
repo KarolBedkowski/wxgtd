@@ -516,10 +516,11 @@ def update_project_due_date(task):
 	"""
 	if task.type == enums.TYPE_PROJECT:
 		task.due_date = task.due_date_project
-		for subtask in task.children:
-			if subtask.due_date and subtask.due_date < task.due_date:
-				task.due_date = subtask.due_date
-				task.due_time_set = subtask.due_time_set
+		if task.due_date:
+			for subtask in task.children:
+				if subtask.due_date and subtask.due_date < task.due_date:
+					task.due_date = subtask.due_date
+					task.due_time_set = subtask.due_time_set
 	elif task.due_date and task.parent and task.parent.type == enums.TYPE_PROJECT:
 		if not task.parent.due_date or (task.due_date and task.parent.due_date >
 				task.due_date):
