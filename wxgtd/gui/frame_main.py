@@ -30,6 +30,7 @@ from wxgtd.model import exporter
 from wxgtd.model import sync
 from wxgtd.model import enums
 from wxgtd.model import queries
+from wxgtd.model import dbsync
 from wxgtd.logic import task as task_logic
 from wxgtd.lib import fmt
 from wxgtd.gui import dlg_about
@@ -379,6 +380,30 @@ class FrameMain(BaseFrame):
 
 	def _on_menu_file_sync(self, _evt):
 		appconfig = self._appconfig
+		if appconfig.get('sync', 'use_dropbox'):
+			dlg = DlgSyncProggress(self.wnd)
+			dlg.run()
+			try:
+				dbsync.sync()
+			except sync.SyncLockedError:
+				msgbox = wx.MessageDialog(dlg.wnd, _("Sync file is locked."),
+						_("wxGTD"), wx.OK | wx.ICON_HAND)
+				msgbox.ShowModal()
+				msgbox.Destroy()
+				dlg.update(100, _("Sync file is locked."))
+			except sync.OtherSyncError as err:
+				_LOG.exception('FrameMain._on_menu_file_sync error: %r',
+						str(err))
+				msgdlg = wx.lib.dialogs.ScrolledMessageDialog(self.wnd,
+						str(err), _("Synchronisation error"))
+				msgdlg.ShowModal()
+				msgdlg.Destroy()
+				dlg.update(100, _("Error: ") + str(err))
+			dlg.mark_finished()
+			self._filter_tree_ctrl.RefreshItems()
+			Publisher().sendMessage('task.update')
+			Publisher().sendMessage('dict.update')
+			return
 		last_sync_file = appconfig.get('files', 'last_sync_file')
 		if not last_sync_file:
 			dlg = wx.FileDialog(self.wnd,
