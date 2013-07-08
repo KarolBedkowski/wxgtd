@@ -39,6 +39,7 @@ except ImportError:
 	from wx.lib.pubsub import Publisher  # pylint: disable=E0611
 
 from wxgtd.lib import appconfig
+from wxgtd.lib import ignore_exceptions
 
 from wxgtd.model import exporter
 from wxgtd.model import loader
@@ -50,8 +51,8 @@ _LOG = logging.getLogger(__name__)
 _ = gettext.gettext
 
 
-DEST = '/Apps/DGT-GTD/sync/GTD_SYNC.zip'
-LOCK_FILENAME = '/Apps/DGT-GTD/sync/sync.locked'
+SYNC_PATH = '/Apps/DGT-GTD/sync/GTD_SYNC.zip'
+LOCK_PATH = '/Apps/DGT-GTD/sync/sync.locked'
 
 
 def is_available():
@@ -59,8 +60,7 @@ def is_available():
 
 
 def _notify_progress(progress, msg):
-	Publisher().sendMessage('sync.progress',
-			data=(progress, msg))
+	Publisher().sendMessage('sync.progress', data=(progress, msg))
 
 
 def _create_session():
@@ -84,6 +84,13 @@ def download_file(fileobj, source, dbclient):
 	return False
 
 
+def _delete_file(dbclient, path):
+	try:
+		dbclient.file_delete(path)
+	except dropbox.rest.ErrorResponse as error:
+		_LOG.warn('_delete_file(%s) error: %s', path, error)
+
+
 def sync(load_only=False, notify_cb=_notify_progress):
 	""" Sync data from/to given file.
 
@@ -95,7 +102,7 @@ def sync(load_only=False, notify_cb=_notify_progress):
 	Raises:
 		SyncLockedError when source file is locked.
 	"""
-	_LOG.info("sync: %r", DEST)
+	_LOG.info("sync: %r", SYNC_PATH)
 	if not dropbox:
 		raise SYNC.OtherSyncError(_("Dropbox is not available."))
 	if not appconfig.AppConfig().get('dropbox', 'oauth_secret'):
@@ -114,32 +121,24 @@ def sync(load_only=False, notify_cb=_notify_progress):
 	if create_sync_lock(dbclient):
 		notify_cb(2, _("Downloading..."))
 		try:
-			loaded = download_file(temp_file, DEST, dbclient)
+			loaded = download_file(temp_file, SYNC_PATH, dbclient)
 			temp_file.close()
 			if loaded:
 				loader.load_from_file(temp_filename, notify_cb)
 			if not load_only:
 				exporter.save_to_file(temp_filename, notify_cb, 'GTD_SYNC.json')
-				try:
-					dbclient.file_delete(DEST)
-				except dropbox.rest.ErrorResponse:
-					pass
+				_delete_file(dbclient, SYNC_PATH)
 				notify_cb(20, _("Uploading..."))
 				with open(temp_filename) as temp_file:
-					dbclient.put_file(DEST, temp_file)
+					dbclient.put_file(SYNC_PATH, temp_file)
 		except Exception as err:
 			_LOG.exception("file sync error")
 			raise SYNC.OtherSyncError(err)
 		finally:
 			notify_cb(90, _("Removing sync lock"))
-			try:
-				dbclient.file_delete(LOCK_FILENAME)
-			except dropbox.rest.ErrorResponse:
-				_LOG.exception('create_sync_lock get lock')
-			try:
+			_delete_file(dbclient, LOCK_PATH)
+			with ignore_exceptions(IOError):
 				os.unlink(temp_filename)
-			except IOError:
-				pass
 		notify_cb(100, _("Completed"))
 	else:
 		notify_cb(100, _("Synchronization file is locked. "
@@ -157,7 +156,7 @@ def create_sync_lock(dbclient):
 		False, if directory is locked.
 	"""
 	try:
-		data = dbclient.metadata(LOCK_FILENAME)
+		data = dbclient.metadata(LOCK_PATH)
 		if data and data['bytes'] > 0:
 			return False
 	except dropbox.rest.ErrorResponse:
@@ -167,21 +166,7 @@ def create_sync_lock(dbclient):
 	device_id = session.query(objects.Conf).filter_by(  # pylint: disable=E1101
 			key='deviceId').first()
 	synclog = {'deviceId': device_id.val,
-			"startTime": fmt_date(datetime.datetime.utcnow())}
+			"startTime": exporter.fmt_date(datetime.datetime.utcnow())}
 	session.flush()  # pylint: disable=E1101
-	dbclient.put_file(LOCK_FILENAME, _JSON_ENCODER(synclog))
+	dbclient.put_file(LOCK_PATH, _JSON_ENCODER(synclog))
 	return True
-
-
-def fmt_date(date):
-	""" Format date to format required by GTD.
-
-	Args:
-		date: date & time as datetime.datetime object
-
-	Returns:
-		formatted date or empty string when date is None
-	"""
-	if not date:
-		return ""
-	return date.strftime("%Y-%m-%dT%H:%M:%S.") + date.strftime("%f")[:3] + 'Z'

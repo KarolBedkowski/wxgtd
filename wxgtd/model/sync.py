@@ -60,6 +60,7 @@ def sync(filename, load_only=False, notify_cb=_notify_progress):
 		SyncLockedError when source file is locked.
 	"""
 	_LOG.info("sync: %r", filename)
+	notify_cb(0, _("Sync via file %s") % filename)
 	notify_cb(0, _("Creating backup"))
 	create_backup()
 	notify_cb(25, _("Sanity check"))
