@@ -838,7 +838,8 @@ class FrameMain(BaseFrame):
 		Attr:
 			on_load: if true only read data.
 		"""
-		use_dropbox = self._appconfig.get('sync', 'use_dropbox')
+		use_dropbox = (self._appconfig.get('sync', 'use_dropbox') and
+				dbsync.is_available())
 		if not use_dropbox:
 			last_sync_file = self._appconfig.get('files', 'last_sync_file')
 			if not last_sync_file:

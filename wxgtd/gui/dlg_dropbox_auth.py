@@ -54,7 +54,7 @@ class DlgDropboxAuth(BaseDialog):
 			'dropbox/appsecret', validators=LVALID.NotEmptyValidator(),
 			field=_("app secret")))
 
-	def _on_ok(self, evt):
+	def _on_ok(self, _evt):
 		if not self._wnd.Validate():
 			return
 		if not self._wnd.TransferDataFromWindow():
@@ -63,7 +63,7 @@ class DlgDropboxAuth(BaseDialog):
 			return
 		self._wnd.EndModal(wx.ID_OK)
 
-	def _on_btn_app_console(self, _evt):
+	def _on_btn_app_console(self, _evt):  # pylint: disable=R0201
 		wx.LaunchDefaultBrowser('https://www.dropbox.com/developers/apps/create')
 
 	def _auth(self):

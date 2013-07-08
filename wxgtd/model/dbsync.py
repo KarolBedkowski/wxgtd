@@ -30,7 +30,7 @@ except ImportError:
 try:
 	import dropbox
 except ImportError:
-	dropbox = None
+	dropbox = None  # pylint: disable=C0103
 
 try:
 	from wx.lib.pubsub.pub import Publisher
@@ -51,6 +51,10 @@ _ = gettext.gettext
 
 DEST = '/Apps/DGT-GTD/sync/GTD_SYNC.zip'
 LOCK_FILENAME = '/Apps/DGT-GTD/sync/sync.locked'
+
+
+def is_available():
+	return bool(dropbox)
 
 
 def _notify_progress(progress, msg):
@@ -96,6 +100,7 @@ def sync(load_only=False, notify_cb=_notify_progress):
 		raise SYNC.OtherSyncError(_("Dropbox is not available."))
 	if not appconfig.AppConfig().get('dropbox', 'oauth_secret'):
 		raise SYNC.OtherSyncError(_("Dropbox is not configured."))
+	notify_cb(0, _("Sync via Dropbox API...."))
 	notify_cb(0, _("Creating backup"))
 	SYNC.create_backup()
 	notify_cb(1, _("Checking sync lock"))

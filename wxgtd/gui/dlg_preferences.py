@@ -17,6 +17,11 @@ import gettext
 
 import wx
 
+try:
+	import dropbox
+except ImportError:
+	dropbox = None  # pylint: disable=C0103
+
 from wxgtd.wxtools.validators import Validator, ValidatorDv
 from wxgtd.model import enums
 from wxgtd.lib.appconfig import AppConfigWrapper
@@ -108,9 +113,11 @@ class DlgPreferences(BaseDialog):
 		self['cb_gui_confirm_complete_dlg'].SetValidator(Validator(config,
 				'gui/confirm_complete_dlg'))
 
-		sync_dropbox = config.get('sync/use_dropbox', False)
+		sync_dropbox = bool(dropbox) and config.get('sync/use_dropbox', False)
 		self['rb_sync_by_file'].SetValue(not sync_dropbox)
 		self['rb_sync_by_db'].SetValue(sync_dropbox)
+		self['rb_sync_by_db'].Enable(bool(dropbox))
+		self['btn_sync_db_auth'].Enable(bool(dropbox))
 		self._update_static_texts()
 
 	def _setup_comboboxes(self):
