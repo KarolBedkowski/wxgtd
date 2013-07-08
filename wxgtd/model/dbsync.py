@@ -27,7 +27,10 @@ except ImportError:
 	_JSON_DECODER = json.loads
 	_JSON_ENCODER = json.dumps
 
-import dropbox
+try:
+	import dropbox
+except ImportError:
+	dropbox = None
 
 try:
 	from wx.lib.pubsub.pub import Publisher
@@ -68,7 +71,6 @@ def download_file(fileobj, source, dbclient):
 	_LOG.info('download_file')
 	try:
 		remote_file, metadata = dbclient.get_file_and_metadata(source)
-		print remote_file, metadata
 		if metadata and metadata['bytes'] > 0:
 			fileobj.write(remote_file.read())
 			return True
@@ -90,13 +92,22 @@ def sync(load_only=False, notify_cb=_notify_progress):
 		SyncLockedError when source file is locked.
 	"""
 	_LOG.info("sync: %r", DEST)
+	if not dropbox:
+		raise SYNC.OtherSyncError(_("Dropbox is not available."))
+	if not appconfig.AppConfig().get('dropbox', 'oauth_secret'):
+		raise SYNC.OtherSyncError(_("Dropbox is not configured."))
 	notify_cb(0, _("Creating backup"))
 	SYNC.create_backup()
 	notify_cb(1, _("Checking sync lock"))
-	dbclient = _create_session()
+	try:
+		dbclient = _create_session()
+	except dropbox.rest.ErrorResponse as error:
+		raise SYNC.OtherSyncError(_("Dropbox: connection failed: %s") %
+				str(error))
 	temp_file = tempfile.NamedTemporaryFile(suffix='.zip', delete=False)
 	filename = temp_file.name
 	if create_sync_lock(dbclient):
+		notify_cb(2, _("Downloading..."))
 		try:
 			loaded = download_file(temp_file, DEST, dbclient)
 			temp_file.close()
@@ -108,6 +119,7 @@ def sync(load_only=False, notify_cb=_notify_progress):
 					dbclient.file_delete(DEST)
 				except dropbox.rest.ErrorResponse:
 					pass
+				notify_cb(98, _("Uploading..."))
 				with open(filename) as temp_file:
 					dbclient.put_file(DEST, temp_file)
 		except Exception as err:
@@ -137,7 +149,6 @@ def create_sync_lock(dbclient):
 	"""
 	try:
 		data = dbclient.metadata(LOCK_FILENAME)
-		print data
 		if data and data['bytes'] > 0:
 			return False
 	except dropbox.rest.ErrorResponse:
