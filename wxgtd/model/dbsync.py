@@ -13,6 +13,7 @@ __copyright__ = "Copyright (c) Karol Będkowski, 2013"
 __version__ = '2013-04-26'
 
 
+import os
 import logging
 import gettext
 import tempfile
@@ -89,7 +90,6 @@ def sync(load_only=False, notify_cb=_notify_progress):
 	Notify progress by Publisher().
 
 	Args:
-		filename: full path to file
 		load_only: only load, not write data
 
 	Raises:
@@ -110,22 +110,22 @@ def sync(load_only=False, notify_cb=_notify_progress):
 		raise SYNC.OtherSyncError(_("Dropbox: connection failed: %s") %
 				str(error))
 	temp_file = tempfile.NamedTemporaryFile(suffix='.zip', delete=False)
-	filename = temp_file.name
+	temp_filename = temp_file.name
 	if create_sync_lock(dbclient):
 		notify_cb(2, _("Downloading..."))
 		try:
 			loaded = download_file(temp_file, DEST, dbclient)
 			temp_file.close()
 			if loaded:
-				loader.load_from_file(filename, notify_cb)
+				loader.load_from_file(temp_filename, notify_cb)
 			if not load_only:
-				exporter.save_to_file(filename, notify_cb, 'GTD_SYNC.json')
+				exporter.save_to_file(temp_filename, notify_cb, 'GTD_SYNC.json')
 				try:
 					dbclient.file_delete(DEST)
 				except dropbox.rest.ErrorResponse:
 					pass
 				notify_cb(98, _("Uploading..."))
-				with open(filename) as temp_file:
+				with open(temp_filename) as temp_file:
 					dbclient.put_file(DEST, temp_file)
 		except Exception as err:
 			_LOG.exception("file sync error")
@@ -136,6 +136,10 @@ def sync(load_only=False, notify_cb=_notify_progress):
 				dbclient.file_delete(LOCK_FILENAME)
 			except dropbox.rest.ErrorResponse:
 				_LOG.exception('create_sync_lock get lock')
+			try:
+				os.unlink(temp_filename)
+			except IOError:
+				pass
 		notify_cb(100, _("Completed"))
 	else:
 		notify_cb(100, _("Synchronization file is locked. "
