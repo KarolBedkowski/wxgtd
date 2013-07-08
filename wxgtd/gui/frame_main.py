@@ -30,6 +30,7 @@ from wxgtd.model import exporter
 from wxgtd.model import sync
 from wxgtd.model import enums
 from wxgtd.model import queries
+from wxgtd.model import dbsync
 from wxgtd.logic import task as task_logic
 from wxgtd.lib import fmt
 from wxgtd.gui import dlg_about
@@ -378,41 +379,7 @@ class FrameMain(BaseFrame):
 		dlg.Destroy()
 
 	def _on_menu_file_sync(self, _evt):
-		appconfig = self._appconfig
-		last_sync_file = appconfig.get('files', 'last_sync_file')
-		if not last_sync_file:
-			dlg = wx.FileDialog(self.wnd,
-					_("Please select sync file."),
-					defaultDir=appconfig.get('files', 'last_dir', ''),
-					defaultFile=appconfig.get('files', 'last_file', 'GTD_SYNC.zip'),
-					style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST)
-			if dlg.ShowModal() == wx.ID_OK:
-				last_sync_file = dlg.GetPath()
-			dlg.Destroy()
-		if last_sync_file:
-			appconfig.set('files', 'last_sync_file', last_sync_file)
-			dlg = DlgSyncProggress(self.wnd)
-			dlg.run()
-			try:
-				sync.sync(last_sync_file)
-			except sync.SyncLockedError:
-				msgbox = wx.MessageDialog(dlg.wnd, _("Sync file is locked."),
-						_("wxGTD"), wx.OK | wx.ICON_HAND)
-				msgbox.ShowModal()
-				msgbox.Destroy()
-				dlg.update(100, _("Sync file is locked."))
-			except sync.OtherSyncError as err:
-				_LOG.exception('FrameMain._on_menu_file_sync error: %r',
-						str(err))
-				msgdlg = wx.lib.dialogs.ScrolledMessageDialog(self.wnd,
-						str(err), _("Synchronisation error"))
-				msgdlg.ShowModal()
-				msgdlg.Destroy()
-				dlg.update(100, _("Error: ") + str(err))
-			dlg.mark_finished()
-			self._filter_tree_ctrl.RefreshItems()
-			Publisher().sendMessage('task.update')
-			Publisher().sendMessage('dict.update')
+		self._synchronize(False)
 
 	def _on_menu_sett_preferences(self, _evt):
 		if DlgPreferences(self.wnd).run(True):
@@ -723,22 +690,11 @@ class FrameMain(BaseFrame):
 		wx.SetCursor(wx.STANDARD_CURSOR)
 
 	def _autosync(self, on_load=True):
-		last_sync_file = self._appconfig.get('files', 'last_sync_file')
-		if last_sync_file:
-			dlg = DlgSyncProggress(self.wnd)
-			dlg.run()
-			try:
-				sync.sync(last_sync_file, load_only=on_load)
-			except sync.SyncLockedError:
-				msgbox = wx.MessageDialog(dlg.wnd, _("Sync file is locked."),
-						_("wxGTD"), wx.OK | wx.ICON_HAND)
-				msgbox.ShowModal()
-				msgbox.Destroy()
-				dlg.update(100, _("Sync file is locked."))
-			dlg.mark_finished(2)
-		if on_load:
-			Publisher().sendMessage('task.update')
-			Publisher().sendMessage('dict.update')
+		if not self._appconfig.get('sync', 'use_dropbox'):
+			# don't sync if file is not configured
+			if not self._appconfig.get('files', 'last_sync_file'):
+				return
+		self._synchronize(on_load)
 
 	def _delete_selected_task(self):
 		tasks_uuid = list(self._items_list_ctrl.get_selected_items_uuid())
@@ -875,6 +831,56 @@ class FrameMain(BaseFrame):
 			cnt = OBJ.Task.select_by_filters(self._get_params_for_list(group,
 					True, True), session=self._session).count()
 			rb_show_selection.SetItemLabel(group, label % cnt)
+
+	def _synchronize(self, on_load=True):
+		""" Synchronize data.
+
+		Attr:
+			on_load: if true only read data.
+		"""
+		use_dropbox = (self._appconfig.get('sync', 'use_dropbox') and
+				dbsync.is_available())
+		if not use_dropbox:
+			last_sync_file = self._appconfig.get('files', 'last_sync_file')
+			if not last_sync_file:
+				dlg = wx.FileDialog(self.wnd,
+						_("Please select sync file."),
+						defaultDir=self._appconfig.get('files', 'last_dir', ''),
+						defaultFile=self._appconfig.get('files', 'last_file',
+								'GTD_SYNC.zip'),
+						style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST)
+				if dlg.ShowModal() == wx.ID_OK:
+					last_sync_file = dlg.GetPath()
+				dlg.Destroy()
+				if last_sync_file:
+					self._appconfig.set('files', 'last_sync_file', last_sync_file)
+			if not last_sync_file:
+				return
+		dlg = DlgSyncProggress(self.wnd)
+		dlg.run()
+		try:
+			if use_dropbox:
+				dbsync.sync()
+			else:
+				sync.sync(last_sync_file)
+		except sync.SyncLockedError:
+			msgbox = wx.MessageDialog(dlg.wnd, _("Sync file is locked."),
+					_("wxGTD"), wx.OK | wx.ICON_HAND)
+			msgbox.ShowModal()
+			msgbox.Destroy()
+			dlg.update(100, _("Sync file is locked."))
+		except sync.OtherSyncError as err:
+			_LOG.exception('FrameMain._on_menu_file_sync error: %r',
+					str(err))
+			msgdlg = wx.lib.dialogs.ScrolledMessageDialog(self.wnd,
+					str(err), _("Synchronisation error"))
+			msgdlg.ShowModal()
+			msgdlg.Destroy()
+			dlg.update(100, _("Error: ") + str(err))
+		dlg.mark_finished()
+		if on_load:
+			Publisher().sendMessage('task.update')
+			Publisher().sendMessage('dict.update')
 
 
 class _TasksPopupMenu:
