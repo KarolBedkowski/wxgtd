@@ -29,7 +29,7 @@ def ignore_exceptions(*exceptions):
 
 	Sample:
 
-		>>> with ignore_exceptions(IOError):
+		>>> with ignore_exceptions(OSError):
 		... 	os.unlink('/tmp/test')
 	"""
 	try:

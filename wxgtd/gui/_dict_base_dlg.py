@@ -182,7 +182,7 @@ class DictBaseDlg(BaseDialog):
 		self['tc_note'].Enable(item_in_edit)
 		self['colorselect'].Enable(item_in_edit)
 
-	def _check_children_before_delete(self, item):
+	def _check_children_before_delete(self, item):  # pylint: disable=R0201
 		if hasattr(item, 'children') and bool(item.children):
 			return True
 		if hasattr(item, 'tasks') and bool(item.tasks):

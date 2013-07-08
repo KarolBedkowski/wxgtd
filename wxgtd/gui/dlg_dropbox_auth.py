@@ -19,10 +19,9 @@ import dropbox
 
 from wxgtd.wxtools.validators import Validator
 from wxgtd.wxtools.validators import v_length as LVALID
+from wxgtd.lib.appconfig import AppConfigWrapper
 
 from wxgtd.gui import message_boxes as msg
-from wxgtd.gui.dlg_preferences import AppConfigWrapper
-
 from ._base_dialog import BaseDialog
 
 _ = gettext.gettext
