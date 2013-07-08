@@ -111,6 +111,7 @@ class DlgPreferences(BaseDialog):
 		sync_dropbox = config.get('sync/use_dropbox', False)
 		self['rb_sync_by_file'].SetValue(not sync_dropbox)
 		self['rb_sync_by_db'].SetValue(sync_dropbox)
+		self._update_static_texts()
 
 	def _setup_comboboxes(self):
 		cb_status = self['cb_task_def_status']
@@ -168,6 +169,11 @@ class DlgPreferences(BaseDialog):
 	def _on_btn_db_auth(self, _evt):
 		if DlgDropboxAuth(self._wnd).run(True):
 			self['rb_sync_by_db'].SetValue(True)
+			self._update_static_texts()
+
+	def _update_static_texts(self):
+		self['l_sync_db_info'].SetLabel(self._appconfig.get('dropbox', 'info',
+				_("Not connected")))
 
 	@wxutils.call_after
 	def _refresh_labels(self):

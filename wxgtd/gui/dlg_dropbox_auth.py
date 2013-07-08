@@ -75,8 +75,8 @@ class DlgDropboxAuth(BaseDialog):
 			try:
 				access_token = sess.obtain_access_token(request_token)
 				_LOG.debug(access_token)
-			except dropbox.rest.ErrorResponse:
-				_LOG.exception('_auth error')
+			except dropbox.rest.ErrorResponse as error:
+				_LOG.info('_auth error: %r', error)
 				url = sess.build_authorize_url(request_token)
 				wx.LaunchDefaultBrowser(url)
 				if not msg.message_box_question(self._wnd,
@@ -87,4 +87,6 @@ class DlgDropboxAuth(BaseDialog):
 				self._appconfig.set('dropbox', 'oauth_key', access_token.key)
 				self._appconfig.set('dropbox', 'oauth_secret', access_token.secret)
 				db_client = dropbox.client.DropboxClient(sess)
+				self._appconfig.set('dropbox', 'info',
+						db_client.account_info()["display_name"])
 				return bool(db_client)
