@@ -35,6 +35,7 @@ Runtime Requirements
 * wxWidgets 2.8+
 * python-dateutil http://labix.org/python-dateutil
 * sqlalchemy 0.7.9+
+* dropbox (optional; for sync via Dropbox API)
 
 
 Licence
