@@ -101,9 +101,9 @@ def sync(load_only=False, notify_cb=_notify_progress):
 	if not appconfig.AppConfig().get('dropbox', 'oauth_secret'):
 		raise SYNC.OtherSyncError(_("Dropbox is not configured."))
 	notify_cb(0, _("Sync via Dropbox API...."))
-	notify_cb(0, _("Creating backup"))
+	notify_cb(1, _("Creating backup"))
 	SYNC.create_backup()
-	notify_cb(1, _("Checking sync lock"))
+	notify_cb(25, _("Checking sync lock"))
 	try:
 		dbclient = _create_session()
 	except dropbox.rest.ErrorResponse as error:
@@ -124,14 +124,14 @@ def sync(load_only=False, notify_cb=_notify_progress):
 					dbclient.file_delete(DEST)
 				except dropbox.rest.ErrorResponse:
 					pass
-				notify_cb(98, _("Uploading..."))
+				notify_cb(20, _("Uploading..."))
 				with open(temp_filename) as temp_file:
 					dbclient.put_file(DEST, temp_file)
 		except Exception as err:
 			_LOG.exception("file sync error")
 			raise SYNC.OtherSyncError(err)
 		finally:
-			notify_cb(99, _("Removing sync lock"))
+			notify_cb(90, _("Removing sync lock"))
 			try:
 				dbclient.file_delete(LOCK_FILENAME)
 			except dropbox.rest.ErrorResponse:
