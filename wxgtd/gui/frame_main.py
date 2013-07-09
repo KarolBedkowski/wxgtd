@@ -694,7 +694,7 @@ class FrameMain(BaseFrame):
 			# don't sync if file is not configured
 			if not self._appconfig.get('files', 'last_sync_file'):
 				return
-		self._synchronize(on_load)
+		self._synchronize(on_load, autoclose=True)
 
 	def _delete_selected_task(self):
 		tasks_uuid = list(self._items_list_ctrl.get_selected_items_uuid())
@@ -832,11 +832,12 @@ class FrameMain(BaseFrame):
 					True, True), session=self._session).count()
 			rb_show_selection.SetItemLabel(group, label % cnt)
 
-	def _synchronize(self, on_load=True):
+	def _synchronize(self, on_load=True, autoclose=False):
 		""" Synchronize data.
 
 		Attr:
 			on_load: if true only read data.
+			autoclose: close progress dialog after sync (if no errors)
 		"""
 		use_dropbox = (self._appconfig.get('sync', 'use_dropbox') and
 				dbsync.is_available())
@@ -860,15 +861,16 @@ class FrameMain(BaseFrame):
 		dlg.run()
 		try:
 			if use_dropbox:
-				dbsync.sync()
+				dbsync.sync(load_only=on_load)
 			else:
-				sync.sync(last_sync_file)
+				sync.sync(last_sync_file, load_only=on_load)
 		except sync.SyncLockedError:
 			msgbox = wx.MessageDialog(dlg.wnd, _("Sync file is locked."),
 					_("wxGTD"), wx.OK | wx.ICON_HAND)
 			msgbox.ShowModal()
 			msgbox.Destroy()
 			dlg.update(100, _("Sync file is locked."))
+			autoclose = False
 		except sync.OtherSyncError as err:
 			_LOG.exception('FrameMain._on_menu_file_sync error: %r',
 					str(err))
@@ -877,7 +879,8 @@ class FrameMain(BaseFrame):
 			msgdlg.ShowModal()
 			msgdlg.Destroy()
 			dlg.update(100, _("Error: ") + str(err))
-		dlg.mark_finished()
+			autoclose = False
+		dlg.mark_finished(2 if autoclose else -1)
 		if on_load:
 			Publisher().sendMessage('task.update')
 			Publisher().sendMessage('dict.update')
