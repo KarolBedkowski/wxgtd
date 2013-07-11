@@ -12,6 +12,7 @@ __copyright__ = "Copyright (c) Karol Będkowski, 2013"
 __version__ = "2013-04-27"
 
 
+import os
 import optparse
 import logging
 
@@ -63,6 +64,12 @@ def run():
 	config.load()
 	config.debug = options.debug
 
+	from wxgtd.wxtools import ipc
+	ipc_lock_path = os.path.join(config.config_path, "wxgtd_lock")
+	ipc_port = ipc.check_lock(ipc_lock_path, "gui.frame_main.raise")
+	if ipc_port is not None:
+		exit(0)
+
 	# locale
 	from wxgtd.lib import locales
 	locales.setup_locale(config)
@@ -98,6 +105,10 @@ def run():
 	from wxgtd.model import db
 	db.connect(db.find_db_file(config), options.debug_sql)
 
+	server = ipc.IPCServer()
+	ipc_port = server.start()
+	ipc.create_lock(ipc_lock_path, ipc_port)
+
 	if options.quick_task_dialog:
 		from wxgtd.gui import quicktask
 		quicktask.quick_task(None)
@@ -121,4 +132,6 @@ def run():
 		app.MainLoop()
 
 	# app closed; save config
+	server.stop()
+	ipc.remove_lock(ipc_lock_path)
 	config.save()
