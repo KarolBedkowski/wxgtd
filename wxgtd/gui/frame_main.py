@@ -674,8 +674,8 @@ class FrameMain(BaseFrame):
 			_LOG.debug('FrameMain._on_timer: check reminders')
 			FrameReminders.check(self.wnd, self._session)
 
-	def _on_window_iconze(self, _evt):
-		if self._appconfig.get('gui', 'min_to_tray'):
+	def _on_window_iconze(self, evt):
+		if evt.Iconized() and self._appconfig.get('gui', 'min_to_tray'):
 			self.wnd.Show(False)
 
 	def _refresh_list(self):
