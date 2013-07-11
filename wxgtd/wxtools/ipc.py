@@ -1,11 +1,11 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 # pylint: disable-msg=R0901, R0904
-""" wxShell (pyCrust)
+""" Inter process communication.
 
-Copyright (c) Karol Będkowski, 2004-2013
+Copyright (c) Karol Będkowski, 2013
 
-This file is part of kPyLibs
+This file is part of wxGTD
 
 This is free software; you can redistribute it and/or modify it under the
 terms of the GNU General Public License as published by the Free Software
@@ -13,8 +13,8 @@ Foundation, version 2.
 """
 
 __author__ = 'Karol Będkowski'
-__copyright__ = 'Copyright (C) Karol Będkowski 2006-2013'
-__version__ = "2013-04-27"
+__copyright__ = 'Copyright (C) Karol Będkowski 2013'
+__version__ = "2013-07-11"
 
 
 import os
@@ -52,7 +52,7 @@ class _ThreadedTCPRequestHandler(SocketServer.BaseRequestHandler):
 			message = data_j['message']
 			Publisher().sendMessage(message, data=data_j.get("data"))
 			self.request.sendall("ok")
-		except Exception as err:
+		except Exception as err:  # pylint: disable=W0703
 			print err
 
 
@@ -60,76 +60,110 @@ class _ThreadedTCPServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):
 	pass
 
 
-class IPCServer:
+class IPC:
+	""" Inter process communication controller.
 
-	def __init__(self):
-		self.server = None
+	Args:
+		lock_path: path to file holding local server port.
+	"""
+
+	def __init__(self, lock_path):
+		self._server = None
+		self._server_thread = None
+		self.lock_path = lock_path
+		self.port = None
+
+	def startup(self, message=None):
+		""" Check is another app is runing; run ipc server if not.
+		Args:
+			message: message to sent for check.
+		Returns:
+			False = app exists and responding.
+		"""
+		if self.check_lock(message) is not None:
+			return False
+		return self.start()
 
 	def start(self):
-		# Port 0 means to select an arbitrary unused port
-		HOST, PORT = "localhost", 0
-		self.server = server = _ThreadedTCPServer((HOST, PORT),
+		""" Start IPC server. """
+		self._server = server = _ThreadedTCPServer(("localhost", 0),
 				_ThreadedTCPRequestHandler)
-		ip, port = server.server_address
-		self.server_thread = server_thread = threading.Thread(
+		addr_ip, port = server.server_address
+		self._server_thread = server_thread = threading.Thread(
 				target=server.serve_forever)
 		server_thread.daemon = True
 		server_thread.start()
-		_LOG.info("IPCServer.started(port=%r)", port)
-		return port
+		_LOG.info("IPC.started(port=%r, ip=%r)", port, addr_ip)
+		self.port = port
+		return self._create_lock()
 
-	def stop(self):
-		self.server.shutdown()
+	def shutdown(self):
+		""" Shutdown server. """
+		self._server.shutdown()
+		self._remove_lock()
 
+	def check_lock(self, message=None):
+		""" Check lock file; if exists - checking is app response.
 
-def send(port, message, data=None):
-	_LOG.info("send(%r, %r, %r)", port, message, data)
-	sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-	sock.connect(("localhost", port))
-	try:
-		data_j = _JSON_ENCODER({'message': message, 'data': data})
-		sock.sendall(data_j)
-		response = sock.recv(1024)
-		return response
-	finally:
-		sock.close()
-	return None
+		Args:
+			message: message to sent for check.
+		"""
+		if os.path.isfile(self.lock_path):
+			# lock file exists
+			_LOG.debug("check_lock: file exists %s", self.lock_path)
+			with open(self.lock_path)as lock_file:
+				try:
+					port = int(lock_file.read())
+					_LOG.debug("check_lock: port %r", port)
+					if 1024 < port < 65536:
+						resp = self.send(message or "check", port=port)
+						_LOG.info("check_lock: check send; res=%r", resp)
+						if resp == "ok":
+							return port
+				except:  # pylint: disable=W0702
+					pass
+			# death lock file
+			self._remove_lock()
+		return None
 
+	def _create_lock(self):
+		_LOG.info("IPC._create_lock: %r -> %r", self.lock_path, self.port)
+		try:
+			with open(self.lock_path, "w") as lock_file:
+				lock_file.write(str(self.port))
+		except OSError:
+			_LOG.exception("create_lock error (%r, %r)", self.lock_path,
+					self.port)
+			return False
+		return True
 
-def check_lock(lock_path, message="check"):
-	if os.path.isfile(lock_path):
-		# lock file exists
-		_LOG.debug("check_lock: file exists %s", lock_path)
-		with open(lock_path)as lock_file:
-			try:
-				port = int(lock_file.read())
-				_LOG.debug("check_lock: port %r", port)
-				if 1024 < port < 65536:
-					resp = send(port, message)
-					_LOG.debug("check_lock: check send; res=%r", resp)
-					if resp == "ok":
-						return port
-			except:
-				pass
-		# death lock file
-		remove_lock(lock_path)
-	return None
+	def _remove_lock(self):
+		try:
+			os.unlink(self.lock_path)
+		except OSError:
+			_LOG.exception("_remove_lock error (%r)", self.lock_path)
+			return False
+		return True
 
+	def send(self, message, data=None, port=None):
+		""" Send message to running application.
 
-def create_lock(lock_path, port):
-	try:
-		with open(lock_path, "w") as lock_file:
-			lock_file.write(str(port))
-	except OSError:
-		_LOG.exception("create_lock error (%r, %r)", lock_path, port)
-		return False
-	return True
-
-
-def remove_lock(lock_path):
-	try:
-		os.unlink(lock_path)
-	except OSError:
-		_LOG.exception("remove_lock error (%r)", lock_path)
-		return False
-	return True
+		Args:
+			message: message to send
+			data: optional data to send
+			port: optional destination port.
+		Returns:
+			Server response
+		"""
+		port = port or self.port
+		_LOG.info("send(%r, %r, %r)", port, message, data)
+		sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+		sock.connect(("localhost", port))
+		try:
+			data_j = _JSON_ENCODER({'message': message, 'data': data})
+			sock.sendall(data_j)
+			response = sock.recv(1024)
+			return response
+		finally:
+			sock.close()
+		return None
