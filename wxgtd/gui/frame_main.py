@@ -158,6 +158,7 @@ class FrameMain(BaseFrame):
 
 		Publisher().subscribe(self._on_tasks_update, ('task', 'update'))
 		Publisher().subscribe(self._on_tasks_update, ('task', 'delete'))
+		Publisher().subscribe(self._on_frame_messsage, ('gui', 'frame_main'))
 
 		self._create_popup_menu_bindings(wnd)
 
@@ -621,6 +622,12 @@ class FrameMain(BaseFrame):
 
 	def _on_tasks_update(self, _args):
 		self._refresh_list()
+
+	def _on_frame_messsage(self, args):
+		if args.topic == ('gui', 'frame_main', 'raise'):
+			if self.wnd and self.wnd.IsEnabled():
+				self.wnd.Show()
+				self.wnd.Raise()
 
 	def _on_btn_hide_due(self, _evt):
 		self._refresh_list()
