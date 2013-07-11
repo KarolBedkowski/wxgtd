@@ -12,6 +12,7 @@ __copyright__ = "Copyright (c) Karol Będkowski, 2013"
 __version__ = "2013-04-27"
 
 
+import os
 import optparse
 import logging
 
@@ -47,6 +48,15 @@ def _parse_opt():
 	return optp.parse_args()[0]
 
 
+def _run_ipcs(config):
+	from wxgtd.wxtools import ipc
+	ipcs = ipc.IPC(os.path.join(config.config_path, "wxgtd_lock"))
+	if not ipcs.startup("gui.frame_main.raise"):
+		_LOG.info("App is already running...")
+		exit(0)
+	return ipcs
+
+
 def run():
 	""" Run application. """
 	# parse options
@@ -62,6 +72,8 @@ def run():
 	config.load_defaults(config.get_data_file('defaults.cfg'))
 	config.load()
 	config.debug = options.debug
+
+	ipcs = _run_ipcs(config)
 
 	# locale
 	from wxgtd.lib import locales
@@ -121,4 +133,5 @@ def run():
 		app.MainLoop()
 
 	# app closed; save config
+	ipcs.shutdown()
 	config.save()
