@@ -28,6 +28,7 @@ Support synchronisation data via sync file by Dropbox.
 
 .. _`DGT GTD`: http://www.dgtale.ch/
 
+
 OPTIONS
 =======
 
@@ -44,6 +45,10 @@ Debug options
   -d, --debug         enable debug messages
   --debug-sql         enable sql debug messages
   --wx-inspection     run wx windows inspector
+
+Other options
+-------------
+  --force-start       Force start application even other instance is running.
 
 
 FILES
