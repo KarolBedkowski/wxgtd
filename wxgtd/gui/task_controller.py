@@ -122,7 +122,11 @@ class TaskController:
 		Returns:
 			True after successful delete task.
 		"""
-		if not mbox.message_box_delete_confirm(self.wnd, _("task")):
+		if permanently:
+			if not mbox.message_box_delete_confirm(self.wnd, _("task")):
+				return False
+		elif not mbox.message_box_delete_confirm(self.wnd, _("task"),
+				_("Task will be moved to trash.")):
 			return False
 		return task_logic.delete_task(self._task, self._session, permanently)
 
