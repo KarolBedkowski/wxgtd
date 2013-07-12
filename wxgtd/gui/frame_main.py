@@ -415,7 +415,7 @@ class FrameMain(BaseFrame):
 		self._delete_selected_task()
 
 	def _on_menu_task_undelete(self, _evt):
-		self._undelete_selected_task()
+		self._undelete_selected_tasks()
 
 	def _on_menu_task_edit(self, _evt):
 		self._edit_selected_task()
@@ -605,6 +605,8 @@ class FrameMain(BaseFrame):
 	def _on_items_list_right_click(self, _evt):
 		if self._items_list_ctrl.selected_count == 0:
 			return
+		elif self['rb_show_selection'].GetSelection() == queries.QUERY_TRASH:
+			menu = self._tasks_popup_menu.build_trash_menu()
 		elif self._items_list_ctrl.selected_count == 1:
 			task_uuid = self._items_list_ctrl.get_item_uuid(None)
 			task = OBJ.Task.get(session=self._session, uuid=task_uuid)
@@ -712,10 +714,11 @@ class FrameMain(BaseFrame):
 			TaskController(self.wnd, self._session,
 					None).delete_tasks(tasks_uuid)
 
-	def _undelete_selected_task(self):
-		task_uuid = self._items_list_ctrl.get_item_uuid(None)
-		if task_uuid:
-			TaskController(self.wnd, self._session, task_uuid).undelete_task()
+	def _undelete_selected_tasks(self):
+		tasks_uuid = list(self._items_list_ctrl.get_selected_items_uuid())
+		if tasks_uuid:
+			TaskController(self.wnd, self._session,
+					None).undelete_tasks(tasks_uuid)
 
 	def _new_task(self):
 		parent_uuid = None
@@ -926,12 +929,9 @@ class _TasksPopupMenu:
 		menu.Append(self.toggle_task_stared_id, _('Set Task Not Starred')
 				if task.starred else _('Set Task Starred'))
 		menu.AppendSeparator()
-		menu.Append(self.task_edit_id, _('Edit Task'))
-		menu.Append(self.task_clone_id, _('Clone Task'))
-		if task.deleted:
-			menu.Append(self.task_undelete_id, _('Undelete Task'))
-		else:
-			menu.Append(self.task_delete_id, _('Delete Task'))
+		menu.Append(self.task_edit_id, _('Edit..'))
+		menu.Append(self.task_clone_id, _('Clone...'))
+		menu.Append(self.task_delete_id, _('Delete..'))
 		menu.AppendSeparator()
 		menu.Append(self.task_change_project_id, _('Change Project/List...'))
 		if task.type != enums.TYPE_CHECKLIST_ITEM:
@@ -956,7 +956,7 @@ class _TasksPopupMenu:
 		menu.Append(self.task_set_starred_id, _('Set Task Starred'))
 		menu.Append(self.task_set_not_starred_id, _('Set Task Not Starred'))
 		menu.AppendSeparator()
-		menu.Append(self.task_delete_id, _('Delete Task'))
+		menu.Append(self.task_delete_id, _('Delete...'))
 		menu.AppendSeparator()
 		menu.Append(self.task_change_project_id, _('Change Project/List...'))
 		menu.Append(self.task_change_context_id, _('Change Context...'))
@@ -968,4 +968,10 @@ class _TasksPopupMenu:
 		menu.Append(self.task_change_start_id, _('Change Start Date...'))
 		menu.Append(self.task_change_remind_id, _('Change Remind Date...'))
 		menu.Append(self.task_change_hide_until_id, _('Change Show Settings...'))
+		return menu
+
+	def build_trash_menu(self):
+		""" Build popup menu trash group """
+		menu = wx.Menu()
+		menu.Append(self.task_undelete_id, _('Undelete..'))
 		return menu
