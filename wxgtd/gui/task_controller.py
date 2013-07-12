@@ -116,7 +116,7 @@ class TaskController:
 		return mbox.message_box_question(self.wnd, _("Set task completed?"),
 				None, _("Set complete"), _("Close"))
 
-	def delete_task(self):
+	def delete_task(self, permanently=False):
 		""" Delete task with confirmation.
 
 		Returns:
@@ -124,9 +124,9 @@ class TaskController:
 		"""
 		if not mbox.message_box_delete_confirm(self.wnd, _("task")):
 			return False
-		return task_logic.delete_task(self._task, self._session)
+		return task_logic.delete_task(self._task, self._session, permanently)
 
-	def delete_tasks(self, tasks_uuid):
+	def delete_tasks(self, tasks_uuid, permanently=False):
 		""" Delete multiple task with confirmation.
 		Args:
 			tasks_uuid: list of tasks uuid to delete
@@ -135,7 +135,7 @@ class TaskController:
 		"""
 		if not mbox.message_box_delete_confirm(self.wnd, _("tasks")):
 			return False
-		return task_logic.delete_task(tasks_uuid, self._session)
+		return task_logic.delete_task(tasks_uuid, self._session, permanently)
 
 	def undelete_task(self):
 		""" UnDelete task with confirmation.

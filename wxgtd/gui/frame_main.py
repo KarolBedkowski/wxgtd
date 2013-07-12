@@ -167,6 +167,8 @@ class FrameMain(BaseFrame):
 				id=self._tasks_popup_menu.task_edit_id)
 		wnd.Bind(wx.EVT_MENU, self._on_menu_task_delete,
 				id=self._tasks_popup_menu.task_delete_id)
+		wnd.Bind(wx.EVT_MENU, self._on_menu_task_delete_perm,
+				id=self._tasks_popup_menu.task_delete_perm_id)
 		wnd.Bind(wx.EVT_MENU, self._on_menu_task_undelete,
 				id=self._tasks_popup_menu.task_undelete_id)
 		wnd.Bind(wx.EVT_MENU, self._on_menu_task_toggle_completed,
@@ -413,6 +415,9 @@ class FrameMain(BaseFrame):
 
 	def _on_menu_task_delete(self, _evt):
 		self._delete_selected_task()
+
+	def _on_menu_task_delete_perm(self, _evt):
+		self._delete_selected_task(permanently=True)
 
 	def _on_menu_task_undelete(self, _evt):
 		self._undelete_selected_tasks()
@@ -705,14 +710,14 @@ class FrameMain(BaseFrame):
 				return
 		self._synchronize(on_load, autoclose=True)
 
-	def _delete_selected_task(self):
+	def _delete_selected_task(self, permanently=False):
 		tasks_uuid = list(self._items_list_ctrl.get_selected_items_uuid())
 		if len(tasks_uuid) == 1:
 			TaskController(self.wnd, self._session, tasks_uuid[0]).\
-					delete_task()
+					delete_task(permanently=permanently)
 		elif len(tasks_uuid) > 1:
 			TaskController(self.wnd, self._session,
-					None).delete_tasks(tasks_uuid)
+					None).delete_tasks(tasks_uuid, permanently=permanently)
 
 	def _undelete_selected_tasks(self):
 		tasks_uuid = list(self._items_list_ctrl.get_selected_items_uuid())
@@ -920,6 +925,7 @@ class _TasksPopupMenu:
 		self.task_set_starred_id = wx.NewId()
 		self.task_set_not_starred_id = wx.NewId()
 		self.task_undelete_id = wx.NewId()
+		self.task_delete_perm_id = wx.NewId()
 
 	def build(self, task):
 		""" Build popup menu for given (selected) task """
@@ -973,5 +979,6 @@ class _TasksPopupMenu:
 	def build_trash_menu(self):
 		""" Build popup menu trash group """
 		menu = wx.Menu()
-		menu.Append(self.task_undelete_id, _('Undelete..'))
+		menu.Append(self.task_undelete_id, _('Undelete...'))
+		menu.Append(self.task_delete_perm_id, _('Delete permanently...'))
 		return menu
