@@ -116,17 +116,21 @@ class TaskController:
 		return mbox.message_box_question(self.wnd, _("Set task completed?"),
 				None, _("Set complete"), _("Close"))
 
-	def delete_task(self):
+	def delete_task(self, permanently=False):
 		""" Delete task with confirmation.
 
 		Returns:
 			True after successful delete task.
 		"""
-		if not mbox.message_box_delete_confirm(self.wnd, _("task")):
+		if permanently:
+			if not mbox.message_box_delete_confirm(self.wnd, _("task")):
+				return False
+		elif not mbox.message_box_delete_confirm(self.wnd, _("task"),
+				_("Task will be moved to trash.")):
 			return False
-		return task_logic.delete_task(self._task, self._session)
+		return task_logic.delete_task(self._task, self._session, permanently)
 
-	def delete_tasks(self, tasks_uuid):
+	def delete_tasks(self, tasks_uuid, permanently=False):
 		""" Delete multiple task with confirmation.
 		Args:
 			tasks_uuid: list of tasks uuid to delete
@@ -135,7 +139,7 @@ class TaskController:
 		"""
 		if not mbox.message_box_delete_confirm(self.wnd, _("tasks")):
 			return False
-		return task_logic.delete_task(tasks_uuid, self._session)
+		return task_logic.delete_task(tasks_uuid, self._session, permanently)
 
 	def undelete_task(self):
 		""" UnDelete task with confirmation.
@@ -147,6 +151,17 @@ class TaskController:
 				_("Undelete selected tasks?")):
 			return False
 		return task_logic.undelete_task(self._task, self._session)
+
+	def undelete_tasks(self, tasks_uuid):
+		""" UnDelete task with confirmation.
+
+		Returns:
+			True after successful delete task.
+		"""
+		if not mbox.message_box_question_yesno(self.wnd,
+				_("Undelete selected tasks?")):
+			return False
+		return task_logic.undelete_task(tasks_uuid, self._session)
 
 	def task_change_due_date(self):
 		""" Show dialog and change task due date.
