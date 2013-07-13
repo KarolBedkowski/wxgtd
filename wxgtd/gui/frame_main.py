@@ -323,8 +323,10 @@ class FrameMain(BaseFrame):
 		appconfig.set('main', 'show_finished', self._btn_show_finished.GetValue())
 		appconfig.set('main', 'show_subtask', self._btn_show_subtasks.GetValue())
 		appconfig.set('main', 'show_hide_until', self._btn_hide_until.GetValue())
-		appconfig.set('main', 'selected_group',
-				self['rb_show_selection'].GetSelection())
+		sel_group = self['rb_show_selection'].GetSelection()
+		if sel_group == queries.QUERY_TRASH:
+			sel_group = 0
+		appconfig.set('main', 'selected_group', sel_group)
 		self._filter_tree_ctrl.save_last_settings()
 		self._tbicon.Destroy()
 		BaseFrame._on_close(self, event)
