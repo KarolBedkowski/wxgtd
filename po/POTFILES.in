@@ -36,6 +36,7 @@ wxgtd/gui/dlg_remind_settings.py
 wxgtd/gui/dlg_select_tags.py
 wxgtd/gui/dialogs.py
 wxgtd/gui/quicktask.py
+wxgtd/gui/dlg_dropbox_auth.py
 wxgtd/gui/dlg_datetime.py
 wxgtd/gui/dlg_export_tasks.py
 wxgtd/gui/frame_task.py
@@ -58,6 +59,7 @@ wxgtd/model/queries.py
 wxgtd/model/objects.py
 wxgtd/model/enums.py
 wxgtd/model/sqls.py
+wxgtd/model/dbsync.py
 wxgtd/model/__init__.py
 wxgtd/model/loader.py
 wxgtd/model/db.py
@@ -65,6 +67,7 @@ wxgtd/model/exporter.py
 wxgtd/wxtools/wxshell.py
 wxgtd/wxtools/__init__.py
 wxgtd/wxtools/iconprovider.py
+wxgtd/wxtools/ipc.py
 wxgtd/wxtools/wxresources.py
 wxgtd/wxtools/wxutils.py
 wxgtd/wxtools/validators/validator.py
