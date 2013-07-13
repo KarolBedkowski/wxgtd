@@ -8,7 +8,7 @@
 :Tags: gtd, tasks management
 
 Desktop application for task management compatible with `DGT GTD`_.
-Support synchronisation data via sync file by Dropbox.
+Support synchronisation data via Dropbox (file or API).
 
 .. _`DGT GTD`: http://www.dgtale.ch/
 
