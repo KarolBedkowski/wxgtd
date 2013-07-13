@@ -17,37 +17,23 @@ import gettext
 
 import wx
 
+try:
+	import dropbox
+except ImportError:
+	dropbox = None  # pylint: disable=C0103
+
 from wxgtd.wxtools.validators import Validator, ValidatorDv
 from wxgtd.model import enums
-from wxgtd.lib.appconfig import AppConfig
+from wxgtd.lib.appconfig import AppConfigWrapper
 from wxgtd.wxtools import wxutils
 
 from ._base_dialog import BaseDialog
 from .dlg_remind_settings import DlgRemindSettings
 from .dlg_show_settings import DlgShowSettings
+from .dlg_dropbox_auth import DlgDropboxAuth
 
 _LOG = logging.getLogger(__name__)
 _ = gettext.gettext
-
-
-class AppConfigWrapper(object):
-	""" Wrapper for AppConfig class that allow use it with validators. """
-	# pylint: disable=R0903
-
-	def __init__(self):
-		self._config = AppConfig()
-
-	def __getitem__(self, key):
-		key = key.split('/')
-		return self._config.get(key[0], key[1])
-
-	def __setitem__(self, key, value):
-		key = key.split('/')
-		self._config.set(key[0], key[1], value)
-
-	def get(self, key, default=None):
-		key = key.split('/')
-		return self._config.get(key[0], key[1], default)
 
 
 class DlgPreferences(BaseDialog):
@@ -74,6 +60,7 @@ class DlgPreferences(BaseDialog):
 				self._on_btn_task_def_remind_set)
 		self['btn_task_def_hide_until_set'].Bind(wx.EVT_BUTTON,
 				self._on_btn_task_def_hide_set)
+		self['btn_sync_db_auth'].Bind(wx.EVT_BUTTON, self._on_btn_db_auth)
 
 	def _setup(self):  # pylint: disable=R0201
 		_LOG.debug("DlgPreferences()")
@@ -126,6 +113,13 @@ class DlgPreferences(BaseDialog):
 		self['cb_gui_confirm_complete_dlg'].SetValidator(Validator(config,
 				'gui/confirm_complete_dlg'))
 
+		sync_dropbox = bool(dropbox) and config.get('sync/use_dropbox', False)
+		self['rb_sync_by_file'].SetValue(not sync_dropbox)
+		self['rb_sync_by_db'].SetValue(sync_dropbox)
+		self['rb_sync_by_db'].Enable(bool(dropbox))
+		self['btn_sync_db_auth'].Enable(bool(dropbox))
+		self._update_static_texts()
+
 	def _setup_comboboxes(self):
 		cb_status = self['cb_task_def_status']
 		cb_status.Clear()
@@ -139,6 +133,8 @@ class DlgPreferences(BaseDialog):
 			return
 		self._config['hotlist/condition_or'] = \
 				self['rb_hotlist_cond_or'].GetValue()
+		self._config['sync/use_dropbox'] = \
+				self['rb_sync_by_db'].GetValue()
 		BaseDialog._on_ok(self, evt)
 
 	def _on_sl_priority(self, _evt):
@@ -176,6 +172,15 @@ class DlgPreferences(BaseDialog):
 		if dlg.run(True):
 			self._appconfig.set('task', 'default_hide', dlg.pattern)
 			self._refresh_labels()
+
+	def _on_btn_db_auth(self, _evt):
+		if DlgDropboxAuth(self._wnd).run(True):
+			self['rb_sync_by_db'].SetValue(True)
+			self._update_static_texts()
+
+	def _update_static_texts(self):
+		self['l_sync_db_info'].SetLabel(self._appconfig.get('dropbox', 'info',
+				_("Not connected")))
 
 	@wxutils.call_after
 	def _refresh_labels(self):

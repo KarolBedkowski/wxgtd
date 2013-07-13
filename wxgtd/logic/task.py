@@ -339,7 +339,7 @@ def update_task_from_parent(task, parent_uuid, session, appconfig):
 			task.task.append(OBJ.TaskTag(tag_uuid=tasktag.tag_uuid))
 
 
-def delete_task(task, session=None):
+def delete_task(task, session=None, permanently=False):
 	""" Delete given task.
 
 	Show confirmation and delete task from database.
@@ -347,6 +347,7 @@ def delete_task(task, session=None):
 	Args:
 		task: one or list of task for delete (Task or UUID)
 		session: sqlalchemy session
+		permanently: if True - delete objects from database
 
 	Returns:
 		True = task deleted
@@ -360,7 +361,10 @@ def delete_task(task, session=None):
 			if not task:
 				_LOG.warning("delete_task: missing task %r", task)
 				continue
-		task.deleted = datetime.datetime.now()
+		if permanently:
+			session.delete(task)
+		else:
+			task.deleted = datetime.datetime.now()
 		deleted += 1
 	if deleted:
 		session.commit()

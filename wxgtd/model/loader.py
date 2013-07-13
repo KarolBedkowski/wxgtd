@@ -55,7 +55,7 @@ def load_from_file(filename, notify_cb=_fake_update_func, force=False):
 	if not os.path.isfile(filename):
 		notify_cb(50, _("File not found..."))
 		return True
-	notify_cb(0, _("Openning file"))
+	notify_cb(2, _("Openning file"))
 	if filename.endswith(".zip"):
 		with zipfile.ZipFile(filename, "r") as zfile:
 			fname = zfile.namelist()[0]
@@ -310,13 +310,13 @@ def load_json(strdata, notify_cb, force=False):
 	Returns:
 		true if success.
 	"""
-	notify_cb(2, _("Decoding.."))
+	notify_cb(10, _("Decoding.."))
 	data = _JSON_DECODER(strdata.decode("UTF-8"))
 	session = objects.Session()
 
-	notify_cb(4, _("Checking..."))
+	notify_cb(15, _("Checking..."))
 	if not force and not _check_synclog(data, session):
-		notify_cb(2, _("Don't load"))
+		notify_cb(99, _("Don't load"))
 		_LOG.info("load_json: no loading file")
 		return True
 
@@ -371,7 +371,7 @@ def load_json(strdata, notify_cb, force=False):
 
 	notify_cb(92, _("Committing..."))
 	session.commit()  # pylint: disable=E1101
-	notify_cb(100, _("Load completed"))
+	notify_cb(99, _("Load completed"))
 
 	if 'version' in data:
 		del data['version']

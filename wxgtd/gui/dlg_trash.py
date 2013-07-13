@@ -38,12 +38,6 @@ class DlgTrash(BaseDialog):
 		BaseDialog.__init__(self, parent, 'dlg_trash')
 		self._setup(items, session)
 
-	def _load_controls(self, wnd):
-		self._lc_items = self['lc_items']
-		self._lc_items.InsertColumn(0, _("Title"))
-		self._lc_items.InsertColumn(1, _("Created"))
-		self._lc_items.InsertColumn(2, _("Deleted"))
-
 	def _create_bindings(self, wnd):
 		BaseDialog._create_bindings(self, wnd)
 		wnd.Bind(wx.EVT_BUTTON, self._on_ok, self['btn_undelete'])
@@ -51,7 +45,10 @@ class DlgTrash(BaseDialog):
 	def _setup(self, items, session):
 		self._items = list(items)
 		self._session = session
-		lc_items = self._lc_items
+		lc_items = self._lc_items = self['lc_items']
+		lc_items.InsertColumn(0, _("Title"))
+		lc_items.InsertColumn(1, _("Created"))
+		lc_items.InsertColumn(2, _("Deleted"))
 		for idx, item in enumerate(items):
 			lc_items.InsertStringItem(idx, item.title)
 			lc_items.SetStringItem(idx, 1, fmt.format_timestamp(item.created))
@@ -61,7 +58,7 @@ class DlgTrash(BaseDialog):
 		lc_items.SetColumnWidth(1, wx.LIST_AUTOSIZE)
 		lc_items.SetColumnWidth(2, wx.LIST_AUTOSIZE)
 
-	def _on_ok(self, evt):
+	def _on_ok(self, _evt):
 		if self._lc_items.GetSelectedItemCount() == 0:
 			msg.message_box_info(self._wnd,
 					_("Please select one or more items to undelete."))

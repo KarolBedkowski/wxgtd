@@ -57,11 +57,13 @@ def save_to_file(filename, notify_cb=_fake_update_func, internal_fname=None):
 			fname = internal_fname or os.path.basename(filename[:-4])
 			if not fname.endswith('.json'):
 				fname += '.json'
-			zfile.writestr(fname, dump_database_to_json(notify_cb))
+			data = dump_database_to_json(notify_cb)
+			notify_cb(85, _("Writing..."))
+			zfile.writestr(fname, data)
 	else:
 		with open(filename, 'w') as ifile:
 			ifile.write(dump_database_to_json(notify_cb))
-	notify_cb(100, _("Saved"))
+	notify_cb(99, _("Saved"))
 
 
 def fmt_date(date):
@@ -136,7 +138,7 @@ def dump_database_to_json(notify_cb):
 	res['syncLog'] = _dump_synclog(session, notify_cb)
 
 	session.commit()  # pylint: disable=E1101
-	notify_cb(80, _("Saving..."))
+	notify_cb(80, _("Encoding..."))
 
 	return _JSON_ENCODER(res)
 

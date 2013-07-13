@@ -12,6 +12,7 @@ __copyright__ = "Copyright (c) Karol Będkowski, 2013"
 __version__ = "2013-04-27"
 
 
+import os
 import optparse
 import logging
 
@@ -44,7 +45,20 @@ def _parse_opt():
 			help='enable sql debug messages')
 	group.add_option('--wx-inspection', action="store_true", default=False)
 	optp.add_option_group(group)
+	group = optparse.OptionGroup(optp, "Other options")
+	group.add_option('--force-start', action="store_true", default=False,
+			help='Force start application even other instance is running.')
+	optp.add_option_group(group)
 	return optp.parse_args()[0]
+
+
+def _run_ipcs(config):
+	from wxgtd.wxtools import ipc
+	ipcs = ipc.IPC(os.path.join(config.config_path, "wxgtd_lock"))
+	if not ipcs.startup("gui.frame_main.raise"):
+		_LOG.info("App is already running...")
+		exit(0)
+	return ipcs
 
 
 def run():
@@ -62,6 +76,10 @@ def run():
 	config.load_defaults(config.get_data_file('defaults.cfg'))
 	config.load()
 	config.debug = options.debug
+
+	ipcs = None
+	if not options.force_start:
+		ipcs = _run_ipcs(config)
 
 	# locale
 	from wxgtd.lib import locales
@@ -121,4 +139,6 @@ def run():
 		app.MainLoop()
 
 	# app closed; save config
+	if ipcs:
+		ipcs.shutdown()
 	config.save()

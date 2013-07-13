@@ -60,12 +60,14 @@ def sync(filename, load_only=False, notify_cb=_notify_progress):
 		SyncLockedError when source file is locked.
 	"""
 	_LOG.info("sync: %r", filename)
+	notify_cb(0, _("Sync via file %s") % filename)
 	notify_cb(0, _("Creating backup"))
 	create_backup()
-	notify_cb(1, _("Sanity check"))
+	notify_cb(25, _("Sanity check"))
 	_sync_file_check(filename)
-	notify_cb(1, _("Checking sync lock"))
+	notify_cb(50, _("Checking sync lock"))
 	if exporter.create_sync_lock(filename):
+		notify_cb(1, _("Loading..."))
 		try:
 			if loader.load_from_file(filename, notify_cb):
 				if not load_only:
@@ -74,7 +76,7 @@ def sync(filename, load_only=False, notify_cb=_notify_progress):
 			_LOG.exception("file sync error")
 			raise OtherSyncError(err)
 		finally:
-			notify_cb(99, _("Removing sync lock"))
+			notify_cb(50, _("Removing sync lock"))
 			exporter.delete_sync_lock(filename)
 		notify_cb(100, _("Completed"))
 	else:

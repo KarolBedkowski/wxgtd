@@ -30,6 +30,7 @@ from wxgtd.model import exporter
 from wxgtd.model import sync
 from wxgtd.model import enums
 from wxgtd.model import queries
+from wxgtd.model import dbsync
 from wxgtd.logic import task as task_logic
 from wxgtd.lib import fmt
 from wxgtd.gui import dlg_about
@@ -157,6 +158,7 @@ class FrameMain(BaseFrame):
 
 		Publisher().subscribe(self._on_tasks_update, ('task', 'update'))
 		Publisher().subscribe(self._on_tasks_update, ('task', 'delete'))
+		Publisher().subscribe(self._on_frame_messsage, ('gui', 'frame_main'))
 
 		self._create_popup_menu_bindings(wnd)
 
@@ -165,6 +167,8 @@ class FrameMain(BaseFrame):
 				id=self._tasks_popup_menu.task_edit_id)
 		wnd.Bind(wx.EVT_MENU, self._on_menu_task_delete,
 				id=self._tasks_popup_menu.task_delete_id)
+		wnd.Bind(wx.EVT_MENU, self._on_menu_task_delete_perm,
+				id=self._tasks_popup_menu.task_delete_perm_id)
 		wnd.Bind(wx.EVT_MENU, self._on_menu_task_undelete,
 				id=self._tasks_popup_menu.task_undelete_id)
 		wnd.Bind(wx.EVT_MENU, self._on_menu_task_toggle_completed,
@@ -319,8 +323,10 @@ class FrameMain(BaseFrame):
 		appconfig.set('main', 'show_finished', self._btn_show_finished.GetValue())
 		appconfig.set('main', 'show_subtask', self._btn_show_subtasks.GetValue())
 		appconfig.set('main', 'show_hide_until', self._btn_hide_until.GetValue())
-		appconfig.set('main', 'selected_group',
-				self['rb_show_selection'].GetSelection())
+		sel_group = self['rb_show_selection'].GetSelection()
+		if sel_group == queries.QUERY_TRASH:
+			sel_group = 0
+		appconfig.set('main', 'selected_group', sel_group)
 		self._filter_tree_ctrl.save_last_settings()
 		self._tbicon.Destroy()
 		BaseFrame._on_close(self, event)
@@ -378,41 +384,7 @@ class FrameMain(BaseFrame):
 		dlg.Destroy()
 
 	def _on_menu_file_sync(self, _evt):
-		appconfig = self._appconfig
-		last_sync_file = appconfig.get('files', 'last_sync_file')
-		if not last_sync_file:
-			dlg = wx.FileDialog(self.wnd,
-					_("Please select sync file."),
-					defaultDir=appconfig.get('files', 'last_dir', ''),
-					defaultFile=appconfig.get('files', 'last_file', 'GTD_SYNC.zip'),
-					style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST)
-			if dlg.ShowModal() == wx.ID_OK:
-				last_sync_file = dlg.GetPath()
-			dlg.Destroy()
-		if last_sync_file:
-			appconfig.set('files', 'last_sync_file', last_sync_file)
-			dlg = DlgSyncProggress(self.wnd)
-			dlg.run()
-			try:
-				sync.sync(last_sync_file)
-			except sync.SyncLockedError:
-				msgbox = wx.MessageDialog(dlg.wnd, _("Sync file is locked."),
-						_("wxGTD"), wx.OK | wx.ICON_HAND)
-				msgbox.ShowModal()
-				msgbox.Destroy()
-				dlg.update(100, _("Sync file is locked."))
-			except sync.OtherSyncError as err:
-				_LOG.exception('FrameMain._on_menu_file_sync error: %r',
-						str(err))
-				msgdlg = wx.lib.dialogs.ScrolledMessageDialog(self.wnd,
-						str(err), _("Synchronisation error"))
-				msgdlg.ShowModal()
-				msgdlg.Destroy()
-				dlg.update(100, _("Error: ") + str(err))
-			dlg.mark_finished()
-			self._filter_tree_ctrl.RefreshItems()
-			Publisher().sendMessage('task.update')
-			Publisher().sendMessage('dict.update')
+		self._synchronize(False)
 
 	def _on_menu_sett_preferences(self, _evt):
 		if DlgPreferences(self.wnd).run(True):
@@ -446,8 +418,11 @@ class FrameMain(BaseFrame):
 	def _on_menu_task_delete(self, _evt):
 		self._delete_selected_task()
 
+	def _on_menu_task_delete_perm(self, _evt):
+		self._delete_selected_task(permanently=True)
+
 	def _on_menu_task_undelete(self, _evt):
-		self._undelete_selected_task()
+		self._undelete_selected_tasks()
 
 	def _on_menu_task_edit(self, _evt):
 		self._edit_selected_task()
@@ -637,6 +612,8 @@ class FrameMain(BaseFrame):
 	def _on_items_list_right_click(self, _evt):
 		if self._items_list_ctrl.selected_count == 0:
 			return
+		elif self['rb_show_selection'].GetSelection() == queries.QUERY_TRASH:
+			menu = self._tasks_popup_menu.build_trash_menu()
 		elif self._items_list_ctrl.selected_count == 1:
 			task_uuid = self._items_list_ctrl.get_item_uuid(None)
 			task = OBJ.Task.get(session=self._session, uuid=task_uuid)
@@ -654,6 +631,12 @@ class FrameMain(BaseFrame):
 
 	def _on_tasks_update(self, _args):
 		self._refresh_list()
+
+	def _on_frame_messsage(self, args):
+		if args.topic == ('gui', 'frame_main', 'raise'):
+			if self.wnd and self.wnd.IsEnabled():
+				self.wnd.Show()
+				self.wnd.Raise()
 
 	def _on_btn_hide_due(self, _evt):
 		self._refresh_list()
@@ -700,8 +683,8 @@ class FrameMain(BaseFrame):
 			_LOG.debug('FrameMain._on_timer: check reminders')
 			FrameReminders.check(self.wnd, self._session)
 
-	def _on_window_iconze(self, _evt):
-		if self._appconfig.get('gui', 'min_to_tray'):
+	def _on_window_iconze(self, evt):
+		if evt.Iconized() and self._appconfig.get('gui', 'min_to_tray'):
 			self.wnd.Show(False)
 
 	def _refresh_list(self):
@@ -723,36 +706,26 @@ class FrameMain(BaseFrame):
 		wx.SetCursor(wx.STANDARD_CURSOR)
 
 	def _autosync(self, on_load=True):
-		last_sync_file = self._appconfig.get('files', 'last_sync_file')
-		if last_sync_file:
-			dlg = DlgSyncProggress(self.wnd)
-			dlg.run()
-			try:
-				sync.sync(last_sync_file, load_only=on_load)
-			except sync.SyncLockedError:
-				msgbox = wx.MessageDialog(dlg.wnd, _("Sync file is locked."),
-						_("wxGTD"), wx.OK | wx.ICON_HAND)
-				msgbox.ShowModal()
-				msgbox.Destroy()
-				dlg.update(100, _("Sync file is locked."))
-			dlg.mark_finished(2)
-		if on_load:
-			Publisher().sendMessage('task.update')
-			Publisher().sendMessage('dict.update')
+		if not self._appconfig.get('sync', 'use_dropbox'):
+			# don't sync if file is not configured
+			if not self._appconfig.get('files', 'last_sync_file'):
+				return
+		self._synchronize(on_load, autoclose=True)
 
-	def _delete_selected_task(self):
+	def _delete_selected_task(self, permanently=False):
 		tasks_uuid = list(self._items_list_ctrl.get_selected_items_uuid())
 		if len(tasks_uuid) == 1:
 			TaskController(self.wnd, self._session, tasks_uuid[0]).\
-					delete_task()
+					delete_task(permanently=permanently)
 		elif len(tasks_uuid) > 1:
 			TaskController(self.wnd, self._session,
-					None).delete_tasks(tasks_uuid)
+					None).delete_tasks(tasks_uuid, permanently=permanently)
 
-	def _undelete_selected_task(self):
-		task_uuid = self._items_list_ctrl.get_item_uuid(None)
-		if task_uuid:
-			TaskController(self.wnd, self._session, task_uuid).undelete_task()
+	def _undelete_selected_tasks(self):
+		tasks_uuid = list(self._items_list_ctrl.get_selected_items_uuid())
+		if tasks_uuid:
+			TaskController(self.wnd, self._session,
+					None).undelete_tasks(tasks_uuid)
 
 	def _new_task(self):
 		parent_uuid = None
@@ -876,6 +849,59 @@ class FrameMain(BaseFrame):
 					True, True), session=self._session).count()
 			rb_show_selection.SetItemLabel(group, label % cnt)
 
+	def _synchronize(self, on_load=True, autoclose=False):
+		""" Synchronize data.
+
+		Attr:
+			on_load: if true only read data.
+			autoclose: close progress dialog after sync (if no errors)
+		"""
+		use_dropbox = (self._appconfig.get('sync', 'use_dropbox') and
+				dbsync.is_available())
+		if not use_dropbox:
+			last_sync_file = self._appconfig.get('files', 'last_sync_file')
+			if not last_sync_file:
+				dlg = wx.FileDialog(self.wnd,
+						_("Please select sync file."),
+						defaultDir=self._appconfig.get('files', 'last_dir', ''),
+						defaultFile=self._appconfig.get('files', 'last_file',
+								'GTD_SYNC.zip'),
+						style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST)
+				if dlg.ShowModal() == wx.ID_OK:
+					last_sync_file = dlg.GetPath()
+				dlg.Destroy()
+				if last_sync_file:
+					self._appconfig.set('files', 'last_sync_file', last_sync_file)
+			if not last_sync_file:
+				return
+		dlg = DlgSyncProggress(self.wnd)
+		dlg.run()
+		try:
+			if use_dropbox:
+				dbsync.sync(load_only=on_load)
+			else:
+				sync.sync(last_sync_file, load_only=on_load)
+		except sync.SyncLockedError:
+			msgbox = wx.MessageDialog(dlg.wnd, _("Sync file is locked."),
+					_("wxGTD"), wx.OK | wx.ICON_HAND)
+			msgbox.ShowModal()
+			msgbox.Destroy()
+			dlg.update(100, _("Sync file is locked."))
+			autoclose = False
+		except sync.OtherSyncError as err:
+			_LOG.exception('FrameMain._on_menu_file_sync error: %r',
+					str(err))
+			msgdlg = wx.lib.dialogs.ScrolledMessageDialog(self.wnd,
+					str(err), _("Synchronisation error"))
+			msgdlg.ShowModal()
+			msgdlg.Destroy()
+			dlg.update(100, _("Error: ") + str(err))
+			autoclose = False
+		dlg.mark_finished(2 if autoclose else -1)
+		if on_load:
+			Publisher().sendMessage('task.update')
+			Publisher().sendMessage('dict.update')
+
 
 class _TasksPopupMenu:
 	""" Popup menu for tasks list. """
@@ -901,6 +927,7 @@ class _TasksPopupMenu:
 		self.task_set_starred_id = wx.NewId()
 		self.task_set_not_starred_id = wx.NewId()
 		self.task_undelete_id = wx.NewId()
+		self.task_delete_perm_id = wx.NewId()
 
 	def build(self, task):
 		""" Build popup menu for given (selected) task """
@@ -910,12 +937,9 @@ class _TasksPopupMenu:
 		menu.Append(self.toggle_task_stared_id, _('Set Task Not Starred')
 				if task.starred else _('Set Task Starred'))
 		menu.AppendSeparator()
-		menu.Append(self.task_edit_id, _('Edit Task'))
-		menu.Append(self.task_clone_id, _('Clone Task'))
-		if task.deleted:
-			menu.Append(self.task_undelete_id, _('Undelete Task'))
-		else:
-			menu.Append(self.task_delete_id, _('Delete Task'))
+		menu.Append(self.task_edit_id, _('Edit..'))
+		menu.Append(self.task_clone_id, _('Clone...'))
+		menu.Append(self.task_delete_id, _('Delete..'))
 		menu.AppendSeparator()
 		menu.Append(self.task_change_project_id, _('Change Project/List...'))
 		if task.type != enums.TYPE_CHECKLIST_ITEM:
@@ -940,7 +964,7 @@ class _TasksPopupMenu:
 		menu.Append(self.task_set_starred_id, _('Set Task Starred'))
 		menu.Append(self.task_set_not_starred_id, _('Set Task Not Starred'))
 		menu.AppendSeparator()
-		menu.Append(self.task_delete_id, _('Delete Task'))
+		menu.Append(self.task_delete_id, _('Delete...'))
 		menu.AppendSeparator()
 		menu.Append(self.task_change_project_id, _('Change Project/List...'))
 		menu.Append(self.task_change_context_id, _('Change Context...'))
@@ -952,4 +976,11 @@ class _TasksPopupMenu:
 		menu.Append(self.task_change_start_id, _('Change Start Date...'))
 		menu.Append(self.task_change_remind_id, _('Change Remind Date...'))
 		menu.Append(self.task_change_hide_until_id, _('Change Show Settings...'))
+		return menu
+
+	def build_trash_menu(self):
+		""" Build popup menu trash group """
+		menu = wx.Menu()
+		menu.Append(self.task_undelete_id, _('Undelete...'))
+		menu.Append(self.task_delete_perm_id, _('Delete permanently...'))
 		return menu
