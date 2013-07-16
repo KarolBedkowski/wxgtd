@@ -15,7 +15,10 @@ import logging
 import gettext
 
 import wx
-import dropbox
+try:
+	import dropbox
+except ImportError:
+	dropbox = None  # pylint: disable=C0103
 
 from wxgtd.wxtools.validators import Validator
 from wxgtd.wxtools.validators import v_length as LVALID
@@ -66,6 +69,8 @@ class DlgDropboxAuth(BaseDialog):
 		wx.LaunchDefaultBrowser('https://www.dropbox.com/developers/apps/create')
 
 	def _auth(self):
+		if dropbox is None:
+			return False
 		sess = dropbox.session.DropboxSession(
 				self._appconfig.get('dropbox', 'appkey'),
 				self._appconfig.get('dropbox', 'appsecret'), 'dropbox')
