@@ -71,6 +71,8 @@ def update_task_alarm(task):
 	_LOG.debug('update_task_alarm: %r', task)
 	alarm_pattern = task.alarm_pattern
 	if not alarm_pattern:
+		if task.alarm == task.due_date:
+			task.alarm_pattern = 'due'
 		return
 	if alarm_pattern == 'due':
 		task.alarm = task.due_date

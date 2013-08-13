@@ -442,6 +442,7 @@ def _load_tasks(data, session, notify_cb):
 		task["goal_uuid"] = None
 		task_obj = _create_or_update(session, objects.Task, task)
 		task_logic.update_task_hide(task_obj)
+		task_logic.update_task_alarm(task_obj)
 	if tasks:
 		del data["task"]
 	notify_cb(29, _("Loaded %d tasks") % len(tasks_cache))
