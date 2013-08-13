@@ -172,7 +172,7 @@ class AppConfig(Singleton):
 			try:
 				return eval(self._config.get(section, key))
 			except:  # catch all errors; pylint: disable=W0702
-				_LOG.exception('AppConfig.get(%s, %s, %r)' % (section, key, default))
+				_LOG.exception('AppConfig.get(%s, %s, %r)', section, key, default)
 		return default
 
 	def get_items(self, section):
@@ -191,7 +191,7 @@ class AppConfig(Singleton):
 					result = list((key, eval(val)) for key, val in items)
 				return result
 			except:  # catch all errors; pylint: disable=W0702
-				_LOG.exception('AppConfig.get(%s)' % section)
+				_LOG.exception('AppConfig.get(%s)', section)
 		return None
 
 	def get_secure(self, section, key, default=None):
@@ -268,8 +268,8 @@ class AppConfig(Singleton):
 			try:
 				os.makedirs(config_path)
 			except IOError:
-				_LOG.exception('Error creating config directory: %s'
-						% self.config_path)
+				_LOG.exception('Error creating config directory: %s',
+						self.config_path)
 				config_path = self.main_dir
 		return config_path
 
@@ -312,6 +312,12 @@ class AppConfigWrapper(object):
 	def __setitem__(self, key, value):
 		key = key.split('/')
 		self._config.set(key[0], key[1], value)
+
+	def __delitem__(self, _key):
+		pass
+
+	def __len__(self):
+		return 0
 
 	def get(self, key, default=None):
 		key = key.split('/')

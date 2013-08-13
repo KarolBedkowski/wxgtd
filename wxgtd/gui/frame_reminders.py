@@ -41,12 +41,12 @@ class FrameReminders(BaseFrame):
 
 	_xrc_resource = 'wxgtd.xrc'
 	_window_name = 'frame_reminders'
-	_instance = None
+	INSTANCE = None
 
 	def __init__(self, parent, session):
 		self._task_list_ctrl = None
 		BaseFrame.__init__(self, parent)
-		self._obj_key = 'dlg_reminders'
+		self.obj_key = 'dlg_reminders'
 		self._setup(session)
 		self._refresh()
 
@@ -61,9 +61,9 @@ class FrameReminders(BaseFrame):
 				continue
 			tasks_to_show.append(task)
 		if tasks_to_show:
-			window = cls._instance
+			window = cls.INSTANCE
 			if not window:
-				window = cls._instance = FrameReminders(parent_wnd, session)
+				window = cls.INSTANCE = FrameReminders(parent_wnd, session)
 				window.wnd.Show()
 			window.load_tasks(tasks_to_show)
 			wx.CallAfter(window.wnd.Raise)
@@ -106,7 +106,7 @@ class FrameReminders(BaseFrame):
 		self._task_list_ctrl.fill(self._reminders)
 
 	def _on_close(self, event):
-		self.__class__._instance = None
+		self.__class__.INSTANCE = None
 		BaseFrame._on_close(self, event)
 
 	def _on_btn_close(self, _evt):

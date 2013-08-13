@@ -153,7 +153,7 @@ _OFFSETS = {'Daily': relativedelta(days=1),
 		'Quarterly': relativedelta(months=+3),
 		'Semiannually': relativedelta(months=+6),
 		'Yearly': relativedelta(years=+1)}
-RE_REPEAT_XT = re.compile("^Every (\d+) (\w+)$", re.IGNORECASE)
+RE_REPEAT_XT = re.compile(r"^Every (\d+) (\w+)$", re.IGNORECASE)
 RE_REPEAT_EVERYW = re.compile("^Every ((Mon|Tue|Wed|Thu|Fri|Sat|Sun),? ?)+$",
 		re.IGNORECASE)
 _WEEKDAYS = {'mon': 0,

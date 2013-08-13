@@ -43,7 +43,7 @@ class BaseDialog:
 	def __init__(self, parent, dialog_name='dialog', resource='wxgtd.xrc',
 			icon=None, save_pos=True):
 		self._dialog_name = dialog_name
-		self._obj_key = None
+		self.obj_key = None
 		self._save_pos = save_pos
 		# setup
 		self._wnd = self._create_window(dialog_name, resource, parent)
@@ -74,7 +74,7 @@ class BaseDialog:
 			wx.CallAfter(dlg.wnd.Raise)
 		else:
 			cls._windows[key] = dlg = cls(*args, **kwargs)
-			dlg._obj_key = key
+			dlg.obj_key = key
 		return dlg
 
 	def run(self, modal=False):
@@ -105,6 +105,15 @@ class BaseDialog:
 			ctrl = self._wnd.FindWindowById(key)
 		assert ctrl is not None, 'ctrl %s not found' % key
 		return ctrl
+
+	def __setitem__(self, _key, _val):
+		pass
+
+	def __delitem__(self, _key):
+		pass
+
+	def __len__(self):
+		return len(self._wnd.GetChildren()) if self.wnd else 0
 
 	def _create_window(self, dialog_name, resource,  # pylint: disable=R0201
 			parent):
@@ -171,8 +180,8 @@ class BaseDialog:
 			self._appconfig.set(self._dialog_name, 'position',
 					self._wnd.GetPositionTuple())
 		# remove from cache.
-		if self._obj_key and self._obj_key in self._windows:
-			del self._windows[self._obj_key]
+		if self.obj_key and self.obj_key in self._windows:
+			del self._windows[self.obj_key]
 		self._wnd.Destroy()
 
 	def _on_cancel(self, _evt):

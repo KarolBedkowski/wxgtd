@@ -266,30 +266,26 @@ class TaskListControl(ULC.UltimateListCtrl, listmix.ColumnSorterMixin):
 
 	def _setup_columns(self):
 		info = ULC.UltimateListItem()
-		info._mask = wx.LIST_MASK_TEXT | wx.LIST_MASK_FORMAT
-		info._format = 0
-		info._text = _("Prio")
+		info.SetMask(wx.LIST_MASK_TEXT | wx.LIST_MASK_FORMAT)
+		info.SetText(_("Prio"))
 		self.InsertColumnInfo(0, info)
 
 		info = ULC.UltimateListItem()
-		info._format = wx.LIST_FORMAT_LEFT
-		info._mask = wx.LIST_MASK_TEXT | wx.LIST_MASK_FORMAT
-		info._image = []
-		info._text = _("Title")
+		info.SetAlign(ULC.ULC_FORMAT_LEFT)
+		info.SetMask(wx.LIST_MASK_TEXT | wx.LIST_MASK_FORMAT)
+		info.SetText(_("Title"))
 		self.InsertColumnInfo(1, info)
 
 		info = ULC.UltimateListItem()
-		info._format = wx.LIST_FORMAT_LEFT
-		info._mask = wx.LIST_MASK_TEXT | wx.LIST_MASK_FORMAT
-		info._image = []
-		info._text = _("Due")
+		info.SetAlign(ULC.ULC_FORMAT_LEFT)
+		info.SetMask(wx.LIST_MASK_TEXT | wx.LIST_MASK_FORMAT)
+		info.SetText(_("Due"))
 		self.InsertColumnInfo(2, info)
 
 		info = ULC.UltimateListItem()
-		info._format = wx.LIST_FORMAT_LEFT
-		info._mask = wx.LIST_MASK_TEXT | wx.LIST_MASK_FORMAT
-		info._image = []
-		info._text = _("Info")
+		info.SetAlign(ULC.ULC_FORMAT_LEFT)
+		info.SetMask(wx.LIST_MASK_TEXT | wx.LIST_MASK_FORMAT)
+		info.SetText(_("Info"))
 		self.InsertColumnInfo(3, info)
 
 		self.SetColumnWidth(0, 24)

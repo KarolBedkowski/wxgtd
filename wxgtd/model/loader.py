@@ -287,13 +287,13 @@ def sort_objects_by_parent(objs):
 		return []
 	all_objs_count = len(objs)
 	# no parent
-	result = filter(lambda x: x["parent_id"] == 0, objs)
+	result = [x for x in objs if x["parent_id"] == 0]
 	result_uuids = set(obj["_id"] for obj in result)
-	objs = filter(lambda x: x["parent_id"] != 0, objs)
+	objs = [x for x in objs if x["parent_id"] != 0]
 	# rest
 	while objs:
-		objs_to_add = filter(lambda x: x["parent_id"] in result_uuids, objs)
-		objs = filter(lambda x: x["parent_id"] not in result_uuids, objs)
+		objs_to_add = [x for x in objs if x["parent_id"] in result_uuids]
+		objs = [x for x in objs if x["parent_id"] not in result_uuids]
 		result.extend(objs_to_add)
 		result_uuids.update(obj["_id"] for obj in objs_to_add)
 	assert len(result) == all_objs_count
@@ -471,7 +471,7 @@ def _load_alarms(data, session, tasks_cache, notify_cb):
 	for alarm in alarms:
 		task_uuid = _replace_ids(alarm, tasks_cache, "task_id")
 		if not task_uuid:
-			_LOG.error("load alarm error %r; %r; %r", alarm, task_uuid)
+			_LOG.error("load alarm error %r", alarm)
 			continue
 		_convert_timestamps(alarm, "alarm")
 		task = session.query(  # pylint: disable=E1101

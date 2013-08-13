@@ -21,16 +21,14 @@ from . import appconfig
 
 class ColorFormatter(logging.Formatter):
 	""" Formatter for logs that color messages according to level. """
-	COLORS = {'DEBUG': 34,
-			'INFO': 37,
-			'WARNING': 33,
-			'ERROR': 31,
-			'CRITICAL': 31}
-	FORMAT_SEQ = "\033[1;%dm%s\033[0m"
+	FORMAT_MAP = {level: ("\033[1;%dm%s\033[0m" % (color, level))
+			for level, color in
+			(('DEBUG', 34), ('INFO', 37), ('WARNING', 33), ('ERROR', 31),
+			('CRITICAL', 31))}
 
 	def format(self, record):
-		record.levelname = self.FORMAT_SEQ % (
-				self.COLORS.get(record.levelname, 37), record.levelname)
+		record.levelname = self.FORMAT_MAP.get(record.levelname,
+				record.levelname)
 		return logging.Formatter.format(self, record)
 
 
