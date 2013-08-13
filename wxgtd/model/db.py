@@ -64,8 +64,8 @@ def connect(filename, debug=False, *args, **kwargs):
 		@sqlalchemy.event.listens_for(Engine, "after_cursor_execute")
 		def after_cursor_execute(_conn, _cursor,  # pylint: disable=W0612
 				_stmt, _params, context, _executemany):
-			_LOG.debug("Query time: %.02fms" % (
-					(time.time() - context.app_query_start) * 1000))
+			_LOG.debug("Query time: %.02fms",
+					(time.time() - context.app_query_start) * 1000)
 
 	_LOG.info('Database create_all START')
 	objects.Base.metadata.create_all(engine)

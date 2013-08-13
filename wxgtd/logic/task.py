@@ -71,6 +71,8 @@ def update_task_alarm(task):
 	_LOG.debug('update_task_alarm: %r', task)
 	alarm_pattern = task.alarm_pattern
 	if not alarm_pattern:
+		if task.alarm == task.due_date:
+			task.alarm_pattern = 'due'
 		return
 	if alarm_pattern == 'due':
 		task.alarm = task.due_date
@@ -151,7 +153,7 @@ _OFFSETS = {'Daily': relativedelta(days=1),
 		'Quarterly': relativedelta(months=+3),
 		'Semiannually': relativedelta(months=+6),
 		'Yearly': relativedelta(years=+1)}
-RE_REPEAT_XT = re.compile("^Every (\d+) (\w+)$", re.IGNORECASE)
+RE_REPEAT_XT = re.compile(r"^Every (\d+) (\w+)$", re.IGNORECASE)
 RE_REPEAT_EVERYW = re.compile("^Every ((Mon|Tue|Wed|Thu|Fri|Sat|Sun),? ?)+$",
 		re.IGNORECASE)
 _WEEKDAYS = {'mon': 0,

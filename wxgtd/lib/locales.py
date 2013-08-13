@@ -26,7 +26,7 @@ def setup_locale(app_config):
 	""" setup locales and gettext """
 	locales_dir = app_config.locales_dir
 	package_name = 'wxgtd'
-	_LOG.info('run: locale dir: %s' % locales_dir)
+	_LOG.info('run: locale dir: %s', locales_dir)
 	try:
 		locale.bindtextdomain(package_name, locales_dir)
 		locale.bind_textdomain_codeset(package_name, "UTF-8")
@@ -41,4 +41,4 @@ def setup_locale(app_config):
 	gettext.textdomain(package_name)
 	gettext.bindtextdomain('wxstd', locales_dir)
 	gettext.bind_textdomain_codeset(package_name, "UTF-8")
-	_LOG.info('locale: %s' % str(locale.getlocale()))
+	_LOG.info('locale: %s', str(locale.getlocale()))

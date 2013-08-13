@@ -80,7 +80,7 @@ class _IconProviderCache(Singleton):
 			if hasattr(self._icons_pkg, attrname):
 				bitmap = getattr(self._icons_pkg, attrname)()
 		if bitmap is None:
-			_LOG.warn('_IconProviderCache._load_image(%s): not found' % name)
+			_LOG.warn('_IconProviderCache._load_image(%s): not found', name)
 			return wx.NullBitmap
 		self._icons_cache[name] = bitmap
 		return bitmap
@@ -90,6 +90,15 @@ class _IconProviderCache(Singleton):
 		if not icon:
 			icon = self._load_image(name)
 		return icon
+
+	def __delitem__(self, _key):
+		pass
+
+	def __setitem__(self, _key, _val):
+		pass
+
+	def __len__(self):
+		return len(self._icons_cache)
 
 	def __contains__(self, key):
 		return key in self._icons_cache

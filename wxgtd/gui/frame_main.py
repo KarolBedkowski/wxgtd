@@ -385,6 +385,8 @@ class FrameMain(BaseFrame):
 
 	def _on_menu_file_sync(self, _evt):
 		self._synchronize(False)
+		Publisher().sendMessage('task.update')
+		Publisher().sendMessage('dict.update')
 
 	def _on_menu_sett_preferences(self, _evt):
 		if DlgPreferences(self.wnd).run(True):
@@ -711,6 +713,9 @@ class FrameMain(BaseFrame):
 			if not self._appconfig.get('files', 'last_sync_file'):
 				return
 		self._synchronize(on_load, autoclose=True)
+		if on_load:
+			Publisher().sendMessage('task.update')
+			Publisher().sendMessage('dict.update')
 
 	def _delete_selected_task(self, permanently=False):
 		tasks_uuid = list(self._items_list_ctrl.get_selected_items_uuid())
@@ -898,9 +903,6 @@ class FrameMain(BaseFrame):
 			dlg.update(100, _("Error: ") + str(err))
 			autoclose = False
 		dlg.mark_finished(2 if autoclose else -1)
-		if on_load:
-			Publisher().sendMessage('task.update')
-			Publisher().sendMessage('dict.update')
 
 
 class _TasksPopupMenu:

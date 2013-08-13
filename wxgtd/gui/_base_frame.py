@@ -55,6 +55,15 @@ class BaseFrame(object):
 		assert ctrl is not None, 'Control %r not found' % key
 		return ctrl
 
+	def __setitem__(self, _key, _val):
+		pass
+
+	def __delitem__(self, _key):
+		pass
+
+	def __len__(self):
+		return len(self.wnd.GetChildren()) if self.wnd else 0
+
 	def _setup_wnd(self, wnd):
 		if self._window_icon:
 			wnd.SetIcon(iconprovider.get_icon(self._window_icon))
