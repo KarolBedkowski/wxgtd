@@ -4,7 +4,7 @@ SetCompressor /SOLID lzma
 
 ; HM NIS Edit Wizard helper defines
 !define PRODUCT_NAME "wxGTD"
-!define PRODUCT_VERSION "0.x.0"
+!define PRODUCT_VERSION "0.x"
 !define PRODUCT_PUBLISHER "Karol Bêdkowski"
 !define PRODUCT_DIR_REGKEY "Software\Microsoft\Windows\CurrentVersion\App Paths\wxgtd.exe"
 !define PRODUCT_UNINST_KEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT_NAME}"
