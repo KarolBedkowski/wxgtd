@@ -1,26 +1,25 @@
 # Polish wxGTD translation
 # Copyright (C) Karol Będkowski, 2013
 # This file is distributed under the same license as the wxGTD package.
-# Karol Będkowski <karol.bedkowski@gmail.com>, 2013.
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: wxgtd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2013-07-13 18:14+0200\n"
-"PO-Revision-Date: 2013-07-13 18:15+0200\n"
+"POT-Creation-Date: 2014-08-01 20:05+0200\n"
+"PO-Revision-Date: 2014-08-01 20:08+0200\n"
 "Last-Translator: Karol Będkowski <karol.bedkowski@gmail.com>\n"
 "Language-Team: polski <>\n"
 "Language: pl\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
-"Content-Transfer-Encoding: 8bits\n"
+"Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=(n==1 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 "
 "|| n%100>=20) ? 1 : 2);\n"
-"X-Generator: Gtranslator 2.91.5\n"
+"X-Generator: Gtranslator 2.91.6\n"
 
 #: ../wxgtd/version.py:19 ../wxgtd/version.py:23
-#: ../wxgtd/gui/_taskbaricon.py:46 ../wxgtd/gui/frame_main.py:886
+#: ../wxgtd/gui/_taskbaricon.py:46 ../wxgtd/gui/frame_main.py:892
 #: ../data/wxgtd.xrc.h:8
 msgid "wxGTD"
 msgstr "wxGTD"
@@ -80,752 +79,198 @@ msgstr ""
 "\n"
 "Szczegóły opisano w pliku COPYING.\n"
 
-#: ../wxgtd/gui/frame_reminders.py:125
-msgid "Please select snooze time"
-msgstr "Proszę wybrać czas drzemki"
+#: ../wxgtd/model/loader.py:56
+msgid "File not found..."
+msgstr "Nie znaleziono pliku..."
 
-#: ../wxgtd/gui/frame_reminders.py:126
-msgid "Snooze task alarm"
-msgstr "Drzemka"
+#: ../wxgtd/model/loader.py:58
+msgid "Openning file"
+msgstr "Otwieranie pliku"
 
-#: ../wxgtd/gui/dlg_notebook_page.py:55 ../wxgtd/gui/frame_notebooks.py:194
-#: ../wxgtd/gui/task_controller.py:430 ../wxgtd/gui/_filtertreectrl.py:98
-msgid "No Folder"
-msgstr "Brak folderu"
+#: ../wxgtd/model/loader.py:313
+msgid "Decoding.."
+msgstr "Dekodowanie..."
 
-#: ../wxgtd/gui/frame_search.py:51 ../wxgtd/gui/frame_main.py:287
-#: ../wxgtd/gui/frame_main.py:307
-msgid "Search"
-msgstr "Szukaj"
+#: ../wxgtd/model/loader.py:317
+msgid "Checking..."
+msgstr "Sprawdzanie..."
 
-#: ../wxgtd/gui/frame_search.py:108 ../wxgtd/gui/frame_notebooks.py:233
-#: ../wxgtd/gui/frame_main.py:702
+#: ../wxgtd/model/loader.py:319
+msgid "Don't load"
+msgstr "Nie wczytuje"
+
+#: ../wxgtd/model/loader.py:347
+msgid "Cleanup"
+msgstr "Czyszczenie"
+
+#: ../wxgtd/model/loader.py:351
 #, python-format
-msgid "%d item"
-msgid_plural "%d items"
-msgstr[0] "%d element"
-msgstr[1] "%d elementy"
-msgstr[2] "%d elementów"
+msgid "Removed tasks: %d"
+msgstr "Usunięto zadań: %d"
 
-#: ../wxgtd/gui/message_boxes.py:100
+#: ../wxgtd/model/loader.py:354
 #, python-format
-msgid ""
-"Save the changes to\n"
-"%(doc_name)s before closing?"
-msgstr ""
-"Zapisać zmiany w\n"
-"%(doc_name)s przed zamknięciem?"
+msgid "Removed folders: %d"
+msgstr "Usunięto folderów: %d"
 
-#: ../wxgtd/gui/message_boxes.py:103
-msgid "Save the changes before closing?"
-msgstr "Zapisać zmiany przed zamknięciem?"
-
-#: ../wxgtd/gui/message_boxes.py:105
-msgid "If you close without saving, changes will be discarded"
-msgstr "Zamknięcie bez zapisu spowoduje utracenie wszystkich zmian."
-
-#: ../wxgtd/gui/message_boxes.py:107
+#: ../wxgtd/model/loader.py:357
 #, python-format
-msgid ""
-"If you close without saving, changes from the last\n"
-"%(time)s will be discarded"
-msgstr ""
-"Zamknięcie bez zapisania spowoduje utratę zmian\n"
-"z ostatnich %(time)s."
+msgid "Removed contexts: %d"
+msgstr "Usunięto kontekstów: %d"
 
-#: ../wxgtd/gui/message_boxes.py:115
-msgid "Close &without Saving"
-msgstr "Zamknij bez zapisywania"
-
-#: ../wxgtd/gui/message_boxes.py:119
-msgid "Save &As"
-msgstr "Zapisz jako"
-
-#: ../wxgtd/gui/message_boxes.py:119
-msgid "Save"
-msgstr "Zapisz"
-
-#: ../wxgtd/gui/message_boxes.py:148
+#: ../wxgtd/model/loader.py:360
 #, python-format
-msgid "Delete %s?"
-msgstr "Usunąć %s?"
+msgid "Removed task notes: %d"
+msgstr "Usunięto notatek: %d"
 
-#: ../wxgtd/gui/message_boxes.py:150 ../wxgtd/gui/_dict_base_dlg.py:118
-msgid "After removal, it cannot be recovered."
-msgstr "Po usunięciu, nie będzie możliwe przywrócenie."
-
-#: ../wxgtd/gui/message_boxes.py:158 ../data/wxgtd.xrc.h:86
-msgid "Delete"
-msgstr "Usuń"
-
-#: ../wxgtd/gui/message_boxes.py:361
-msgid "Ok"
-msgstr "Ok"
-
-#: ../wxgtd/gui/message_boxes.py:362
-msgid "Cancel"
-msgstr "Anuluj"
-
-#: ../wxgtd/gui/dlg_tags.py:28
-msgid "tag"
-msgstr "etykiatę"
-
-#: ../wxgtd/gui/frame_notebooks.py:62 ../wxgtd/gui/_tasklistctrl.py:278
-#: ../wxgtd/gui/dlg_trash.py:49 ../wxgtd/model/exporter.py:490
-msgid "Title"
-msgstr "Tytuł"
-
-#: ../wxgtd/gui/frame_notebooks.py:63 ../wxgtd/gui/dlg_trash.py:50
-msgid "Created"
-msgstr "Utworzenie"
-
-#: ../wxgtd/gui/frame_notebooks.py:64
-msgid "Modified"
-msgstr "Modyfikacja"
-
-#: ../wxgtd/gui/frame_notebooks.py:91
-msgid "New Note"
-msgstr "Nowa notatka"
-
-#: ../wxgtd/gui/frame_notebooks.py:93
-msgid "Add new notebook page"
-msgstr "Dodanie nowego strony notatnika"
-
-#: ../wxgtd/gui/frame_notebooks.py:96
-msgid "Edit Note"
-msgstr "Edycja notatki"
-
-#: ../wxgtd/gui/frame_notebooks.py:98
-msgid "Edit selected notebook page"
-msgstr "Edycja zaznaczonego strony notatnika"
-
-#: ../wxgtd/gui/frame_notebooks.py:102
-msgid "Delete Note"
-msgstr "Usunięcie notatki"
-
-#: ../wxgtd/gui/frame_notebooks.py:104
-msgid "Delete selected notebook page"
-msgstr "Usunięcie zaznaczonego strony notatnika"
-
-#: ../wxgtd/gui/frame_notebooks.py:110
-msgid "Exit"
-msgstr "Wyjście"
-
-#: ../wxgtd/gui/frame_notebooks.py:112
-msgid "Close window"
-msgstr "Zamknięcie okna"
-
-#: ../wxgtd/gui/frame_notebooks.py:189
-msgid "Any Folder"
-msgstr "Dowolny folder"
-
-#: ../wxgtd/gui/_taskbaricon.py:52
-msgid "Show/Hide wxGTD"
-msgstr "Pokaż/ukryj wxGTD"
-
-#: ../wxgtd/gui/_taskbaricon.py:53
-msgid "Show Notebook"
-msgstr "Pokaż notatnik"
-
-#: ../wxgtd/gui/_taskbaricon.py:55
-msgid "Quick New Task..."
-msgstr "Szybkie nowe zadanie..."
-
-#: ../wxgtd/gui/_taskbaricon.py:56
-msgid "Create New Task..."
-msgstr "Nowe zadanie..."
-
-#: ../wxgtd/gui/_taskbaricon.py:58
-msgid "Close wxGTD"
-msgstr "Zamknij wxGTD"
-
-#: ../wxgtd/gui/_base_task_frame.py:133 ../wxgtd/gui/_base_task_frame.py:143
-msgid "Task Note"
-msgstr "Notatka Zadania"
-
-#: ../wxgtd/gui/_base_task_frame.py:156
-msgid "note"
-msgstr "notatka"
-
-#: ../wxgtd/gui/dlg_repeat_settings.py:115
-msgid "days"
-msgstr "dni"
-
-#: ../wxgtd/gui/dlg_repeat_settings.py:116
-msgid "weeks"
-msgstr "tygodni"
-
-#: ../wxgtd/gui/dlg_repeat_settings.py:117
-msgid "months"
-msgstr "miesięcy"
-
-#: ../wxgtd/gui/dlg_repeat_settings.py:118
-msgid "years"
-msgstr "lat"
-
-#: ../wxgtd/gui/dlg_repeat_settings.py:123
-msgid "first"
-msgstr "pierwszy"
-
-#: ../wxgtd/gui/dlg_repeat_settings.py:124
-msgid "second"
-msgstr "drugi"
-
-#: ../wxgtd/gui/dlg_repeat_settings.py:125
-msgid "third"
-msgstr "trzeci"
-
-#: ../wxgtd/gui/dlg_repeat_settings.py:126
-msgid "fourth"
-msgstr "czwarty"
-
-#: ../wxgtd/gui/dlg_repeat_settings.py:127
-msgid "fifth"
-msgstr "piąty"
-
-#: ../wxgtd/gui/dlg_repeat_settings.py:128
-msgid "last"
-msgstr "ostatni"
-
-#: ../wxgtd/gui/dlg_repeat_settings.py:133 ../data/wxgtd.xrc.h:160
-msgid "Monday"
-msgstr "poniedziałek"
-
-#: ../wxgtd/gui/dlg_repeat_settings.py:134 ../data/wxgtd.xrc.h:161
-msgid "Tuesday"
-msgstr "wtorek"
-
-#: ../wxgtd/gui/dlg_repeat_settings.py:135 ../data/wxgtd.xrc.h:162
-msgid "Wednesday"
-msgstr "środa"
-
-#: ../wxgtd/gui/dlg_repeat_settings.py:136 ../data/wxgtd.xrc.h:163
-msgid "Thursday"
-msgstr "czwartek"
-
-#: ../wxgtd/gui/dlg_repeat_settings.py:137 ../data/wxgtd.xrc.h:164
-msgid "Friday"
-msgstr "piątek"
-
-#: ../wxgtd/gui/dlg_repeat_settings.py:138 ../data/wxgtd.xrc.h:165
-msgid "Saturday"
-msgstr "sobota"
-
-#: ../wxgtd/gui/dlg_repeat_settings.py:139 ../data/wxgtd.xrc.h:166
-msgid "Sunday"
-msgstr "niedzila"
-
-#: ../wxgtd/gui/dlg_folders.py:28
-msgid "folder"
-msgstr "folder"
-
-#: ../wxgtd/gui/task_controller.py:116
-msgid "Set task completed?"
-msgstr "Zaznaczyć zadanie jako zakończone?"
-
-#: ../wxgtd/gui/task_controller.py:117 ../wxgtd/gui/task_controller.py:610
-#: ../wxgtd/gui/task_controller.py:614
-msgid "Set complete"
-msgstr "Ustaw jako zakończone"
-
-#: ../wxgtd/gui/task_controller.py:117 ../wxgtd/gui/task_controller.py:610
-#: ../wxgtd/gui/task_controller.py:615
-msgid "Close"
-msgstr "Zamknij"
-
-#: ../wxgtd/gui/task_controller.py:126 ../wxgtd/gui/task_controller.py:128
-msgid "task"
-msgstr "zadanie"
-
-#: ../wxgtd/gui/task_controller.py:129
-msgid "Task will be moved to trash."
-msgstr "Zadanie będzie przeniesione do kosza."
-
-#: ../wxgtd/gui/task_controller.py:140
-msgid "tasks"
-msgstr "zadania"
-
-#: ../wxgtd/gui/task_controller.py:151 ../wxgtd/gui/task_controller.py:162
-msgid "Undelete selected tasks?"
-msgstr "Przywrócić zaznaczonego zadania?"
-
-#: ../wxgtd/gui/task_controller.py:294
-msgid "Change task type to:"
-msgstr "Zmiana typu zadania na:"
-
-#: ../wxgtd/gui/task_controller.py:295 ../wxgtd/gui/task_controller.py:318
-#: ../wxgtd/gui/task_controller.py:569 ../wxgtd/model/enums.py:44
-#: ../data/wxgtd.xrc.h:51
-msgid "Task"
-msgstr "Zadanie"
-
-#: ../wxgtd/gui/task_controller.py:317 ../wxgtd/gui/task_controller.py:568
-msgid "Change task priority to:"
-msgstr "Zmiana priorytetu zadania na:"
-
-#: ../wxgtd/gui/task_controller.py:338
-msgid "Change tasks status to:"
-msgstr "Zmiana status zadania na:"
-
-#: ../wxgtd/gui/task_controller.py:339 ../wxgtd/gui/task_controller.py:374
-#: ../wxgtd/gui/task_controller.py:435 ../data/wxgtd.xrc.h:103
-msgid "Tasks"
-msgstr "Zadania"
-
-#: ../wxgtd/gui/task_controller.py:369 ../wxgtd/gui/_filtertreectrl.py:94
-msgid "No Context"
-msgstr "Brak kontekstu"
-
-#: ../wxgtd/gui/task_controller.py:373
-msgid "Change tasks context to:"
-msgstr "Zmiana kontekst zadania na:"
-
-#: ../wxgtd/gui/task_controller.py:434
-msgid "Change tasks folder to:"
-msgstr "Zmiana folder zadania na:"
-
-#: ../wxgtd/gui/task_controller.py:591 ../wxgtd/gui/task_controller.py:602
-msgid ""
-"This operation change task and subtasks type.\n"
-"Continue change??"
-msgstr ""
-"Ta operacja zmieni typ zadania i podzadań.\n"
-"Kontynuować zmianę?"
-
-#: ../wxgtd/gui/task_controller.py:597
-msgid ""
-"This operation change all subtasks to simple tasks\n"
-"Are you sure?"
-msgstr ""
-"Ta operacja zmieni wszystkie podzadania na zwykłe zadania.\n"
-"Czy jesteś pewien?"
-
-#: ../wxgtd/gui/task_controller.py:609
-msgid "Set tasks completed?"
-msgstr "Zaznaczyć zadanie jako zakończone?"
-
-#: ../wxgtd/gui/task_controller.py:614
-msgid "Set tasks not completed?"
-msgstr "Zaznaczyć zadanie jako niezakończone?"
-
-#: ../wxgtd/gui/task_controller.py:649
-msgid ""
-"This operation change task and subtasks type.\n"
-"Continue change?"
-msgstr ""
-"Ta operacja zmieni typ zadania i podzadań.\n"
-"Kontynuować zmianę?"
-
-#: ../wxgtd/gui/notebook_controller.py:58
-msgid "notebook page"
-msgstr "stronę notatnika"
-
-#: ../wxgtd/gui/dlg_preferences.py:153 ../wxgtd/gui/frame_main.py:337
-#: ../wxgtd/gui/frame_main.py:865
-msgid "Please select sync file."
-msgstr "Proszę podać plik synchronizajci"
-
-#: ../wxgtd/gui/dlg_preferences.py:183
-msgid "Not connected"
-msgstr "Nie połączono"
-
-#: ../wxgtd/gui/dlg_goals.py:30
-msgid "goal"
-msgstr "cel"
-
-#: ../wxgtd/gui/dlg_projects_tree.py:72
-msgid "wxGTD (no project)"
-msgstr "wxGTD (bez projektu)"
-
-#: ../wxgtd/gui/dlg_select_tags.py:66
-msgid "Please enter tag name."
-msgstr "Proszę podać nazwę etykiety."
-
-#: ../wxgtd/gui/dlg_select_tags.py:67
-msgid "New Tag"
-msgstr "Nowa etykieta"
-
-#: ../wxgtd/gui/dialogs.py:89
-msgid "Empty text is not allowed."
-msgstr "Pusty tekst nie jest dozwolony."
-
-#: ../wxgtd/gui/dialogs.py:90
-msgid "Error"
-msgstr "Błąd"
-
-#: ../wxgtd/gui/quicktask.py:32
-msgid "Enter task title"
-msgstr "Proszę wprowadzić tytuł zadania"
-
-#: ../wxgtd/gui/quicktask.py:33
-msgid "wxGTD Quick Task"
-msgstr "Szybkie zadanie wxGTD"
-
-#: ../wxgtd/gui/dlg_dropbox_auth.py:51
-msgid "app key"
-msgstr "app key"
-
-#: ../wxgtd/gui/dlg_dropbox_auth.py:54
-msgid "app secret"
-msgstr "app secret"
-
-#: ../wxgtd/gui/dlg_dropbox_auth.py:82
-msgid "Allow wxGTD to access Dropbox files"
-msgstr "Zezwól wxGTD na dostęp do plików w Dropbox"
-
-#: ../wxgtd/gui/dlg_dropbox_auth.py:83
-msgid "Please authorize application in Dropbox."
-msgstr "Proszę autoryzować aplikację w Dropbox"
-
-#: ../wxgtd/gui/dlg_export_tasks.py:75
-msgid "Export complete."
-msgstr "Eksport zakończony."
-
-#: ../wxgtd/gui/dlg_export_tasks.py:77
-msgid "Export Error."
-msgstr "Błąd eksportu."
-
-#: ../wxgtd/gui/dlg_export_tasks.py:89
-msgid "Please select target file."
-msgstr "Proszę wybrać docelowy plik."
-
-#: ../wxgtd/gui/dlg_contexts.py:28
-msgid "context"
-msgstr "kontekst"
-
-#: ../wxgtd/gui/_dict_base_dlg.py:120
-msgid "Warning: this affect another items!"
-msgstr "Uwaga: będzie to dotyczyło innych elementów!"
-
-#: ../wxgtd/gui/_tasklistctrl.py:242
-msgid "Dismiss"
-msgstr "Odrzuć"
-
-#: ../wxgtd/gui/_tasklistctrl.py:251
-msgid "Snooze"
-msgstr "Drzemka"
-
-#: ../wxgtd/gui/_tasklistctrl.py:271
-msgid "Prio"
-msgstr "Priorytet"
-
-#: ../wxgtd/gui/_tasklistctrl.py:285
-msgid "Due"
-msgstr "plan."
-
-#: ../wxgtd/gui/_tasklistctrl.py:292
-msgid "Info"
-msgstr "Info"
-
-#: ../wxgtd/gui/_filtertreectrl.py:89
-msgid "Statuses"
-msgstr "Statusy"
-
-#: ../wxgtd/gui/_filtertreectrl.py:93 ../data/wxgtd.xrc.h:100
-msgid "Contexts"
-msgstr "Konteksty"
-
-#: ../wxgtd/gui/_filtertreectrl.py:97 ../data/wxgtd.xrc.h:1
-msgid "Folders"
-msgstr "Foldery"
-
-#: ../wxgtd/gui/_filtertreectrl.py:101 ../data/wxgtd.xrc.h:48
-msgid "Goals"
-msgstr "Cele"
-
-#: ../wxgtd/gui/_filtertreectrl.py:102
-msgid "No goal"
-msgstr "Brak celu"
-
-#: ../wxgtd/gui/_filtertreectrl.py:105 ../data/wxgtd.xrc.h:171
-msgid "Tags"
-msgstr "Etykiety"
-
-#: ../wxgtd/gui/_filtertreectrl.py:106
-msgid "No tag"
-msgstr "Brak etykiety"
-
-#: ../wxgtd/gui/_filtertreectrl.py:268 ../wxgtd/gui/_filtertreectrl.py:269
-msgid "Select only this item"
-msgstr "Zaznacz tylko ten element"
-
-#: ../wxgtd/gui/dlg_trash.py:51 ../data/wxgtd.xrc.h:6
-msgid "Deleted"
-msgstr "Usunięto"
-
-#: ../wxgtd/gui/dlg_trash.py:64
-msgid "Please select one or more items to undelete."
-msgstr "Proszę wybrać jeden lub więcej elementów do przywrócenia."
-
-#: ../wxgtd/gui/frame_main.py:209
-msgid "New Task"
-msgstr "Nowe zadanie"
-
-#: ../wxgtd/gui/frame_main.py:211
-msgid "Add new task"
-msgstr "Dodanie nowego zadania"
-
-#: ../wxgtd/gui/frame_main.py:214
-msgid "Quick Task"
-msgstr "Szybkie zadanie"
-
-#: ../wxgtd/gui/frame_main.py:216
-msgid "Add quick new task"
-msgstr "Szybkie dodanie nowego zadania"
-
-#: ../wxgtd/gui/frame_main.py:219
-msgid "Edit Task"
-msgstr "Edycja zadania"
-
-#: ../wxgtd/gui/frame_main.py:221
-msgid "Edit selected task"
-msgstr "Edycja zaznaczonego zadania"
-
-#: ../wxgtd/gui/frame_main.py:225
-msgid "Delete Task"
-msgstr "Usunięcie zadania"
-
-#: ../wxgtd/gui/frame_main.py:227
-msgid "Delete selected task"
-msgstr "Usunięcie zaznaczonego zadania"
-
-#: ../wxgtd/gui/frame_main.py:233
-msgid "Toggle Task Completed"
-msgstr "Przełączenie zakończenia zadania"
-
-#: ../wxgtd/gui/frame_main.py:235
-msgid "Toggle selected task completed"
-msgstr "Przełączenie statusu zakończenia zaznaczonego zadnia"
-
-#: ../wxgtd/gui/frame_main.py:238
-msgid "Toggle Task Starred"
-msgstr "Przełączenie oznaczenia zadania"
-
-#: ../wxgtd/gui/frame_main.py:240
-msgid "Toggle selected task starred"
-msgstr "Przełączenie statusu zakończenia zaznaczonego zadnia"
-
-#. show subtask
-#. pylint: disable=W0201
-#: ../wxgtd/gui/frame_main.py:249
-msgid " Show subtasks "
-msgstr "Pokazuj podzadania"
-
-#. show completed
-#. pylint: disable=W0201
-#: ../wxgtd/gui/frame_main.py:259
-msgid " Show finished "
-msgstr "Pokazuj zakończone"
-
-#. hide until due
-#. pylint: disable=W0201
-#: ../wxgtd/gui/frame_main.py:270
-msgid " Hide until "
-msgstr "Ukrywaj dopóki"
-
-#: ../wxgtd/gui/frame_main.py:278
-msgid "Synchronize tasks"
-msgstr "Synchronizuj zadania"
-
-#: ../wxgtd/gui/frame_main.py:299 ../data/wxgtd.xrc.h:7
-msgid "Reminders"
-msgstr "Przypomnienia"
-
-#: ../wxgtd/gui/frame_main.py:303 ../data/wxgtd.xrc.h:47
-msgid "Notebook"
-msgstr "Notatnik"
-
-#: ../wxgtd/gui/frame_main.py:350 ../wxgtd/gui/frame_main.py:376
-#: ../wxgtd/gui/frame_main.py:895
-msgid "Synchronisation error"
-msgstr "Błąd synchronizacji"
-
-#: ../wxgtd/gui/frame_main.py:353 ../wxgtd/gui/frame_main.py:379
-#: ../wxgtd/gui/frame_main.py:898
-msgid "Error: "
-msgstr "Błąd: "
-
-#: ../wxgtd/gui/frame_main.py:363
-msgid "Please select target sync file."
-msgstr "Proszę wybrać docelowy plik synchronizacji"
-
-#: ../wxgtd/gui/frame_main.py:670
-msgid "No active alarms in this moment."
-msgstr "Nie ma w tym momencie aktywnych alarmów."
-
-#: ../wxgtd/gui/frame_main.py:671
-msgid "Alarms"
-msgstr "Alarmy"
-
-#: ../wxgtd/gui/frame_main.py:757
-msgid "Clone task with all subtasks?"
-msgstr "Sklonować zadanie i wszystkie podzadania?"
-
-#: ../wxgtd/gui/frame_main.py:844
+#: ../wxgtd/model/loader.py:363
 #, python-format
-msgid "All (%d)"
-msgstr "Wszystkie (%d)"
+msgid "Removed goals %d"
+msgstr "Usunięto celów: %d"
 
-#: ../wxgtd/gui/frame_main.py:844
+#: ../wxgtd/model/loader.py:366
 #, python-format
-msgid "Hotlist (%d)"
-msgstr "Gorąca lista (%d)"
+msgid "Removed notebook pages: %d"
+msgstr "Usunięto stron notatnika: %d"
 
-#: ../wxgtd/gui/frame_main.py:845
+#. 90: after load actions
+#: ../wxgtd/model/loader.py:369
+msgid "Global updates"
+msgstr "Globalne aktualizacje"
+
+#: ../wxgtd/model/loader.py:372
+msgid "Committing..."
+msgstr "Zapisywanie..."
+
+#. pylint: disable=E1101
+#: ../wxgtd/model/loader.py:374
+msgid "Load completed"
+msgstr "Wczytywanie zakończone"
+
+#: ../wxgtd/model/loader.py:387
+msgid "Loading folders"
+msgstr "Wczytywanie folderów"
+
+#: ../wxgtd/model/loader.py:397
 #, python-format
-msgid "Starred (%d)"
-msgstr "Oznaczone (%d)"
+msgid "Loaded %d folders"
+msgstr "Wczytanie %d folderów"
 
-#: ../wxgtd/gui/frame_main.py:845
+#: ../wxgtd/model/loader.py:403
+msgid "Loading contexts"
+msgstr "Wczytywanie kontekstów"
+
+#: ../wxgtd/model/loader.py:412
 #, python-format
-msgid "Basket (%d)"
-msgstr "Koszyk (%d)"
+msgid "Loaded %d contexts"
+msgstr "Wczytano %d kontekstów"
 
-#: ../wxgtd/gui/frame_main.py:845
+#: ../wxgtd/model/loader.py:418
+msgid "Loading goals"
+msgstr "Wczytywanie celów"
+
+#: ../wxgtd/model/loader.py:427
 #, python-format
-msgid "Finished (%d)"
-msgstr "Zakończone (%d)"
+msgid "Loaded %d goals"
+msgstr "Wczytano %d celów"
 
-#: ../wxgtd/gui/frame_main.py:846
+#: ../wxgtd/model/loader.py:433
+msgid "Loading tasks"
+msgstr "Wczytywanie zadań"
+
+#: ../wxgtd/model/loader.py:448
 #, python-format
-msgid "Projects (%d)"
-msgstr "Projekty (%d)"
+msgid "Loaded %d tasks"
+msgstr "Wczytano %d zadań"
 
-#: ../wxgtd/gui/frame_main.py:846
+#: ../wxgtd/model/loader.py:454
+msgid "Loading task notes"
+msgstr "Wczytywanie notatek zadań"
+
+#: ../wxgtd/model/loader.py:463
 #, python-format
-msgid "Checklists (%d)"
-msgstr "Listy zadań (%d)"
+msgid "Loaded %d task notes"
+msgstr "Wczytano %d notatek zadań"
 
-#: ../wxgtd/gui/frame_main.py:847
+#: ../wxgtd/model/loader.py:469
+msgid "Loading alarms"
+msgstr "Wczytywanie alarmów"
+
+#: ../wxgtd/model/loader.py:486
 #, python-format
-msgid "Active Alarms (%d)"
-msgstr "Aktywne alarmy (%d)"
+msgid "Loaded %d alarms"
+msgstr "Wczytano %d alarmów"
 
-#: ../wxgtd/gui/frame_main.py:885 ../wxgtd/gui/frame_main.py:889
-msgid "Sync file is locked."
-msgstr "Plik synchronizacji jest zablokowany"
+#: ../wxgtd/model/loader.py:491
+msgid "Loading task folders"
+msgstr "Wczytywanie folderów zadań"
 
-#: ../wxgtd/gui/frame_main.py:935 ../wxgtd/gui/frame_main.py:963
-msgid "Set Task Not Completed"
-msgstr "Zaznaczyć zadanie jako niezakończone"
-
-#: ../wxgtd/gui/frame_main.py:936 ../wxgtd/gui/frame_main.py:962
-msgid "Set Task Completed"
-msgstr "Zaznaczyć zadanie jako zakończone"
-
-#: ../wxgtd/gui/frame_main.py:937 ../wxgtd/gui/frame_main.py:965
-msgid "Set Task Not Starred"
-msgstr "Odznacz zadanie"
-
-#: ../wxgtd/gui/frame_main.py:938 ../wxgtd/gui/frame_main.py:964
-msgid "Set Task Starred"
-msgstr "Oznacz zadanie"
-
-#: ../wxgtd/gui/frame_main.py:940
-msgid "Edit.."
-msgstr "Edytuj.."
-
-#: ../wxgtd/gui/frame_main.py:941
-msgid "Clone..."
-msgstr "Klonuj..."
-
-#: ../wxgtd/gui/frame_main.py:942
-msgid "Delete.."
-msgstr "Usuń..."
-
-#: ../wxgtd/gui/frame_main.py:944 ../wxgtd/gui/frame_main.py:969
-msgid "Change Project/List..."
-msgstr "Zmień projekt/listę..."
-
-#: ../wxgtd/gui/frame_main.py:946 ../wxgtd/gui/frame_main.py:970
-msgid "Change Context..."
-msgstr "Zmień kontekst..."
-
-#: ../wxgtd/gui/frame_main.py:947 ../wxgtd/gui/frame_main.py:971
-msgid "Change Folder..."
-msgstr "Zmień folder..."
-
-#: ../wxgtd/gui/frame_main.py:948 ../wxgtd/gui/frame_main.py:972
-msgid "Change Status..."
-msgstr "Zmień status..."
-
-#: ../wxgtd/gui/frame_main.py:949 ../wxgtd/gui/frame_main.py:973
-msgid "Change Priority..."
-msgstr "Zmień priorytet..."
-
-#: ../wxgtd/gui/frame_main.py:952 ../wxgtd/gui/frame_main.py:975
-msgid "Change Due Date..."
-msgstr "Zmień termin..."
-
-#: ../wxgtd/gui/frame_main.py:953 ../wxgtd/gui/frame_main.py:976
-msgid "Change Start Date..."
-msgstr "Zmień datę startu..."
-
-#: ../wxgtd/gui/frame_main.py:954 ../wxgtd/gui/frame_main.py:977
-msgid "Change Remind Date..."
-msgstr "Zmień datę przypomnienia..."
-
-#: ../wxgtd/gui/frame_main.py:956
-msgid "Change Show Settings.."
-msgstr "Zmień widoczność..."
-
-#: ../wxgtd/gui/frame_main.py:967
-msgid "Delete..."
-msgstr "Usuń..."
-
-#: ../wxgtd/gui/frame_main.py:978
-msgid "Change Show Settings..."
-msgstr "Zmień widoczność..."
-
-#: ../wxgtd/gui/frame_main.py:984
-msgid "Undelete..."
-msgstr "Przywróć..."
-
-#: ../wxgtd/gui/frame_main.py:985
-msgid "Delete permanently..."
-msgstr "Skasuj trwale..."
-
-#: ../wxgtd/model/sync.py:63
+#: ../wxgtd/model/loader.py:509
 #, python-format
-msgid "Sync via file %s"
-msgstr "Synchronizacja przez plik %s"
+msgid "Loaded %d task folders"
+msgstr "Wczytano %d folderów zadań"
 
-#: ../wxgtd/model/sync.py:64 ../wxgtd/model/dbsync.py:111
-msgid "Creating backup"
-msgstr "Utworzenie kopii zapasowej"
+#: ../wxgtd/model/loader.py:515
+msgid "Loading task contexts"
+msgstr "Wczytywanie kontekstów zadań"
 
-#: ../wxgtd/model/sync.py:66
-msgid "Sanity check"
-msgstr "Sprawdzenie poprawności"
+#: ../wxgtd/model/loader.py:533
+#, python-format
+msgid "Loaded %d tasks contexts"
+msgstr "Wczytano %d kontekstów zadań"
 
-#: ../wxgtd/model/sync.py:68 ../wxgtd/model/dbsync.py:113
-msgid "Checking sync lock"
-msgstr "Sprawdzanie pliku blokady"
+#: ../wxgtd/model/loader.py:538
+msgid "Loading task goals"
+msgstr "Wczytywanie celów zadań"
 
-#: ../wxgtd/model/sync.py:70
-msgid "Loading..."
-msgstr "Wczytywanie..."
+#: ../wxgtd/model/loader.py:556
+#, python-format
+msgid "Loaded %d task goals"
+msgstr "Wczytanoo %d celów zadań"
 
-#: ../wxgtd/model/sync.py:79 ../wxgtd/model/dbsync.py:138
-msgid "Removing sync lock"
-msgstr "Usuwanie pliku blokady"
+#: ../wxgtd/model/loader.py:561
+msgid "Loading tags"
+msgstr "Wczytywanie etykiet"
 
-#: ../wxgtd/model/sync.py:81 ../wxgtd/model/dbsync.py:142
-#: ../wxgtd/model/exporter.py:491
-msgid "Completed"
-msgstr "Zakonczono"
+#: ../wxgtd/model/loader.py:570
+#, python-format
+msgid "Loaded %d tags"
+msgstr "Wczytano %d etykiet"
 
-#: ../wxgtd/model/sync.py:83 ../wxgtd/model/dbsync.py:144
-msgid "Synchronization file is locked. Can't synchronize..."
-msgstr "Plik synchronizacji jest zablokowany. Nie można zsynchronizować..."
+#: ../wxgtd/model/loader.py:576
+msgid "Loading task tags"
+msgstr "Wczytywanie etykiet zadań"
 
-#: ../wxgtd/model/sync.py:137
-msgid "Sync directory not exists."
-msgstr "Katalog synchronizacji nie istnieje."
+#: ../wxgtd/model/loader.py:595
+#, python-format
+msgid "Loaded %d task tags"
+msgstr "Wczytano %d etykiet zadań"
 
-#: ../wxgtd/model/sync.py:142
-msgid "To many files in sync directory."
-msgstr "Zbyt wiele plików w katalogu synchronizacji."
+#: ../wxgtd/model/loader.py:600
+msgid "Loading notebooks"
+msgstr "Wczytywanie notatników"
+
+#: ../wxgtd/model/loader.py:609
+#, python-format
+msgid "Loaded %d notebook pages"
+msgstr "Wczytano %d stron notatnika"
+
+#: ../wxgtd/model/loader.py:616
+msgid "Loading notebook pages folders"
+msgstr "Wczytywanie folderów notatników"
+
+#: ../wxgtd/model/loader.py:635
+#, python-format
+msgid "Loaded %d notebook folders"
+msgstr "Wczytano %d folderów notatników"
+
+#: ../wxgtd/model/loader.py:640
+msgid "Loading synclog"
+msgstr "Wczytywanie logu synchronizacji"
+
+#: ../wxgtd/model/loader.py:653
+msgid "Synclog loaded"
+msgstr "Log synchronizacji wczytany"
 
 #. pylint: disable=C0103
 #: ../wxgtd/model/enums.py:22
@@ -872,6 +317,12 @@ msgstr "Anulowane"
 #: ../wxgtd/model/enums.py:32
 msgid "Reference"
 msgstr "Odniesienie"
+
+#: ../wxgtd/model/enums.py:44 ../wxgtd/gui/task_controller.py:295
+#: ../wxgtd/gui/task_controller.py:318 ../wxgtd/gui/task_controller.py:569
+#: ../data/wxgtd.xrc.h:51
+msgid "Task"
+msgstr "Zadanie"
 
 #: ../wxgtd/model/enums.py:45
 msgid "Project"
@@ -1111,6 +562,14 @@ msgstr "Dropbox jest nie skonfigurowany."
 msgid "Sync via Dropbox API...."
 msgstr "Synchronizacja przez API Dropbox-a"
 
+#: ../wxgtd/model/dbsync.py:111 ../wxgtd/model/sync.py:64
+msgid "Creating backup"
+msgstr "Utworzenie kopii zapasowej"
+
+#: ../wxgtd/model/dbsync.py:113 ../wxgtd/model/sync.py:68
+msgid "Checking sync lock"
+msgstr "Sprawdzanie pliku blokady"
+
 #: ../wxgtd/model/dbsync.py:117
 #, python-format
 msgid "Dropbox: connection failed: %s"
@@ -1124,198 +583,39 @@ msgstr "Pobieranie..."
 msgid "Uploading..."
 msgstr "Wysyłanie..."
 
-#: ../wxgtd/model/loader.py:56
-msgid "File not found..."
-msgstr "Nie znaleziono pliku..."
+#: ../wxgtd/model/dbsync.py:138 ../wxgtd/model/sync.py:79
+msgid "Removing sync lock"
+msgstr "Usuwanie pliku blokady"
 
-#: ../wxgtd/model/loader.py:58
-msgid "Openning file"
-msgstr "Otwieranie pliku"
+#: ../wxgtd/model/dbsync.py:142 ../wxgtd/model/sync.py:81
+#: ../wxgtd/model/exporter.py:491
+msgid "Completed"
+msgstr "Zakonczono"
 
-#: ../wxgtd/model/loader.py:313
-msgid "Decoding.."
-msgstr "Dekodowanie..."
+#: ../wxgtd/model/dbsync.py:144 ../wxgtd/model/sync.py:83
+msgid "Synchronization file is locked. Can't synchronize..."
+msgstr "Plik synchronizacji jest zablokowany. Nie można zsynchronizować..."
 
-#: ../wxgtd/model/loader.py:317
-msgid "Checking..."
-msgstr "Sprawdzanie..."
-
-#: ../wxgtd/model/loader.py:319
-msgid "Don't load"
-msgstr "Nie wczytuje"
-
-#: ../wxgtd/model/loader.py:347
-msgid "Cleanup"
-msgstr "Czyszczenie"
-
-#: ../wxgtd/model/loader.py:351
+#: ../wxgtd/model/sync.py:63
 #, python-format
-msgid "Removed tasks: %d"
-msgstr "Usunięto zadań: %d"
+msgid "Sync via file %s"
+msgstr "Synchronizacja przez plik %s"
 
-#: ../wxgtd/model/loader.py:354
-#, python-format
-msgid "Removed folders: %d"
-msgstr "Usunięto folderów: %d"
+#: ../wxgtd/model/sync.py:66
+msgid "Sanity check"
+msgstr "Sprawdzenie poprawności"
 
-#: ../wxgtd/model/loader.py:357
-#, python-format
-msgid "Removed contexts: %d"
-msgstr "Usunięto kontekstów: %d"
+#: ../wxgtd/model/sync.py:70
+msgid "Loading..."
+msgstr "Wczytywanie..."
 
-#: ../wxgtd/model/loader.py:360
-#, python-format
-msgid "Removed task notes: %d"
-msgstr "Usunięto notatek: %d"
+#: ../wxgtd/model/sync.py:137
+msgid "Sync directory not exists."
+msgstr "Katalog synchronizacji nie istnieje."
 
-#: ../wxgtd/model/loader.py:363
-#, python-format
-msgid "Removed goals %d"
-msgstr "Usunięto celów: %d"
-
-#: ../wxgtd/model/loader.py:366
-#, python-format
-msgid "Removed notebook pages: %d"
-msgstr "Usunięto stron notatnika: %d"
-
-#. 90: after load actions
-#: ../wxgtd/model/loader.py:369
-msgid "Global updates"
-msgstr "Globalne aktualizacje"
-
-#: ../wxgtd/model/loader.py:372
-msgid "Committing..."
-msgstr "Zapisywanie..."
-
-#. pylint: disable=E1101
-#: ../wxgtd/model/loader.py:374
-msgid "Load completed"
-msgstr "Wczytywanie zakończone"
-
-#: ../wxgtd/model/loader.py:387
-msgid "Loading folders"
-msgstr "Wczytywanie folderów"
-
-#: ../wxgtd/model/loader.py:397
-#, python-format
-msgid "Loaded %d folders"
-msgstr "Wczytanie %d folderów"
-
-#: ../wxgtd/model/loader.py:403
-msgid "Loading contexts"
-msgstr "Wczytywanie kontekstów"
-
-#: ../wxgtd/model/loader.py:412
-#, python-format
-msgid "Loaded %d contexts"
-msgstr "Wczytano %d kontekstów"
-
-#: ../wxgtd/model/loader.py:418
-msgid "Loading goals"
-msgstr "Wczytywanie celów"
-
-#: ../wxgtd/model/loader.py:427
-#, python-format
-msgid "Loaded %d goals"
-msgstr "Wczytano %d celów"
-
-#: ../wxgtd/model/loader.py:433
-msgid "Loading tasks"
-msgstr "Wczytywanie zadań"
-
-#: ../wxgtd/model/loader.py:447
-#, python-format
-msgid "Loaded %d tasks"
-msgstr "Wczytano %d zadań"
-
-#: ../wxgtd/model/loader.py:453
-msgid "Loading task notes"
-msgstr "Wczytywanie notatek zadań"
-
-#: ../wxgtd/model/loader.py:462
-#, python-format
-msgid "Loaded %d task notes"
-msgstr "Wczytano %d notatek zadań"
-
-#: ../wxgtd/model/loader.py:468
-msgid "Loading alarms"
-msgstr "Wczytywanie alarmów"
-
-#: ../wxgtd/model/loader.py:485
-#, python-format
-msgid "Loaded %d alarms"
-msgstr "Wczytano %d alarmów"
-
-#: ../wxgtd/model/loader.py:490
-msgid "Loading task folders"
-msgstr "Wczytywanie folderów zadań"
-
-#: ../wxgtd/model/loader.py:508
-#, python-format
-msgid "Loaded %d task folders"
-msgstr "Wczytano %d folderów zadań"
-
-#: ../wxgtd/model/loader.py:514
-msgid "Loading task contexts"
-msgstr "Wczytywanie kontekstów zadań"
-
-#: ../wxgtd/model/loader.py:532
-#, python-format
-msgid "Loaded %d tasks contexts"
-msgstr "Wczytano %d kontekstów zadań"
-
-#: ../wxgtd/model/loader.py:537
-msgid "Loading task goals"
-msgstr "Wczytywanie celów zadań"
-
-#: ../wxgtd/model/loader.py:555
-#, python-format
-msgid "Loaded %d task goals"
-msgstr "Wczytanoo %d celów zadań"
-
-#: ../wxgtd/model/loader.py:560
-msgid "Loading tags"
-msgstr "Wczytywanie etykiet"
-
-#: ../wxgtd/model/loader.py:569
-#, python-format
-msgid "Loaded %d tags"
-msgstr "Wczytano %d etykiet"
-
-#: ../wxgtd/model/loader.py:575
-msgid "Loading task tags"
-msgstr "Wczytywanie etykiet zadań"
-
-#: ../wxgtd/model/loader.py:594
-#, python-format
-msgid "Loaded %d task tags"
-msgstr "Wczytano %d etykiet zadań"
-
-#: ../wxgtd/model/loader.py:599
-msgid "Loading notebooks"
-msgstr "Wczytywanie notatników"
-
-#: ../wxgtd/model/loader.py:608
-#, python-format
-msgid "Loaded %d notebook pages"
-msgstr "Wczytano %d stron notatnika"
-
-#: ../wxgtd/model/loader.py:615
-msgid "Loading notebook pages folders"
-msgstr "Wczytywanie folderów notatników"
-
-#: ../wxgtd/model/loader.py:634
-#, python-format
-msgid "Loaded %d notebook folders"
-msgstr "Wczytano %d folderów notatników"
-
-#: ../wxgtd/model/loader.py:639
-msgid "Loading synclog"
-msgstr "Wczytywanie logu synchronizacji"
-
-#: ../wxgtd/model/loader.py:652
-msgid "Synclog loaded"
-msgstr "Log synchronizacji wczytany"
+#: ../wxgtd/model/sync.py:142
+msgid "To many files in sync directory."
+msgstr "Zbyt wiele plików w katalogu synchronizacji."
 
 #: ../wxgtd/model/exporter.py:61
 msgid "Writing..."
@@ -1443,6 +743,11 @@ msgstr "Typ"
 msgid "Priority"
 msgstr "Priorytet"
 
+#: ../wxgtd/model/exporter.py:490 ../wxgtd/gui/frame_notebooks.py:62
+#: ../wxgtd/gui/dlg_trash.py:49 ../wxgtd/gui/_tasklistctrl.py:276
+msgid "Title"
+msgstr "Tytuł"
+
 #: ../wxgtd/model/exporter.py:492
 msgid "Due date"
 msgstr "Termin"
@@ -1495,6 +800,16 @@ msgstr "email"
 msgid "sms"
 msgstr "sms"
 
+#: ../wxgtd/wxtools/validators/v_value.py:37
+#, python-format
+msgid "Value too low (min=%d)"
+msgstr "Wartość za mała (min=%d)"
+
+#: ../wxgtd/wxtools/validators/v_value.py:59
+#, python-format
+msgid "Value too high (max=%d)"
+msgstr "Wartość za duża (maks=%d)"
+
 #: ../wxgtd/wxtools/validators/validator.py:115
 #, python-format
 msgid ""
@@ -1508,18 +823,6 @@ msgstr ""
 msgid "Validate error"
 msgstr "Błąd walidacji"
 
-#: ../wxgtd/wxtools/validators/v_datetime.py:44
-msgid "Time isn't in correct format - HH:MM:SS format required"
-msgstr "Czas nie jest w poprawnym formacie - wymagany format GG:MM:SS"
-
-#: ../wxgtd/wxtools/validators/v_datetime.py:47
-msgid "Time isn't in correct format - HH:MM format required"
-msgstr "Czas nie jest w poprawnym formacie - wymagany format GG:MM"
-
-#: ../wxgtd/wxtools/validators/v_datetime.py:118
-msgid "Date isn't in correct format - YYYY-MM-DD format required"
-msgstr "Data nie jest w poprawnym formacie - wymagany format RRRR-MM-DD"
-
 #: ../wxgtd/wxtools/validators/v_length.py:38
 msgid "Field must by not empty"
 msgstr "Pole nie może być puste"
@@ -1532,15 +835,21 @@ msgstr "Za mało znaków"
 msgid "Too many characters"
 msgstr "Za dużo znaków"
 
-#: ../wxgtd/wxtools/validators/v_value.py:37
-#, python-format
-msgid "Value too low (min=%d)"
-msgstr "Wartość za mała (min=%d)"
+#: ../wxgtd/wxtools/validators/v_regex.py:39
+msgid "Incorrect value"
+msgstr "Niewłaściwa wartość"
 
-#: ../wxgtd/wxtools/validators/v_value.py:59
-#, python-format
-msgid "Value too high (max=%d)"
-msgstr "Wartość za duża (maks=%d)"
+#: ../wxgtd/wxtools/validators/v_datetime.py:44
+msgid "Time isn't in correct format - HH:MM:SS format required"
+msgstr "Czas nie jest w poprawnym formacie - wymagany format GG:MM:SS"
+
+#: ../wxgtd/wxtools/validators/v_datetime.py:47
+msgid "Time isn't in correct format - HH:MM format required"
+msgstr "Czas nie jest w poprawnym formacie - wymagany format GG:MM"
+
+#: ../wxgtd/wxtools/validators/v_datetime.py:118
+msgid "Date isn't in correct format - YYYY-MM-DD format required"
+msgstr "Data nie jest w poprawnym formacie - wymagany format RRRR-MM-DD"
 
 #: ../wxgtd/wxtools/validators/v_type.py:39
 msgid "Integer value required"
@@ -1550,9 +859,704 @@ msgstr "Wymagana liczba całkowita"
 msgid "Float value required"
 msgstr "Wymagana liczba rzeczywista"
 
-#: ../wxgtd/wxtools/validators/v_regex.py:39
-msgid "Incorrect value"
-msgstr "Niewłaściwa wartość"
+#: ../wxgtd/gui/dlg_repeat_settings.py:115
+msgid "days"
+msgstr "dni"
+
+#: ../wxgtd/gui/dlg_repeat_settings.py:116
+msgid "weeks"
+msgstr "tygodni"
+
+#: ../wxgtd/gui/dlg_repeat_settings.py:117
+msgid "months"
+msgstr "miesięcy"
+
+#: ../wxgtd/gui/dlg_repeat_settings.py:118
+msgid "years"
+msgstr "lat"
+
+#: ../wxgtd/gui/dlg_repeat_settings.py:123
+msgid "first"
+msgstr "pierwszy"
+
+#: ../wxgtd/gui/dlg_repeat_settings.py:124
+msgid "second"
+msgstr "drugi"
+
+#: ../wxgtd/gui/dlg_repeat_settings.py:125
+msgid "third"
+msgstr "trzeci"
+
+#: ../wxgtd/gui/dlg_repeat_settings.py:126
+msgid "fourth"
+msgstr "czwarty"
+
+#: ../wxgtd/gui/dlg_repeat_settings.py:127
+msgid "fifth"
+msgstr "piąty"
+
+#: ../wxgtd/gui/dlg_repeat_settings.py:128
+msgid "last"
+msgstr "ostatni"
+
+#: ../wxgtd/gui/dlg_repeat_settings.py:133 ../data/wxgtd.xrc.h:160
+msgid "Monday"
+msgstr "poniedziałek"
+
+#: ../wxgtd/gui/dlg_repeat_settings.py:134 ../data/wxgtd.xrc.h:161
+msgid "Tuesday"
+msgstr "wtorek"
+
+#: ../wxgtd/gui/dlg_repeat_settings.py:135 ../data/wxgtd.xrc.h:162
+msgid "Wednesday"
+msgstr "środa"
+
+#: ../wxgtd/gui/dlg_repeat_settings.py:136 ../data/wxgtd.xrc.h:163
+msgid "Thursday"
+msgstr "czwartek"
+
+#: ../wxgtd/gui/dlg_repeat_settings.py:137 ../data/wxgtd.xrc.h:164
+msgid "Friday"
+msgstr "piątek"
+
+#: ../wxgtd/gui/dlg_repeat_settings.py:138 ../data/wxgtd.xrc.h:165
+msgid "Saturday"
+msgstr "sobota"
+
+#: ../wxgtd/gui/dlg_repeat_settings.py:139 ../data/wxgtd.xrc.h:166
+msgid "Sunday"
+msgstr "niedzila"
+
+#: ../wxgtd/gui/dlg_export_tasks.py:75
+msgid "Export complete."
+msgstr "Eksport zakończony."
+
+#: ../wxgtd/gui/dlg_export_tasks.py:77
+msgid "Export Error."
+msgstr "Błąd eksportu."
+
+#: ../wxgtd/gui/dlg_export_tasks.py:89
+msgid "Please select target file."
+msgstr "Proszę wybrać docelowy plik."
+
+#: ../wxgtd/gui/dlg_tags.py:28
+msgid "tag"
+msgstr "etykiatę"
+
+#: ../wxgtd/gui/frame_search.py:51 ../wxgtd/gui/frame_main.py:287
+#: ../wxgtd/gui/frame_main.py:307
+msgid "Search"
+msgstr "Szukaj"
+
+#: ../wxgtd/gui/frame_search.py:108 ../wxgtd/gui/frame_notebooks.py:233
+#: ../wxgtd/gui/frame_main.py:704
+#, python-format
+msgid "%d item"
+msgid_plural "%d items"
+msgstr[0] "%d element"
+msgstr[1] "%d elementy"
+msgstr[2] "%d elementów"
+
+#: ../wxgtd/gui/notebook_controller.py:58
+msgid "notebook page"
+msgstr "stronę notatnika"
+
+#: ../wxgtd/gui/frame_notebooks.py:63 ../wxgtd/gui/dlg_trash.py:50
+msgid "Created"
+msgstr "Utworzenie"
+
+#: ../wxgtd/gui/frame_notebooks.py:64
+msgid "Modified"
+msgstr "Modyfikacja"
+
+#: ../wxgtd/gui/frame_notebooks.py:91
+msgid "New Note"
+msgstr "Nowa notatka"
+
+#: ../wxgtd/gui/frame_notebooks.py:93
+msgid "Add new notebook page"
+msgstr "Dodanie nowego strony notatnika"
+
+#: ../wxgtd/gui/frame_notebooks.py:96
+msgid "Edit Note"
+msgstr "Edycja notatki"
+
+#: ../wxgtd/gui/frame_notebooks.py:98
+msgid "Edit selected notebook page"
+msgstr "Edycja zaznaczonego strony notatnika"
+
+#: ../wxgtd/gui/frame_notebooks.py:102
+msgid "Delete Note"
+msgstr "Usunięcie notatki"
+
+#: ../wxgtd/gui/frame_notebooks.py:104
+msgid "Delete selected notebook page"
+msgstr "Usunięcie zaznaczonego strony notatnika"
+
+#: ../wxgtd/gui/frame_notebooks.py:110
+msgid "Exit"
+msgstr "Wyjście"
+
+#: ../wxgtd/gui/frame_notebooks.py:112
+msgid "Close window"
+msgstr "Zamknięcie okna"
+
+#: ../wxgtd/gui/frame_notebooks.py:189
+msgid "Any Folder"
+msgstr "Dowolny folder"
+
+#: ../wxgtd/gui/frame_notebooks.py:194 ../wxgtd/gui/_filtertreectrl.py:98
+#: ../wxgtd/gui/dlg_notebook_page.py:55 ../wxgtd/gui/task_controller.py:430
+msgid "No Folder"
+msgstr "Brak folderu"
+
+#: ../wxgtd/gui/dlg_trash.py:51 ../data/wxgtd.xrc.h:6
+msgid "Deleted"
+msgstr "Usunięto"
+
+#: ../wxgtd/gui/dlg_trash.py:64
+msgid "Please select one or more items to undelete."
+msgstr "Proszę wybrać jeden lub więcej elementów do przywrócenia."
+
+#: ../wxgtd/gui/_taskbaricon.py:52
+msgid "Show/Hide wxGTD"
+msgstr "Pokaż/ukryj wxGTD"
+
+#: ../wxgtd/gui/_taskbaricon.py:53
+msgid "Show Notebook"
+msgstr "Pokaż notatnik"
+
+#: ../wxgtd/gui/_taskbaricon.py:55
+msgid "Quick New Task..."
+msgstr "Szybkie nowe zadanie..."
+
+#: ../wxgtd/gui/_taskbaricon.py:56
+msgid "Create New Task..."
+msgstr "Nowe zadanie..."
+
+#: ../wxgtd/gui/_taskbaricon.py:58
+msgid "Close wxGTD"
+msgstr "Zamknij wxGTD"
+
+#: ../wxgtd/gui/dialogs.py:89
+msgid "Empty text is not allowed."
+msgstr "Pusty tekst nie jest dozwolony."
+
+#: ../wxgtd/gui/dialogs.py:90
+msgid "Error"
+msgstr "Błąd"
+
+#: ../wxgtd/gui/dlg_folders.py:28
+msgid "folder"
+msgstr "folder"
+
+#: ../wxgtd/gui/_filtertreectrl.py:89
+msgid "Statuses"
+msgstr "Statusy"
+
+#: ../wxgtd/gui/_filtertreectrl.py:93 ../data/wxgtd.xrc.h:100
+msgid "Contexts"
+msgstr "Konteksty"
+
+#: ../wxgtd/gui/_filtertreectrl.py:94 ../wxgtd/gui/task_controller.py:369
+msgid "No Context"
+msgstr "Brak kontekstu"
+
+#: ../wxgtd/gui/_filtertreectrl.py:97 ../data/wxgtd.xrc.h:1
+msgid "Folders"
+msgstr "Foldery"
+
+#: ../wxgtd/gui/_filtertreectrl.py:101 ../data/wxgtd.xrc.h:48
+msgid "Goals"
+msgstr "Cele"
+
+#: ../wxgtd/gui/_filtertreectrl.py:102
+msgid "No goal"
+msgstr "Brak celu"
+
+#: ../wxgtd/gui/_filtertreectrl.py:105 ../data/wxgtd.xrc.h:171
+msgid "Tags"
+msgstr "Etykiety"
+
+#: ../wxgtd/gui/_filtertreectrl.py:106
+msgid "No tag"
+msgstr "Brak etykiety"
+
+#: ../wxgtd/gui/_filtertreectrl.py:268 ../wxgtd/gui/_filtertreectrl.py:269
+msgid "Select only this item"
+msgstr "Zaznacz tylko ten element"
+
+#: ../wxgtd/gui/quicktask.py:32
+msgid "Enter task title"
+msgstr "Proszę wprowadzić tytuł zadania"
+
+#: ../wxgtd/gui/quicktask.py:33
+msgid "wxGTD Quick Task"
+msgstr "Szybkie zadanie wxGTD"
+
+#: ../wxgtd/gui/_tasklistctrl.py:242
+msgid "Dismiss"
+msgstr "Odrzuć"
+
+#: ../wxgtd/gui/_tasklistctrl.py:251
+msgid "Snooze"
+msgstr "Drzemka"
+
+#: ../wxgtd/gui/_tasklistctrl.py:270
+msgid "Prio"
+msgstr "Priorytet"
+
+#: ../wxgtd/gui/_tasklistctrl.py:282
+msgid "Due"
+msgstr "plan."
+
+#: ../wxgtd/gui/_tasklistctrl.py:288
+msgid "Info"
+msgstr "Info"
+
+#: ../wxgtd/gui/frame_main.py:209
+msgid "New Task"
+msgstr "Nowe zadanie"
+
+#: ../wxgtd/gui/frame_main.py:211
+msgid "Add new task"
+msgstr "Dodanie nowego zadania"
+
+#: ../wxgtd/gui/frame_main.py:214
+msgid "Quick Task"
+msgstr "Szybkie zadanie"
+
+#: ../wxgtd/gui/frame_main.py:216
+msgid "Add quick new task"
+msgstr "Szybkie dodanie nowego zadania"
+
+#: ../wxgtd/gui/frame_main.py:219
+msgid "Edit Task"
+msgstr "Edycja zadania"
+
+#: ../wxgtd/gui/frame_main.py:221
+msgid "Edit selected task"
+msgstr "Edycja zaznaczonego zadania"
+
+#: ../wxgtd/gui/frame_main.py:225
+msgid "Delete Task"
+msgstr "Usunięcie zadania"
+
+#: ../wxgtd/gui/frame_main.py:227
+msgid "Delete selected task"
+msgstr "Usunięcie zaznaczonego zadania"
+
+#: ../wxgtd/gui/frame_main.py:233
+msgid "Toggle Task Completed"
+msgstr "Przełączenie zakończenia zadania"
+
+#: ../wxgtd/gui/frame_main.py:235
+msgid "Toggle selected task completed"
+msgstr "Przełączenie statusu zakończenia zaznaczonego zadnia"
+
+#: ../wxgtd/gui/frame_main.py:238
+msgid "Toggle Task Starred"
+msgstr "Przełączenie oznaczenia zadania"
+
+#: ../wxgtd/gui/frame_main.py:240
+msgid "Toggle selected task starred"
+msgstr "Przełączenie statusu zakończenia zaznaczonego zadnia"
+
+#. show subtask
+#. pylint: disable=W0201
+#: ../wxgtd/gui/frame_main.py:249
+msgid " Show subtasks "
+msgstr "Pokazuj podzadania"
+
+#. show completed
+#. pylint: disable=W0201
+#: ../wxgtd/gui/frame_main.py:259
+msgid " Show finished "
+msgstr "Pokazuj zakończone"
+
+#. hide until due
+#. pylint: disable=W0201
+#: ../wxgtd/gui/frame_main.py:270
+msgid " Hide until "
+msgstr "Ukrywaj dopóki"
+
+#: ../wxgtd/gui/frame_main.py:278
+msgid "Synchronize tasks"
+msgstr "Synchronizuj zadania"
+
+#: ../wxgtd/gui/frame_main.py:299 ../data/wxgtd.xrc.h:7
+msgid "Reminders"
+msgstr "Przypomnienia"
+
+#: ../wxgtd/gui/frame_main.py:303 ../data/wxgtd.xrc.h:47
+msgid "Notebook"
+msgstr "Notatnik"
+
+#: ../wxgtd/gui/frame_main.py:337 ../wxgtd/gui/frame_main.py:871
+#: ../wxgtd/gui/dlg_preferences.py:153
+msgid "Please select sync file."
+msgstr "Proszę podać plik synchronizajci"
+
+#: ../wxgtd/gui/frame_main.py:350 ../wxgtd/gui/frame_main.py:376
+#: ../wxgtd/gui/frame_main.py:901
+msgid "Synchronisation error"
+msgstr "Błąd synchronizacji"
+
+#: ../wxgtd/gui/frame_main.py:353 ../wxgtd/gui/frame_main.py:379
+#: ../wxgtd/gui/frame_main.py:904
+msgid "Error: "
+msgstr "Błąd: "
+
+#: ../wxgtd/gui/frame_main.py:363
+msgid "Please select target sync file."
+msgstr "Proszę wybrać docelowy plik synchronizacji"
+
+#: ../wxgtd/gui/frame_main.py:672
+msgid "No active alarms in this moment."
+msgstr "Nie ma w tym momencie aktywnych alarmów."
+
+#: ../wxgtd/gui/frame_main.py:673
+msgid "Alarms"
+msgstr "Alarmy"
+
+#: ../wxgtd/gui/frame_main.py:762
+msgid "Clone task with all subtasks?"
+msgstr "Sklonować zadanie i wszystkie podzadania?"
+
+#: ../wxgtd/gui/frame_main.py:849
+#, python-format
+msgid "All (%d)"
+msgstr "Wszystkie (%d)"
+
+#: ../wxgtd/gui/frame_main.py:849
+#, python-format
+msgid "Hotlist (%d)"
+msgstr "Gorąca lista (%d)"
+
+#: ../wxgtd/gui/frame_main.py:850
+#, python-format
+msgid "Today (%d)"
+msgstr "Dzisiaj (%d)"
+
+#: ../wxgtd/gui/frame_main.py:851
+#, python-format
+msgid "Starred (%d)"
+msgstr "Oznaczone (%d)"
+
+#: ../wxgtd/gui/frame_main.py:851
+#, python-format
+msgid "Basket (%d)"
+msgstr "Koszyk (%d)"
+
+#: ../wxgtd/gui/frame_main.py:851
+#, python-format
+msgid "Finished (%d)"
+msgstr "Zakończone (%d)"
+
+#: ../wxgtd/gui/frame_main.py:852
+#, python-format
+msgid "Projects (%d)"
+msgstr "Projekty (%d)"
+
+#: ../wxgtd/gui/frame_main.py:852
+#, python-format
+msgid "Checklists (%d)"
+msgstr "Listy zadań (%d)"
+
+#: ../wxgtd/gui/frame_main.py:853
+#, python-format
+msgid "Active Alarms (%d)"
+msgstr "Aktywne alarmy (%d)"
+
+#: ../wxgtd/gui/frame_main.py:891 ../wxgtd/gui/frame_main.py:895
+msgid "Sync file is locked."
+msgstr "Plik synchronizacji jest zablokowany"
+
+#: ../wxgtd/gui/frame_main.py:938 ../wxgtd/gui/frame_main.py:966
+msgid "Set Task Not Completed"
+msgstr "Zaznaczyć zadanie jako niezakończone"
+
+#: ../wxgtd/gui/frame_main.py:939 ../wxgtd/gui/frame_main.py:965
+msgid "Set Task Completed"
+msgstr "Zaznaczyć zadanie jako zakończone"
+
+#: ../wxgtd/gui/frame_main.py:940 ../wxgtd/gui/frame_main.py:968
+msgid "Set Task Not Starred"
+msgstr "Odznacz zadanie"
+
+#: ../wxgtd/gui/frame_main.py:941 ../wxgtd/gui/frame_main.py:967
+msgid "Set Task Starred"
+msgstr "Oznacz zadanie"
+
+#: ../wxgtd/gui/frame_main.py:943
+msgid "Edit.."
+msgstr "Edytuj.."
+
+#: ../wxgtd/gui/frame_main.py:944
+msgid "Clone..."
+msgstr "Klonuj..."
+
+#: ../wxgtd/gui/frame_main.py:945
+msgid "Delete.."
+msgstr "Usuń..."
+
+#: ../wxgtd/gui/frame_main.py:947 ../wxgtd/gui/frame_main.py:972
+msgid "Change Project/List..."
+msgstr "Zmień projekt/listę..."
+
+#: ../wxgtd/gui/frame_main.py:949 ../wxgtd/gui/frame_main.py:973
+msgid "Change Context..."
+msgstr "Zmień kontekst..."
+
+#: ../wxgtd/gui/frame_main.py:950 ../wxgtd/gui/frame_main.py:974
+msgid "Change Folder..."
+msgstr "Zmień folder..."
+
+#: ../wxgtd/gui/frame_main.py:951 ../wxgtd/gui/frame_main.py:975
+msgid "Change Status..."
+msgstr "Zmień status..."
+
+#: ../wxgtd/gui/frame_main.py:952 ../wxgtd/gui/frame_main.py:976
+msgid "Change Priority..."
+msgstr "Zmień priorytet..."
+
+#: ../wxgtd/gui/frame_main.py:955 ../wxgtd/gui/frame_main.py:978
+msgid "Change Due Date..."
+msgstr "Zmień termin..."
+
+#: ../wxgtd/gui/frame_main.py:956 ../wxgtd/gui/frame_main.py:979
+msgid "Change Start Date..."
+msgstr "Zmień datę startu..."
+
+#: ../wxgtd/gui/frame_main.py:957 ../wxgtd/gui/frame_main.py:980
+msgid "Change Remind Date..."
+msgstr "Zmień datę przypomnienia..."
+
+#: ../wxgtd/gui/frame_main.py:959
+msgid "Change Show Settings.."
+msgstr "Zmień widoczność..."
+
+#: ../wxgtd/gui/frame_main.py:970
+msgid "Delete..."
+msgstr "Usuń..."
+
+#: ../wxgtd/gui/frame_main.py:981
+msgid "Change Show Settings..."
+msgstr "Zmień widoczność..."
+
+#: ../wxgtd/gui/frame_main.py:987
+msgid "Undelete..."
+msgstr "Przywróć..."
+
+#: ../wxgtd/gui/frame_main.py:988
+msgid "Delete permanently..."
+msgstr "Skasuj trwale..."
+
+#: ../wxgtd/gui/dlg_projects_tree.py:72
+msgid "wxGTD (no project)"
+msgstr "wxGTD (bez projektu)"
+
+#: ../wxgtd/gui/_base_task_frame.py:133 ../wxgtd/gui/_base_task_frame.py:143
+msgid "Task Note"
+msgstr "Notatka Zadania"
+
+#: ../wxgtd/gui/_base_task_frame.py:156
+msgid "note"
+msgstr "notatka"
+
+#: ../wxgtd/gui/dlg_goals.py:30
+msgid "goal"
+msgstr "cel"
+
+#: ../wxgtd/gui/_dict_base_dlg.py:118 ../wxgtd/gui/message_boxes.py:150
+msgid "After removal, it cannot be recovered."
+msgstr "Po usunięciu, nie będzie możliwe przywrócenie."
+
+#: ../wxgtd/gui/_dict_base_dlg.py:120
+msgid "Warning: this affect another items!"
+msgstr "Uwaga: będzie to dotyczyło innych elementów!"
+
+#: ../wxgtd/gui/frame_reminders.py:125
+msgid "Please select snooze time"
+msgstr "Proszę wybrać czas drzemki"
+
+#: ../wxgtd/gui/frame_reminders.py:126
+msgid "Snooze task alarm"
+msgstr "Drzemka"
+
+#: ../wxgtd/gui/dlg_contexts.py:28
+msgid "context"
+msgstr "kontekst"
+
+#: ../wxgtd/gui/message_boxes.py:100
+#, python-format
+msgid ""
+"Save the changes to\n"
+"%(doc_name)s before closing?"
+msgstr ""
+"Zapisać zmiany w\n"
+"%(doc_name)s przed zamknięciem?"
+
+#: ../wxgtd/gui/message_boxes.py:103
+msgid "Save the changes before closing?"
+msgstr "Zapisać zmiany przed zamknięciem?"
+
+#: ../wxgtd/gui/message_boxes.py:105
+msgid "If you close without saving, changes will be discarded"
+msgstr "Zamknięcie bez zapisu spowoduje utracenie wszystkich zmian."
+
+#: ../wxgtd/gui/message_boxes.py:107
+#, python-format
+msgid ""
+"If you close without saving, changes from the last\n"
+"%(time)s will be discarded"
+msgstr ""
+"Zamknięcie bez zapisania spowoduje utratę zmian\n"
+"z ostatnich %(time)s."
+
+#: ../wxgtd/gui/message_boxes.py:115
+msgid "Close &without Saving"
+msgstr "Zamknij bez zapisywania"
+
+#: ../wxgtd/gui/message_boxes.py:119
+msgid "Save &As"
+msgstr "Zapisz jako"
+
+#: ../wxgtd/gui/message_boxes.py:119
+msgid "Save"
+msgstr "Zapisz"
+
+#: ../wxgtd/gui/message_boxes.py:148
+#, python-format
+msgid "Delete %s?"
+msgstr "Usunąć %s?"
+
+#: ../wxgtd/gui/message_boxes.py:158 ../data/wxgtd.xrc.h:86
+msgid "Delete"
+msgstr "Usuń"
+
+#: ../wxgtd/gui/message_boxes.py:361
+msgid "Ok"
+msgstr "Ok"
+
+#: ../wxgtd/gui/message_boxes.py:362
+msgid "Cancel"
+msgstr "Anuluj"
+
+#: ../wxgtd/gui/dlg_dropbox_auth.py:54
+msgid "app key"
+msgstr "app key"
+
+#: ../wxgtd/gui/dlg_dropbox_auth.py:57
+msgid "app secret"
+msgstr "app secret"
+
+#: ../wxgtd/gui/dlg_dropbox_auth.py:87
+msgid "Allow wxGTD to access Dropbox files"
+msgstr "Zezwól wxGTD na dostęp do plików w Dropbox"
+
+#: ../wxgtd/gui/dlg_dropbox_auth.py:88
+msgid "Please authorize application in Dropbox."
+msgstr "Proszę autoryzować aplikację w Dropbox"
+
+#: ../wxgtd/gui/task_controller.py:116
+msgid "Set task completed?"
+msgstr "Zaznaczyć zadanie jako zakończone?"
+
+#: ../wxgtd/gui/task_controller.py:117 ../wxgtd/gui/task_controller.py:610
+#: ../wxgtd/gui/task_controller.py:614
+msgid "Set complete"
+msgstr "Ustaw jako zakończone"
+
+#: ../wxgtd/gui/task_controller.py:117 ../wxgtd/gui/task_controller.py:610
+#: ../wxgtd/gui/task_controller.py:615
+msgid "Close"
+msgstr "Zamknij"
+
+#: ../wxgtd/gui/task_controller.py:126 ../wxgtd/gui/task_controller.py:128
+msgid "task"
+msgstr "zadanie"
+
+#: ../wxgtd/gui/task_controller.py:129
+msgid "Task will be moved to trash."
+msgstr "Zadanie będzie przeniesione do kosza."
+
+#: ../wxgtd/gui/task_controller.py:140
+msgid "tasks"
+msgstr "zadania"
+
+#: ../wxgtd/gui/task_controller.py:151 ../wxgtd/gui/task_controller.py:162
+msgid "Undelete selected tasks?"
+msgstr "Przywrócić zaznaczonego zadania?"
+
+#: ../wxgtd/gui/task_controller.py:294
+msgid "Change task type to:"
+msgstr "Zmiana typu zadania na:"
+
+#: ../wxgtd/gui/task_controller.py:317 ../wxgtd/gui/task_controller.py:568
+msgid "Change task priority to:"
+msgstr "Zmiana priorytetu zadania na:"
+
+#: ../wxgtd/gui/task_controller.py:338
+msgid "Change tasks status to:"
+msgstr "Zmiana status zadania na:"
+
+#: ../wxgtd/gui/task_controller.py:339 ../wxgtd/gui/task_controller.py:374
+#: ../wxgtd/gui/task_controller.py:435 ../data/wxgtd.xrc.h:103
+msgid "Tasks"
+msgstr "Zadania"
+
+#: ../wxgtd/gui/task_controller.py:373
+msgid "Change tasks context to:"
+msgstr "Zmiana kontekst zadania na:"
+
+#: ../wxgtd/gui/task_controller.py:434
+msgid "Change tasks folder to:"
+msgstr "Zmiana folder zadania na:"
+
+#: ../wxgtd/gui/task_controller.py:591 ../wxgtd/gui/task_controller.py:602
+msgid ""
+"This operation change task and subtasks type.\n"
+"Continue change??"
+msgstr ""
+"Ta operacja zmieni typ zadania i podzadań.\n"
+"Kontynuować zmianę?"
+
+#: ../wxgtd/gui/task_controller.py:597
+msgid ""
+"This operation change all subtasks to simple tasks\n"
+"Are you sure?"
+msgstr ""
+"Ta operacja zmieni wszystkie podzadania na zwykłe zadania.\n"
+"Czy jesteś pewien?"
+
+#: ../wxgtd/gui/task_controller.py:609
+msgid "Set tasks completed?"
+msgstr "Zaznaczyć zadanie jako zakończone?"
+
+#: ../wxgtd/gui/task_controller.py:614
+msgid "Set tasks not completed?"
+msgstr "Zaznaczyć zadanie jako niezakończone?"
+
+#: ../wxgtd/gui/task_controller.py:649
+msgid ""
+"This operation change task and subtasks type.\n"
+"Continue change?"
+msgstr ""
+"Ta operacja zmieni typ zadania i podzadań.\n"
+"Kontynuować zmianę?"
+
+#: ../wxgtd/gui/dlg_select_tags.py:66
+msgid "Please enter tag name."
+msgstr "Proszę podać nazwę etykiety."
+
+#: ../wxgtd/gui/dlg_select_tags.py:67
+msgid "New Tag"
+msgstr "Nowa etykieta"
+
+#: ../wxgtd/gui/dlg_preferences.py:183
+msgid "Not connected"
+msgstr "Nie połączono"
 
 #: ../data/wxgtd.xrc.h:2
 msgid "Folder"
