@@ -847,6 +847,7 @@ class FrameMain(BaseFrame):
 	def _refresh_groups(self):
 		rb_show_selection = self['rb_show_selection']
 		for group, label in enumerate((_("All (%d)"), _("Hotlist (%d)"),
+				_("Today (%d)"),
 				_("Starred (%d)"), _("Basket (%d)"), _("Finished (%d)"),
 				_("Projects (%d)"), _("Checklists (%d)"),
 				_("Active Alarms (%d)"))):
