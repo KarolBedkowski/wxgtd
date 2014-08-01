@@ -19,13 +19,14 @@ from wxgtd.model import enums
 # groups
 QUERY_ALL_TASK = 0
 QUERY_HOTLIST = 1
-QUERY_STARRED = 2
-QUERY_BASKET = 3
-QUERY_FINISHED = 4
-QUERY_PROJECTS = 5
-QUERY_CHECKLISTS = 6
-QUERY_FUTURE_ALARMS = 7
-QUERY_TRASH = 8
+QUERY_TODAY = 2
+QUERY_STARRED = 3
+QUERY_BASKET = 4
+QUERY_FINISHED = 5
+QUERY_PROJECTS = 6
+QUERY_CHECKLISTS = 7
+QUERY_FUTURE_ALARMS = 8
+QUERY_TRASH = 9
 
 # options
 OPT_SHOW_FINISHED = 1
@@ -64,6 +65,10 @@ def build_query_params(query_group, options, parent, search_str):
 					else False}
 	if query_group == QUERY_HOTLIST:
 		_get_hotlist_settings(params)
+	elif query_group == QUERY_TODAY:
+		now = datetime.datetime.utcnow()
+		now_end = now.replace(hour=23, minute=59, second=59)
+		params['max_due_date'] = now_end
 	elif query_group == QUERY_STARRED:
 		if not parent:
 			# ignore starred when showing subtasks

@@ -43,6 +43,9 @@ def _parse_opt():
 	group.add_option('--hotlist', action="store_const",
 			const=queries.QUERY_HOTLIST,
 			dest="query_group", help='show task in hotlist')
+	group.add_option('--today', action="store_const",
+			const=queries.QUERY_TODAY,
+			dest="query_group", help='show task with due date today')
 	group.add_option('--starred', action="store_const",
 			const=queries.QUERY_STARRED,
 			dest="query_group", help='show starred tasks')

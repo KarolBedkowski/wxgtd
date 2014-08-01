@@ -180,6 +180,7 @@
                                     <choices>
                                         <choice>All</choice>
                                         <choice>Hot</choice>
+                                        <choice>Today</choice>
                                         <choice>Starred</choice>
                                         <choice>Basket</choice>
                                         <choice>Finished</choice>
