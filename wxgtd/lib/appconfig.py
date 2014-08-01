@@ -2,7 +2,7 @@
 # pylint: disable-msg=C0103
 """ Application configuration.
 
-Copyright (c) Karol Będkowski, 2007-2013
+Copyright (c) Karol Będkowski, 2007-2014
 
 This file is part of kPyLibs
 
@@ -57,6 +57,9 @@ class AppConfig(Singleton):
 				'data=%(data_dir)s', self.__dict__)
 
 	###########################################################################
+
+	def __len__(self):
+		return len(self._config.sections())
 
 	def _get_debug(self):
 		return self._runtime_params.get('DEBUG', False)
@@ -307,7 +310,9 @@ class AppConfigWrapper(object):
 
 	def __getitem__(self, key):
 		key = key.split('/')
-		return self._config.get(key[0], key[1])
+		value = self._config.get(key[0], key[1])
+		_LOG.debug("AppConfigWrapper.get(%r) -> %r", key, value)
+		return value
 
 	def __setitem__(self, key, value):
 		key = key.split('/')
@@ -317,7 +322,7 @@ class AppConfigWrapper(object):
 		pass
 
 	def __len__(self):
-		return 0
+		return len(self._config)
 
 	def get(self, key, default=None):
 		key = key.split('/')
