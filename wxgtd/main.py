@@ -77,10 +77,6 @@ def run():
 	config.load()
 	config.debug = options.debug
 
-	ipcs = None
-	if not options.force_start:
-		ipcs = _run_ipcs(config)
-
 	# locale
 	from wxgtd.lib import locales
 	locales.setup_locale(config)
@@ -97,6 +93,10 @@ def run():
 			print 'No wxversion.... (%s)' % str(err)
 
 	import wx
+
+	ipcs = None
+	if not options.force_start:
+		ipcs = _run_ipcs(config)
 
 	# create app
 	app = wx.App(False)
