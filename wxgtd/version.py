@@ -17,13 +17,13 @@ _ = gettext.gettext
 
 SHORTNAME = 'wxgtd'
 NAME = _("wxGTD")
-VERSION = '0.12.3'
-VERSION_INFO = (0, 12, 3, 'beta', 1)
-RELEASE = '2014-08-01'
+VERSION = '0.12.4'
+VERSION_INFO = (0, 12, 4, 'beta', 1)
+RELEASE = '2014-08-17'
 DESCRIPTION = _('''wxGTD''')
 DEVELOPERS = u'''Karol Będkowski'''
 TRANSLATORS = u'''Karol Będkowski'''
-COPYRIGHT = u"Copyright (c) Karol Będkowski, 2013"
+COPYRIGHT = u"Copyright (c) Karol Będkowski, 2013-2014"
 LICENSE = _('''\
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
