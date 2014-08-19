@@ -10,7 +10,7 @@ __version__ = "2013-04-17"
 import copy
 import time
 from unittest import main, TestCase
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from . import task as task_logic
 
@@ -61,6 +61,13 @@ class TestLogicUpdateTaskAlarm(TestCase):
 
 	def test_02_due(self):
 		obj = _FTask(datetime.now(), None, 'due')
+		task_logic.update_task_alarm(obj)
+		self.assertEqual(obj.alarm, obj.due_date)
+
+	def test_02_due_2(self):
+		obj = _FTask(datetime.now(), None, 'due')
+		task_logic.update_task_alarm(obj)
+		obj.due_date = datetime.now() + timedelta(days=10)
 		task_logic.update_task_alarm(obj)
 		self.assertEqual(obj.alarm, obj.due_date)
 

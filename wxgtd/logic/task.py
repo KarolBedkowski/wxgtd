@@ -565,8 +565,10 @@ def save_modified_task(task, session=None):
 		True if ok.
 	"""
 	session = session or OBJ.Session()
-	update_project_due_date(task)
+	update_task_hide(task)
+	update_task_alarm(task)
 	adjust_task_type(task, session)
+	update_project_due_date(task)
 	if task.type == enums.TYPE_CHECKLIST_ITEM:
 		if not task.importance:
 			task.importance = OBJ.Task.find_max_importance(task.parent_uuid,
@@ -590,8 +592,10 @@ def save_modified_tasks(tasks, session=None):
 	"""
 	session = session or OBJ.Session()
 	for task in tasks:
-		update_project_due_date(task)
+		update_task_hide(task)
+		update_task_alarm(task)
 		adjust_task_type(task, session)
+		update_project_due_date(task)
 		if task.type == enums.TYPE_CHECKLIST_ITEM:
 			if not task.importance:
 				task.importance = OBJ.Task.find_max_importance(task.parent_uuid,
