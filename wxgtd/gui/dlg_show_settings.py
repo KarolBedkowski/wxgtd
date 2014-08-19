@@ -68,21 +68,21 @@ class DlgShowSettings(BaseDialog):
 
 		c_pattern = self['c_pattern']
 		for rem_key, rem_name in enums.HIDE_PATTERNS_LIST:
-			c_pattern.Append(rem_name, rem_key)
+			if rem_key != "given date":
+				c_pattern.Append(rem_name, rem_key)
 
 		self['rb_always'].SetValue(True)
-		if date and not no_date:
-			self._data['date'] = self._data['time'] = date
-			if not pattern:
-				self['rb_datetime'].SetValue(True)
-				return
-		if pattern:
+		if pattern and pattern != "given date":
 			c_pattern = self['c_pattern']
 			for idx in xrange(c_pattern.GetCount()):
 				if c_pattern.GetClientData(idx) == pattern:
 					c_pattern.Select(idx)
 					self['rb_before'].SetValue(True)
 					return
+			_LOG.warning("DlgShowSettings(%r) wrong pattern", pattern)
+		if date and not no_date:
+			self._data['date'] = self._data['time'] = date
+			self['rb_datetime'].SetValue(True)
 
 	def _on_ok(self, evt):
 		if not self._wnd.Validate():
