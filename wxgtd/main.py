@@ -82,15 +82,14 @@ def run():
 	locales.setup_locale(config)
 
 	# importowanie wx
-	if not appconfig.is_frozen():
+	try:
+		import wxversion
 		try:
-			import wxversion
-			try:
-				wxversion.select('2.8')
-			except wxversion.AlreadyImportedError:
-				pass
-		except ImportError, err:
-			print 'No wxversion.... (%s)' % str(err)
+			wxversion.select('2.8')
+		except wxversion.AlreadyImportedError:
+			pass
+	except ImportError, err:
+		print 'No wxversion.... (%s)' % str(err)
 
 	import wx
 
