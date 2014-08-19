@@ -73,16 +73,17 @@ class DlgRemindSettings(BaseDialog):
 			self['dp_date'].Enable(False)
 			self['sb_time'].Enable(False)
 
-		if alarm and not no_date:
-			self._data['date'] = self._data['time'] = alarm
-			if not alarm_pattern or alarm_pattern == 'due':
-				self['rb_datetime'].SetValue(True)
-		elif alarm_pattern:
+		if alarm_pattern:
 			for idx in xrange(c_before.GetCount()):
+				print alarm_pattern, c_before.GetClientData(idx)
 				if c_before.GetClientData(idx) == alarm_pattern:
 					c_before.Select(idx)
 					self['rb_before'].SetValue(True)
 					return
+			_LOG.warning("DlgRemindSettings(%r) wrong pattern", alarm_pattern)
+		elif alarm and not no_date:
+			self._data['date'] = self._data['time'] = alarm
+			self['rb_datetime'].SetValue(True)
 
 	def _on_ok(self, evt):
 		if not self._wnd.Validate():
