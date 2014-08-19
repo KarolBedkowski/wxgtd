@@ -1,3 +1,9 @@
+wxgtd 0.12.5 2014-08-19
+
+	* fix save remind/hide settings
+	* fix remind dialog
+	* fix hide until dialog
+
 wxgtd 0.12.4 2014-08-17
 
 	* fix loading wx2.8 version
