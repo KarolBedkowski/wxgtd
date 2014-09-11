@@ -22,6 +22,9 @@ _LOG = logging.getLogger(__name__)
 
 publisher = None
 
+from wx.lib.pubsub import setuparg1
+assert setuparg1
+
 try:
 	from wx.lib.pubsub.pub import Publisher
 	publisher = Publisher()
