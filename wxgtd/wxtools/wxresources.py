@@ -2,13 +2,13 @@
 # pylint: disable-msg=R0901, R0904, C0103
 """ Utilities for wx resources.
 
-Copyright (c) Karol Będkowski, 2004-2013
+Copyright (c) Karol Będkowski, 2004-2014
 
 This file is part of wxGTD
 Licence: GPLv2+
 """
 __author__ = "Karol Będkowski"
-__copyright__ = "Copyright (c) Karol Będkowski, 2004-2013"
+__copyright__ = "Copyright (c) Karol Będkowski, 2004-2014"
 __version__ = "2013-04-27"
 
 import re
@@ -157,6 +157,8 @@ def load_xrc_resource(filename):
 		data = re_gettext.sub(_localize, data)
 		re_gettext = re.compile(r'(\<item\>)(.*?)(\<\/item\>)')
 		data = re_gettext.sub(_localize, data)
+		# workaround for 'XRC error: unknown font family "default"'
+		data = data.replace('<family>default</family>', '')
 		data = data.encode('UTF-8')
 		res = xrc.EmptyXmlResource()
 		res.InsertHandler(NumCtrlXmlHandler())

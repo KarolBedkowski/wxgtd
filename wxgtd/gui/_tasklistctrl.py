@@ -123,7 +123,7 @@ class TaskListControl(ULC.UltimateListCtrl, listmix.ColumnSorterMixin):
 		ULC.UltimateListCtrl.__init__(self, parent, wid, pos, size, style,
 				agwStyle)
 		listmix.ColumnSorterMixin.__init__(self, 4)
-		self._icons = icon_prov = iconprovider.IconProvider()
+		self._icons = icon_prov = iconprovider.IconProvider(16)
 		icon_prov.load_icons(['task_done', 'prio-1', 'prio0', 'prio1', 'prio2',
 				'prio3', 'sm_up', 'sm_down'])
 		self.SetImageList(icon_prov.image_list, wx.IMAGE_LIST_SMALL)

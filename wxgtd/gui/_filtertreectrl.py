@@ -18,11 +18,8 @@ import wx
 import wx.lib.customtreectrl as CT
 import wx.gizmos
 from wx.lib.mixins import treemixin
-try:
-	from wx.lib.pubsub.pub import Publisher
-except ImportError:
-	from wx.lib.pubsub import Publisher  # pylint: disable=E0611
 
+from wxgtd.wxtools.wxpub import publisher
 from wxgtd.model import objects as OBJ
 from wxgtd.model import enums
 from wxgtd.lib import appconfig
@@ -198,8 +195,8 @@ class FilterTreeCtrl(treemixin.VirtualTree, treemixin.ExpansionState,
 				id=self._menu_show_only_id)
 		self.Bind(wx.EVT_MENU, self._on_menu_show_except,
 				id=self._menu_show_except_id)
-		Publisher().subscribe(self._reload_items, ('dict', 'update'))
-		Publisher().subscribe(self._reload_items, ('dict', 'delete'))
+		publisher.subscribe(self._reload_items, ('dict', 'update'))
+		publisher.subscribe(self._reload_items, ('dict', 'delete'))
 		wx.CallAfter(self.refresh)
 
 	@property

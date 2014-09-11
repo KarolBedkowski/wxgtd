@@ -16,11 +16,8 @@ import gettext
 from datetime import datetime
 
 import wx
-try:
-	from wx.lib.pubsub.pub import Publisher
-except ImportError:
-	from wx.lib.pubsub import Publisher  # pylint: disable=E0611
 
+from wxgtd.wxtools.wxpub import publisher
 from wxgtd.logic import task as task_logic
 from wxgtd.model import enums
 from wxgtd.model import objects as OBJ
@@ -95,8 +92,8 @@ class FrameReminders(BaseFrame):
 				self._on_items_list_activated)
 		wnd.Bind(wx.EVT_BUTTON, self._on_btn_close, id=wx.ID_CLOSE)
 
-		Publisher().subscribe(self._on_tasks_update, ('task', 'update'))
-		Publisher().subscribe(self._on_tasks_update, ('task', 'delete'))
+		publisher.subscribe(self._on_tasks_update, ('task', 'update'))
+		publisher.subscribe(self._on_tasks_update, ('task', 'delete'))
 
 	def _setup(self, session):
 		self._reminders = []
@@ -118,7 +115,7 @@ class FrameReminders(BaseFrame):
 		task.alarm = None
 		task.update_modify_time()
 		self._session.commit()
-		Publisher().sendMessage('task.update', data={'task_uuid': task.uuid})
+		publisher.sendMessage('task.update', data={'task_uuid': task.uuid})
 
 	def _on_task_btn_snooze(self, evt):
 		task_uuid = evt.task
@@ -132,7 +129,7 @@ class FrameReminders(BaseFrame):
 			task.alarm = datetime.utcnow() + task_logic.alarm_pattern_to_time(pattern)
 			task.update_modify_time()
 			self._session.commit()
-			Publisher().sendMessage('task.update', data={'task_uuid': task.uuid})
+			publisher.sendMessage('task.update', data={'task_uuid': task.uuid})
 		dlg.Destroy()
 
 	def _remove_task(self, task_uuid):

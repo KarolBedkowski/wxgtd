@@ -31,10 +31,8 @@ except ImportError:
 	_JSON_DECODER = json.loads
 	_JSON_ENCODER = json.dumps
 
-try:
-	from wx.lib.pubsub.pub import Publisher
-except ImportError:
-	from wx.lib.pubsub import Publisher  # pylint: disable=E0611
+
+from wxgtd.wxtools.wxpub import publisher
 
 _LOG = logging.getLogger(__name__)
 
@@ -50,7 +48,7 @@ class _ThreadedTCPRequestHandler(SocketServer.BaseRequestHandler):
 				return
 			data_j = _JSON_DECODER(data.decode("UTF-8"))
 			message = data_j['message']
-			Publisher().sendMessage(message, data=data_j.get("data"))
+			publisher.sendMessage(message, data=data_j.get("data"))
 			self.request.sendall("ok")
 		except Exception as err:  # pylint: disable=W0703
 			print err

@@ -8,18 +8,15 @@ Licence: GPLv2+
 """
 
 __author__ = "Karol Będkowski"
-__copyright__ = "Copyright (c) Karol Będkowski, 2010-2013"
+__copyright__ = "Copyright (c) Karol Będkowski, 2010-2014"
 __version__ = "2010-11-25"
 
 import logging
 import gettext
 
 import wx
-try:
-	from wx.lib.pubsub.pub import Publisher
-except ImportError:
-	from wx.lib.pubsub import Publisher  # pylint: disable=E0611
 
+from wxgtd.wxtools.wxpub import publisher
 from wxgtd.model import objects as OBJ
 from wxgtd.model import enums
 from wxgtd.logic import dicts as logic_dicts
@@ -186,7 +183,7 @@ class FrameTask(BaseTaskFrame):
 		goal = logic_dicts.find_or_create_goal(value, self._session)
 		if goal:
 			self._task.goal = goal
-			Publisher().sendMessage('dict.update')
+			publisher.sendMessage('dict.update')
 
 	def _check_folder_selection(self):
 		choice_ctrl = self['cb_folder']
@@ -200,7 +197,7 @@ class FrameTask(BaseTaskFrame):
 		folder = logic_dicts.find_or_create_folder(value, self._session)
 		if folder:
 			self._task.folder = folder
-			Publisher().sendMessage('dict.update')
+			publisher.sendMessage('dict.update')
 
 	def _check_context_selection(self):
 		choice_ctrl = self['cb_context']
@@ -214,4 +211,4 @@ class FrameTask(BaseTaskFrame):
 		context = logic_dicts.find_or_create_context(value, self._session)
 		if context:
 			self._task.context = context
-			Publisher().sendMessage('dict.update')
+			publisher.sendMessage('dict.update')

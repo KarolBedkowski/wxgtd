@@ -33,10 +33,7 @@ try:
 except ImportError:
 	dropbox = None  # pylint: disable=C0103
 
-try:
-	from wx.lib.pubsub.pub import Publisher
-except ImportError:
-	from wx.lib.pubsub import Publisher  # pylint: disable=E0611
+from wxgtd.wxtools.wxpub import publisher
 
 from wxgtd.lib import appconfig
 from wxgtd.lib import ignore_exceptions
@@ -60,7 +57,7 @@ def is_available():
 
 
 def _notify_progress(progress, msg):
-	Publisher().sendMessage('sync.progress', data=(progress, msg))
+	publisher.sendMessage('sync.progress', data=(progress, msg))
 
 
 def _create_session():
@@ -94,7 +91,7 @@ def _delete_file(dbclient, path):
 def sync(load_only=False, notify_cb=_notify_progress):
 	""" Sync data from/to given file.
 
-	Notify progress by Publisher().
+	Notify progress by publisher.
 
 	Args:
 		load_only: only load, not write data

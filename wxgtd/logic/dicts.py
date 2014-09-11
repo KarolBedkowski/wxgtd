@@ -16,11 +16,7 @@ __version__ = "2013-04-19"
 import logging
 import datetime
 
-try:
-	from wx.lib.pubsub.pub import Publisher
-except ImportError:
-	from wx.lib.pubsub import Publisher  # pylint: disable=E0611
-
+from wxgtd.wxtools.wxpub import publisher
 from wxgtd.model import objects as obj
 
 
@@ -43,7 +39,7 @@ def find_or_create_goal(title, session):
 				title)
 		goal = obj.Goal(title=title)
 		session.add(goal)
-		Publisher().sendMessage('goal.update')
+		publisher.sendMessage('goal.update')
 	return goal
 
 
@@ -63,7 +59,7 @@ def find_or_create_folder(title, session):
 				title)
 		folder = obj.Folder(title=title)
 		session.add(folder)
-		Publisher().sendMessage('folder.update')
+		publisher.sendMessage('folder.update')
 	return folder
 
 
@@ -83,7 +79,7 @@ def find_or_create_context(title, session):
 				title)
 		context = obj.Context(title=title)
 		session.add(context)
-		Publisher().sendMessage('context.update')
+		publisher.sendMessage('context.update')
 	return context
 
 
@@ -102,7 +98,7 @@ def undelete_dict_item(item, session):
 		item.deleted = None
 		item.modified = datetime.datetime.now()
 		session.commit()
-		Publisher().sendMessage('dictitem.update')
+		publisher.sendMessage('dictitem.update')
 		return True
 	_LOG.warn("undelete_dict_item: undelete not deleted object: %r", item)
 	return False

@@ -16,11 +16,8 @@ import logging
 
 import wx
 import wx.lib.dialogs
-try:
-	from wx.lib.pubsub.pub import Publisher
-except ImportError:
-	from wx.lib.pubsub import Publisher  # pylint: disable=E0611
 
+from wxgtd.wxtools.wxpub import publisher
 from wxgtd.wxtools import iconprovider
 from wxgtd.wxtools import wxutils
 from wxgtd.model import objects as OBJ
@@ -83,8 +80,8 @@ class FrameNotebook(BaseFrame):
 		wnd.Bind(wx.EVT_LIST_ITEM_ACTIVATED, self._on_pages_list_activated,
 				self._lb_pages)
 		wnd.Bind(wx.EVT_LIST_COL_CLICK, self._on_pages_list_col_click)
-		Publisher().subscribe(self._on_notebook_update, ('notebook', 'update'))
-		Publisher().subscribe(self._on_notebook_update, ('notebook', 'delete'))
+		publisher.subscribe(self._on_notebook_update, ('notebook', 'update'))
+		publisher.subscribe(self._on_notebook_update, ('notebook', 'delete'))
 
 	def _create_toolbar(self):
 		toolbar = self.wnd.CreateToolBar()

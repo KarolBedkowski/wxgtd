@@ -19,10 +19,7 @@ import re
 
 from dateutil.relativedelta import relativedelta
 
-try:
-	from wx.lib.pubsub.pub import Publisher
-except ImportError:
-	from wx.lib.pubsub import Publisher  # pylint: disable=E0611
+from wxgtd.wxtools.wxpub import publisher
 
 from wxgtd.model import objects as OBJ
 from wxgtd.model import enums
@@ -370,7 +367,7 @@ def delete_task(task, session=None, permanently=False):
 		deleted += 1
 	if deleted:
 		session.commit()
-		Publisher().sendMessage('task.delete')
+		publisher.sendMessage('task.delete')
 	return bool(deleted)
 
 
@@ -550,7 +547,7 @@ def clone_task(task_uuid, session=None):
 		return None
 	new_task = task.clone()
 	save_modified_task(new_task, session)
-	Publisher().sendMessage('task.update', data={'task_uuid': new_task.uuid})
+	publisher.sendMessage('task.update', data={'task_uuid': new_task.uuid})
 	return new_task.uuid
 
 
@@ -576,7 +573,7 @@ def save_modified_task(task, session=None):
 	task.update_modify_time()
 	session.add(task)
 	session.commit()  # pylint: disable=E1101
-	Publisher().sendMessage('task.update', data={'task_uuid': task.uuid})
+	publisher.sendMessage('task.update', data={'task_uuid': task.uuid})
 	return True
 
 
@@ -603,7 +600,7 @@ def save_modified_tasks(tasks, session=None):
 		task.update_modify_time()
 		session.add(task)
 	session.commit()  # pylint: disable=E1101
-	Publisher().sendMessage('task.update')
+	publisher.sendMessage('task.update')
 	return True
 
 

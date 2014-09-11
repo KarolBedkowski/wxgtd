@@ -17,11 +17,8 @@ import logging
 import datetime
 
 import wx
-try:
-	from wx.lib.pubsub.pub import Publisher
-except ImportError:
-	from wx.lib.pubsub import Publisher  # pylint: disable=E0611
 
+from wxgtd.wxtools.wxpub import publisher
 from wxgtd.model.objects import Session
 from wxgtd.wxtools.validators import Validator, ValidatorColorStr
 from wxgtd.gui._base_dialog import BaseDialog
@@ -103,7 +100,7 @@ class DictBaseDlg(BaseDialog):
 		self._session.add(self._displayed_item)  # pylint: disable=E1101
 		self._session.commit()  # pylint: disable=E1101
 		self._refresh_list()
-		Publisher().sendMessage('dict.update')
+		publisher.sendMessage('dict.update')
 
 	def _on_del_item(self, _evt):
 		""" Acton for delete item button. """
@@ -126,7 +123,7 @@ class DictBaseDlg(BaseDialog):
 				self._session.delete(item)  # pylint: disable=E1101
 			self._session.commit()  # pylint: disable=E1101
 			self._refresh_list()
-			Publisher().sendMessage('dict.delete')
+			publisher.sendMessage('dict.delete')
 			return True
 
 	def _on_list_item_activate(self, _evt):

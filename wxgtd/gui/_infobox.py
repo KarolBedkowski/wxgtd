@@ -67,7 +67,7 @@ def draw_info(mdc, task, overdue, cache):
 		mdc.DrawBitmap(iconprovider.get_image(icon_name), 0, main_icon_y_offset,
 				False)
 	if task.completed:
-		mdc.SetTextForeground(wx.Color(150, 150, 150))
+		mdc.SetTextForeground(wx.Colour(150, 150, 150))
 	elif overdue:
 		mdc.SetTextForeground(wx.RED)
 	else:
@@ -243,7 +243,6 @@ class TaskInfoPanel(wx.Panel):
 
 	def _on_paint(self, _evt):
 		dc = wx.BufferedPaintDC(self)
-		self.PrepareDC(dc)
 		bg = wx.Brush(wx.WHITE if self.task else self.GetBackgroundColour())
 		dc.SetBackground(bg)
 		dc.Clear()
@@ -270,7 +269,6 @@ class TaskIconsPanel(wx.Panel):
 
 	def _on_paint(self, _evt):
 		dc = wx.BufferedPaintDC(self)
-		self.PrepareDC(dc)
 		bg = wx.Brush(wx.WHITE if self.task else self.GetBackgroundColour())
 		dc.SetBackground(bg)
 		dc.Clear()

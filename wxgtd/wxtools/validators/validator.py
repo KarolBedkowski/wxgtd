@@ -2,7 +2,7 @@
 # pylint: disable-msg=W0401, C0103
 """ wxValidator wrapper.
 
-Copyright (c) Karol Będkowski, 2006-2013
+Copyright (c) Karol Będkowski, 2006-2014
 
 This file is part of wxGTD
 
@@ -12,7 +12,7 @@ Foundation, version 2.
 """
 
 __author__ = "Karol Będkowski"
-__copyright__ = "Copyright (c) Karol Będkowski, 2006-2013"
+__copyright__ = "Copyright (c) Karol Będkowski, 2006-2014"
 __version__ = "2013-04-21"
 
 import types
@@ -303,7 +303,7 @@ class ValidatorColorStr(Validator):
 		if value:
 			if value[0] != "#":
 				value = '#' + value
-			color = wx.Color()
+			color = wx.Colour()
 			color.SetFromString(value)
 			self.GetWindow().SetColour(color)
 
