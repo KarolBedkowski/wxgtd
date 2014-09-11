@@ -16,12 +16,7 @@ import logging
 import gettext
 import datetime
 
-
-try:
-	from wx.lib.pubsub.pub import Publisher
-except ImportError:
-	from wx.lib.pubsub import Publisher  # pylint: disable=E0611
-
+from wxgtd.wxtools.wxpub import publisher
 from wxgtd.model import objects as OBJ
 
 _LOG = logging.getLogger(__name__)
@@ -47,7 +42,7 @@ def delete_notebook_page(page_uuid, session=None):
 		return False
 	page.deleted = datetime.datetime.now()
 	session.commit()
-	Publisher().sendMessage('notebook.delete', data={'notebook_uuid': page_uuid})
+	publisher.sendMessage('notebook.delete', data={'notebook_uuid': page_uuid})
 	return True
 
 
@@ -65,5 +60,5 @@ def save_modified_page(page, session=None):
 	page.update_modify_time()
 	session.add(page)
 	session.commit()
-	Publisher().sendMessage('notebook.update', data={'notebook_uuid': page.uuid})
+	publisher.sendMessage('notebook.update', data={'notebook_uuid': page.uuid})
 	return True

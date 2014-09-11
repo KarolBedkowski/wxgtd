@@ -14,10 +14,7 @@ __version__ = "2013-04-28"
 import logging
 
 import wx
-try:
-	from wx.lib.pubsub.pub import Publisher  # pylint: disable=E0611
-except ImportError:
-	from wx.lib.pubsub import Publisher  # pylint: disable=E0611
+from wxgtd.wxtools.wxpub import publisher
 
 from ._base_dialog import BaseDialog
 
@@ -71,7 +68,7 @@ class DlgSyncProggress(BaseDialog):
 		self._tc_progress = self['tc_progress']
 
 	def _setup(self):
-		Publisher().subscribe(self._on_update_message, ('sync', 'progress'))
+		publisher.subscribe(self._on_update_message, ('sync', 'progress'))
 		self[wx.ID_CLOSE].Enable(False)
 
 	def _on_update_message(self, args):

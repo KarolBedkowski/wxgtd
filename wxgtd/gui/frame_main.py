@@ -18,12 +18,9 @@ import logging
 import wx
 import wx.lib.customtreectrl as CT
 import wx.lib.dialogs
-try:
-	from wx.lib.pubsub.pub import Publisher
-except ImportError:
-	from wx.lib.pubsub import Publisher  # pylint: disable=E0611
 
 from wxgtd.wxtools import iconprovider
+from wxgtd.wxtools.wxpub import publisher
 from wxgtd.model import objects as OBJ
 from wxgtd.model import loader
 from wxgtd.model import exporter
@@ -156,9 +153,9 @@ class FrameMain(BaseFrame):
 		wnd.Bind(wx.EVT_TIMER, self._on_timer)
 		wnd.Bind(wx.EVT_ICONIZE, self._on_window_iconze)
 
-		Publisher().subscribe(self._on_tasks_update, ('task', 'update'))
-		Publisher().subscribe(self._on_tasks_update, ('task', 'delete'))
-		Publisher().subscribe(self._on_frame_messsage, ('gui', 'frame_main'))
+		publisher.subscribe(self._on_tasks_update, ('task', 'update'))
+		publisher.subscribe(self._on_tasks_update, ('task', 'delete'))
+		publisher.subscribe(self._on_frame_messsage, ('gui', 'frame_main'))
 
 		self._create_popup_menu_bindings(wnd)
 
@@ -354,7 +351,7 @@ class FrameMain(BaseFrame):
 			dlgp.mark_finished(2)
 			appconfig.set('files', 'last_dir', os.path.dirname(filename))
 			appconfig.set('files', 'last_file', os.path.basename(filename))
-			Publisher().sendMessage('task.update')
+			publisher.sendMessage('task.update')
 		dlg.Destroy()
 
 	def _on_menu_file_save(self, _evt):
@@ -378,15 +375,15 @@ class FrameMain(BaseFrame):
 				msgdlg.Destroy()
 				dlgp.update(100, _("Error: ") + str(err))
 			dlgp.mark_finished(2)
-			Publisher().sendMessage('task.update')
+			publisher.sendMessage('task.update')
 			appconfig.set('files', 'last_dir', os.path.dirname(filename))
 			appconfig.set('files', 'last_file', os.path.basename(filename))
 		dlg.Destroy()
 
 	def _on_menu_file_sync(self, _evt):
 		self._synchronize(False)
-		Publisher().sendMessage('task.update')
-		Publisher().sendMessage('dict.update')
+		publisher.sendMessage('task.update')
+		publisher.sendMessage('dict.update')
 
 	def _on_menu_sett_preferences(self, _evt):
 		if DlgPreferences(self.wnd).run(True):
@@ -714,8 +711,8 @@ class FrameMain(BaseFrame):
 				return
 		self._synchronize(on_load, autoclose=True)
 		if on_load:
-			Publisher().sendMessage('task.update')
-			Publisher().sendMessage('dict.update')
+			publisher.sendMessage('task.update')
+			publisher.sendMessage('dict.update')
 
 	def _delete_selected_task(self, permanently=False):
 		tasks_uuid = list(self._items_list_ctrl.get_selected_items_uuid())

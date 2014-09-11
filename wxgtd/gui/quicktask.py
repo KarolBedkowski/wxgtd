@@ -16,10 +16,8 @@ import gettext
 import logging
 
 import wx
-try:
-	from wx.lib.pubsub.pub import Publisher
-except ImportError:
-	from wx.lib.pubsub import Publisher  # pylint: disable=E0611
+
+from wxgtd.wxtools.wxpub import publisher
 
 from wxgtd.logic import quicktask
 
@@ -33,5 +31,5 @@ def quick_task(parent_wnd=None):
 			_("wxGTD Quick Task"), "")
 	if dlg.ShowModal() == wx.ID_OK and dlg.GetValue().strip():
 		task = quicktask.create_quicktask(dlg.GetValue().strip())
-		Publisher().sendMessage('task.update', data={'task_uuid': task.uuid})
+		publisher.sendMessage('task.update', data={'task_uuid': task.uuid})
 	dlg.Destroy()

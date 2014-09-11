@@ -17,10 +17,7 @@ import gettext
 import os
 import datetime
 
-try:
-	from wx.lib.pubsub.pub import Publisher
-except ImportError:
-	from wx.lib.pubsub import Publisher  # pylint: disable=E0611
+from wxgtd.wxtools.wxpub import publisher
 
 from wxgtd.lib import appconfig
 
@@ -43,14 +40,14 @@ class OtherSyncError(RuntimeError):
 
 
 def _notify_progress(progress, msg):
-	Publisher().sendMessage('sync.progress',
+	publisher.sendMessage('sync.progress',
 			data=(progress, msg))
 
 
 def sync(filename, load_only=False, notify_cb=_notify_progress):
 	""" Sync data from/to given file.
 
-	Notify progress by Publisher().
+	Notify progress by publisher.
 
 	Args:
 		filename: full path to file
