@@ -3,7 +3,7 @@
 ## pylint: disable-msg=W0401, C0103
 """Images provider.
 
-Copyright (c) Karol Będkowski, 2007-2013
+Copyright (c) Karol Będkowski, 2007-2014
 
 This file is part of kPyLibs
 
@@ -137,6 +137,7 @@ class IconProvider:
 	"""
 
 	def __init__(self, image_size=16):
+		self._width = self._height = image_size
 		self._image_list = wx.ImageList(image_size, image_size)
 		self._image_mapping = {}
 
@@ -159,6 +160,14 @@ class IconProvider:
 			if image is None:
 				_LOG.warn('load icon %s failed', name)
 				continue
+			if image.GetWidth() != self._width or \
+					image.GetHeight() != self._height:
+				_LOG.warn("IconProvider: converting %s (%d, %d) -> (%d, %d)",
+					name, image.GetWidth(), image.GetHeight(),
+					self._width, self._height)
+				if isinstance(image, wx.Bitmap):
+					image = image.ConvertToImage()
+				image = image.Scale(self._width, self._height)
 			# add image to wxImageList
 			if isinstance(image, wx.Icon):
 				self._image_mapping[name] = self._image_list.AddIcon(image)
