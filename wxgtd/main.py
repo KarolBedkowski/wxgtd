@@ -77,25 +77,29 @@ def run():
 	config.load()
 	config.debug = options.debug
 
-	# locale
-	from wxgtd.lib import locales
-	locales.setup_locale(config)
-
 	# importowanie wx
 	try:
 		import wxversion
 		try:
-			wxversion.select('2.8')
+			wxversion.ensureMinimal('2.8')
 		except wxversion.AlreadyImportedError:
-			pass
+			_LOG.warn('Wx Already Imported')
+		except wxversion.VersionError:
+			_LOG.error("WX version >= 2.8 not found; avalable: %s",
+				wxversion.checkInstalled())
 	except ImportError, err:
-		print 'No wxversion.... (%s)' % str(err)
+		_LOG.error('No wxversion.... (%s)' % str(err))
 
 	import wx
+	_LOG.info("WX version: %s", wx.version())
 
 	ipcs = None
 	if not options.force_start:
 		ipcs = _run_ipcs(config)
+
+	# locale
+	from wxgtd.lib import locales
+	locales.setup_locale(config)
 
 	# create app
 	app = wx.App(False)

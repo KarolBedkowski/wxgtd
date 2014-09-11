@@ -16,16 +16,22 @@ __author__ = 'Karol Będkowski'
 __copyright__ = 'Copyright (C) Karol Będkowski 2013'
 __version__ = "2013-07-11"
 
+import logging
+
+_LOG = logging.getLogger(__name__)
 
 publisher = None
 
 try:
-	from wx.lib.pubsub import pub
-	publisher = pub
+	from wx.lib.pubsub.pub import Publisher
+	publisher = Publisher()
+	_LOG.debug("Using wx.lib.pubsub.pub.Publisher")
 except ImportError:
 	try:
-		from wx.lib.pubsub.pub import Publisher
-		publisher = Publisher()
-	except ImportError:
 		from wx.lib.pubsub import Publisher  # pylint: disable=E0611
 		publisher = Publisher()
+		_LOG.debug("Using wx.lib.pubsub.Publisher")
+	except ImportError:
+		from wx.lib.pubsub import pub
+		publisher = pub
+		_LOG.debug("Using wx.lib.pubsub.pub")
