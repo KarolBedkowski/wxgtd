@@ -99,7 +99,8 @@ def run():
 
 	# create app
 	app = wx.App(False)
-	wx.InitAllImageHandlers()
+	if wx.version().startswith('2'):
+		wx.InitAllImageHandlers()
 
 	# splash screen
 	if not options.quick_task_dialog:
