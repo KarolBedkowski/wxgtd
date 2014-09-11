@@ -243,7 +243,6 @@ class TaskInfoPanel(wx.Panel):
 
 	def _on_paint(self, _evt):
 		dc = wx.BufferedPaintDC(self)
-		self.PrepareDC(dc)
 		bg = wx.Brush(wx.WHITE if self.task else self.GetBackgroundColour())
 		dc.SetBackground(bg)
 		dc.Clear()
@@ -270,7 +269,6 @@ class TaskIconsPanel(wx.Panel):
 
 	def _on_paint(self, _evt):
 		dc = wx.BufferedPaintDC(self)
-		self.PrepareDC(dc)
 		bg = wx.Brush(wx.WHITE if self.task else self.GetBackgroundColour())
 		dc.SetBackground(bg)
 		dc.Clear()
