@@ -201,6 +201,11 @@ class FrameMain(BaseFrame):
 		wnd.Bind(wx.EVT_MENU, self._on_menu_task_change_priority,
 				id=self._tasks_popup_menu.task_change_priority_id)
 
+	def _set_size_pos(self):
+		self['window_2'].SetSashPosition(self._appconfig.get(self._window_name,
+				'splitter_pos', 150))
+		BaseFrame._set_size_pos(self)
+
 	def _create_toolbar(self):
 		toolbar = self.wnd.CreateToolBar()
 		tbi = toolbar.AddLabelTool(-1, _('New Task'),
@@ -324,6 +329,8 @@ class FrameMain(BaseFrame):
 		if sel_group == queries.QUERY_TRASH:
 			sel_group = 0
 		appconfig.set('main', 'selected_group', sel_group)
+		appconfig.set(self._window_name, 'splitter_pos',
+			self['window_2'].GetSashPosition())
 		self._filter_tree_ctrl.save_last_settings()
 		self._tbicon.Destroy()
 		BaseFrame._on_close(self, event)
