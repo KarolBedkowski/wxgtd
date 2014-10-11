@@ -159,6 +159,7 @@ def load_xrc_resource(filename):
 		data = re_gettext.sub(_localize, data)
 		# workaround for 'XRC error: unknown font family "default"'
 		data = data.replace('<family>default</family>', '')
+		data = data.replace('|wxTHICK_FRAME', '')
 		data = data.encode('UTF-8')
 		res = xrc.EmptyXmlResource()
 		res.InsertHandler(NumCtrlXmlHandler())
