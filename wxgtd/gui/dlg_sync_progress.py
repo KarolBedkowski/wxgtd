@@ -44,6 +44,7 @@ class DlgSyncProggress(BaseDialog):
 		self._g_progress.SetValue(max(min(int(progress), 100), 0))
 		self._tc_progress.AppendText(msg + '\n')
 		self._wnd.Update()
+		wx.Yield()
 
 	def mark_finished(self, autoclose=-1):
 		""" Set progress finished.
