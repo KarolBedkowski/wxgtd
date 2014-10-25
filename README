@@ -4,7 +4,7 @@
 
 :Credits: Copyright (c) Karol Będkowski, 2013-2014
 :Licence: GPLv2+
-:Status: alpha (working, bugs)
+:Status: beta
 :Tags: gtd, tasks management
 
 Desktop application for task management compatible with `DGT GTD`_.
@@ -32,7 +32,7 @@ Just unpack and run via wxgtd.pyw.
 Runtime Requirements
 --------------------
 * Python 2.6+
-* wxWidgets 2.8+
+* wxWidgets 2.8
 * python-dateutil http://labix.org/python-dateutil
 * sqlalchemy 0.7.9+
 * dropbox (optional; for sync via Dropbox API)
