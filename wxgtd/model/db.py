@@ -106,6 +106,15 @@ def connect(filename, debug=False, *args, **kwargs):
 	engine.execute("delete from notebook_pages where deleted < ?",
 			(date_threshold, ))
 
+	_LOG.debug("Cleanup synclog")
+	wrong_sls = engine.execute('select device_id, sync_time from synclog s '
+				'where sync_time < (select max(sync_time) '
+				'from synclog s2 where s.device_id = s2.device_id)').fetchall()
+	for wrong_sl in wrong_sls:
+		_LOG.debug('  delete synclog: %r', wrong_sls)
+		engine.execute("delete from synclog where device_id=? and sync_time=?",
+				 (wrong_sls[0], wrong_sls[1]))
+
 	_LOG.info('Database bootstrap COMPLETED')
 	return objects.Session
 

@@ -339,11 +339,12 @@ def load_json(strdata, notify_cb, force=False):
 
 	my_dev_id = session.query(  # pylint: disable=E1101
 			objects.Conf).filter_by(key='deviceId').first().val
-	last_prev_sync_time = session.query(  # pylint: disable=E1101
-			objects.SyncLog).filter_by(device_id=my_dev_id).first().sync_time
+	last_sync_obj = session.query(  # pylint: disable=E1101
+			objects.SyncLog).filter_by(device_id=my_dev_id).first()
 
 	# 80: cleanup
-	if last_prev_sync_time:
+	if last_sync_obj:
+		last_prev_sync_time = last_sync_obj.sync_time
 		notify_cb(80, _("Cleanup"))
 		# pokasowanie staroci
 		deleted_cnt = _cleanup_tasks(set(tasks_cache.itervalues()),
