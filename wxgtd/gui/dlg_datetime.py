@@ -12,6 +12,7 @@ __copyright__ = "Copyright (c) Karol Będkowski, 2013"
 __version__ = "2013-04-28"
 
 import logging
+import datetime
 
 import wx
 import wx.calendar
@@ -59,6 +60,9 @@ class DlgDateTime(BaseDialog):
 				self._on_calendar)
 		self['tc_time'].Bind(wx.lib.masked.EVT_TIMEUPDATE, self._on_time_ctrl)
 		self['cb_set_time'].Bind(wx.EVT_CHECKBOX, self._on_cb_set_time)
+		self['btn_today'].Bind(wx.EVT_BUTTON, self._on_btn_today)
+		self['btn_tomorrow'].Bind(wx.EVT_BUTTON, self._on_btn_tomorrow)
+		self['btn_next_week'].Bind(wx.EVT_BUTTON, self._on_btn_next_week)
 
 	def _setup(self, timestamp, timeset):
 		_LOG.debug("DlgDateTime(%r)", timestamp)
@@ -95,3 +99,22 @@ class DlgDateTime(BaseDialog):
 
 	def _on_cb_set_time(self, _evt):
 		self['rb_date'].SetValue(True)
+
+	def _on_btn_today(self, _evt):
+		self._set_datetime(datetime.datetime.now())
+
+	def _on_btn_tomorrow(self, _evt):
+		self._set_datetime(datetime.datetime.now() + datetime.timedelta(days=1))
+
+	def _on_btn_next_week(self, _evt):
+		self._set_datetime(datetime.datetime.now() + datetime.timedelta(days=7))
+
+	def _set_datetime(self, date):
+		self['cc_date'].SetDate(wx.DateTimeFromDMY(
+				date.day, date.month - 1, date.year))
+		if self['cb_set_time'].GetValue():
+			self['tc_time'].SetValue("%02d:%02d:%02d" % (
+					date.hour, date.minute, date.second))
+		else:
+			self['tc_time'].SetValue("00:00:00")
+			self['cb_set_time'].SetValue(False)
