@@ -244,7 +244,7 @@ if __name__ == '__main__':
 			data_files=list(get_data_files()),
 			include_package_data=True,
 			#scripts=['bin/wxgtd'],
-			install_requires=['wxPython>=2.8.0', 'wxPython<3.0', 'sqlalchemy>=0.7'],
+			install_requires=['wxPython>=2.8.0', 'sqlalchemy>=0.7'],
 			setup_requires=['nose>=1.0'],
 			zipfile=r"modules.dat",
 			windows=[target_win],

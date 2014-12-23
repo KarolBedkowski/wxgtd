@@ -81,11 +81,11 @@ def run():
 	try:
 		import wxversion
 		try:
-			wxversion.select('2.8')
+			wxversion.ensureMinimal("2.8")
 		except wxversion.AlreadyImportedError:
 			_LOG.warn('Wx Already Imported')
 		except wxversion.VersionError:
-			_LOG.error("WX version == 2.8 not found; avalable: %s",
+			_LOG.error("WX version > 2.8 not found; avalable: %s",
 				wxversion.checkInstalled())
 	except ImportError, err:
 		_LOG.error('No wxversion.... (%s)' % str(err))

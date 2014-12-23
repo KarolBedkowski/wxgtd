@@ -1,3 +1,7 @@
+wxgtk ?
+	* support wx3
+	* use wxGenericCalendarCtrl instead of native implementation 
+
 wxgtd 0.12.6 2014-10-26
 	* partial support for wx3 (disabled - errors in wxCalendarCtrl)
 	* minor bugfixes
