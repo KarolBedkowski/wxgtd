@@ -19,6 +19,7 @@ import wx
 from wx import xrc
 from wx.lib import masked
 from wx.lib import colourselect as csel
+import wx.calendar
 
 from wxgtd.lib.appconfig import AppConfig
 
@@ -129,6 +130,27 @@ class SearchCtrlXmlHandler(xrc.XmlResourceHandler):
 		return ctrl
 
 
+class CalendarCtrlXmlHandler(xrc.XmlResourceHandler):
+	""" Custom control: "CalendarCtrl". Use wx CalendarCtrl instead of native."""
+
+	def __init__(self):
+		xrc.XmlResourceHandler.__init__(self)
+		self.AddWindowStyles()
+
+	def CanHandle(self, node):
+		return self.IsOfClass(node, "CalendarCtrl")
+
+	def DoCreateResource(self):
+		ctrl = wx.calendar.CalendarCtrl(
+				self.GetParentAsWindow(),
+				self.GetID())
+		if self.HasParam("description"):
+			ctrl.SetDescriptiveText(self.GetParamValue("description"))
+		self.SetupWindow(ctrl)
+		self.CreateChildren(ctrl)
+		return ctrl
+
+
 _XRC_CACHE = {}
 
 
@@ -166,6 +188,7 @@ def load_xrc_resource(filename):
 		res.InsertHandler(TimeCtrlXmlHandler())
 		res.InsertHandler(ColourSelectHandler())
 		res.InsertHandler(SearchCtrlXmlHandler())
+		res.InsertHandler(CalendarCtrlXmlHandler())
 		res.LoadFromString(data)
 		_XRC_CACHE[xrcfile_path] = res
 	return res
