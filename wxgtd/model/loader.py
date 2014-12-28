@@ -642,12 +642,11 @@ def _load_synclog(data, session, notify_cb):
 	for sync_log in data.get("syncLog"):
 		_convert_timestamps(sync_log, "prevSyncTime", "syncTime")
 		slog_item = objects.SyncLog.get(session, device_id=sync_log["deviceId"])
-		if slog_item:
-			slog_item.prev_sync_time = slog_item.sync_time
-		else:
+		if not slog_item:
 			slog_item = objects.SyncLog()
 			slog_item.device_id = sync_log["deviceId"]
 		slog_item.sync_time = sync_log["syncTime"]
+		slog_item.sync_time = sync_log["prevSyncTime"]
 		session.add(slog_item)  # pylint: disable=E1101
 	if "syncLog" in data:
 		del data["syncLog"]
