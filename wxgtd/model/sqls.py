@@ -131,3 +131,26 @@ SCHEMA_DEF = []
 #create table if not exists wxgtd (
 	#key varchar(32) primary key,
 	#val text)"""])
+
+
+_SYNCLOG_SCHEME = """CREATE TABLE synclog (
+device_id VARCHAR(50) NOT NULL,
+sync_time DATETIME,
+prev_sync_time DATETIME,
+PRIMARY KEY (device_id))"""
+
+
+def fix_synclog(engine):
+	""" Drop primary key from synclog.sync_time """
+	res = engine.execute("select sql from sqlite_master where name='synclog'")
+	rows = res.fetchall()
+	if not rows or not rows[0]:
+		return
+	if 'sync_time DATETIME NOT NULL' not in rows[0][0]:
+		return
+	engine.execute("alter table synclog rename to synclog_old")
+	engine.execute(_SYNCLOG_SCHEME)
+	with engine.begin() as conn:
+		conn.execute("insert into synclog select device_id, max(sync_time), "
+				"max(prev_sync_time) from synclog_old group by device_id")
+	engine.execute("drop table synclog_old;")
