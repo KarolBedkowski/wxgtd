@@ -1,15 +1,15 @@
 # -*- coding: utf-8 -*-
 """ Licence and version informations.
 
-Copyright (c) Karol Będkowski, 2013-2014
+Copyright (c) Karol Będkowski, 2013-2015
 
 This file is part of wxGTD
 Licence: GPLv2+
 """
 
 __author__ = "Karol Będkowski"
-__copyright__ = "Copyright (c) Karol Będkowski, 2013-2014"
-__version__ = "2014-08-01"
+__copyright__ = "Copyright (c) Karol Będkowski, 2013-2015"
+__version__ = "2015-02-07"
 
 import gettext
 
@@ -17,13 +17,13 @@ _ = gettext.gettext
 
 SHORTNAME = 'wxgtd'
 NAME = _("wxGTD")
-VERSION = '0.12.7'
-VERSION_INFO = (0, 12, 7, 'beta', 1)
-RELEASE = '2014-12-28'
+VERSION = '0.12.8'
+VERSION_INFO = (0, 12, 8, 'beta', 1)
+RELEASE = '2015-02-07'
 DESCRIPTION = _('''wxGTD''')
 DEVELOPERS = u'''Karol Będkowski'''
 TRANSLATORS = u'''Karol Będkowski'''
-COPYRIGHT = u"Copyright (c) Karol Będkowski, 2013-2014"
+COPYRIGHT = u"Copyright (c) Karol Będkowski, 2013-2015"
 LICENSE = _('''\
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
