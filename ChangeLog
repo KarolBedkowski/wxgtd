@@ -1,3 +1,6 @@
+wxgtk 0.12.7 2015-02-07
+	* fix syncing new devices
+
 wxgtk 0.12.6 2014-12-28
 	* support wx3
 	* use wxGenericCalendarCtrl instead of native implementation 
