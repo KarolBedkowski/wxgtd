@@ -142,6 +142,7 @@ def str2datetime_utc(string):
 			return value.replace(tzinfo=None)
 		except ValueError:
 			_LOG.exception("str2datetime_utc %r", string)
+	_LOG.error("Wrong string %r", string)
 	return None
 
 
@@ -154,13 +155,16 @@ def _convert_timestamps(dictobj, *fields):
 		dictobj: loaded object as dict
 		fields: list of additional fields to convert
 	"""
-	def convert(field):
-		value = dictobj.get(field)
+	_LOG.error("fields=%r", fields)
+
+	def convert(fld):
+		value = dictobj.get(fld)
 		if value is None:
+			_LOG.debug("Missing field %r in %r", fld, dictobj)
 			return
 		elif value:
 			value = str2datetime_utc(value)
-		dictobj[field] = value or None
+		dictobj[fld] = value or None
 
 	for field in ("created", "modified", "deleted"):
 		convert(field)
@@ -267,11 +271,13 @@ def _check_synclog(data, session):
 				.filter_by(device_id=synclog['deviceId'])
 				.order_by(objects.SyncLog.sync_time.desc())
 				.first())
+		_LOG.debug("_check_synclog (%r): %r", synclog, last_sync_log)
 		if not last_sync_log:
 			_LOG.info("_check_synclog: device %r not found; need sync...",
 				synclog['deviceId'])
 			return True
-		if last_sync_log.sync_time < file_sync_time:
+		if last_sync_log.sync_time is not None and \
+				last_sync_log.sync_time < file_sync_time:
 			_LOG.info("_check_synclog: device %r updated; need sync...",
 				synclog['deviceId'])
 			return True
@@ -646,7 +652,7 @@ def _load_synclog(data, session, notify_cb):
 			slog_item = objects.SyncLog()
 			slog_item.device_id = sync_log["deviceId"]
 		slog_item.sync_time = sync_log["syncTime"]
-		slog_item.sync_time = sync_log["prevSyncTime"]
+		slog_item.prev_sync_time = sync_log["prevSyncTime"]
 		session.add(slog_item)  # pylint: disable=E1101
 	if "syncLog" in data:
 		del data["syncLog"]
