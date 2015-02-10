@@ -101,10 +101,12 @@ def _parse_opt():
 			help='enable debug messages')
 	group.add_option('--debug-sql', action="store_true", default=False,
 			help='enable sql debug messages')
+	group.add_option("--shell", action="store_true", default=False,
+			help="start shell", dest="shell")
 	optp.add_option_group(group)
 	options, args = optp.parse_args()
 	if not any((options.quick_task_title, options.query_group >= 0,
-			options.sync)):
+			options.sync, options.shell)):
 		optp.print_help()
 		exit(0)
 	return options, args
@@ -147,6 +149,8 @@ def run():
 		_list_tasks(options, args)
 	if options.sync:
 		_sync(config, False)
+	if options.shell:
+		_shell()
 	config.save()
 	exit(0)
 
@@ -193,3 +197,11 @@ def _sync(config, load_only):
 	if last_sync_file:
 		from wxgtd.model import sync
 		sync.sync(last_sync_file, load_only, notify_cb=_log_sync_cb)
+
+
+def _shell():
+	# starting interactive shell
+	from IPython.terminal import ipapp
+	app = ipapp.TerminalIPythonApp.instance()
+	app.initialize(argv=[])
+	app.start()

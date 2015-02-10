@@ -685,7 +685,7 @@ class SyncLog(BaseModelMixin, Base):
 	""" Synclog history """
 	__tablename__ = "synclog"
 	device_id = Column(String(50), primary_key=True)
-	sync_time = Column(DateTime)
+	sync_time = Column(DateTime, primary_key=True)
 	prev_sync_time = Column(DateTime, nullable=True)
 
 
