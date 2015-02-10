@@ -28,6 +28,7 @@ except ImportError:
 	_JSON_ENCODER = json.dumps
 
 from dateutil import parser, tz
+from sqlalchemy import func
 
 from wxgtd.model import objects
 from wxgtd.model import enums
@@ -266,18 +267,18 @@ def _check_synclog(data, session):
 	"""
 	for synclog in data.get("syncLog") or []:
 		file_sync_time_str = synclog.get("syncTime")
+		if not file_sync_time_str:
+			continue
 		file_sync_time = str2datetime_utc(file_sync_time_str)
-		last_sync_log = (session.query(objects.SyncLog)
-				.filter_by(device_id=synclog['deviceId'])
-				.order_by(objects.SyncLog.sync_time.desc())
-				.first())
-		_LOG.debug("_check_synclog (%r): %r", synclog, last_sync_log)
-		if not last_sync_log:
+		last_sync_time = session.query(func.max(objects.SyncLog.sync_time)).\
+				filter_by(device_id=synclog['deviceId']).\
+				scalar()
+		_LOG.debug("_check_synclog (%r): %r", synclog, last_sync_time)
+		if not last_sync_time:
 			_LOG.info("_check_synclog: device %r not found; need sync...",
 				synclog['deviceId'])
 			return True
-		if last_sync_log.sync_time is not None and \
-				last_sync_log.sync_time < file_sync_time:
+		if last_sync_time < file_sync_time:
 			_LOG.info("_check_synclog: device %r updated; need sync...",
 				synclog['deviceId'])
 			return True
@@ -645,12 +646,16 @@ def _load_notebook_folders(data, session, notebooks_cache, folders_cache,
 def _load_synclog(data, session, notify_cb):
 	_LOG.info("_load_synclog")
 	notify_cb(76, _("Loading synclog"))
+	# delete all synclogs
+	session.query(objects.SyncLog).delete()
 	for sync_log in data.get("syncLog"):
+		if not sync_log.get('syncTime'):
+			_LOG.warn("_load_synclog: missing syncTime in %r", sync_log)
+			continue
 		_convert_timestamps(sync_log, "prevSyncTime", "syncTime")
 		slog_item = objects.SyncLog.get(session, device_id=sync_log["deviceId"])
-		if not slog_item:
-			slog_item = objects.SyncLog()
-			slog_item.device_id = sync_log["deviceId"]
+		slog_item = objects.SyncLog()
+		slog_item.device_id = sync_log["deviceId"]
 		slog_item.sync_time = sync_log["syncTime"]
 		slog_item.prev_sync_time = sync_log["prevSyncTime"]
 		session.add(slog_item)  # pylint: disable=E1101
